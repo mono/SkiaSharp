@@ -177,6 +177,32 @@ Task("onefuzz-validate")
     if (harnessMethods.Count == 0)
         errors.Add("Unable to find any fuzz target methods in FuzzTargets.cs.");
 
+    // OneFuzz symbolizes crashes from PDBs on Windows and from the embedded symbol table on Linux.
+    bool HasElfSymbols(string path)
+    {
+        var data = System.IO.File.ReadAllBytes(path);
+        if (data.Length < 0x40 || data[0] != 0x7f || data[1] != (byte)'E' || data[4] != 2 || data[5] != 1)
+            return false; // only 64-bit little-endian ELF is checked
+        var sectionTable = (long)BitConverter.ToUInt64(data, 0x28);
+        var entrySize = BitConverter.ToUInt16(data, 0x3A);
+        var count = BitConverter.ToUInt16(data, 0x3C);
+        var namesIndex = BitConverter.ToUInt16(data, 0x3E);
+        var namesOffset = (long)BitConverter.ToUInt64(data, (int)(sectionTable + namesIndex * entrySize + 0x18));
+        for (var i = 0; i < count; i++)
+        {
+            var header = (int)(sectionTable + i * entrySize);
+            var nameStart = (int)(namesOffset + BitConverter.ToUInt32(data, header));
+            var nameEnd = Array.IndexOf(data, (byte)0, nameStart);
+            if (System.Text.Encoding.ASCII.GetString(data, nameStart, nameEnd - nameStart) == ".symtab")
+                return true;
+        }
+        return false;
+    }
+
+    // JobDependencies are simple globs in the drop root, so a symbol file only ships if one of them matches it.
+    bool IsCovered(string file, IEnumerable<string> patterns) => patterns.Any(pattern =>
+        Regex.IsMatch(file, "^" + Regex.Escape(System.IO.Path.GetFileName(pattern.Replace('\\', '/'))).Replace("\\*", ".*") + "$"));
+
     var configFiles = System.IO.Directory.GetFiles(outputPath, "OneFuzzConfig.*.json");
     if (configFiles.Length == 0)
         errors.Add("No OneFuzzConfig.<platform>.json files were generated.");
@@ -229,10 +255,24 @@ Task("onefuzz-validate")
                 foreach (var binary in fuzzer["FuzzingTargetBinaries"]?.AsArray() ?? new JsonArray())
                 {
                     var file = binary!.GetValue<string>();
-                    if (!System.IO.File.Exists(System.IO.Path.Combine(outputPath, file)))
+                    var filePath = System.IO.Path.Combine(outputPath, file);
+                    var dependencies = (entry["JobDependencies"]?.AsArray() ?? new JsonArray()).Select(d => d!.GetValue<string>()).ToList();
+                    if (!System.IO.File.Exists(filePath))
+                    {
                         errors.Add($"{entryPath}: FuzzingTargetBinaries '{file}' is not in the drop.");
-                    else if (!System.IO.File.Exists(System.IO.Path.Combine(outputPath, System.IO.Path.ChangeExtension(file, ".pdb"))))
-                        warnings.Add($"{entryPath}: '{file}' has no .pdb, so its stacks will not symbolize.");
+                    }
+                    else if (file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var symbols = System.IO.Path.ChangeExtension(file, ".pdb");
+                        if (!System.IO.File.Exists(System.IO.Path.Combine(outputPath, symbols)))
+                            errors.Add($"{entryPath}: '{file}' has no '{symbols}', so its crash stacks will not symbolize.");
+                        else if (!IsCovered(symbols, dependencies))
+                            errors.Add($"{entryPath}: '{symbols}' is not matched by JobDependencies, so it would not be uploaded.");
+                    }
+                    else if (file.EndsWith(".so", StringComparison.OrdinalIgnoreCase) && !HasElfSymbols(filePath))
+                    {
+                        errors.Add($"{entryPath}: '{file}' has no symbol table (stripped), so its crash stacks will not symbolize.");
+                    }
                 }
             }
 
@@ -278,6 +318,7 @@ Task("onefuzz-validate")
 });
 
 Task("Default")
+    .IsDependentOn("onefuzz-prepare")
     .IsDependentOn("onefuzz-validate");
 
 RunTarget(TARGET);
