@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 		{
 			var keys = new[] { "mac/18.2.0/Text.png", "mac/26.1.0/Text.png", "mac/Text.png" };
 			var request = new GoldenRequest("mac", "Text", Version.Parse(runtime));
-			Assert.Equal(expected, Resolve(keys.Reverse().ToArray(), request).Key);
+			Assert.Equal(expected, Resolve(keys.AsEnumerable().Reverse().ToArray(), request).Key);
 		}
 
 		[Fact]
