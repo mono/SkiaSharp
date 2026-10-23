@@ -152,7 +152,9 @@ Real uses: `SKDocument` roots its output stream, `SKColorSpace` its ICC profile,
 stream — all via `Referenced(...)`. For a **mutable set** of rooted children, add with
 `Referenced(this, child)`, drop one with `Unreferenced(this, child)`, and drop them all with
 `UnreferencedAll(this)` — again, no hand-rolled `List<T>` and no reaching into the dictionaries
-from derived types.
+from derived types. These helpers store only one root per native handle; if native code permits
+registering the same child more than once, track the registration count separately and only
+`Unreferenced` after the last native registration is removed.
 
 **`Owned` / `OwnedBy` — root *and* dispose.** When the owner should also dispose the child:
 
