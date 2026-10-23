@@ -34,7 +34,6 @@ Task("sync-ANGLE")
         "third_party/jsoncpp",
         "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
-        "third_party/depot_tools",
         "third_party/spirv-headers/src",
         "third_party/spirv-tools/src",
         "third_party/vulkan-headers/src",
@@ -58,22 +57,6 @@ Task("sync-ANGLE")
                 .AppendQuoted($"mklink /J \"{chromiumLlvm}\" \"{llvmHome}\""),
         });
     }
-
-    // Use ANGLE's compatible GN revision.
-    var gnVersion = GetRegexValue(
-        @"'buildtools/win':\s*\{[\s\S]*?'package':\s*'gn/gn/windows-amd64'[\s\S]*?'version':\s*'([^']+)'",
-        ANGLE_PATH.CombineWithFilePath("DEPS"));
-    if (string.IsNullOrEmpty(gnVersion))
-        throw new Exception("Could not resolve ANGLE's Windows GN revision.");
-    var gnDirectory = ANGLE_PATH.Combine("out/tools/gn");
-    EnsureDirectoryExists(gnDirectory);
-    var cipd = ANGLE_PATH.CombineWithFilePath("third_party/depot_tools/cipd.bat");
-    RunProcess("cmd.exe", new ProcessSettings {
-        Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
-            .AppendQuoted($"call \"{cipd}\" install gn/gn/windows-amd64 {gnVersion} -root \"{gnDirectory}\""),
-        WorkingDirectory = ANGLE_PATH.FullPath,
-    });
-    GN_EXE = gnDirectory.CombineWithFilePath("gn.exe").FullPath;
 
     // Use conventional import library and PDB names.
     {
@@ -109,12 +92,6 @@ Task("sync-ANGLE")
                 throw new Exception($"Cannot apply the SkiaSharp config to ANGLE targets at {buildConfig}.");
             FileWriteText(buildConfig, contents.Replace(anchor, $"{anchor}\n{config}"));
         }
-    }
-
-    // set version numbers
-    var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
-    if (!FileExists(lastchange)) {
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
     // download rc.exe
