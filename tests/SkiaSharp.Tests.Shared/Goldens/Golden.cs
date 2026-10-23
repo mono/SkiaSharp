@@ -126,8 +126,8 @@ public sealed class Golden
 			: GoldenInput.Bytes(ReadBytes(), ReferenceKey).Read();
 	}
 
-	private static bool VerifyCore(Golden? golden, GoldenInput.Image actual,
-		GoldenInput.Image? expected, GoldenOptions options, bool report = true)
+	private static bool VerifyCore(
+		Golden? golden, GoldenInput.Image actual, GoldenInput.Image? expected, GoldenOptions options, bool report = true)
 	{
 		if (expected == null)
 		{
@@ -144,7 +144,7 @@ public sealed class Golden
 				Assert.Fail($"Image is {Size(actualSize)}, expected {Size(required)}.");
 			}
 
-			golden.WriteDiagnostics(actual.Png, actualSize, null, null, null);
+			golden.WriteDiagnostics(actual, actualSize);
 			Attach(actual);
 			Assert.Fail($"Missing reviewed golden. {golden.Describe()} Actual retained at {actual.Label}.");
 			return false;
@@ -154,9 +154,9 @@ public sealed class Golden
 		if (!result.Matched && !report)
 			return false;
 
-		golden?.WriteDiagnostics(actual.Png, result.ActualSize, expected.Png, result.ExpectedSize, result.DifferencePng);
+		golden?.WriteDiagnostics(actual, expected, result);
 
-		Complete(actual, expected, result.Pixels, result.DifferencePng, result.Failure, result.Matched);
+		Complete(actual, expected, result);
 
 		return result.Matched;
 	}
@@ -203,63 +203,55 @@ public sealed class Golden
 		return new Comparison(false, actualSize, expectedSize, pixels, differencePng, message);
 	}
 
-	private void WriteDiagnostics(
-		byte[] actualPng,
-		SKSizeI actualSize,
-		byte[]? expectedPng,
-		SKSizeI? expectedSize,
-		byte[]? differencePng)
+	private void WriteDiagnostics(GoldenInput.Image actual, SKSizeI actualSize)
 	{
 		TestContext.Current.TestOutputHelper?.WriteLine(Describe());
-		TestContext.Current.TestOutputHelper?.WriteLine(
-			Marker("actual", actualPng, actualSize));
-		if (expectedPng != null && expectedSize is { } referenceSize)
-			TestContext.Current.TestOutputHelper?.WriteLine(
-				Marker("reference", expectedPng, referenceSize));
-		if (differencePng != null)
-			TestContext.Current.TestOutputHelper?.WriteLine(
-				Marker("diff", differencePng, actualSize));
+		TestContext.Current.TestOutputHelper?.WriteLine(Marker("actual", actual.Png, actualSize));
 	}
 
-	private static void Complete(
-		GoldenInput.Image actual,
-		GoldenInput.Image expected,
-		SKPixelComparisonResult? comparison,
-		byte[]? differencePng,
-		string? failure,
-		bool matched)
+	private void WriteDiagnostics(GoldenInput.Image actual, GoldenInput.Image expected, Comparison comparison)
+	{
+		TestContext.Current.TestOutputHelper?.WriteLine(Describe());
+		TestContext.Current.TestOutputHelper?.WriteLine(Marker("actual", actual.Png, comparison.ActualSize));
+		TestContext.Current.TestOutputHelper?.WriteLine(Marker("reference", expected.Png, comparison.ExpectedSize));
+		if (comparison.DifferencePng != null)
+			TestContext.Current.TestOutputHelper?.WriteLine(Marker("diff", comparison.DifferencePng, comparison.ActualSize));
+	}
+
+	private static void Complete(GoldenInput.Image actual, GoldenInput.Image expected, Comparison comparison)
 	{
 		Attach(actual);
-		if (comparison != null)
+		if (comparison.Pixels != null)
 		{
 			var difference =
-				$"{comparison.ErrorPixelCount}/{comparison.TotalPixels} pixels differ";
+				$"{comparison.Pixels.ErrorPixelCount}/{comparison.Pixels.TotalPixels} pixels differ";
 			var summary = $"Image comparison: {difference};";
 			TestContext.Current.TestOutputHelper?.WriteLine(
-				$"{summary} average RGBA color error {comparison.AverageColorErrorFraction:P3}.");
+				$"{summary} average RGBA color error {comparison.Pixels.AverageColorErrorFraction:P3}.");
 		}
-		if (matched)
+		if (comparison.Matched)
 			return;
 
 		Attach(expected, $"expected-{expected.AttachmentName}");
 		string? diffPath = null;
-		if (differencePng != null)
+		if (comparison.DifferencePng != null)
 		{
 			if (actual.FilePath != null)
 			{
 				diffPath = Path.ChangeExtension(actual.FilePath, ".diff.png");
-				WritePng(diffPath, differencePng);
+				WritePng(diffPath, comparison.DifferencePng);
 				TestContext.Current.AddFileAttachment(diffPath, "image/png");
 			}
 			else
 			{
 				TestArtifacts.AddAttachment(
-					TestContext.Current, "difference.png", differencePng, "image/png");
+					TestContext.Current, "difference.png", comparison.DifferencePng, "image/png");
 			}
 		}
 
 		var diff = diffPath == null ? "." : $"; diff {diffPath}.";
-		Assert.Fail($"Golden images differ: {failure} Expected {expected.Label}; actual {actual.Label}{diff}");
+		var locations = $"Expected {expected.Label}; actual {actual.Label}{diff}";
+		Assert.Fail($"Golden images differ: {comparison.Failure} {locations}");
 	}
 
 	private static void Attach(GoldenInput.Image image, string? attachmentName = null)
@@ -285,8 +277,7 @@ public sealed class Golden
 	}
 
 	private static SKImage Decode(byte[] png, string location) =>
-		SKImage.FromEncodedData(png)
-		?? throw new InvalidOperationException($"Failed to decode image: {location}.");
+		SKImage.FromEncodedData(png) ?? throw new InvalidOperationException($"Failed to decode image: {location}.");
 
 	private static async Task<string> RetryAsync(
 		GoldenInput input,
@@ -325,13 +316,9 @@ public sealed class Golden
 		}
 	}
 
-	private static async Task<T> WaitAsync<T>(
-		Task<T> task,
-		TimeSpan timeout,
-		CancellationToken cancellationToken)
+	private static async Task<T> WaitAsync<T>(Task<T> task, TimeSpan timeout, CancellationToken cancellationToken)
 	{
-		using var timeoutCancellation =
-			CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 		var delay = Task.Delay(timeout, timeoutCancellation.Token);
 		if (await Task.WhenAny(task, delay) != task)
 		{
@@ -343,7 +330,8 @@ public sealed class Golden
 		return await task;
 	}
 
-	private static string Size(SKSizeI size) => $"{size.Width}x{size.Height}";
+	private static string Size(SKSizeI size) =>
+		$"{size.Width}x{size.Height}";
 
 	private sealed record Comparison(
 		bool Matched,

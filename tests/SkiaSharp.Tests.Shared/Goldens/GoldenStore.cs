@@ -88,8 +88,7 @@ public sealed class GoldenStore
 		foreach (var assembly in resourceAssemblies)
 		foreach (var resource in assembly.GetManifestResourceNames().OrderBy(name => name, StringComparer.Ordinal))
 		{
-			if (!resource.StartsWith(ResourcePrefix, StringComparison.Ordinal) ||
-				!resource.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+			if (!resource.StartsWith(ResourcePrefix, StringComparison.Ordinal) || !resource.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
 				continue;
 
 			Add(resource.Substring(ResourcePrefix.Length), $"{assembly.GetName().Name}!{resource}", () =>

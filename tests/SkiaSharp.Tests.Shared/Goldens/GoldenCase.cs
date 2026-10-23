@@ -5,12 +5,7 @@ namespace SkiaSharp.Tests.Shared;
 /// <summary>Identifies the runtime and case used to resolve one golden reference.</summary>
 public sealed record GoldenCase
 {
-	public GoldenCase(
-		string profile,
-		string casePath,
-		Version? version = null,
-		string? architecture = null,
-		string? variant = null)
+	public GoldenCase(string profile, string casePath, Version? version = null, string? architecture = null, string? variant = null)
 	{
 		Profile = NormalizeProfile(profile);
 		CasePath = ValidateCase(casePath);
@@ -19,21 +14,13 @@ public sealed record GoldenCase
 		{
 			ValidateSegment(architecture);
 			if (!IsArchitecture(architecture))
-			{
-				throw new ArgumentException(
-					$"Expected a supported .NET architecture: {architecture}",
-					nameof(architecture));
-			}
+				throw new ArgumentException($"Expected a supported .NET architecture: {architecture}", nameof(architecture));
 		}
 		if (variant != null)
 		{
 			ValidateSegment(variant);
 			if (IsArchitecture(variant))
-			{
-				throw new ArgumentException(
-					$"Architecture tokens cannot be used as variants: {variant}",
-					nameof(variant));
-			}
+				throw new ArgumentException($"Architecture tokens cannot be used as variants: {variant}", nameof(variant));
 		}
 		Architecture = architecture;
 		Variant = variant;
@@ -69,10 +56,7 @@ public sealed record GoldenCase
 			? @"\A[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*\z"
 			: @"\A[a-z0-9]+(?:-[a-z0-9]+)*\z";
 		if (string.IsNullOrEmpty(value) || !Regex.IsMatch(value, pattern) ||
-			Regex.IsMatch(
-				value,
-				@"\A(con|prn|aux|nul|com[1-9]|lpt[1-9])\z",
-				RegexOptions.IgnoreCase))
+			Regex.IsMatch(value, @"\A(con|prn|aux|nul|com[1-9]|lpt[1-9])\z", RegexOptions.IgnoreCase))
 			throw new ArgumentException($"Expected a safe golden path segment: {value}");
 	}
 
@@ -103,6 +87,5 @@ public sealed record GoldenCase
 	}
 
 	private static Version? NormalizeVersion(Version? version) =>
-		version == null ? null :
-			version.Build < 0 ? new Version(version.Major, version.Minor, 0) : version;
+		version == null ? null : version.Build < 0 ? new Version(version.Major, version.Minor, 0) : version;
 }
