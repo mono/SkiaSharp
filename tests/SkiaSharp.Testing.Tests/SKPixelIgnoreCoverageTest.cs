@@ -174,7 +174,7 @@ public class SKPixelIgnoreCoverageTest : SKImageComparisonTestBase
 		Assert.Equal(1.0 / 3, baseline.MismatchedPixelFraction);
 		options.IgnoreMask = mask;
 		AssertEquivalent(baseline, SKImageComparison.Compare(first, second, options));
-		foreach (var style in Enum.GetValues<SKDifferenceStyle>())
+		foreach (SKDifferenceStyle style in Enum.GetValues(typeof(SKDifferenceStyle)))
 		{
 			using var masked = SKImageComparison.GenerateDifferenceImage(first, second, style, options);
 			options.IgnoreMask = null;
@@ -309,7 +309,7 @@ public class SKPixelIgnoreCoverageTest : SKImageComparisonTestBase
 		Assert.Equal(8L, result.RawMetrics.SampleCount);
 		Assert.Equal(result.RawMetrics.SampleCount, result.ThresholdedMetrics.SampleCount);
 		Assert.Equal(9, result.MaxChannelDifference);
-		foreach (var style in Enum.GetValues<SKDifferenceStyle>())
+		foreach (SKDifferenceStyle style in Enum.GetValues(typeof(SKDifferenceStyle)))
 		{
 			using var diff = SKImageComparison.GenerateDifferenceImage(first, second, style, options);
 			var expected = style switch
