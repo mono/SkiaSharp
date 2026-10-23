@@ -1,53 +1,46 @@
-# Building and Validating Samples
+# Building and validating samples
 
-The Samples suite builds generated applications against produced NuGet packages,
-runs Console/Web APIs on the host and in Docker, and checks actual browser UIs.
+The sample suite builds generated applications against produced NuGet packages
+and runs supported Console, Web API, browser and Docker samples.
 
-## Run the suite
+## Prepare packages
 
-Install the repository SDK and your host's required workloads. For Docker tests,
-put `docker` on `PATH` and start a daemon using Windows containers on Windows
-or Linux containers on macOS/Linux. Unavailable Docker skips those tests;
-wrong container mode and sample failures fail.
+Install the repository SDK and required workloads. Docker tests require a
+running daemon in Windows-container mode on Windows or Linux-container mode on
+macOS/Linux.
 
-**Bootstrap before staging packages:** bootstrap resets `output/`.
-For managed-only work:
+Bootstrap before staging packages because bootstrap resets `output/`:
 
 ```sh
+# Managed-only changes
 dotnet cake --target=externals-download
 ```
 
-For native or Skia changes, build natives from source instead; see
-[AGENTS.md](../../AGENTS.md). Do not download prebuilt natives after native changes.
+Native or Skia changes must build natives from source instead; see
+[AGENTS.md](../../AGENTS.md).
 
-Stage one producing build's non-symbol packages in `output/nugets/`, including
-the required native/view packages. Base versions must match `scripts/VERSIONS.txt`.
-Download its `nuget` artifact or use the PR helper:
+Stage all non-symbol packages from one producing build in `output/nugets/`.
+Package base versions must match `scripts/VERSIONS.txt`. To download a PR build:
 
 ```powershell
-$pr = 1234 # Producing PR number.
+$pr = 1234
 pwsh scripts/get-skiasharp-pr.ps1 $pr -SuccessfulOnly -Force
 New-Item output/nugets -ItemType Directory -Force | Out-Null
 Copy-Item "$HOME/.skiasharp/hives/pr-$pr/packages/*.nupkg" output/nugets/
 ```
 
-Pass the producing package suffix explicitly. For example, packages ending in
-`-pr.1234.26509.10` require:
+Run the suite with the package suffix:
 
 ```sh
 dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-This generates the samples and runs the suite. Keep all packages from the same
-producing build and pass its suffix explicitly.
+Use `--runGroup=Build`, `--runGroup=Host` or `--runGroup=Docker` for one
+execution group. Omit it for the full suite.
 
-To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
-`--runGroup=Docker`. Omit `--runGroup` to run the full suite.
-Group names are case-sensitive.
+## IDE and direct runs
 
-## IDE and direct test runs
-
-After staging packages, generate once before IDE or direct test runs:
+Generate the sample projects once after staging packages:
 
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
@@ -55,88 +48,55 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
 
-Keep both framework properties to limit the runner's source dependencies to
-.NET 10. Sample builds use the SDK on `PATH` and their own declared TFMs.
+Keep both framework properties so the runner uses only .NET 10 dependencies.
+Sample projects still build their declared target frameworks.
 
-Sample helpers accept one optional `DotNetOptions` record. For example,
-`BuildSample(folder, project, new() { Framework = "net10.0-browserwasm" })`
-selects a framework with `--framework` without replacing declared framework lists.
-Reuse the same options with `DotNet.Build` and the callback-based `DotNet.Run`;
-additional `Properties` are passed to both before run's `--` separator.
-Configuration defaults to Release. `WorkingDirectory` defaults to the project
-directory (workspace root for raw `DotNet.Execute` commands).
-`Timeout` defaults to 30 minutes for builds and one minute for raw commands.
-For sample runs it overrides only address/exit waits (normally two/three minutes),
-not callback duration or browser-operation waits; cleanup/output reads stay bounded
-to one minute. Configuration, framework and helper-owned restore properties cannot
-be overridden through `Properties`.
+`BuildSample`, `DotNet.Build` and `DotNet.Run` accept an optional
+`DotNetOptions` record for framework, configuration, additional properties,
+working directory and timeouts.
 
 ## Browser runs
 
-Sample runs bind to ephemeral loopback HTTP through `ASPNETCORE_URLS`, so no
-HTTPS development certificate is required. WasmAppHost forwards application
-arguments such as `--urls` to the browser rather than configuring its server.
-
-For local browser tests, build the runner and install its matching Chromium:
+Build the runner and install its matching Chromium:
 
 ```sh
 dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
-pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 \
+  install --with-deps chromium
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -- --filter-trait Category=Browser --report-trx
 ```
 
-Use the Release script path for a Release build. CI installs Chromium before
-Host-group or unfiltered tests automatically; other groups and local tests do
-not. Linux `--with-deps` may require `sudo`.
-See [Playwright browser installation](https://playwright.dev/dotnet/docs/browsers).
-Filtered runs do not replace the full suite.
+Use the Release script path for Release builds. CI installs Chromium for Host
+and unfiltered runs. Filtered runs do not replace the full suite.
 
-## Coverage and diagnostics
+## Test groups and diagnostics
 
-Basic/Gallery samples have build coverage; Console/Web APIs and Web/WASM/Blazor
-UIs have runtime checks, including Blazor Drawing pointer strokes, color/brush
-selection and clear. Basic Uno runs its declared `net10.0-browserwasm` project
-target, checking CPU rendering and Drawing navigation, pointer strokes and
-clear rather than launching a desktop or host solution variant.
-Gallery is build-only; device execution is separate.
-Browser errors and unavailable GPU rendering fail.
-
-| Group | Tests | CI hosts |
+| Group | Coverage | CI hosts |
 | --- | --- | --- |
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
-| Host | Console, Web API and browser sample execution | Windows, macOS, Linux |
-| Docker | Container image builds and sample execution | Windows, Linux |
+| Host | Console, Web API and browser execution | Windows, macOS, Linux |
+| Docker | Container builds and execution | Windows, Linux |
 
-When adding tests, choose a `RunGroup` by execution target, not sample family.
-Name execution classes by purpose: `SampleBuildTests`, `BasicSampleRunTests`,
-`BrowserSampleRunTests`, and `UnoBrowserSampleRunTests`. `DockerSampleBuildTests`
-and `DockerSampleRunTests` share one collection fixture and both use the Docker
-group. Infrastructure, discovery, and artifact-contract checks stay separate.
-`DotNetSampleTestBase` prepares isolated .NET workspaces; `DockerSampleTestBase`
-prepares flat Docker build contexts. The Docker fixture owns cached images,
-container execution, and Docker resource cleanup. Both bases live beside the
-test classes; CLI wrappers (`DotNet`, `Docker`) and fixtures live in `Utils`.
-Independent test collections run in parallel. Browser classes share a collection
-to serialize browser workloads; Docker classes share another for their image
-cache and owned-resource registry. Neither collection blocks unrelated tests.
-Tests and theory rows within each class/collection remain serial.
-Each test requires exactly one typed attribute, such as
-`[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
-the same group; otherwise annotate individual methods.
+Choose a `RunGroup` by execution target. Each test requires exactly one typed
+attribute such as `[RunGroup(SampleRunGroup.Build)]`; place it on the class only
+when every test uses the same group.
 
-Find output, binlogs, results and images under `output/logs/testlogs/samples/`
-or CI's `sample_logs_*` artifacts. For restore failures, check the generated
-versions against staged packages. Do not clear shared caches.
+Keep build, run and infrastructure checks in the existing purpose-based test
+classes. Browser and Docker workloads use their existing shared collections.
 
-Review current platform references under `tests/Goldens/Samples/{platform}/`.
-Host profiles are `mac`, `linux` and `windows`; Docker uses separate
-`docker-linux` and `docker-windows` profiles. Existing references remain
-at the platform root, organized by case paths such as `Console/output`,
-`Web/page` and `Blazor/drawing-drawn`.
+Find output, binlogs, results and images under
+`output/logs/testlogs/samples/` or CI's `sample_logs_*` artifacts. For restore
+failures, confirm the generated versions match the staged package set.
 
-Sample tests use `SampleImage.Host(...)` or `SampleImage.Container(...)` to
-select the appropriate profile:
+## Sample golden images
+
+References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
+`mac`, `linux` and `windows`; Docker uses `docker-linux` and `docker-windows`.
+Cases use paths such as `Console/output`, `Web/page` and
+`Blazor/drawing-drawn`.
+
+Use the sample helpers to select the profile:
 
 ```csharp
 SampleImage.Host("Console/output").Verify(
@@ -153,10 +113,8 @@ await SampleImage.Host("Blazor/cpu").VerifyAsync(
     TestContext.Current.CancellationToken);
 ```
 
-Dimensions must match; the default limit is **0.075% differing pixels** with
-zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
-smoke check that can miss uniform dark output. Mismatches retain actual/diff
-images; references are never accepted automatically.
+Samples use zero channel tolerance and allow 0.075% differing pixels by
+default. Animated GPU pages may use a 6% mean RGBA error limit.
 
-See [golden-image tests](golden-image-tests.md) for reference lookup, input
-types, packaging, diagnostics and capture review.
+See [golden-image tests](golden-image-tests.md) for lookup, packaging,
+diagnostics and reference review.
