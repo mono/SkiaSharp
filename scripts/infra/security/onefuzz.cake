@@ -87,25 +87,45 @@ Task("onefuzz-prepare")
         RunProcess("dotnet", $"tool run sharpfuzz -- {arguments}");
     }
 
-    // Each submission ships its own config; the submit job selects one as OneFuzzConfig.json.
-    foreach (var configSource in System.IO.Directory.GetFiles(fuzzingRoot, "OneFuzzConfig.*.json"))
+    // Each platform ships its own config, generated from one template; the submit job selects one as OneFuzzConfig.json.
+    var platforms = new[]
     {
-        var config = JsonNode.Parse(System.IO.File.ReadAllText(configSource)) ?? throw new Exception($"Failed to load OneFuzz config: {configSource}");
-        if (!string.IsNullOrWhiteSpace(ONEFUZZ_VALIDATION_BUILD_ID))
+        new { Platform = "windows", NativeExtension = "dll", DependencyPath = ".\\*" },
+        new { Platform = "ubuntu", NativeExtension = "so", DependencyPath = "./*" },
+        new { Platform = "azurelinux", NativeExtension = "so", DependencyPath = "./*" }
+    };
+
+    var template = JsonNode.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(fuzzingRoot, "OneFuzzConfig.template.json")))!;
+    foreach (var platform in platforms)
+    {
+        var entries = new JsonArray();
+        foreach (var target in template["Targets"]!.AsArray())
         {
-            foreach (var entry in config["Entries"]?.AsArray() ?? new JsonArray())
+            var name = ONEFUZZ_VALIDATION_BUILD_ID is { Length: > 0 }
+                ? $"validation-{target!["Name"]}"
+                : target!["Name"]!.GetValue<string>();
+            var suffix = ONEFUZZ_VALIDATION_BUILD_ID is { Length: > 0 } ? $"-{ONEFUZZ_VALIDATION_BUILD_ID}" : "";
+
+            string Escape(string value) => JsonEncodedText.Encode(value).ToString();
+            var entry = template["Entry"]!.ToJsonString()
+                .Replace("{Method}", target["Method"]!.GetValue<string>())
+                .Replace("{Name}", Escape(name))
+                .Replace("{Platform}", platform.Platform)
+                .Replace("{NativeExtension}", platform.NativeExtension)
+                .Replace("{DependencyPath}", Escape(platform.DependencyPath));
+
+            var entryNode = JsonNode.Parse(entry)!;
+            if (suffix.Length > 0)
             {
-                foreach (var job in entry?["OneFuzzJobs"]?.AsArray() ?? new JsonArray())
-                {
-                    var targetName = job?["TargetName"]?.GetValue<string>();
-                    if (!string.IsNullOrWhiteSpace(targetName))
-                        job["TargetName"] = $"validation-{targetName}-{ONEFUZZ_VALIDATION_BUILD_ID}";
-                }
+                var job = entryNode["OneFuzzJobs"]![0]!;
+                job["TargetName"] = job["TargetName"]!.GetValue<string>() + suffix;
             }
+            entries.Add(entryNode);
         }
 
+        var config = new JsonObject { ["ConfigVersion"] = 3, ["Entries"] = entries };
         System.IO.File.WriteAllText(
-            System.IO.Path.Combine(outputPath, System.IO.Path.GetFileName(configSource)),
+            System.IO.Path.Combine(outputPath, $"OneFuzzConfig.{platform.Platform}.json"),
             config.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
 
