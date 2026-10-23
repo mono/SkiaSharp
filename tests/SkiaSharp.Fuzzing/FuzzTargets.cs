@@ -296,7 +296,7 @@ public static class FuzzTargets
 	private static Dictionary<uint, byte[]> LoadHarfBuzzTableBytes()
 	{
 		var tables = new Dictionary<uint, byte[]>();
-		var fontPath = Path.Combine(AppContext.BaseDirectory, "seed-sources", "ZeroGlyphs.ttf");
+		var fontPath = Path.Combine(AppContext.BaseDirectory, "seed-sources", "font.ttf");
 		if (!File.Exists(fontPath))
 			return tables;
 

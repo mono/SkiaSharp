@@ -14,6 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="SharpFuzz.Common" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
@@ -22,8 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\Content\fonts\ZeroGlyphs.ttf"
-             Link="seed-sources\ZeroGlyphs.ttf"
+    <Content Include="..\Content\fonts\Roboto2-Regular_NoEmbed.ttf"
+             Link="seed-sources\font.ttf"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\Content\images\animated-heart.gif"
+             Link="seed-sources\animated-heart.gif"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\Content\images\baboon.png"

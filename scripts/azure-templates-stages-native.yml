@@ -12,9 +12,6 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
-  - name: runFuzzing
-    type: boolean
-    default: false
 
 stages:
 
@@ -22,7 +19,6 @@ stages:
     parameters:
       buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
       enableCaching: ${{ parameters.enableCaching }}
-      runFuzzing: ${{ parameters.runFuzzing }}
 
   - template: /scripts/azure-templates-stages-native-macos.yml@self
     parameters:

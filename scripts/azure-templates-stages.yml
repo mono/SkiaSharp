@@ -58,7 +58,6 @@ stages:
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
-        runFuzzing: ${{ parameters.runFuzzing }}
 
   - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
@@ -89,9 +88,7 @@ stages:
       - ${{ if or(eq(parameters.runFuzzing, 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
         - template: /scripts/azure-templates-stages-fuzzing.yml@self
           parameters:
-            buildAgentWindows: ${{ parameters.buildAgentWindows }}
             buildAgentLinux: ${{ parameters.buildAgentLinux }}
-            runFuzzing: ${{ parameters.runFuzzing }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-msbuild.yml@self

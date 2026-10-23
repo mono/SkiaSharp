@@ -1,24 +1,29 @@
 parameters:
-  - name: buildAgentWindows
-    type: object
   - name: buildAgentLinux
     type: object
-  - name: runFuzzing
-    type: boolean
-    default: false
+  # Each entry submits tests/SkiaSharp.Fuzzing/OneFuzzConfig.<config>.json to the OneFuzz pool for <os>.
+  - name: submissions
+    type: object
+    default:
+      windows:
+        config: windows
+        os: Windows
+      ubuntu:
+        config: ubuntu
+        os: ubuntu
+      azurelinux:
+        config: azurelinux
+        os: azurelinux3
 
 stages:
   - stage: fuzzing
     displayName: OneFuzz
-    ${{ if and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
-      dependsOn: native_windows
-    ${{ else }}:
-      dependsOn: package
+    dependsOn: native
     jobs:
-      - job: fuzzing_windows
-        displayName: OneFuzz Windows x64
+      - job: fuzzing
+        displayName: OneFuzz
         timeoutInMinutes: 120
-        pool: ${{ parameters.buildAgentWindows.pool }}
+        pool: ${{ parameters.buildAgentLinux.pool }}
         workspace:
           clean: all
         steps:
@@ -26,113 +31,44 @@ stages:
             submodules: false
             fetchDepth: 1
 
-          - task: UseDotNet@2
-            displayName: Install .NET $(DOTNET_VERSION)
-            inputs:
-              packageType: sdk
-              version: $(DOTNET_VERSION)
+          # Linux avoids the macOS-only target frameworks that CI otherwise enables, which need a workload.
+          # The harness smoke run loads the Linux native library, which needs fontconfig.
+          - bash: |
+              sudo apt update
+              sudo apt install -y libfontconfig1
+            displayName: Install additional package dependencies
+            retryCountOnTaskFailure: 3
 
-          - ${{ if and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
-            - task: DownloadPipelineArtifact@2
-              displayName: Download native_win32_x64_windows artifacts
-              inputs:
-                buildType: current
-                artifactName: native_win32_x64_windows
-                targetPath: $(Build.SourcesDirectory)\output
-          - ${{ else }}:
-            - task: DownloadPipelineArtifact@2
-              displayName: Download native artifacts
-              inputs:
-                buildType: current
-                artifactName: native
-                targetPath: $(Build.SourcesDirectory)\output
+          - template: /scripts/azure-templates-steps-dotnet.yml@self
+            parameters:
+              platform: ${{ parameters.buildAgentLinux.pool.os }}
+              sdks:
+                - sdkVersion: $(DOTNET_VERSION)
 
-          - pwsh: |
-              $toolDirectory = Join-Path $env:AGENT_TEMPDIRECTORY 'sharpfuzz'
-              dotnet tool install --tool-path $toolDirectory SharpFuzz.CommandLine --version 2.3.0
-              if ($LASTEXITCODE -ne 0) { throw "Installing SharpFuzz failed with exit code $LASTEXITCODE." }
+          - pwsh: ./scripts/infra/native/shared/patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Fix the Microsoft.WinFX.* file
 
-              dotnet tool restore
-              if ($LASTEXITCODE -ne 0) { throw "Restoring local .NET tools failed with exit code $LASTEXITCODE." }
+          - template: /scripts/azure-templates-steps-download-artifacts.yml@self
+            parameters:
+              artifacts:
+                - name: native
 
-              $cakeArguments = @(
-                '--target=onefuzz-prepare',
-                '--platform=windows',
-                "--outputDirectory=$([IO.Path]::Combine($env:BUILD_ARTIFACTSTAGINGDIRECTORY, 'OneFuzz'))",
-                "--sharpFuzzPath=$([IO.Path]::Combine($toolDirectory, 'sharpfuzz.exe'))"
-              )
-              if ($env:BUILD_SOURCEBRANCH -ne 'refs/heads/main' -or $env:BUILD_REASON -ne 'Schedule') {
-                $cakeArguments += "--validationBuildId=$($env:BUILD_BUILDID)"
-              }
+          # Only scheduled builds of main use the production target names.
+          - pwsh: ./scripts/infra/security/prepare-onefuzz-drop.ps1
+            displayName: Prepare the OneFuzz drop
+            ${{ if not(and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
+              env:
+                ONEFUZZ_VALIDATION_BUILD_ID: $(Build.BuildId)
 
-              dotnet cake @cakeArguments
-              if ($LASTEXITCODE -ne 0) { throw "Preparing the OneFuzz drop via Cake failed with exit code $LASTEXITCODE." }
-            displayName: Prepare Windows OneFuzz drop
-
-          - task: onefuzz-task@0
-            displayName: Submit Windows targets to OneFuzz
-            inputs:
-              onefuzzOSes: Windows
-            env:
-              onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)\OneFuzz
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-      - ${{ if not(and(eq(parameters.runFuzzing, true), ne(variables['Build.SourceBranch'], 'refs/heads/main'))) }}:
-        - job: fuzzing_ubuntu
-          displayName: OneFuzz Ubuntu x64
-          timeoutInMinutes: 120
-          pool: ${{ parameters.buildAgentLinux.pool }}
-          workspace:
-            clean: all
-          steps:
-            - checkout: self
-              submodules: false
-              fetchDepth: 1
-
-            - task: UseDotNet@2
-              displayName: Install .NET $(DOTNET_VERSION)
-              inputs:
-                packageType: sdk
-                version: $(DOTNET_VERSION)
-
-            - task: DownloadPipelineArtifact@2
-              displayName: Download native artifacts
-              inputs:
-                buildType: current
-                artifactName: native
-                targetPath: $(Build.SourcesDirectory)/output
-
-            - bash: |
-                sudo apt-get update
-                sudo apt-get install -y libfontconfig1
-              displayName: Install Linux runtime dependencies
-
-            - pwsh: |
-                $toolDirectory = Join-Path $env:AGENT_TEMPDIRECTORY 'sharpfuzz'
-                dotnet tool install --tool-path $toolDirectory SharpFuzz.CommandLine --version 2.3.0
-                if ($LASTEXITCODE -ne 0) { throw "Installing SharpFuzz failed with exit code $LASTEXITCODE." }
-
-                dotnet tool restore
-                if ($LASTEXITCODE -ne 0) { throw "Restoring local .NET tools failed with exit code $LASTEXITCODE." }
-
-                $cakeArguments = @(
-                  '--target=onefuzz-prepare',
-                  '--platform=ubuntu',
-                  "--outputDirectory=$([IO.Path]::Combine($env:BUILD_ARTIFACTSTAGINGDIRECTORY, 'OneFuzz'))",
-                  "--sharpFuzzPath=$([IO.Path]::Combine($toolDirectory, 'sharpfuzz'))"
-                )
-                if ($env:BUILD_SOURCEBRANCH -ne 'refs/heads/main' -or $env:BUILD_REASON -ne 'Schedule') {
-                  $cakeArguments += "--validationBuildId=$($env:BUILD_BUILDID)"
-                }
-
-                dotnet cake @cakeArguments
-                if ($LASTEXITCODE -ne 0) { throw "Preparing the OneFuzz drop via Cake failed with exit code $LASTEXITCODE." }
-              displayName: Prepare Ubuntu OneFuzz drop
+          # The drop is shared; each submission only differs by its config and OS.
+          - ${{ each submission in parameters.submissions }}:
+            - pwsh: Copy-Item ./output/onefuzz/OneFuzzConfig.${{ submission.value.config }}.json ./output/onefuzz/OneFuzzConfig.json -Force
+              displayName: Select the ${{ submission.key }} OneFuzz config
 
             - task: onefuzz-task@0
-              displayName: Submit Ubuntu targets to OneFuzz
+              displayName: Submit the ${{ submission.key }} targets to OneFuzz
               inputs:
-                onefuzzOSes: azurelinux3
+                onefuzzOSes: ${{ submission.value.os }}
               env:
-                onefuzzDropDirectory: $(Build.ArtifactStagingDirectory)/OneFuzz
+                onefuzzDropDirectory: $(Build.SourcesDirectory)/output/onefuzz
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
