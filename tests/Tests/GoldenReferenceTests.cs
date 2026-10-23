@@ -209,8 +209,16 @@ namespace SkiaSharp.Tests
 			var result = Resolve(new[] { "portable/Maui/home.raster.png" }, request);
 			Assert.Equal("portable/Maui/home.raster.png", result.Key);
 			Assert.Equal("mac/Maui/home.raster.arm64.png", request.CaptureKey);
-			Assert.Equal("##SKIA-GOLDEN## role=actual key=mac/Maui/home.raster.arm64.png size=1x2 base64=AQID",
-				GoldenImage.Marker("actual", request, 1, 2, new byte[] { 1, 2, 3 }));
+			Assert.StartsWith(
+				"##SKIA-GOLDEN## role=actual key=mac/Maui/home.raster.arm64.png size=1x2 base64=",
+				GoldenImage.Marker("actual", request, OneByTwoPng()));
+		}
+
+		private static byte[] OneByTwoPng()
+		{
+			using var bitmap = new SKBitmap(1, 2);
+			using var image = SKImage.FromBitmap(bitmap);
+			return GoldenImage.Encode(image);
 		}
 
 		public void Dispose()

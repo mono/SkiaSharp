@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
+using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
-using static SkiaSharp.Tests.Samples.Utils.SampleImage;
 
 namespace SkiaSharp.Tests.Samples;
 
@@ -112,8 +112,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             var drawn = await app.Screenshot();
             var region = new SKRectI((int)bounds.X + 150, (int)bounds.Y + 150,
                 (int)bounds.X + 650, (int)bounds.Y + 500);
-            Assert.True(CountPixels(drawn, region, c => c == new SKColor(229, 57, 53)) > 2000);
-            Assert.True(CountPixels(drawn, region, c => c == new SKColor(30, 136, 229)) > 2000);
+            Assert.True(ImagePixels.Count(drawn, region, c => c == new SKColor(229, 57, 53)) > 2000);
+            Assert.True(ImagePixels.Count(drawn, region, c => c == new SKColor(30, 136, 229)) > 2000);
 
             await app.Page.GetByRole(AriaRole.Button, new() { Name = "Clear", Exact = true }).ClickAsync();
             await app.Page.Mouse.MoveAsync(0, 0);
@@ -126,7 +126,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 }
                 """);
             var cleared = await app.Screenshot();
-            Assert.Equal(0, CountPixels(cleared, region, c =>
+            Assert.Equal(0, ImagePixels.Count(cleared, region, c =>
                 c == new SKColor(229, 57, 53) || c == new SKColor(30, 136, 229)));
 
             SampleImage.Validate(drawn, SampleImage.Host("Blazor/drawing-drawn"));
@@ -166,7 +166,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
 
             var screenshot = await app.Screenshot();
             TestContext.Current.AddFileAttachment(screenshot, "image/png");
-            Assert.Equal(10000, CountPixels(screenshot, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
+            Assert.Equal(10000, ImagePixels.Count(screenshot, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
             await Assertions.Expect(swatch).ToHaveCSSAsync("background-color", "rgb(0, 0, 255)");
         });
 
@@ -190,7 +190,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             }, expected);
 
             Assert.Equal(2, attempts);
-            Assert.Equal(10000, CountPixels(matched, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
+            Assert.Equal(10000, ImagePixels.Count(matched, new SKRectI(0, 0, 100, 100), c => c == SKColors.Blue));
         });
 
     [Theory]

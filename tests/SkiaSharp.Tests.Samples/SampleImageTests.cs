@@ -55,7 +55,7 @@ public class SampleImageTests : IDisposable
         var error = Assert.ThrowsAny<Exception>(() =>
             SampleImage.Validate(actual, SampleImage.Host("Console/output")));
 
-        Assert.Contains("Assert.NotNull", error.Message);
+        Assert.Contains("Failed to decode image", error.Message);
     }
 
     [Fact]

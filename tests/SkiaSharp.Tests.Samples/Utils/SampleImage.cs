@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using SkiaSharp.Tests.Shared;
 using Xunit;
@@ -22,7 +21,7 @@ internal static class SampleImage
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
         await File.WriteAllBytesAsync(actual, bytes);
-        Assert.True(bytes.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG image.");
+        Assert.True(GoldenImage.HasPngSignature(bytes), "Expected a PNG image.");
         Validate(actual, request, options);
     }
 
@@ -58,8 +57,9 @@ internal static class SampleImage
         string? actual = null;
         try
         {
-            return await Retry(async () => actual = await capture(), limit,
-                (path, report) => Validate(path, resolution.Location!, resolution.ReadBytes(), options ?? new(), report));
+            return await ImageCapture.RetryAsync(async () => actual = await capture(), limit,
+                (path, report) => Validate(path, resolution.Location!, resolution.ReadBytes(), options ?? new(), report),
+                TestContext.Current.CancellationToken);
         }
         finally
         {
@@ -78,39 +78,11 @@ internal static class SampleImage
 
     private static void Emit(GoldenResolution resolution, string actual)
     {
-        if (File.Exists(actual))
-            Write("actual", File.ReadAllBytes(actual));
-        if (resolution.Key is not null)
-            Write("reference", resolution.ReadBytes());
         var diff = Path.ChangeExtension(actual, ".diff.png");
-        if (File.Exists(diff))
-            Write("diff", File.ReadAllBytes(diff));
-
-        void Write(string role, byte[] bytes)
-        {
-            using var image = SKImage.FromEncodedData(bytes);
-            if (image is null)
-                return;
-            TestContext.Current.TestOutputHelper?.WriteLine(
-                GoldenImage.Marker(role, resolution.Request, image.Width, image.Height, bytes));
-        }
-    }
-
-    internal static int CountPixels(string screenshot, SKRectI region, Func<SKColor, bool> matches)
-    {
-        using var bitmap = SKBitmap.Decode(screenshot);
-        Assert.NotNull(bitmap);
-        Assert.InRange(region.Left, 0, bitmap.Width - 1);
-        Assert.InRange(region.Top, 0, bitmap.Height - 1);
-        Assert.InRange(region.Right, region.Left + 1, bitmap.Width);
-        Assert.InRange(region.Bottom, region.Top + 1, bitmap.Height);
-        var count = 0;
-        for (var y = region.Top; y < region.Bottom; y++)
-            for (var x = region.Left; x < region.Right; x++)
-                if (matches(bitmap.GetPixel(x, y)))
-                    count++;
-        TestContext.Current.TestOutputHelper?.WriteLine($"Measured {count} matching pixels in {region} from {screenshot}.");
-        return count;
+        var actualPng = File.Exists(actual) ? File.ReadAllBytes(actual) : null;
+        var differencePng = File.Exists(diff) ? File.ReadAllBytes(diff) : null;
+        foreach (var marker in GoldenImage.Markers(resolution, actualPng, differencePng))
+            TestContext.Current.TestOutputHelper?.WriteLine(marker);
     }
 
     /// <summary>Saves the actual PNG bytes, checks their signature, then compares it with another image file.</summary>
@@ -119,7 +91,7 @@ internal static class SampleImage
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
 
         await File.WriteAllBytesAsync(actual, bytes);
-        Assert.True(bytes.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "Expected a PNG image.");
+        Assert.True(GoldenImage.HasPngSignature(bytes), "Expected a PNG image.");
 
         Validate(actual, expected, options);
     }
@@ -136,34 +108,9 @@ internal static class SampleImage
         var limit = timeout ?? TimeSpan.FromSeconds(2);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
         options ??= new();
-        return await Retry(capture, limit, (actual, report) => Validate(actual, expected, options, report));
-    }
-
-    private static async Task<string> Retry(Func<Task<string>> capture, TimeSpan limit, Func<string, bool, bool> compare)
-    {
-        var cancellation = TestContext.Current.CancellationToken;
-        var clock = Stopwatch.StartNew();
-        string? actual = null;
-
-        while (true)
-        {
-            cancellation.ThrowIfCancellationRequested();
-            var remaining = limit - clock.Elapsed;
-            if (remaining <= TimeSpan.Zero)
-            {
-                if (actual is null)
-                    throw new TimeoutException("The sample screenshot deadline expired before capture.");
-                compare(actual, true);
-                return actual;
-            }
-            actual = await capture().WaitAsync(remaining, cancellation);
-            if (compare(actual, false))
-                return actual;
-
-            remaining = limit - clock.Elapsed;
-            if (remaining > TimeSpan.Zero)
-                await Task.Delay(remaining < TimeSpan.FromMilliseconds(100) ? remaining : TimeSpan.FromMilliseconds(100), cancellation);
-        }
+        return await ImageCapture.RetryAsync(
+            capture, limit, (actual, report) => Validate(actual, expected, options, report),
+            TestContext.Current.CancellationToken);
     }
 
     private static bool Validate(string actual, string expected, GoldenComparisonOptions options, bool reportMismatch)
@@ -180,25 +127,22 @@ internal static class SampleImage
     {
         if (reportMismatch && attachActual)
             TestContext.Current.AddFileAttachment(actual, "image/png");
-        using var actualImage = GoldenImage.TryDecode(File.ReadAllBytes(actual));
-        using var expectedImage = GoldenImage.TryDecode(expectedBytes);
-        if (!reportMismatch && (actualImage is null || expectedImage is null))
+        var actualBytes = File.ReadAllBytes(actual);
+        var actualDecodes = GoldenImage.TryGetSize(actualBytes, out var actualSize);
+        var expectedDecodes = GoldenImage.TryGetSize(expectedBytes, out var expectedSize);
+        if (!reportMismatch && (!actualDecodes || !expectedDecodes))
             TestContext.Current.AddFileAttachment(actual, "image/png");
-        Assert.NotNull(actualImage);
-        Assert.NotNull(expectedImage);
-        var dimensionsMatch = actualImage.Width == expectedImage.Width && actualImage.Height == expectedImage.Height &&
-            (options.ExpectedSize is not { } required || actualImage.Width == required.Width && actualImage.Height == required.Height);
+        Assert.True(actualDecodes, $"Failed to decode image: {actual}.");
+        Assert.True(expectedDecodes, $"Failed to decode image: {expected}.");
+        var dimensionsMatch = actualSize == expectedSize &&
+            (options.ExpectedSize is not { } required || actualSize == required);
         if (!dimensionsMatch && !reportMismatch)
             return false;
         if (options.ExpectedSize is { } size)
-        {
-            Assert.Equal(size.Width, actualImage.Width);
-            Assert.Equal(size.Height, actualImage.Height);
-        }
-        Assert.Equal(expectedImage.Width, actualImage.Width);
-        Assert.Equal(expectedImage.Height, actualImage.Height);
+            Assert.Equal(size, actualSize);
+        Assert.Equal(expectedSize, actualSize);
 
-        var result = GoldenImage.Compare(expectedImage, actualImage, options);
+        var result = GoldenImage.Compare(expectedBytes, actualBytes, options, expected, actual);
         var failure = options.MaxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {result.AverageColorErrorFraction:P3}, exceeding {limit:P3}"
             : $"differing pixels {(double)result.Pixels.ErrorPixelCount / result.Pixels.TotalPixels:P3}, exceeding {options.MaxErrorPixelFraction:P3}";
@@ -218,9 +162,8 @@ internal static class SampleImage
         if (!reportMismatch)
             return false;
 
-        using var diff = GoldenImage.Difference(expectedImage, actualImage, options);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
-        File.WriteAllBytes(diffPath, GoldenImage.Encode(diff));
+        GoldenImage.Write(diffPath, GoldenImage.Difference(expectedBytes, actualBytes, options, expected, actual));
 
         if (File.Exists(expected))
             TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");

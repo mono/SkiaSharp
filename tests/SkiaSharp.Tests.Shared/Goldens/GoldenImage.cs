@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests.Shared;
@@ -7,6 +8,18 @@ namespace SkiaSharp.Tests.Shared;
 public static class GoldenImage
 {
 	public const string MarkerPrefix = "##SKIA-GOLDEN##";
+	private static readonly byte[] PngSignature = { 137, 80, 78, 71, 13, 10, 26, 10 };
+
+	public static bool HasPngSignature(byte[] bytes)
+	{
+		if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+		if (bytes.Length < PngSignature.Length)
+			return false;
+		for (var i = 0; i < PngSignature.Length; i++)
+			if (bytes[i] != PngSignature[i])
+				return false;
+		return true;
+	}
 
 	public static SKImage Decode(byte[] png, string location)
 	{
@@ -19,6 +32,19 @@ public static class GoldenImage
 	{
 		if (png == null) throw new ArgumentNullException(nameof(png));
 		return SKImage.FromEncodedData(png);
+	}
+
+	public static bool TryGetSize(byte[] png, out SKSizeI size)
+	{
+		using var image = TryDecode(png);
+		if (image == null)
+		{
+			size = default;
+			return false;
+		}
+
+		size = new SKSizeI(image.Width, image.Height);
+		return true;
 	}
 
 	public static byte[] Encode(SKImage image)
@@ -44,17 +70,48 @@ public static class GoldenImage
 		}
 	}
 
-	public static string Marker(string role, GoldenRequest request, int width, int height, byte[] png)
+	public static void Write(string path, byte[] png)
+	{
+		if (path == null) throw new ArgumentNullException(nameof(path));
+		if (png == null) throw new ArgumentNullException(nameof(png));
+		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+		File.WriteAllBytes(path, png);
+	}
+
+	public static string Marker(string role, GoldenRequest request, byte[] png)
 	{
 		if (role != "actual" && role != "reference" && role != "diff")
 			throw new ArgumentException("Unknown image role.", nameof(role));
 		if (request == null) throw new ArgumentNullException(nameof(request));
-		if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
-		if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
 		if (png == null) throw new ArgumentNullException(nameof(png));
 
+		using var image = Decode(png, role + " marker");
 		return MarkerPrefix + " role=" + role + " key=" + request.CaptureKey +
-			" size=" + width + "x" + height + " base64=" + Convert.ToBase64String(png);
+			" size=" + image.Width + "x" + image.Height + " base64=" + Convert.ToBase64String(png);
+	}
+
+	public static string? TryMarker(string role, GoldenRequest request, byte[] png)
+	{
+		using var image = TryDecode(png);
+		return image == null
+			? null
+			: MarkerPrefix + " role=" + role + " key=" + request.CaptureKey +
+				" size=" + image.Width + "x" + image.Height + " base64=" + Convert.ToBase64String(png);
+	}
+
+	public static IEnumerable<string> Markers(
+		GoldenResolution resolution,
+		byte[]? actualPng = null,
+		byte[]? differencePng = null)
+	{
+		if (resolution == null) throw new ArgumentNullException(nameof(resolution));
+
+		if (actualPng != null && TryMarker("actual", resolution.Request, actualPng) is { } actual)
+			yield return actual;
+		if (resolution.Key != null && TryMarker("reference", resolution.Request, resolution.ReadBytes()) is { } reference)
+			yield return reference;
+		if (differencePng != null && TryMarker("diff", resolution.Request, differencePng) is { } difference)
+			yield return difference;
 	}
 
 	public static GoldenComparison Compare(SKImage expected, SKImage actual, GoldenComparisonOptions options)
@@ -74,10 +131,35 @@ public static class GoldenImage
 			SKPixelComparer.Compare(expected, actual, options.ChannelTolerance), options);
 	}
 
+	public static GoldenComparison Compare(
+		byte[] expectedPng,
+		byte[] actualPng,
+		GoldenComparisonOptions options,
+		string expectedLocation,
+		string actualLocation)
+	{
+		using var expected = Decode(expectedPng, expectedLocation);
+		using var actual = Decode(actualPng, actualLocation);
+		return Compare(expected, actual, options);
+	}
+
 	public static SKImage Difference(SKImage expected, SKImage actual, GoldenComparisonOptions options)
 	{
 		ValidateOptions(options);
 		return SKPixelComparer.GenerateDifferenceImage(expected, actual, options.ChannelTolerance);
+	}
+
+	public static byte[] Difference(
+		byte[] expectedPng,
+		byte[] actualPng,
+		GoldenComparisonOptions options,
+		string expectedLocation,
+		string actualLocation)
+	{
+		using var expected = Decode(expectedPng, expectedLocation);
+		using var actual = Decode(actualPng, actualLocation);
+		using var difference = Difference(expected, actual, options);
+		return Encode(difference);
 	}
 
 	private static void ValidateOptions(GoldenComparisonOptions options)
