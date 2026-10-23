@@ -52,8 +52,6 @@ internal static class GoldenPaths
 		{
 			throw new ArgumentException("Expected a normalized System.Version with three or four components: " + key);
 		}
-		if (parts.Length == caseStart)
-			throw new ArgumentException("Expected a golden case path: " + key);
 		foreach (var segment in parts.Skip(caseStart).Take(parts.Length - caseStart - 1))
 			ValidateSegment(segment, caseSegment: true);
 		var names = parts[parts.Length - 1].Substring(0, parts[parts.Length - 1].Length - 4).Split('.');

@@ -6,6 +6,8 @@ namespace SkiaSharp.Tests.Shared;
 /// <summary>Provides shared PNG decoding, encoding, comparison and difference generation.</summary>
 public static class GoldenImage
 {
+	public const string MarkerPrefix = "##SKIA-GOLDEN##";
+
 	public static SKImage Decode(byte[] png, string location)
 	{
 		if (png == null) throw new ArgumentNullException(nameof(png));
@@ -40,6 +42,19 @@ public static class GoldenImage
 		{
 			handle.Free();
 		}
+	}
+
+	public static string Marker(string role, GoldenRequest request, int width, int height, byte[] png)
+	{
+		if (role != "actual" && role != "reference" && role != "diff")
+			throw new ArgumentException("Unknown image role.", nameof(role));
+		if (request == null) throw new ArgumentNullException(nameof(request));
+		if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
+		if (height <= 0) throw new ArgumentOutOfRangeException(nameof(height));
+		if (png == null) throw new ArgumentNullException(nameof(png));
+
+		return MarkerPrefix + " role=" + role + " key=" + request.CaptureKey +
+			" size=" + width + "x" + height + " base64=" + Convert.ToBase64String(png);
 	}
 
 	public static GoldenComparison Compare(SKImage expected, SKImage actual, GoldenComparisonOptions options)

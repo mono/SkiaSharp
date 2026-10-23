@@ -78,7 +78,8 @@ internal static class SampleImage
 
     private static void Emit(GoldenResolution resolution, string actual)
     {
-        Write("actual", File.ReadAllBytes(actual));
+        if (File.Exists(actual))
+            Write("actual", File.ReadAllBytes(actual));
         if (resolution.Key is not null)
             Write("reference", resolution.ReadBytes());
         var diff = Path.ChangeExtension(actual, ".diff.png");
@@ -87,10 +88,11 @@ internal static class SampleImage
 
         void Write(string role, byte[] bytes)
         {
-            using var image = SKImage.FromEncodedData(bytes)
-                ?? throw new InvalidOperationException("Cannot emit an invalid PNG diagnostic.");
+            using var image = SKImage.FromEncodedData(bytes);
+            if (image is null)
+                return;
             TestContext.Current.TestOutputHelper?.WriteLine(
-                GoldenDiagnostics.Marker(role, resolution.Request, image.Width, image.Height, bytes));
+                GoldenImage.Marker(role, resolution.Request, image.Width, image.Height, bytes));
         }
     }
 
@@ -111,7 +113,7 @@ internal static class SampleImage
         return count;
     }
 
-    /// <summary>Saves the actual PNG bytes, checks their signature, then validates the saved image against the expected reference.</summary>
+    /// <summary>Saves the actual PNG bytes, checks their signature, then compares it with another image file.</summary>
     internal static async Task Validate(byte[] bytes, string actual, string expected, GoldenComparisonOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
@@ -122,11 +124,11 @@ internal static class SampleImage
         Validate(actual, expected, options);
     }
 
-    /// <summary>Validates image dimensions and pixels against an absolute or canonical golden-relative reference path.</summary>
+    /// <summary>Compares two image files by dimensions and pixels.</summary>
     internal static void Validate(string actual, string expected, GoldenComparisonOptions? options = null) =>
         Validate(actual, expected, options ?? new(), reportMismatch: true);
 
-    /// <summary>Captures until an image matches the reviewed reference or the timeout expires.</summary>
+    /// <summary>Captures until an image matches another image file or the timeout expires.</summary>
     internal static async Task<string> Validate(
         Func<Task<string>> capture, string expected, TimeSpan? timeout = null, GoldenComparisonOptions? options = null)
     {
@@ -166,12 +168,10 @@ internal static class SampleImage
 
     private static bool Validate(string actual, string expected, GoldenComparisonOptions options, bool reportMismatch)
     {
-        expected = Path.Combine(Root, expected);
-
         if (reportMismatch || !File.Exists(expected))
             TestContext.Current.AddFileAttachment(actual, "image/png");
 
-        Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}. Actual image retained at {actual}.");
+        Assert.True(File.Exists(expected), $"Missing comparison image: {expected}. Actual image retained at {actual}.");
         return Validate(actual, expected, File.ReadAllBytes(expected), options, reportMismatch, attachActual: false);
     }
 

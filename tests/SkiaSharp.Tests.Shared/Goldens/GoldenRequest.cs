@@ -34,6 +34,7 @@ public sealed class GoldenRequest
 	public string CasePath { get; }
 	public string? Architecture { get; }
 	public string? Variant { get; }
+	public string CaptureKey => Platform + "/" + FileNames().First();
 
 	internal IEnumerable<string> FileNames()
 	{

@@ -35,10 +35,8 @@ def validate_key(key):
         if any(int(component) > 2147483647 for component in case[0].split(".")):
             raise ValueError(f"Version component is out of range: {key}")
         case.pop(0)
-    elif len(case) >= 2 and case[0][0].isdigit() and "." in case[0]:
+    elif len(case) >= 2 and "." in case[0] and case[0][0].isdigit():
         raise ValueError(f"Expected a normalized three- or four-component System.Version: {key}")
-    if not case:
-        raise ValueError(f"Expected a golden case path: {key}")
     filename = case[-1]
     if not filename.endswith(".png"):
         raise ValueError(f"Expected a PNG filename: {key}")

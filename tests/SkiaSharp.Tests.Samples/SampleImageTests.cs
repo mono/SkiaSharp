@@ -46,6 +46,19 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
+    public void InvalidTypedCaptureReportsTheComparisonFailureWithoutDiagnosticMasking()
+    {
+        var actual = Path.Combine(root, "invalid-typed.actual.png");
+        Directory.CreateDirectory(root);
+        File.WriteAllBytes(actual, new byte[] { 1, 2, 3 });
+
+        var error = Assert.ThrowsAny<Exception>(() =>
+            SampleImage.Validate(actual, SampleImage.Host("Console/output")));
+
+        Assert.Contains("Assert.NotNull", error.Message);
+    }
+
+    [Fact]
     public void GoldenMismatchKeepsActualAndExpectedAttachmentsDistinct()
     {
         var actual = Path.Combine(root, "actual", "canvas.png");
@@ -390,7 +403,7 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
-    public void MissingReviewedGoldenFailsWithoutCreatingAReference()
+    public void MissingComparisonImageFailsWithoutCreatingAReference()
     {
         Directory.CreateDirectory(root);
         var actual = Path.Combine(root, "missing-reference.actual.png");
@@ -401,7 +414,7 @@ public class SampleImageTests : IDisposable
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         File.WriteAllBytes(actual, data.ToArray());
         var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
-        Assert.Contains("Missing reviewed sample golden", error.Message);
+        Assert.Contains("Missing comparison image", error.Message);
         Assert.True(File.Exists(actual));
         Assert.False(File.Exists(expected));
     }

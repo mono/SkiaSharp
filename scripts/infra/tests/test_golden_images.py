@@ -50,6 +50,7 @@ class GoldenImageTests(unittest.TestCase):
                     "mac/1.2.3.4.5/sample.png", "mac/con.png",
                     "Mac/sample.png", "mac/Group/CON/sample.png",
                     "mac/Group//sample.png", "mac/Group/../sample.png",
+                    "mac//sample.png",
                     "mac/Group/./sample.png", "mac/C:/sample.png",
                     "mac/sample..png", "mac/sample.a.b.c.png",
                     "mac\\sample.png", "mac/2147483648.0.0/sample.png",

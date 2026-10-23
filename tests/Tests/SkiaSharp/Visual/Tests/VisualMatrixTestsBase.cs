@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		public const string VisualCategory = "Visual";
 
-		public const string ImageMarker = GoldenDiagnostics.ImageMarker;
+		public const string ImageMarker = GoldenImage.MarkerPrefix;
 
 		protected VisualMatrixTestsBase(ITestOutputHelper output)
 			: base(output)
@@ -112,7 +112,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		private void Emit(string marker, string rendererName, string sceneName, SKImageInfo info, byte[] png)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
-			WriteOutput(GoldenDiagnostics.Marker(marker, Request(rendererName, sceneName),
+			WriteOutput(GoldenImage.Marker(marker, Request(rendererName, sceneName),
 				normalized.Width, normalized.Height, png));
 		}
 
