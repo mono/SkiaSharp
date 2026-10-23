@@ -20,14 +20,13 @@
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests.Shared\SkiaSharp.Tests.Shared.csproj" />
     <ProjectReference Include="..\SkiaSharp.Tests.Samples.Analyzers\SkiaSharp.Tests.Samples.Analyzers.csproj"
       OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="TargetFramework;TargetFrameworks" />
   </ItemGroup>
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
-    <Compile Include="..\Tests\Utils\SKPixelComparer.cs" Link="Utils\SKPixelComparer.cs" />
-    <Compile Include="..\Tests\Utils\GoldenReferences.cs" Link="Utils\GoldenReferences.cs" />
   </ItemGroup>
 
   <Target Name="ValidateSamplePlatformPackages" BeforeTargets="CollectPackageReferences;Restore;Build">

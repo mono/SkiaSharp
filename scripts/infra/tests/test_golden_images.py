@@ -1,11 +1,12 @@
 import base64
+from contextlib import contextmanager
 import importlib.util
 from pathlib import Path
 import shutil
 import struct
 import sys
-import tempfile
 import unittest
+import uuid
 import zlib
 
 spec = importlib.util.spec_from_file_location("golden_images", Path(__file__).with_name("extract-visual-goldens.py"))
@@ -20,23 +21,41 @@ def png(value=0):
             chunk(b"IDAT", zlib.compress(b"\x00" + bytes([value, 0, 0, 255]))) + chunk(b"IEND", b""))
 
 
-def marker(key="Visual/mac/base/visual-text.raster.arm64.png", role="actual", data=None):
+def marker(key="Visual/mac/0.0.0/Text.raster.arm64.png", role="actual", data=None):
     return (f"##SKIA-GOLDEN## role={role} key={key} size=1x1 "
             f"base64={base64.b64encode(png() if data is None else data).decode()}")
+
+@contextmanager
+def workspace():
+    root = Path("output/golden-export-tests") / uuid.uuid4().hex
+    root.mkdir(parents=True)
+    try:
+        yield root
+    finally:
+        shutil.rmtree(root)
 
 
 class GoldenImageTests(unittest.TestCase):
     def test_safe_canonical_paths(self):
-        for key in ("Samples/mac/base/console.png", "Visual/portable/base/visual-text.raster.png",
-                    "Samples/ubuntu/22.04.5/sample.firefox.x64.png"):
+        for key in ("Samples/mac/0.0.0/Console/output.png", "Visual/portable/0.0.0/Text.raster.png",
+                    "Samples/ubuntu/22.4.5/Web/page.firefox.x64.png",
+                    "Samples/android/1.2.3.4/Maui/home.png",
+                    "Samples/mac/0.0.0/Browser/wasm-page.png",
+                    "Visual/mac/2147483647.0.0/DiagonalLines.ganesh-gl.arm64.png"):
             goldens.validate_key(key)
-        for key in ("../Visual/mac/base/sample.png", "/Visual/mac/base/sample.png",
+        for key in ("../Visual/mac/0.0.0/sample.png", "/Visual/mac/0.0.0/sample.png",
                     "Visual/mac/../sample.png", "Visual/mac/latest/sample.png",
-                    "Visual/mac/base/con.png", "Samples/Mac/base/sample.png",
-                    "Visual/mac/base/sample..png", "Visual/mac/base/sample.a.b.c.png",
-                    "Visual\\mac\\base\\sample.png", "Visual/mac/2147483648/sample.png",
-                    "Visual/mac/base/sample.x64.firefox.png", "Visual/mac/base/sample.x64.arm64.png",
-                    "Visual/mac/base/sample.firefox.unknown.png"):
+                    "Visual/mac/base/sample.png", "Visual/mac/12.0/sample.png",
+                    "Visual/mac/12.00.0/sample.png", "Visual/mac/12.0.0.r1/sample.png",
+                    "Visual/mac/1.2.3.4.5/sample.png", "Visual/mac/0.0.0/con.png",
+                    "Samples/Mac/0.0.0/sample.png", "Visual/mac/0.0.0/Group/CON/sample.png",
+                    "Visual/mac/0.0.0/Group//sample.png", "Visual/mac/0.0.0/Group/../sample.png",
+                    "Visual/mac/0.0.0/Group/./sample.png", "Visual/mac/0.0.0/C:/sample.png",
+                    "Visual/mac/0.0.0/sample..png", "Visual/mac/0.0.0/sample.a.b.c.png",
+                    "Visual\\mac\\0.0.0\\sample.png", "Visual/mac/2147483648.0.0/sample.png",
+                    "Visual/mac/0.0.0/sample.x64.firefox.png", "Visual/mac/0.0.0/sample.x64.arm64.png",
+                    "Visual/mac/0.0.0/sample.firefox.unknown.png", "Visual/mac/0.0.0/sample.Raster.png",
+                    "Visual/mac/0.0.0/sample.PNG"):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 goldens.validate_key(key)
 
@@ -45,14 +64,14 @@ class GoldenImageTests(unittest.TestCase):
         for data in (b"not png", png()[:24], png()[:-1], png() + b"extra", png()[:40] + b"bad" + png()[43:]):
             with self.subTest(data=data), self.assertRaises(ValueError):
                 goldens.png_size(data)
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             path = Path(folder) / "run.trx"
             path.write_text(marker().replace("size=1x1", "size=2x1"))
             with self.assertRaisesRegex(ValueError, "dimensions"):
                 list(goldens.records(path))
 
     def test_malformed_records_fail_but_failure_prose_is_not_a_record(self):
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             path = Path(folder) / "run.trx"
             path.write_text("##SKIA-GOLDEN## role=actual key=invalid")
             with self.assertRaisesRegex(ValueError, "Malformed"):
@@ -61,14 +80,14 @@ class GoldenImageTests(unittest.TestCase):
             self.assertEqual(1, len(goldens.proposals([path])))
 
     def test_conflicting_captures_fail_instead_of_choosing_last_writer(self):
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             path = Path(folder) / "run.trx"
             path.write_text(marker(data=png(0)) + "\n" + marker(data=png(1)))
             with self.assertRaisesRegex(ValueError, "Conflicting"):
                 goldens.proposals([path])
 
     def test_diagnostics_keep_roles_retries_and_runs_separate(self):
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             root = Path(folder)
             files = []
             for name in ("first", "second"):
@@ -82,7 +101,7 @@ class GoldenImageTests(unittest.TestCase):
             self.assertEqual(2, len(list(output.iterdir())))
 
     def test_staging_never_overwrites_a_reference_and_dry_run_writes_nothing(self):
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             root = Path(folder)
             path = root / "run.trx"
             path.write_text(marker())
@@ -96,19 +115,19 @@ class GoldenImageTests(unittest.TestCase):
 
     @unittest.skipIf(sys.platform == "win32", "Creating symlinks requires Windows host privileges")
     def test_output_symlinks_cannot_escape_destination(self):
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             root = Path(folder)
             destination = root / "output"
             outside = root / "outside"
             destination.mkdir()
             outside.mkdir()
-            (destination / "Visual").symlink_to(outside, target_is_directory=True)
+            (destination / "Visual").symlink_to(outside.resolve(), target_is_directory=True)
             with self.assertRaisesRegex(ValueError, "escapes"):
-                goldens.contained(destination, "Visual/mac/base/sample.png")
+                goldens.contained(destination, "Visual/mac/0.0.0/sample.png")
 
     @unittest.skipIf(sys.platform == "win32", "Creating symlinks requires Windows host privileges")
     def test_final_diagnostic_filename_and_run_directory_cannot_escape(self):
-        with tempfile.TemporaryDirectory() as folder:
+        with workspace() as folder:
             root = Path(folder)
             path = root / "run.trx"
             path.write_text(marker())
@@ -118,7 +137,7 @@ class GoldenImageTests(unittest.TestCase):
             image.unlink()
             outside = root / "outside.png"
             outside.write_bytes(b"must not change")
-            image.symlink_to(outside)
+            image.symlink_to(outside.resolve())
             with self.assertRaisesRegex(ValueError, "escapes"):
                 goldens.export_images([path], output)
             self.assertEqual(b"must not change", outside.read_bytes())
@@ -127,7 +146,7 @@ class GoldenImageTests(unittest.TestCase):
             shutil.rmtree(run)
             external_run = root / "external-run"
             external_run.mkdir()
-            run.symlink_to(external_run, target_is_directory=True)
+            run.symlink_to(external_run.resolve(), target_is_directory=True)
             with self.assertRaisesRegex(ValueError, "escapes"):
                 goldens.export_images([path], output)
             self.assertEqual([], list(external_run.iterdir()))

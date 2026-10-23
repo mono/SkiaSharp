@@ -1,6 +1,6 @@
 using System;
 
-namespace SkiaSharp.Extended
+namespace SkiaSharp.Tests.Shared
 {
 	public static class SKPixelComparer
 	{

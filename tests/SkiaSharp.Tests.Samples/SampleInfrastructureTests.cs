@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
-using SkiaSharp.Tests.Goldens;
+using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -292,14 +292,14 @@ public class SampleInfrastructureTests : IDisposable
     [Fact]
     public async Task TypedGoldenComparisonUsesPackagedBytesAndRetainsStrictPolicy()
     {
-        var request = SampleReferences.Host("console");
-        var reference = SampleReferences.Resolve(request);
-        Assert.NotNull(reference.Path);
-        Assert.StartsWith(AppContext.BaseDirectory, reference.Path);
+        var request = SampleImage.Host("Console/output");
+        var reference = SampleImage.Store.Resolve(request);
+        Assert.NotNull(reference.Location);
+        Assert.StartsWith(AppContext.BaseDirectory, reference.Location);
         var actual = Path.Combine(root, "typed.actual.png");
-        await SampleImage.Validate(File.ReadAllBytes(reference.Path), actual, request,
+        await SampleImage.Validate(reference.ReadBytes(), actual, request,
             new() { ExpectedSize = new(800, 600), MaxErrorPixelFraction = 0 });
-        using var bitmap = SKBitmap.Decode(reference.Path);
+        using var bitmap = SKBitmap.Decode(reference.ReadBytes());
         Assert.NotNull(bitmap);
         bitmap.Erase(SKColors.Red);
         actual = SavePng(bitmap, "typed-mismatch.actual.png");
@@ -315,13 +315,13 @@ public class SampleInfrastructureTests : IDisposable
         using var bitmap = new SKBitmap(4, 4);
         bitmap.Erase(SKColors.Blue);
         var actual = SavePng(bitmap, "typed-missing.actual.png");
-        var request = new GoldenRequest("missing-profile", "12.6.2", "missing-case", "arm64", "engine");
-        var resolution = SampleReferences.Resolve(request);
+        var request = new GoldenRequest("missing-profile", new Version(12, 6, 2), "Missing/case", "arm64", "engine");
+        var resolution = SampleImage.Store.Resolve(request);
         var error = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, request));
         Assert.Null(resolution.Key);
         Assert.Contains(resolution.Describe(), error.Message);
         Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
-        Assert.False(File.Exists(Path.Combine(SampleReferences.Root, resolution.Candidates[0])));
+        Assert.False(File.Exists(Path.Combine(SampleImage.Root, resolution.Candidates[0])));
     }
 
     [Fact]

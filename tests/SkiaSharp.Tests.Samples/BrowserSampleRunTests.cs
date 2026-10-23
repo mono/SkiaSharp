@@ -19,7 +19,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, SampleReferences.Host("web-page"));
+            SampleImage.Validate(screenshot, SampleImage.Host("Web/page"));
         });
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, SampleReferences.Host("browser-wasm-page"));
+            SampleImage.Validate(screenshot, SampleImage.Host("Browser/wasm-page"));
         });
 
     [Fact]
@@ -46,7 +46,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            await SampleImage.Validate(app.Screenshot, SampleReferences.Host("blazor-cpu-page"),
+            await SampleImage.Validate(app.Screenshot, SampleImage.Host("Blazor/cpu"),
                 timeout: TimeSpan.FromSeconds(10));
         });
 
@@ -61,7 +61,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
-            SampleImage.Validate(screenshot, SampleReferences.Host("blazor-gpu-page"),
+            SampleImage.Validate(screenshot, SampleImage.Host("Blazor/gpu"),
                 new() { MaxAverageColorErrorFraction = 0.06 });
         });
 
@@ -129,8 +129,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             Assert.Equal(0, CountPixels(cleared, region, c =>
                 c == new SKColor(229, 57, 53) || c == new SKColor(30, 136, 229)));
 
-            SampleImage.Validate(drawn, SampleReferences.Host("blazor-drawing-page"));
-            SampleImage.Validate(cleared, SampleReferences.Host("blazor-drawing-cleared-page"));
+            SampleImage.Validate(drawn, SampleImage.Host("Blazor/drawing-drawn"));
+            SampleImage.Validate(cleared, SampleImage.Host("Blazor/drawing-cleared"));
         });
 
     [Fact]

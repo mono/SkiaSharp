@@ -17,7 +17,8 @@ import zlib
 
 PNG = b"\x89PNG\r\n\x1a\n"
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
-RESERVED = re.compile(r"(?:con|prn|aux|nul|com[1-9]|lpt[1-9])\Z")
+CASE_SEGMENT = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*\Z")
+RESERVED = re.compile(r"(?:con|prn|aux|nul|com[1-9]|lpt[1-9])\Z", re.IGNORECASE)
 ARCHITECTURES = {"x86", "x64", "arm", "arm64", "armv6", "wasm", "s390x", "loongarch64", "ppc64le", "riscv64"}
 MARKER = re.compile(
     r"##SKIA-GOLDEN## role=(actual|reference|diff) key=(\S+) "
@@ -27,14 +28,14 @@ MARKER = re.compile(
 
 def validate_key(key):
     parts = key.split("/")
-    if len(parts) != 4 or parts[0] not in ("Samples", "Visual"):
+    if len(parts) < 4 or parts[0] not in ("Samples", "Visual"):
         raise ValueError(f"Expected Samples|Visual/profile/version/case[.variant][.architecture].png: {key}")
-    _, profile, version, filename = parts
-    if version != "base":
-        if not re.fullmatch(r"[1-9][0-9]*(?:\.[0-9]+)*(?:\.r[1-9][0-9]*)?", version):
-            raise ValueError(f"Expected an actual version or base: {key}")
-        if any(int(component.removeprefix("r")) > 2147483647 for component in version.split(".")):
-            raise ValueError(f"Version component is out of range: {key}")
+    _, profile, version, *case = parts
+    if not re.fullmatch(r"(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2,3}", version):
+        raise ValueError(f"Expected a normalized three- or four-component System.Version: {key}")
+    if any(int(component) > 2147483647 for component in version.split(".")):
+        raise ValueError(f"Version component is out of range: {key}")
+    filename = case[-1]
     if not filename.endswith(".png"):
         raise ValueError(f"Expected a PNG filename: {key}")
     names = filename[:-4].split(".")
@@ -42,9 +43,12 @@ def validate_key(key):
         raise ValueError(f"Too many filename suffixes: {key}")
     if len(names) == 3 and (names[1] in ARCHITECTURES or names[2] not in ARCHITECTURES):
         raise ValueError(f"Variant must precede a recognized architecture: {key}")
-    for name in [profile, *names]:
+    for name in [profile, *names[1:]]:
         if not SLUG.fullmatch(name) or RESERVED.fullmatch(name):
             raise ValueError(f"Unsafe golden path: {key}")
+    for name in [*case[:-1], names[0]]:
+        if not CASE_SEGMENT.fullmatch(name) or RESERVED.fullmatch(name):
+            raise ValueError(f"Unsafe golden case path: {key}")
 
 
 def png_size(data):

@@ -2,43 +2,49 @@
 
 Visual tests render each scene through every backend required by the host's
 [GPU policy](gpu-test-policy.md). Sample tests compare application output and
-browser screenshots. Both use reviewed PNG references and the same deterministic
-key resolver; each consumer owns its file/resource enumeration and image loading.
+browser screenshots. Both use reviewed PNG references and the non-shipping
+`SkiaSharp.Tests.Shared` project for requests, platform policy, disk/resource
+lookup, byte loading, diagnostic markers and `SKPixelComparer`. Consumers keep
+their image decoding, comparison tolerances and test-result attachments.
 
 ## Reference paths
 
 ```text
-tests/Goldens/{Samples|Visual}/{profile}/{version-or-base}/{case}[.variant][.architecture].png
+tests/Goldens/{Samples|Visual}/{profile}/{version}/{case/path}[.variant][.architecture].png
 ```
 
-Profiles, cases, variants and architectures are lowercase alphanumeric/kebab
-segments. Versions are actual numeric product/platform versions, optionally
-ending in `.rN` for an image revision. `base` means explicitly unversioned.
+Profiles, variants and architectures are safe lowercase alphanumeric/kebab
+segments. Cases are safe relative paths with one or more segments, preserving
+case (for example `Console/output` or `Maui/home`). The profile already identifies
+the platform, so groups distinguish test families such as `Maui/*` and `Native/*`
+rather than repeating `Android` or `iOS`. Rooted paths,
+backslashes, empty segments, dot segments and reserved device names are rejected.
+Versions use `System.Version`, normalized to at least three numeric components;
+fourth components retain normal `System.Version` ordering. Stored directories
+use this canonical numeric form, without leading zeros. The baseline is `0.0.0`.
 Architectures use .NET architecture names (`x64`, `arm64`, `wasm`, etc.);
 those tokens are reserved and cannot also name functional variants.
-`latest` is input-only: a caller must resolve it to an actual version before
-creating a request or capture key.
+There are no symbolic versions, image revision suffixes or version scopes.
 
 Examples:
 
 ```text
-Visual/mac/base/visual-diagonal-lines.ganesh-gl.arm64.png
-Visual/portable/base/visual-filled-circle.raster.png
-Samples/mac/base/browser-wasm-page.png
-Samples/docker-linux/base/console.png
+Visual/mac/0.0.0/DiagonalLines.ganesh-gl.arm64.png
+Visual/portable/0.0.0/FilledCircle.raster.png
+Samples/mac/0.0.0/Browser/wasm-page.png
+Samples/docker-linux/0.0.0/Console/output.png
 ```
 
-The existing visual and sample references remain `base` references. This does
-not infer a product version from an old screenshot. Sample host profiles are
+Existing visual and sample references live under `0.0.0`; migrating their paths
+does not change any PNG bytes or infer a product version. Sample host profiles are
 `mac`, `linux` and `windows`; container profiles are `docker-linux` and
 `docker-windows`, so container and host output cannot accidentally share a
 baseline.
 
 ## Lookup rules
 
-`GoldenRequest` carries the profile, actual version or `base`, case,
-architecture, optional functional variant, version scope, ordered fallback
-profiles and an explicit neutral-variant policy.
+`GoldenRequest` carries the profile, `Version`, case path, optional architecture,
+optional functional variant and explicit neutral-variant policy.
 
 For each eligible version, candidate filenames are ordered:
 
@@ -54,22 +60,20 @@ A named variant never borrows a sibling variant; another architecture is never
 substituted. Visual tests use the renderer as the variant and disallow neutral
 variants, so a missing GPU reference cannot resolve to raster pixels.
 
-Versioned lookup tries the exact version, its explicit minor/family baselines,
-then available older captures in descending numeric order, then `base`.
-`Major` scope bounds older captures to the same major; `Minor` bounds them to
-the same major/minor and never tries a major-only baseline. Choose scope by
-product family: for example, Ubuntu `22.04` and `22.10` are separate minor
-families, as are macOS `10.14` and `10.15`. Future captures are never eligible.
-`Unversioned` scope tries only `base`.
+Lookup tries the exact version, then only existing older versions in descending
+`System.Version` order, ending at `0.0.0`. Future captures are never eligible;
+lookup does not synthesize intermediate versions.
 
-The whole primary profile precedes fallback profiles. Fallbacks are caller-owned,
-ordered and **base-only**; there is no inferred cross-product/platform fallback.
-Visual tests preserve their existing platform-to-`portable` lookup, including
-`nanoserver` to `windows` to `portable`. Sample tests have no profile fallback.
+The whole primary profile precedes fallback profiles, which use the same version
+search. `GoldenPlatform` normalizes `macos` to `mac`. Every profile except
+`portable` falls back to `portable`; the sole special chain is
+`nanoserver -> windows -> portable`. Profiles are deduplicated. Docker profiles
+also fall back to `portable` (there currently are no portable sample references).
+Callers cannot supply arbitrary fallback lists.
 
 `GoldenResolution` reports the selected key/location, ordered attempted
-candidates and a readable trace. Missing references fail with that trace; lookup
-never creates or approves a reference.
+candidates, a `ReadBytes()` method and a readable trace. Missing results retain
+the trace. Lookup never creates or approves a reference.
 
 ## Packaging
 
@@ -78,13 +82,16 @@ never creates or approves a reference.
 visual hosts set `EmbedGoldens=true` and use exact logical resource names:
 
 ```text
-SkiaSharp.Goldens/{profile}/{version-or-base}/{case}[.variant][.architecture].png
+SkiaSharp.Goldens/{profile}/{version}/{case/path}[.variant][.architecture].png
 ```
 
-The visual consumer probes the output directory and `TestConfig.PathRoot`, then
-the entry, configured host and shared test assemblies. It does not scan all
-loaded assemblies or rely on MSBuild's directory-name mangling. Images are loaded
-and decoded by the consumer, not cached by shared resolution code.
+`GoldenStore` accepts ordered disk roots and resource assemblies. Disk roots
+precede embedded resources; the first source containing a key wins. Enumeration
+within each source is ordinal and deterministic. The visual consumer configures
+the output directory and `TestConfig.PathRoot`, then the entry, configured host
+and test assemblies. Samples configure their packaged output directory.
+Neither scans all loaded assemblies or relies on directory-name mangling.
+Selected bytes are read fresh, without a shared byte cache.
 
 ## Comparison policy
 
@@ -122,7 +129,7 @@ python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py -v
 Each image is emitted as one unversioned marker in the test output/TRX:
 
 ```text
-##SKIA-GOLDEN## role=actual key=Visual/mac/base/visual-text.raster.arm64.png size=256x256 base64=...
+##SKIA-GOLDEN## role=actual key=Visual/mac/0.0.0/Text.raster.arm64.png size=256x256 base64=...
 ```
 
 Roles are `actual`, `reference` and `diff`. The key always describes the capture

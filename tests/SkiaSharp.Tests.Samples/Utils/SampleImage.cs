@@ -1,5 +1,6 @@
 using System.Diagnostics;
-using SkiaSharp.Tests.Goldens;
+using System.Runtime.InteropServices;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -7,6 +8,16 @@ namespace SkiaSharp.Tests.Samples.Utils;
 // Checks sample output against a reviewed reference and retains comparison diagnostics.
 internal static class SampleImage
 {
+    internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens");
+    internal static GoldenStore Store => new(new[] { Root });
+
+    internal static GoldenRequest Host(string casePath) =>
+        new(SampleLookup.HostPlatform.ToLowerInvariant(), new Version(0, 0, 0), casePath,
+            RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+
+    internal static GoldenRequest Container(string casePath) =>
+        new(OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux", new Version(0, 0, 0), casePath);
+
     internal static async Task Validate(byte[] bytes, string actual, GoldenRequest request, SampleImageOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
@@ -17,14 +28,16 @@ internal static class SampleImage
 
     internal static void Validate(string actual, GoldenRequest request, SampleImageOptions? options = null)
     {
-        var resolution = SampleReferences.Resolve(request);
+        var resolution = Store.Resolve(request);
+        TestContext.Current.TestOutputHelper?.WriteLine(resolution.Describe());
         try
         {
-            Validate(actual, SampleReferences.Require(resolution, actual), options);
+            Require(resolution, actual);
+            Validate(actual, resolution.Location!, resolution.ReadBytes(), options ?? new(), reportMismatch: true);
         }
         finally
         {
-            SampleReferences.Emit(resolution, actual);
+            Emit(resolution, actual);
         }
     }
 
@@ -34,23 +47,50 @@ internal static class SampleImage
         ArgumentNullException.ThrowIfNull(capture);
         var limit = timeout ?? TimeSpan.FromSeconds(2);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
-        var resolution = SampleReferences.Resolve(request);
-        if (resolution.Path is null)
+        var resolution = Store.Resolve(request);
+        TestContext.Current.TestOutputHelper?.WriteLine(resolution.Describe());
+        if (resolution.Key is null)
         {
             var missing = await capture().WaitAsync(limit, TestContext.Current.CancellationToken);
-            SampleReferences.Emit(resolution, missing);
-            SampleReferences.Require(resolution, missing);
+            Emit(resolution, missing);
+            Require(resolution, missing);
         }
         string? actual = null;
         try
         {
-            return await Validate(async () => actual = await capture(),
-                resolution.Path!, limit, options);
+            return await Retry(async () => actual = await capture(), limit,
+                (path, report) => Validate(path, resolution.Location!, resolution.ReadBytes(), options ?? new(), report));
         }
         finally
         {
             if (actual is not null)
-                SampleReferences.Emit(resolution, actual);
+                Emit(resolution, actual);
+        }
+    }
+
+    private static void Require(GoldenResolution resolution, string actual)
+    {
+        if (resolution.Key is null)
+            TestContext.Current.AddFileAttachment(actual, "image/png");
+        Assert.True(resolution.Key is not null,
+            $"Missing reviewed sample golden. {resolution.Describe()} Actual retained at {actual}.");
+    }
+
+    private static void Emit(GoldenResolution resolution, string actual)
+    {
+        Write("actual", File.ReadAllBytes(actual));
+        if (resolution.Key is not null)
+            Write("reference", resolution.ReadBytes());
+        var diff = Path.ChangeExtension(actual, ".diff.png");
+        if (File.Exists(diff))
+            Write("diff", File.ReadAllBytes(diff));
+
+        void Write(string role, byte[] bytes)
+        {
+            using var image = SKImage.FromEncodedData(bytes)
+                ?? throw new InvalidOperationException("Cannot emit an invalid PNG diagnostic.");
+            TestContext.Current.TestOutputHelper?.WriteLine(
+                GoldenDiagnostics.Marker("Samples", role, resolution.Request, image.Width, image.Height, bytes));
         }
     }
 
@@ -94,6 +134,11 @@ internal static class SampleImage
         var limit = timeout ?? TimeSpan.FromSeconds(2);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
         options ??= new();
+        return await Retry(capture, limit, (actual, report) => Validate(actual, expected, options, report));
+    }
+
+    private static async Task<string> Retry(Func<Task<string>> capture, TimeSpan limit, Func<string, bool, bool> compare)
+    {
         var cancellation = TestContext.Current.CancellationToken;
         var clock = Stopwatch.StartNew();
         string? actual = null;
@@ -106,11 +151,11 @@ internal static class SampleImage
             {
                 if (actual is null)
                     throw new TimeoutException("The sample screenshot deadline expired before capture.");
-                Validate(actual, expected, options, reportMismatch: true);
+                compare(actual, true);
                 return actual;
             }
             actual = await capture().WaitAsync(remaining, cancellation);
-            if (Validate(actual, expected, options, reportMismatch: false))
+            if (compare(actual, false))
                 return actual;
 
             remaining = limit - clock.Elapsed;
@@ -121,20 +166,28 @@ internal static class SampleImage
 
     private static bool Validate(string actual, string expected, SampleImageOptions options, bool reportMismatch)
     {
-        expected = Path.Combine(SampleReferences.Root, expected);
+        expected = Path.Combine(Root, expected);
 
         if (reportMismatch || !File.Exists(expected))
             TestContext.Current.AddFileAttachment(actual, "image/png");
 
+        Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}. Actual image retained at {actual}.");
+        return Validate(actual, expected, File.ReadAllBytes(expected), options, reportMismatch, attachActual: false);
+    }
+
+    private static bool Validate(string actual, string expected, byte[] expectedBytes, SampleImageOptions options,
+        bool reportMismatch, bool attachActual = true)
+    {
+        if (reportMismatch && attachActual)
+            TestContext.Current.AddFileAttachment(actual, "image/png");
         var maxErrorPixelFraction = options.MaxErrorPixelFraction;
         var maxAverageColorErrorFraction = options.MaxAverageColorErrorFraction;
         Assert.InRange(maxErrorPixelFraction, 0, 1);
         if (maxAverageColorErrorFraction is { } maximum)
             Assert.InRange(maximum, 0, 1);
-        Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}. Actual image retained at {actual}.");
 
         using var actualImage = SKImage.FromEncodedData(actual);
-        using var expectedImage = SKImage.FromEncodedData(expected);
+        using var expectedImage = SKImage.FromEncodedData(expectedBytes);
         if (!reportMismatch && (actualImage is null || expectedImage is null))
             TestContext.Current.AddFileAttachment(actual, "image/png");
         Assert.NotNull(actualImage);
@@ -151,7 +204,7 @@ internal static class SampleImage
         Assert.Equal(expectedImage.Width, actualImage.Width);
         Assert.Equal(expectedImage.Height, actualImage.Height);
 
-        var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedImage, actualImage, 0);
+        var result = SKPixelComparer.Compare(expectedImage, actualImage, 0);
         var averageColorErrorFraction = result.AbsoluteError / (result.TotalPixels * 4.0 * 255);
         var comparison = maxAverageColorErrorFraction is { } limit
             ? $"average RGBA color error {averageColorErrorFraction:P3}, exceeding {limit:P3}"
@@ -174,12 +227,21 @@ internal static class SampleImage
         if (!reportMismatch)
             return false;
 
-        using var diff = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
+        using var diff = SKPixelComparer.GenerateDifferenceImage(expectedImage, actualImage, 0);
         using var data = diff.Encode(SKEncodedImageFormat.Png, 100);
         var diffPath = Path.ChangeExtension(actual, ".diff.png");
         File.WriteAllBytes(diffPath, data.ToArray());
 
-        TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
+        if (File.Exists(expected))
+            TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
+        else
+        {
+            var name = $"expected-{Path.GetFileName(expected)}";
+            var unique = name;
+            for (var suffix = 2; TestContext.Current.Attachments?.ContainsKey(unique) == true; suffix++)
+                unique = $"{name}-{suffix}";
+            TestContext.Current.AddAttachment(unique, expectedBytes, "image/png");
+        }
         TestContext.Current.AddFileAttachment(diffPath, "image/png");
 
         Assert.Fail($"Sample pixels differ from {expected}: {result.ErrorPixelCount}/{result.TotalPixels} pixels; " +

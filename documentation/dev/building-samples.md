@@ -129,10 +129,11 @@ Find output, binlogs, results and images under `output/logs/testlogs/samples/`
 or CI's `sample_logs_*` artifacts. For restore failures, check the generated
 versions against staged packages. Do not clear shared caches.
 
-Review platform references under `tests/Goldens/Samples/{profile}/base/`.
+Review platform references under `tests/Goldens/Samples/{profile}/0.0.0/`.
 Host profiles are `mac`, `linux` and `windows`; Docker uses separate
 `docker-linux` and `docker-windows` profiles. Existing references remain
-explicitly unversioned. See [golden-image tests](golden-image-tests.md) for
+at the numeric baseline, organized by case paths such as `Console/output`,
+`Web/page` and `Blazor/drawing-drawn`. See [golden-image tests](golden-image-tests.md) for
 candidate ordering, packaging and capture review.
 Dimensions must match; the default limit is **0.075% differing pixels** with
 zero channel tolerance. Animated GPU pages use a loose **6% mean RGBA error**
@@ -140,7 +141,7 @@ smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
 
 `SampleImage.Validate` takes `actual`, a typed golden request (for example,
-`SampleReferences.Host("console")`), and an optional `SampleImageOptions` record.
+`SampleImage.Host("Console/output")`), and an optional `SampleImageOptions` record.
 Absolute expected-image paths remain available for transient screenshot checks.
 Its byte-array overload also takes
 the actual output path, saves the bytes, then calls the file overload.
