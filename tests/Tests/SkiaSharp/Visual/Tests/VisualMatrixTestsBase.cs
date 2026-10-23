@@ -66,10 +66,10 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
 			var raster = renderer.Name == GpuBackends.Raster;
 			Resolve(renderer.Name, scene.Name).Verify(
-				actual,
-				RendererPixels.NormalizedInfo(info),
-				channelTolerance: raster ? 2 : 12,
-				maxErrorPixelFraction: raster ? 0.002 : 0.03);
+				GoldenInput.Pixels(actual, RendererPixels.NormalizedInfo(info)),
+				new GoldenOptions(
+					channelTolerance: raster ? 2 : 12,
+					maxErrorPixelFraction: raster ? 0.002 : 0.03));
 		}
 
 		internal static Golden Resolve(string rendererName, string sceneName) =>

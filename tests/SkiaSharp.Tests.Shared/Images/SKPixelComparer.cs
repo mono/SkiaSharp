@@ -317,9 +317,11 @@ public static class SKPixelComparer
 		var s2 = mask.Info.Size;
 
 		if (s1 != s2)
+		{
+			var sizes = $"{s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}";
 			throw new InvalidOperationException(
-				$"Unable to compare using mask of a different size: " +
-				$"{s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}.");
+				$"Unable to compare using mask of a different size: {sizes}.");
+		}
 	}
 
 	private static void Validate(SKImage first, SKImage second)
@@ -331,9 +333,11 @@ public static class SKPixelComparer
 		var s2 = second.Info.Size;
 
 		if (s1 != s2)
+		{
+			var sizes = $"{s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}";
 			throw new InvalidOperationException(
-				$"Unable to compare images of different sizes: " +
-				$"{s1.Width}x{s1.Height} vs {s2.Width}x{s2.Height}.");
+				$"Unable to compare images of different sizes: {sizes}.");
+		}
 	}
 
 	private static SKBitmap GetNormalizedBitmap(SKImage image)

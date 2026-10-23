@@ -21,7 +21,7 @@ public sealed record GoldenCase
 			if (!IsArchitecture(architecture))
 			{
 				throw new ArgumentException(
-					"Expected a supported .NET architecture: " + architecture,
+					$"Expected a supported .NET architecture: {architecture}",
 					nameof(architecture));
 			}
 		}
@@ -31,7 +31,7 @@ public sealed record GoldenCase
 			if (IsArchitecture(variant))
 			{
 				throw new ArgumentException(
-					"Architecture tokens cannot be used as variants: " + variant,
+					$"Architecture tokens cannot be used as variants: {variant}",
 					nameof(variant));
 			}
 		}
@@ -44,14 +44,14 @@ public sealed record GoldenCase
 	public Version? Version { get; }
 	public string? Architecture { get; }
 	public string? Variant { get; }
-	public string CaptureKey => Profile + "/" + FileNames().First();
+	public string CaptureKey => $"{Profile}/{FileNames().First()}";
 
 	internal IEnumerable<string> FileNames()
 	{
-		var name = CasePath + (Variant == null ? "" : "." + Variant);
+		var name = Variant == null ? CasePath : $"{CasePath}.{Variant}";
 		if (Architecture != null)
-			yield return name + "." + Architecture + ".png";
-		yield return name + ".png";
+			yield return $"{name}.{Architecture}.png";
+		yield return $"{name}.png";
 	}
 
 	internal IEnumerable<string> FallbackChain()
@@ -73,7 +73,7 @@ public sealed record GoldenCase
 				value,
 				@"\A(con|prn|aux|nul|com[1-9]|lpt[1-9])\z",
 				RegexOptions.IgnoreCase))
-			throw new ArgumentException("Expected a safe golden path segment: " + value);
+			throw new ArgumentException($"Expected a safe golden path segment: {value}");
 	}
 
 	internal static bool IsArchitecture(string value)

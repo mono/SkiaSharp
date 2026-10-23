@@ -105,10 +105,12 @@ Neither scans all loaded assemblies or relies on directory-name mangling.
 
 ## Comparison policy
 
-`Golden.Verify(...)` standardizes image decoding, dimensions, threshold
-evaluation and difference generation. File paths, encoded PNG bytes and raw
-pixels use overloads rather than source-holder types. Consumers select policy
-with named arguments. Visual comparisons remain renderer-specific:
+`GoldenInput` explicitly represents a file path, encoded image bytes, raw pixels
+with `SKImageInfo`, or a retryable capture. Encoded inputs may use any
+Skia-decodable format; diagnostics and attachments are normalized to PNG.
+`GoldenOptions` groups expected dimensions and comparison tolerances.
+`Golden.Verify(...)` standardizes decoding, threshold evaluation and difference
+generation. Visual comparisons remain renderer-specific:
 
 | Renderer | Per-channel tolerance | Allowed outlier fraction |
 | --- | --- | --- |

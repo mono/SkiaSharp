@@ -19,7 +19,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.Host("Web/page").Verify(screenshot);
+            SampleImage.Host("Web/page").Verify(GoldenInput.Path(screenshot));
         });
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.Host("Browser/wasm-page").Verify(screenshot);
+            SampleImage.Host("Browser/wasm-page").Verify(GoldenInput.Path(screenshot));
         });
 
     [Fact]
@@ -47,7 +47,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
             await SampleImage.Host("Blazor/cpu").VerifyAsync(
-                app.Screenshot,
+                GoldenInput.Capture(app.Screenshot),
                 TimeSpan.FromSeconds(10),
                 TestContext.Current.CancellationToken);
         });
@@ -64,8 +64,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.WaitForElement(".canvas-container canvas");
             var screenshot = await app.Screenshot();
             SampleImage.Host("Blazor/gpu").Verify(
-                screenshot,
-                maxAverageColorErrorFraction: 0.06);
+                GoldenInput.Path(screenshot),
+                new GoldenOptions(maxAverageColorErrorFraction: 0.06));
         });
 
     [Fact]
@@ -126,8 +126,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 """);
             var cleared = await app.Screenshot();
 
-            SampleImage.Host("Blazor/drawing-drawn").Verify(drawn);
-            SampleImage.Host("Blazor/drawing-cleared").Verify(cleared);
+            SampleImage.Host("Blazor/drawing-drawn").Verify(GoldenInput.Path(drawn));
+            SampleImage.Host("Blazor/drawing-cleared").Verify(GoldenInput.Path(cleared));
         });
 
     [Fact]
@@ -181,14 +181,14 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             var attempts = 0;
 
             var matched = await Golden.VerifyAsync(
-                async () =>
+                GoldenInput.Capture(async () =>
                 {
                     var actual = await app.Screenshot();
                     if (++attempts == 1)
                         await app.Page.EvaluateAsync("document.documentElement.style.background = 'blue'");
                     return actual;
-                },
-                expected,
+                }),
+                GoldenInput.Path(expected),
                 SampleImage.DefaultTimeout,
                 TestContext.Current.CancellationToken);
 
@@ -217,7 +217,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                     case "wait": await app.WaitForElement("body"); break;
                     case "screenshot":
                         await SampleImage.Host("Web/page").VerifyAsync(
-                            app.Screenshot,
+                            GoldenInput.Capture(app.Screenshot),
                             SampleImage.DefaultTimeout,
                             TestContext.Current.CancellationToken);
                         break;

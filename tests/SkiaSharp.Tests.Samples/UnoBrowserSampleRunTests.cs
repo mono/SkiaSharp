@@ -52,12 +52,12 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.UpAsync();
             await app.Page.Mouse.MoveAsync(0, 0);
             var drawn = await app.Screenshot();
-            SampleImage.Host("Uno/drawing-drawn").Verify(drawn);
+            SampleImage.Host("Uno/drawing-drawn").Verify(GoldenInput.Path(drawn));
 
             await app.Page.Mouse.ClickAsync(1237, 76);
             await app.Page.Mouse.MoveAsync(0, 0);
             await SampleImage.Host("Uno/drawing-cleared").VerifyAsync(
-                app.Screenshot,
+                GoldenInput.Capture(app.Screenshot),
                 TimeSpan.FromSeconds(4),
                 TestContext.Current.CancellationToken);
 
@@ -83,7 +83,7 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
         // Uno creates its canvas while the splash screen still covers the application.
         await app.Page.Locator(".uno-loader").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         return await SampleImage.Host("Uno/cpu").VerifyAsync(
-            app.Screenshot,
+            GoldenInput.Capture(app.Screenshot),
             TimeSpan.FromSeconds(10),
             TestContext.Current.CancellationToken);
     }

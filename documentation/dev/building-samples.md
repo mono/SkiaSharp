@@ -144,16 +144,20 @@ Resolve and verify in one flow:
 
 ```csharp
 SampleImage.Host("Console/output")
-    .Verify(actualPath, expectedSize: new(800, 600));
+    .Verify(
+        GoldenInput.Path(actualPath),
+        new GoldenOptions(expectedSize: new(800, 600)));
 
 await SampleImage.Host("Blazor/cpu").VerifyAsync(
-    app.Screenshot,
+    GoldenInput.Capture(app.Screenshot),
     SampleImage.DefaultTimeout,
     TestContext.Current.CancellationToken);
 ```
 
-Use `Golden.Verify(actualPath, expectedPath)` for transient image-to-image
-checks, and `Golden.WritePng(path, bytes)` when a response must first be
-persisted. Only animated GPU checks set
-`maxAverageColorErrorFraction: 0.06`; omitting policy arguments retains zero
-channel tolerance and the default `0.00075` differing-pixel fraction.
+Use `Golden.Verify(GoldenInput.Path(actualPath), GoldenInput.Path(expectedPath))`
+for transient image-to-image checks. `GoldenInput.Bytes(...)` accepts any
+Skia-decodable encoded image, while `GoldenInput.Pixels(...)` accepts raw pixels
+with their `SKImageInfo`. Use `Golden.WritePng(path, bytes)` when a response must
+first be persisted. Only animated GPU checks set
+`new GoldenOptions(maxAverageColorErrorFraction: 0.06)`; omitting options retains
+zero channel tolerance and the default `0.00075` differing-pixel fraction.
