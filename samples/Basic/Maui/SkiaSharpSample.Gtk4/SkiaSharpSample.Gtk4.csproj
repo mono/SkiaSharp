@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <AssemblyName>SkiaSharpSample.Maui.Gtk4.Basic</AssemblyName>
+    <ApplicationId>com.skiasharp.sample.maui.gtk4</ApplicationId>
+    <ApplicationTitle>SkiaSharp Sample</ApplicationTitle>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <MauiVersion>10.0.51</MauiVersion>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../Shared/Maui.Gtk4/Gtk4Runtime.cs" Link="Gtk4Runtime.cs" />
+    <Compile Include="../SkiaSharpSample/**/*.cs"
+             Exclude="../SkiaSharpSample/MauiProgram.cs;../SkiaSharpSample/Platforms/**/*.cs;../SkiaSharpSample/obj/**/*.cs;../SkiaSharpSample/bin/**/*.cs"
+             Link="Sample/%(RecursiveDir)%(Filename)%(Extension)" />
+    <MauiXaml Include="../SkiaSharpSample/**/*.xaml"
+              Exclude="../SkiaSharpSample/Platforms/**/*.xaml;../SkiaSharpSample/obj/**/*.xaml;../SkiaSharpSample/bin/**/*.xaml"
+              Link="Sample/%(RecursiveDir)%(Filename)%(Extension)" />
+    <MauiImage Include="../SkiaSharpSample/Resources/Images/*" />
+    <MauiIcon Include="../SkiaSharpSample/Resources/appicon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls.Gtk4/SkiaSharp.Views.Maui.Controls.Gtk4.csproj" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <AssemblyMetadata Include="Microsoft.Maui.DevFlowProject" Value="$(MSBuildProjectFullPath)" />
+    <AssemblyMetadata Include="Microsoft.Maui.DevFlowTfm" Value="$(TargetFramework)" />
+    <PackageReference Include="Microsoft.Maui.DevFlow.Agent.Gtk" Version="0.1.0-preview.12.26421.1" />
+  </ItemGroup>
+  <Import Project="../../../../binding/IncludeNativeAssets.SkiaSharp.targets" />
+</Project>

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Views.Maui.Controls.Gtk4</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Maui.Controls.Gtk4</AssemblyName>
+    <PackageId>SkiaSharp.Views.Maui.Controls.Gtk4</PackageId>
+    <PackagingGroup>SkiaSharp.Views.Maui.Controls.Gtk4</PackagingGroup>
+    <Title>Experimental SkiaSharp MAUI GTK4 handlers</Title>
+    <PackageTags>maui;gtk4;cross-platform;experimental</PackageTags>
+    <SignAssembly>false</SignAssembly>
+    <Nullable>Enable</Nullable>
+    <PackageReadmeSource>$(MSBuildProjectDirectory)\README.md</PackageReadmeSource>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SkiaSharp.Views.Maui.Gtk4.Tests" />
+    <PackageReference Include="Microsoft.Maui.Platforms.Linux.Gtk4" Version="0.1.0-preview.12.26421.1" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
+    <PackageReference Include="Microsoft.Maui.Core" Version="10.0.51" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj" />
+  </ItemGroup>
+  <Target Name="RequireGtk4PreviewVersion" BeforeTargets="GenerateNuspec">
+    <Error Condition="'$(VersionSuffix)' == ''"
+           Text="The experimental GTK4 MAUI package depends on a prerelease MAUI Labs backend. Pack with -p:VersionSuffix=gtk4-preview and pack its SkiaSharp project-reference family with the same suffix." />
+  </Target>
+</Project>
