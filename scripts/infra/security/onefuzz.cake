@@ -35,7 +35,6 @@ Task("onefuzz-prepare")
         "SkiaSharp.Resources.dll",
         "SkiaSharp.Skottie.dll",
         "SkiaSharp.SceneGraph.dll",
-        "SharpFuzz.Common.dll",
         "libSkiaSharp.dll",
         "libHarfBuzzSharp.dll",
         "libSkiaSharp.so",
@@ -51,41 +50,8 @@ Task("onefuzz-prepare")
     RunProcess("dotnet", $"{Quote(harness)} --write-seeds {Quote(seeds)}");
     RunProcess("dotnet", $"{Quote(harness)} --smoke {Quote(seeds)}");
 
-    var instrumentation = new Dictionary<string, string[]>
-    {
-        ["SkiaSharp.dll"] = new[]
-        {
-            "SkiaSharp.SKBitmap",
-            "SkiaSharp.SKCodec",
-            "SkiaSharp.SKFontManager",
-            "SkiaSharp.SKFrontBufferedManagedStream",
-            "SkiaSharp.SKManagedStream",
-            "SkiaSharp.SKPicture"
-        },
-        ["HarfBuzzSharp.dll"] = new[]
-        {
-            "HarfBuzzSharp.Buffer",
-            "HarfBuzzSharp.Face",
-            "HarfBuzzSharp.Font"
-        },
-        ["SkiaSharp.Resources.dll"] = new[]
-        {
-            "SkiaSharp.Resources.CachingResourceProvider",
-            "SkiaSharp.Resources.DataUriResourceProvider",
-            "SkiaSharp.Resources.FileResourceProvider"
-        },
-        ["SkiaSharp.Skottie.dll"] = new[]
-        {
-            "SkiaSharp.Skottie.Animation",
-            "SkiaSharp.Skottie.AnimationBuilder"
-        }
-    };
-
-    foreach (var item in instrumentation)
-    {
-        var arguments = string.Join(" ", new[] { System.IO.Path.Combine(outputPath, item.Key) }.Concat(item.Value).Select(Quote));
-        RunProcess("dotnet", $"tool run sharpfuzz -- {arguments}");
-    }
+    // The drop is intentionally not instrumented: OneFuzz instruments the harness and FuzzingTargetBinaries itself,
+    // and a second SharpFuzz (or its own SharpFuzz.Common.dll) in the drop breaks the harness.
 
     // Each platform ships its own config, generated from one template; the submit job selects one as OneFuzzConfig.json.
     var platforms = new[]

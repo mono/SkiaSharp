@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
 using System.Text;
 using HarfBuzzSharp;
 using SkiaSharp.Resources;
@@ -31,13 +30,6 @@ public static class FuzzTargets
 	private const long MaximumDecodedBytes = 16 * 1024 * 1024;
 	private const int MaximumDimension = 4096;
 	private const int MaximumInputBytes = 1 * 1024 * 1024;
-
-	static FuzzTargets()
-	{
-		var loadContext = AssemblyLoadContext.GetLoadContext(typeof(FuzzTargets).Assembly);
-		if (loadContext is not null)
-			loadContext.Resolving += ResolveSharpFuzzAssembly;
-	}
 
 	public static void FuzzManagedStreams(ReadOnlySpan<byte> input)
 	{
@@ -355,16 +347,5 @@ public static class FuzzTargets
 
 		fullPath = Path.GetFullPath(Path.Combine(root, resourcePath, resourceName));
 		return fullPath.StartsWith(normalizedRoot, comparison);
-	}
-
-	private static Assembly? ResolveSharpFuzzAssembly(AssemblyLoadContext loadContext, AssemblyName assemblyName)
-	{
-		if (assemblyName.Name != "SharpFuzz.Common")
-			return null;
-
-		var path = Path.Combine(AppContext.BaseDirectory, "SharpFuzz.Common.dll");
-		return File.Exists(path)
-			? loadContext.LoadFromAssemblyPath(path)
-			: null;
 	}
 }
