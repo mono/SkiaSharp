@@ -224,10 +224,14 @@ void RunProcess(FilePath process, string args = "")
 
 void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
 {
-    var settings = new ProcessSettings {
-        RedirectStandardOutput = true,
+    RunProcess(process, new ProcessSettings {
         Arguments = args,
-    };
+    }, out stdout);
+}
+
+void RunProcess(FilePath process, ProcessSettings settings, out IEnumerable<string> stdout)
+{
+    settings.RedirectStandardOutput = true;
     var result = StartProcess(process, settings, out var stdoutActual);
     stdout = stdoutActual.ToArray();
     if (result != 0) {

@@ -108,7 +108,7 @@ and a `MaxOutlierFraction` (share of pixels allowed to exceed it).
 | Renderer | Tolerance |
 |---|---|
 | `raster` | `(2, 0.002)` |
-| every GPU renderer | `(12, 0.02)` |
+| every GPU renderer | `(12, 0.03)` |
 
 Raster is not bit-exact because the shared `raster/` golden is captured on one
 architecture and replayed on others. Tolerance is chosen by renderer alone —

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -80,12 +81,19 @@ namespace SkiaSharp.Tests
 		/// </summary>
 		public static ISet<string> Disabled() => Parse(OptOut().Raw);
 
-		// Desktop and container hosts inherit the environment variable; device and
-		// browser hosts never see it, so the value is baked into runtimeconfig.json
-		// and read back through AppContext. A skip names whichever one set it.
+		// Desktop and container hosts inherit the environment variable. Device and
+		// browser hosts use build metadata because packaged apps may not preserve
+		// runtimeconfig.json; AppContext remains first for hosts that do.
 		private static (string Raw, string Source) OptOut()
 		{
 			var data = AppContext.GetData(AppContextKey) as string;
+			if (!string.IsNullOrWhiteSpace(data))
+				return (data, AppContextKey);
+
+			data = typeof(GpuPolicy).Assembly
+				.GetCustomAttributes<AssemblyMetadataAttribute>()
+				.FirstOrDefault(attribute => attribute.Key == AppContextKey)
+				?.Value;
 			return string.IsNullOrWhiteSpace(data)
 				? (Environment.GetEnvironmentVariable(EnvironmentVariable), EnvironmentVariable)
 				: (data, AppContextKey);

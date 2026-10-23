@@ -25,6 +25,13 @@ stages:
       buildAgentLinux: ${{ parameters.buildAgentLinux }}
       enableCaching: ${{ parameters.enableCaching }}
 
+  - template: /scripts/azure-templates-stages-samples.yml@self
+    parameters:
+      buildPipelineType: ${{ parameters.buildPipelineType }}
+      buildAgentWindows: ${{ parameters.buildAgentWindows }}
+      buildAgentMac: ${{ parameters.buildAgentMac }}
+      buildAgentLinux: ${{ parameters.buildAgentLinux }}
+
   - template: /scripts/azure-templates-stages-tests.yml@self
     parameters:
       buildPipelineType: ${{ parameters.buildPipelineType }}
@@ -34,9 +41,13 @@ stages:
       buildAgentLinux: ${{ parameters.buildAgentLinux }}
       buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
 
-  - template: /scripts/azure-templates-stages-samples.yml@self
-    parameters:
-      buildPipelineType: ${{ parameters.buildPipelineType }}
-      buildAgentWindows: ${{ parameters.buildAgentWindows }}
-      buildAgentMac: ${{ parameters.buildAgentMac }}
-      buildAgentLinux: ${{ parameters.buildAgentLinux }}
+  - stage: native_tests
+    displayName: Native Tests
+    ${{ if eq(parameters.buildPipelineType, 'test') }}:
+      dependsOn: prepare
+    ${{ else }}:
+      dependsOn: native
+    jobs:
+      - template: /scripts/azure-templates-jobs-tests-native.yml@self
+        parameters:
+          buildAgent: ${{ parameters.buildAgentLinux }}

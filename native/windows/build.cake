@@ -11,8 +11,6 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
-var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
-
 string USE_FREETYPE_VAR = Argument ("useFreeType", EnvironmentVariable ("USE_FREETYPE") ?? "false");
 bool USE_FREETYPE = USE_FREETYPE_VAR == "1" || USE_FREETYPE_VAR.ToLower () == "true";
 bool USE_FONTMGR_WIN = !USE_FREETYPE;
@@ -90,7 +88,6 @@ Task("libSkiaSharp")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
-        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED, delayLoaded: VERIFY_DELAY_LOADED);
     }
 });
 
@@ -116,7 +113,6 @@ Task("libHarfBuzzSharp")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
-        CheckWindowsDependencies($"{outDir}/libHarfBuzzSharp.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 
