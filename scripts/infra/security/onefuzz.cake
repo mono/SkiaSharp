@@ -132,7 +132,152 @@ Task("onefuzz-prepare")
     Information($"Prepared the OneFuzz drop at '{outputPath}'.");
 });
 
+// Offline checks that mirror what the service validates, so mistakes fail here instead of at submission.
+// The service still runs the authoritative validation (`onefuzz onefuzzconfig validate`, and again on submit).
+Task("onefuzz-validate")
+    .Description("Strictly validate the generated OneFuzz configs against the drop.")
+    .IsDependentOn("onefuzz-prepare")
+    .Does(() =>
+{
+    var outputPath = ROOT_PATH.Combine("output/onefuzz").FullPath;
+    var errors = new List<string>();
+    var warnings = new List<string>();
+
+    var entryRequired = new[] { "JobNotificationEmail", "Fuzzer", "OneFuzzJobs", "JobDependencies" };
+    var entryRecommended = new[] { "Skip", "FuzzerTimeoutInSeconds", "MinAvailableMemoryMB", "SdlWorkItemId" };
+    var entryKnown = entryRequired.Concat(entryRecommended).ToHashSet();
+    var fuzzerRequired = new[] { "$type", "Dll", "Class", "Method", "FuzzingTargetBinaries" };
+    var jobRequired = new[] { "ProjectName", "TargetName" };
+    var jobKnown = jobRequired.Concat(new[] { "SeedCorpusContainer", "FuzzingTargetOptions" }).ToHashSet();
+
+    void CheckObject(JsonNode node, string path, string[] required, ISet<string> known)
+    {
+        if (node is not JsonObject obj)
+        {
+            errors.Add($"{path}: expected an object.");
+            return;
+        }
+        foreach (var name in required)
+        {
+            if (obj[name] is null)
+                errors.Add($"{path}: missing required '{name}'.");
+        }
+        foreach (var property in obj)
+        {
+            if (!known.Contains(property.Key))
+                warnings.Add($"{path}: unrecognised property '{property.Key}'.");
+        }
+    }
+
+    // Methods are checked against the harness source, so a typo can never reach the service.
+    var harnessMethods = Regex
+        .Matches(System.IO.File.ReadAllText(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Fuzzing/FuzzTargets.cs").FullPath), @"public static void (\w+)\(ReadOnlySpan<byte>")
+        .Select(m => m.Groups[1].Value)
+        .ToHashSet();
+    if (harnessMethods.Count == 0)
+        errors.Add("Unable to find any fuzz target methods in FuzzTargets.cs.");
+
+    var configFiles = System.IO.Directory.GetFiles(outputPath, "OneFuzzConfig.*.json");
+    if (configFiles.Length == 0)
+        errors.Add("No OneFuzzConfig.<platform>.json files were generated.");
+
+    foreach (var configFile in configFiles)
+    {
+        var name = System.IO.Path.GetFileName(configFile);
+        var text = System.IO.File.ReadAllText(configFile);
+
+        var leftover = Regex.Matches(text, @"\{[A-Za-z]+\}").Select(m => m.Value).Distinct().ToList();
+        if (leftover.Count > 0)
+            errors.Add($"{name}: unreplaced template tokens {string.Join(", ", leftover)}.");
+
+        var config = JsonNode.Parse(text)!;
+        if (config["ConfigVersion"]?.GetValue<int>() != 3)
+            errors.Add($"{name}: ConfigVersion must be 3.");
+
+        var entries = config["Entries"]?.AsArray();
+        if (entries is null || entries.Count == 0)
+        {
+            errors.Add($"{name}: no entries.");
+            continue;
+        }
+
+        var targetNames = new HashSet<string>();
+        for (var i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i]!;
+            var entryPath = $"{name} Entries[{i}]";
+            CheckObject(entry, entryPath, entryRequired, entryKnown);
+
+            foreach (var missing in entryRecommended.Where(r => entry[r] is null))
+                warnings.Add($"{entryPath}: '{missing}' is not set.");
+
+            var fuzzer = entry["Fuzzer"];
+            if (fuzzer is not null)
+            {
+                CheckObject(fuzzer, $"{entryPath} Fuzzer", fuzzerRequired, fuzzerRequired.ToHashSet());
+                if (fuzzer["$type"]?.GetValue<string>() != "libfuzzerDotNet")
+                    errors.Add($"{entryPath}: Fuzzer.$type must be 'libfuzzerDotNet'.");
+
+                var dll = fuzzer["Dll"]?.GetValue<string>();
+                if (dll is not null && !System.IO.File.Exists(System.IO.Path.Combine(outputPath, dll)))
+                    errors.Add($"{entryPath}: Fuzzer.Dll '{dll}' is not in the drop.");
+
+                var method = fuzzer["Method"]?.GetValue<string>();
+                if (method is not null && !harnessMethods.Contains(method))
+                    errors.Add($"{entryPath}: Fuzzer.Method '{method}' does not exist on FuzzTargets.");
+
+                foreach (var binary in fuzzer["FuzzingTargetBinaries"]?.AsArray() ?? new JsonArray())
+                {
+                    var file = binary!.GetValue<string>();
+                    if (!System.IO.File.Exists(System.IO.Path.Combine(outputPath, file)))
+                        errors.Add($"{entryPath}: FuzzingTargetBinaries '{file}' is not in the drop.");
+                    else if (!System.IO.File.Exists(System.IO.Path.Combine(outputPath, System.IO.Path.ChangeExtension(file, ".pdb"))))
+                        warnings.Add($"{entryPath}: '{file}' has no .pdb, so its stacks will not symbolize.");
+                }
+            }
+
+            var jobs = entry["OneFuzzJobs"]?.AsArray();
+            if (jobs is null || jobs.Count == 0)
+                errors.Add($"{entryPath}: OneFuzzJobs is empty.");
+            for (var j = 0; j < (jobs?.Count ?? 0); j++)
+            {
+                var jobPath = $"{entryPath} OneFuzzJobs[{j}]";
+                CheckObject(jobs![j]!, jobPath, jobRequired, jobKnown);
+
+                var target = jobs[j]!["TargetName"]?.GetValue<string>();
+                if (target is not null && !targetNames.Add(target))
+                    errors.Add($"{jobPath}: duplicate TargetName '{target}'.");
+                if (target is not null && !Regex.IsMatch(target, "^[A-Za-z0-9._-]+$"))
+                    errors.Add($"{jobPath}: TargetName '{target}' has characters OneFuzz may reject.");
+                if (jobs[j]!["SeedCorpusContainer"] is null)
+                    warnings.Add($"{name}: OneFuzzJobs have no SeedCorpusContainer, so the fuzzers start without a corpus.");
+            }
+
+            foreach (var dependency in entry["JobDependencies"]?.AsArray() ?? new JsonArray())
+            {
+                var pattern = dependency!.GetValue<string>();
+                if (pattern.Contains(".."))
+                    errors.Add($"{entryPath}: JobDependencies '{pattern}' escapes the drop.");
+                else if (System.IO.Directory.GetFiles(outputPath, System.IO.Path.GetFileName(pattern.Replace('\\', '/')), System.IO.SearchOption.TopDirectoryOnly).Length == 0)
+                    errors.Add($"{entryPath}: JobDependencies '{pattern}' matches no files.");
+            }
+        }
+    }
+
+    foreach (var warning in warnings.Distinct())
+    {
+        Warning(warning);
+        if (EnvironmentVariable("TF_BUILD") is not null)
+            Console.WriteLine($"##vso[task.logissue type=warning]{warning}");
+    }
+
+    if (errors.Count > 0)
+        throw new Exception($"OneFuzz config validation failed:{Environment.NewLine}  {string.Join(Environment.NewLine + "  ", errors)}");
+
+    Information($"Validated {configFiles.Length} OneFuzz configs ({warnings.Distinct().Count()} warnings).");
+});
+
 Task("Default")
-    .IsDependentOn("onefuzz-prepare");
+    .IsDependentOn("onefuzz-validate");
 
 RunTarget(TARGET);
