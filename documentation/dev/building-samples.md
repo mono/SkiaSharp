@@ -73,25 +73,15 @@ and unfiltered runs. Filtered runs do not replace the full suite.
 ## Mobile Appium runs
 
 The `Ios` and `Android` groups run the Basic MAUI/native and Gallery MAUI
-applications against staged packages. They use the same test bodies in three
-explicit phases:
+applications against staged packages.
 
-- `--appiumMode=build` builds and exports applications plus the compiled runner
-  without creating a device.
-- `--appiumMode=run` consumes those exact artifacts without restore, project
-  evaluation, source generation, compilation or linking.
-- `--appiumMode=all` (default) finishes every selected build before booting the
-  owned device and running the scenarios.
+- `--appiumMode=build` prepares apps and the compiled runner without a device.
+- `--appiumMode=run` runs those prepared artifacts without building.
+- `--appiumMode=all` (default) builds everything before creating the device.
 
-Apps are staged under `output/appium-apps/{android|ios}/{architecture}/`.
-The relocatable runner is staged under
-`output/appium-runner/{android|ios}/{architecture}/`. Keep those directories,
-the matching host architecture and the exact producing `output/nugets` cohort
-together when transferring a build between machines.
-
-CI has one device-free build job per platform and dependent runtime-profile
-jobs. Runtime jobs download apps and runners from the current test run and
-packages from the same producing package build.
+Prepared apps and runners are under `output/appium-apps/` and
+`output/appium-runner/`. Keep them with the exact producing `output/nugets`
+packages and use a matching host platform and architecture.
 
 ### iOS simulators
 
@@ -108,9 +98,9 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-For a simulator you manage, set `TEST_IOS_SIMULATOR_VERSION`,
-`TEST_IOS_SIMULATOR_MODEL` and its exact `TEST_IOS_SIMULATOR_UDID`.
-Cake deletes only the simulator it creates.
+For an existing simulator, set `TEST_IOS_SIMULATOR_VERSION`,
+`TEST_IOS_SIMULATOR_MODEL` and `TEST_IOS_SIMULATOR_UDID`. Cake deletes only a
+simulator it creates.
 
 ### Android emulators
 
@@ -128,12 +118,11 @@ dotnet cake --target=samples --runGroup=Android --skipExternals=all \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-The released `dotnet android` tool owns SDK provisioning, AVD creation,
-startup, readiness, animation disabling and device inventory. Cake requires
-the exact expected serial after startup. Direct ADB is limited to
-ownership-checked cleanup because the released tool has no standalone stop
-command. For a device you manage, also set its exact `TEST_ANDROID_UDID`; the
-tests never select the first available device.
+The pinned `dotnet android` tool provisions and starts the AVD. Cake requires
+the expected serial before running tests and uses direct ADB only to stop that
+owned emulator because the tool has no stop command. For an existing device,
+set its exact `TEST_ANDROID_UDID`; tests never select the first available
+device.
 
 ## Test groups and diagnostics
 
@@ -170,8 +159,7 @@ Mobile profiles use optional max-version directories:
 
 Architecture-specific files override the unsuffixed reference. iOS references
 retain raw captures; comparison removes only the declared system-owned inset.
-Android API profiles do not select references by output pixels. Initial,
-drawn and cleared states use separate case names where rendering state differs.
+Initial, drawn and cleared states use separate case names where needed.
 
 Use the sample helpers to select the profile:
 
