@@ -751,5 +751,48 @@ namespace SkiaSharp.Tests
 				// drop both references; the builder is private and goes with it
 			}
 		}
+		[SkippableFact]
+		public void ConvertConicToQuadsReturnsCorrectPointCount()
+		{
+			var p0 = new SKPoint(0, 0);
+			var p1 = new SKPoint(50, 100);
+			var p2 = new SKPoint(100, 0);
+			var w = 0.707f;
+
+			var pts = SKPath.ConvertConicToQuads(p0, p1, p2, w, 2);
+
+			// pow2=2 means 4 quads, so 2*4+1 = 9 points
+			Assert.Equal(9, pts.Length);
+			// First point should match p0
+			Assert.Equal(p0, pts[0]);
+			// Last point should match p2
+			Assert.Equal(p2, pts[pts.Length - 1]);
+		}
+
+		[SkippableFact]
+		public void ConvertConicToQuadsOutOverloadReturnsQuadCount()
+		{
+			var p0 = new SKPoint(0, 0);
+			var p1 = new SKPoint(50, 100);
+			var p2 = new SKPoint(100, 0);
+			var w = 1.0f;
+
+			var quadCount = SKPath.ConvertConicToQuads(p0, p1, p2, w, out var pts, 1);
+
+			// pow2=1 means 2 quads, so 2*2+1 = 5 points
+			Assert.Equal(5, pts.Length);
+			Assert.Equal(2, quadCount);
+		}
+
+		[SkippableFact]
+		public void ConvertConicToQuadsWithNullPtsThrows()
+		{
+			var p0 = new SKPoint(0, 0);
+			var p1 = new SKPoint(50, 100);
+			var p2 = new SKPoint(100, 0);
+
+			Assert.Throws<ArgumentNullException>(() =>
+				SKPath.ConvertConicToQuads(p0, p1, p2, 1.0f, null, 1));
+		}
 	}
 }
