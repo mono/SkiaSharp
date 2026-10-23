@@ -104,7 +104,7 @@ public sealed class Golden
 			maxErrorPixelFraction,
 			maxAverageColorErrorFraction);
 
-	public async Task<string> VerifyAsync(
+	public Task<string> VerifyAsync(
 		Func<Task<string>> capturePath,
 		TimeSpan timeout,
 		CancellationToken cancellationToken = default,
@@ -114,42 +114,20 @@ public sealed class Golden
 		double? maxAverageColorErrorFraction = null)
 	{
 		if (capturePath == null) throw new ArgumentNullException(nameof(capturePath));
-		ValidateComparison(channelTolerance, maxErrorPixelFraction, maxAverageColorErrorFraction);
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
-
+		ValidateComparison(channelTolerance, maxErrorPixelFraction, maxAverageColorErrorFraction);
 		var expectedPng = ReferenceKey == null ? null : ReadBytes();
-		var clock = Stopwatch.StartNew();
-		string? actualPath = null;
-		byte[]? actualPng = null;
-		while (true)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			var remaining = timeout - clock.Elapsed;
-			if (remaining <= TimeSpan.Zero)
-			{
-				if (actualPng == null || actualPath == null)
-					throw new TimeoutException("The image capture deadline expired before capture completed.");
-				CompleteReference(
-					actualPng, actualPath, actualPath, expectedPng,
-					expectedSize, channelTolerance, maxErrorPixelFraction,
-					maxAverageColorErrorFraction, createDifference: true);
-				return actualPath;
-			}
-
-			actualPath = await WaitAsync(capturePath(), remaining, cancellationToken);
-			actualPng = File.ReadAllBytes(actualPath);
-			if (CompleteReference(
-				actualPng, actualPath, actualPath, expectedPng,
+		return RetryAsync(
+			capturePath,
+			timeout,
+			cancellationToken,
+			(actualPng, actualPath, report) => VerifyCore(
+				this,
+				actualPng, actualPath, actualPath,
+				expectedPng, ReferenceLocation,
+				ReferenceLocation != null && File.Exists(ReferenceLocation) ? ReferenceLocation : null,
 				expectedSize, channelTolerance, maxErrorPixelFraction,
-				maxAverageColorErrorFraction, createDifference: false))
-				return actualPath;
-
-			remaining = timeout - clock.Elapsed;
-			if (remaining > TimeSpan.Zero)
-				await Task.Delay(
-					remaining < TimeSpan.FromMilliseconds(100) ? remaining : TimeSpan.FromMilliseconds(100),
-					cancellationToken);
-		}
+				maxAverageColorErrorFraction, report));
 	}
 
 	public static string Verify(
@@ -185,7 +163,7 @@ public sealed class Golden
 			expectedSize, channelTolerance, maxErrorPixelFraction, maxAverageColorErrorFraction);
 	}
 
-	public static async Task<string> VerifyAsync(
+	public static Task<string> VerifyAsync(
 		Func<Task<string>> capturePath,
 		string expectedPath,
 		TimeSpan timeout,
@@ -195,47 +173,19 @@ public sealed class Golden
 		double maxErrorPixelFraction = DefaultMaxErrorPixelFraction,
 		double? maxAverageColorErrorFraction = null)
 	{
-		if (capturePath == null) throw new ArgumentNullException(nameof(capturePath));
 		if (expectedPath == null) throw new ArgumentNullException(nameof(expectedPath));
 		ValidateComparison(channelTolerance, maxErrorPixelFraction, maxAverageColorErrorFraction);
-		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
-
 		byte[]? expectedPng = null;
-		var clock = Stopwatch.StartNew();
-		string? actualPath = null;
-		byte[]? actualPng = null;
-		while (true)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			var remaining = timeout - clock.Elapsed;
-			if (remaining <= TimeSpan.Zero)
-			{
-				if (actualPng == null || actualPath == null)
-					throw new TimeoutException("The image capture deadline expired before capture completed.");
-				CompleteDirect(
-					actualPng, actualPath, actualPath,
-					expectedPng!, expectedPath, expectedPath,
-					expectedSize, channelTolerance, maxErrorPixelFraction,
-					maxAverageColorErrorFraction, createDifference: true);
-				return actualPath;
-			}
-
-			actualPath = await WaitAsync(capturePath(), remaining, cancellationToken);
-			actualPng = File.ReadAllBytes(actualPath);
-			expectedPng ??= File.ReadAllBytes(expectedPath);
-			if (CompleteDirect(
+		return RetryAsync(
+			capturePath,
+			timeout,
+			cancellationToken,
+			(actualPng, actualPath, report) => VerifyCore(
+				null,
 				actualPng, actualPath, actualPath,
-				expectedPng, expectedPath, expectedPath,
+				expectedPng ??= File.ReadAllBytes(expectedPath), expectedPath, expectedPath,
 				expectedSize, channelTolerance, maxErrorPixelFraction,
-				maxAverageColorErrorFraction, createDifference: false))
-				return actualPath;
-
-			remaining = timeout - clock.Elapsed;
-			if (remaining > TimeSpan.Zero)
-				await Task.Delay(
-					remaining < TimeSpan.FromMilliseconds(100) ? remaining : TimeSpan.FromMilliseconds(100),
-					cancellationToken);
-		}
+				maxAverageColorErrorFraction, report));
 	}
 
 	public static string WritePng(string path, byte[] png)
@@ -284,61 +234,70 @@ public sealed class Golden
 	{
 		ValidateComparison(channelTolerance, maxErrorPixelFraction, maxAverageColorErrorFraction);
 		var expectedPng = ReferenceKey == null ? null : ReadBytes();
-		CompleteReference(
-			actualPng, actualLabel, actualPath, expectedPng,
+		VerifyCore(
+			this,
+			actualPng, actualLabel, actualPath,
+			expectedPng, ReferenceLocation,
+			ReferenceLocation != null && File.Exists(ReferenceLocation) ? ReferenceLocation : null,
 			expectedSize, channelTolerance, maxErrorPixelFraction,
-			maxAverageColorErrorFraction, createDifference: true);
+			maxAverageColorErrorFraction, report: true);
 	}
 
-	private bool CompleteReference(
+	private static bool VerifyCore(
+		Golden? golden,
 		byte[] actualPng,
 		string actualLabel,
 		string? actualPath,
 		byte[]? expectedPng,
+		string? expectedLabel,
+		string? expectedPath,
 		SKSizeI? expectedSize,
 		int channelTolerance,
 		double maxErrorPixelFraction,
 		double? maxAverageColorErrorFraction,
-		bool createDifference)
+		bool report)
 	{
 		if (expectedPng == null)
 		{
+			if (golden == null)
+				throw new InvalidOperationException("Direct image verification requires an expected image.");
 			using var actualImage = Decode(actualPng, actualLabel);
 			if (expectedSize is { } required &&
 				(actualImage.Width != required.Width || actualImage.Height != required.Height))
 			{
-				if (!createDifference)
+				if (!report)
 					return false;
 				Attach(actualPng, actualLabel, actualPath);
 				Assert.Fail("Image is " + Size(actualImage) + ", expected " + Size(required) + ".");
 			}
 
-			WriteDiagnostics(
+			golden.WriteDiagnostics(
 				actualPng,
 				new SKSizeI(actualImage.Width, actualImage.Height),
 				null,
 				null,
 				null);
 			Attach(actualPng, actualLabel, actualPath);
-			Assert.Fail("Missing reviewed golden. " + Describe() + $" Actual retained at {actualLabel}.");
+			Assert.Fail(
+				"Missing reviewed golden. " + golden.Describe() +
+				$" Actual retained at {actualLabel}.");
 			return false;
 		}
 
 		var matched = Compare(
-			actualPng, actualLabel, expectedPng, ReferenceLocation!,
+			actualPng, actualLabel, expectedPng, expectedLabel!,
 			expectedSize, channelTolerance, maxErrorPixelFraction,
-			maxAverageColorErrorFraction, createDifference,
+			maxAverageColorErrorFraction, report,
 			out var actualImageSize, out var expectedImageSize,
 			out var comparison, out var differencePng, out var failure);
-		if (!matched && !createDifference)
+		if (!matched && !report)
 			return false;
 
-		WriteDiagnostics(actualPng, actualImageSize, expectedPng, expectedImageSize, differencePng);
+		golden?.WriteDiagnostics(
+			actualPng, actualImageSize, expectedPng, expectedImageSize, differencePng);
 		Complete(
 			actualPng, actualLabel, actualPath,
-			expectedPng,
-			ReferenceLocation!,
-			File.Exists(ReferenceLocation) ? ReferenceLocation : null,
+			expectedPng, expectedLabel!, expectedPath,
 			comparison, differencePng, failure, matched);
 		return matched;
 	}
@@ -356,38 +315,12 @@ public sealed class Golden
 		double? maxAverageColorErrorFraction)
 	{
 		ValidateComparison(channelTolerance, maxErrorPixelFraction, maxAverageColorErrorFraction);
-		CompleteDirect(
+		VerifyCore(
+			null,
 			actualPng, actualLabel, actualPath,
 			expectedPng, expectedLabel, expectedPath,
 			expectedSize, channelTolerance, maxErrorPixelFraction,
-			maxAverageColorErrorFraction, createDifference: true);
-	}
-
-	private static bool CompleteDirect(
-		byte[] actualPng,
-		string actualLabel,
-		string? actualPath,
-		byte[] expectedPng,
-		string expectedLabel,
-		string? expectedPath,
-		SKSizeI? expectedSize,
-		int channelTolerance,
-		double maxErrorPixelFraction,
-		double? maxAverageColorErrorFraction,
-		bool createDifference)
-	{
-		var matched = Compare(
-			actualPng, actualLabel, expectedPng, expectedLabel,
-			expectedSize, channelTolerance, maxErrorPixelFraction,
-			maxAverageColorErrorFraction, createDifference,
-			out _, out _, out var comparison, out var differencePng, out var failure);
-		if (!matched && !createDifference)
-			return false;
-		Complete(
-			actualPng, actualLabel, actualPath,
-			expectedPng, expectedLabel, expectedPath,
-			comparison, differencePng, failure, matched);
-		return matched;
+			maxAverageColorErrorFraction, report: true);
 	}
 
 	private static bool Compare(
@@ -564,6 +497,45 @@ public sealed class Golden
 		if (maxAverageColorErrorFraction is { } average &&
 			(double.IsNaN(average) || average < 0 || average > 1))
 			throw new ArgumentOutOfRangeException(nameof(maxAverageColorErrorFraction));
+	}
+
+	private static async Task<string> RetryAsync(
+		Func<Task<string>> capturePath,
+		TimeSpan timeout,
+		CancellationToken cancellationToken,
+		Func<byte[], string, bool, bool> verify)
+	{
+		if (capturePath == null) throw new ArgumentNullException(nameof(capturePath));
+		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+
+		var clock = Stopwatch.StartNew();
+		string? actualPath = null;
+		byte[]? actualPng = null;
+		while (true)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			var remaining = timeout - clock.Elapsed;
+			if (remaining <= TimeSpan.Zero)
+			{
+				if (actualPng == null || actualPath == null)
+					throw new TimeoutException("The image capture deadline expired before capture completed.");
+				verify(actualPng, actualPath, true);
+				return actualPath;
+			}
+
+			actualPath = await WaitAsync(capturePath(), remaining, cancellationToken);
+			actualPng = File.ReadAllBytes(actualPath);
+			if (verify(actualPng, actualPath, false))
+				return actualPath;
+
+			remaining = timeout - clock.Elapsed;
+			if (remaining > TimeSpan.Zero)
+				await Task.Delay(
+					remaining < TimeSpan.FromMilliseconds(100)
+						? remaining
+						: TimeSpan.FromMilliseconds(100),
+					cancellationToken);
+		}
 	}
 
 	private static async Task<T> WaitAsync<T>(
