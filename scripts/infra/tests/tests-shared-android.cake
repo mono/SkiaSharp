@@ -157,24 +157,27 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
                 throw new Exception("ANDROID_HOME must select the SDK for cleanup.");
             var adb = System.IO.Path.Combine(sdk, "platform-tools", IsRunningOnWindows() ? "adb.exe" : "adb");
             var port = int.Parse(ownedSerial.Substring("emulator-".Length));
-            var state = DeviceState();
-            if (state != null) {
-                if (state != "device")
-                    throw new Exception($"Cannot verify ownership of {ownedSerial} while it is {state}; leaving its AVD intact.");
-                var identity = Property("ro.boot.qemu.avd_name");
-                if (identity.Length == 0)
-                    identity = Property("ro.kernel.qemu.avd_name");
-                if (identity != ownedAvd)
-                    throw new Exception($"Cleanup refused: {ownedSerial} does not identify owned AVD {ownedAvd}.");
-                RunProcess(adb, new ProcessSettings {
-                    Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(ownedSerial).Append("emu kill"),
-                    Timeout = 30000,
-                });
-            }
             var clock = System.Diagnostics.Stopwatch.StartNew();
-            while (DeviceState() != null || !ConsolePortAvailable()) {
+            var nextStopAttempt = TimeSpan.Zero;
+            while (true) {
+                var state = DeviceState();
+                if (state == null && ConsolePortAvailable())
+                    break;
                 if (clock.Elapsed > TimeSpan.FromSeconds(30))
-                    throw new TimeoutException($"Owned Android emulator did not stop: {ownedSerial}");
+                    throw new TimeoutException($"Owned Android emulator did not stop: {ownedSerial} (transport: {state ?? "missing"}).");
+                if (state == "device" && clock.Elapsed >= nextStopAttempt) {
+                    var identity = Property("ro.boot.qemu.avd_name");
+                    if (identity.Length == 0)
+                        identity = Property("ro.kernel.qemu.avd_name");
+                    if (identity != ownedAvd)
+                        throw new Exception($"Cleanup refused: {ownedSerial} does not identify owned AVD {ownedAvd}.");
+                    Information("Stopping owned Android emulator {0} ({1}).", serial, ownedAvd);
+                    RunProcess(adb, new ProcessSettings {
+                        Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(serial).Append("emu kill"),
+                        Timeout = 30000,
+                    });
+                    nextStopAttempt = clock.Elapsed + TimeSpan.FromSeconds(5);
+                }
                 System.Threading.Thread.Sleep(500);
             }
 
