@@ -44,6 +44,15 @@ SkiaSharp uses only a subset of Skia's dependencies. Some unused dependencies ar
 | Dependency | Purpose | Platforms |
 |------------|---------|-----------|
 | **buildtools** | Compiler toolchain | All |
+| **GN** | Build-file generator (build-time only) | All |
+
+### GN Tool Pin
+
+SkiaSharp's native builds use the exact GN revision in
+`externals/skia/bin/fetch-gn`, then compile with Ninja. They do not use Skia's
+separate Bazel tool pins. Skia's `gn/BUILDCONFIG.gn` explicitly retains loose
+include checking and transitive generated-header dependencies because newer GN
+versions default to strict include checking.
 
 ---
 
