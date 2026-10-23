@@ -5,6 +5,7 @@
     <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER;USE_LIBRARY_IMPORT</DefineConstants>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <NoWarn>$(NoWarn);SKIA4001</NoWarn>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
   </PropertyGroup>
 
@@ -20,11 +21,13 @@
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Testing\SkiaSharp.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**;..\Tests\SkiaSharp\Visual\Renderers\Desktop\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
+
 
 </Project>
