@@ -114,7 +114,7 @@ public static class GoldenImage
 			yield return difference;
 	}
 
-	public static GoldenComparison Compare(SKImage expected, SKImage actual, GoldenComparisonOptions options)
+	public static ImageComparison Compare(SKImage expected, SKImage actual, ImageComparisonOptions options)
 	{
 		if (expected == null) throw new ArgumentNullException(nameof(expected));
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -127,14 +127,14 @@ public static class GoldenImage
 			throw new InvalidOperationException(
 				$"Image is {actual.Width}x{actual.Height}, expected {size.Width}x{size.Height}.");
 
-		return new GoldenComparison(
+		return new ImageComparison(
 			SKPixelComparer.Compare(expected, actual, options.ChannelTolerance), options);
 	}
 
-	public static GoldenComparison Compare(
+	public static ImageComparison Compare(
 		byte[] expectedPng,
 		byte[] actualPng,
-		GoldenComparisonOptions options,
+		ImageComparisonOptions options,
 		string expectedLocation,
 		string actualLocation)
 	{
@@ -143,7 +143,7 @@ public static class GoldenImage
 		return Compare(expected, actual, options);
 	}
 
-	public static SKImage Difference(SKImage expected, SKImage actual, GoldenComparisonOptions options)
+	public static SKImage Difference(SKImage expected, SKImage actual, ImageComparisonOptions options)
 	{
 		ValidateOptions(options);
 		return SKPixelComparer.GenerateDifferenceImage(expected, actual, options.ChannelTolerance);
@@ -152,7 +152,7 @@ public static class GoldenImage
 	public static byte[] Difference(
 		byte[] expectedPng,
 		byte[] actualPng,
-		GoldenComparisonOptions options,
+		ImageComparisonOptions options,
 		string expectedLocation,
 		string actualLocation)
 	{
@@ -162,7 +162,7 @@ public static class GoldenImage
 		return Encode(difference);
 	}
 
-	private static void ValidateOptions(GoldenComparisonOptions options)
+	private static void ValidateOptions(ImageComparisonOptions options)
 	{
 		if (options == null) throw new ArgumentNullException(nameof(options));
 		if (options.ChannelTolerance < 0 || options.ChannelTolerance > byte.MaxValue)

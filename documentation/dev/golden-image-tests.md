@@ -5,8 +5,10 @@ Visual tests render each scene through every backend required by the host's
 browser screenshots. Both use reviewed PNG references and the non-shipping
 `SkiaSharp.Tests.Shared` project for requests, platform policy, disk/resource
 lookup, byte loading, PNG handling, comparison results, diagnostic markers and
-`SKPixelComparer`. Consumers keep their policy choices, renderer conversion,
-retry behavior and test-result attachments.
+`SKPixelComparer`. `GoldenVerifier` gives visual and sample tests the same
+resolve, require, compare, retry, diff and marker flow. Consumers keep only their
+request factories, policy choices, renderer/capture operations, artifact paths,
+test-result attachments and assertion wording.
 
 ## Reference paths
 
@@ -101,7 +103,7 @@ Selected bytes are read fresh, without a shared byte cache.
 
 ## Comparison policy
 
-The shared `GoldenComparisonOptions` and `GoldenImage` helpers standardize image
+The shared `ImageComparisonOptions`, `ImageVerifier`, and `GoldenVerifier` standardize image
 decoding, dimensions, threshold evaluation and difference generation. Consumers
 still choose policy. Visual comparisons remain renderer-specific:
 

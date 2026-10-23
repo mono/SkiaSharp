@@ -230,7 +230,7 @@ public class SampleImageTests : IDisposable
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         var expected = SavePng(bitmap, "decode.expected.png");
-        var options = new GoldenComparisonOptions { ExpectedSize = new(800, 600) };
+        var options = new ImageComparisonOptions { ExpectedSize = new(800, 600) };
         await SampleImage.Validate(data.ToArray(), Path.Combine(root, "decode.actual.png"), expected, options);
         await Assert.ThrowsAnyAsync<Exception>(() =>
             SampleImage.Validate(data.ToArray().AsSpan(0, 12).ToArray(),
@@ -242,7 +242,7 @@ public class SampleImageTests : IDisposable
         Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(invalidSignature));
         await Assert.ThrowsAnyAsync<Exception>(() =>
             SampleImage.Validate(data.ToArray(), Path.Combine(root, "wrong-size.actual.png"), expected,
-                new GoldenComparisonOptions { ExpectedSize = new(400, 300) }));
+                new ImageComparisonOptions { ExpectedSize = new(400, 300) }));
     }
 
     [Theory]
@@ -314,7 +314,7 @@ public class SampleImageTests : IDisposable
         bitmap.Erase(SKColors.Red);
         var expected = SavePng(bitmap, "options.expected.png");
         var actual = Path.Combine(root, "options.actual.png");
-        var options = new GoldenComparisonOptions { ExpectedSize = new(16, 12) };
+        var options = new ImageComparisonOptions { ExpectedSize = new(16, 12) };
 
         await SampleImage.Validate(File.ReadAllBytes(expected), actual, expected, options);
         SampleImage.Validate(actual, expected, options);
@@ -323,7 +323,7 @@ public class SampleImageTests : IDisposable
         Assert.Equal(0.00075, options.MaxErrorPixelFraction);
         Assert.Null(options.MaxAverageColorErrorFraction);
 
-        var wrongSize = new GoldenComparisonOptions { ExpectedSize = new(15, 12) };
+        var wrongSize = new ImageComparisonOptions { ExpectedSize = new(15, 12) };
         Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected, wrongSize));
         await Assert.ThrowsAnyAsync<Exception>(() =>
             SampleImage.Validate(File.ReadAllBytes(expected),
@@ -357,12 +357,12 @@ public class SampleImageTests : IDisposable
         for (var i = 0; i < changedPixels; i++)
             bitmap.SetPixel(i, 0, SKColors.White);
         var actual = SavePng(bitmap, "pixel-options.actual.png");
-        var options = new GoldenComparisonOptions { MaxErrorPixelFraction = 0.01 };
+        var options = new ImageComparisonOptions { MaxErrorPixelFraction = 0.01 };
         if (accepted)
             SampleImage.Validate(actual, expected, options);
         else
             Assert.Throws<Xunit.Sdk.FailException>(() => SampleImage.Validate(actual, expected, options));
-        Assert.Equal(0.00075, new GoldenComparisonOptions().MaxErrorPixelFraction);
+        Assert.Equal(0.00075, new ImageComparisonOptions().MaxErrorPixelFraction);
     }
 
     [Theory]

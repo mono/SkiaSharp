@@ -9,6 +9,7 @@ internal static class SampleImage
 {
     internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens");
     internal static GoldenStore Store => new(new[] { Root });
+    private static GoldenVerifier Verifier => new(Store);
 
     internal static GoldenRequest Host(string casePath) =>
         new(SampleLookup.HostPlatform.ToLowerInvariant(), casePath, architecture:
@@ -17,7 +18,7 @@ internal static class SampleImage
     internal static GoldenRequest Container(string casePath) =>
         new(OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux", casePath);
 
-    internal static async Task Validate(byte[] bytes, string actual, GoldenRequest request, GoldenComparisonOptions? options = null)
+    internal static async Task Validate(byte[] bytes, string actual, GoldenRequest request, ImageComparisonOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
         await File.WriteAllBytesAsync(actual, bytes);
@@ -25,68 +26,58 @@ internal static class SampleImage
         Validate(actual, request, options);
     }
 
-    internal static void Validate(string actual, GoldenRequest request, GoldenComparisonOptions? options = null)
+    internal static void Validate(string actual, GoldenRequest request, ImageComparisonOptions? options = null)
     {
-        var resolution = Store.Resolve(request);
-        TestContext.Current.TestOutputHelper?.WriteLine(resolution.Describe());
-        try
-        {
-            Require(resolution, actual);
-            Validate(actual, resolution.Location!, resolution.ReadBytes(), options ?? new(), reportMismatch: true);
-        }
-        finally
-        {
-            Emit(resolution, actual);
-        }
+        var verification = Verifier.Verify(request, ImageSource.FromFile(actual), options);
+        Complete(verification);
     }
 
     internal static async Task<string> Validate(
-        Func<Task<string>> capture, GoldenRequest request, TimeSpan? timeout = null, GoldenComparisonOptions? options = null)
+        Func<Task<string>> capture, GoldenRequest request, TimeSpan? timeout = null, ImageComparisonOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(capture);
         var limit = timeout ?? TimeSpan.FromSeconds(2);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
-        var resolution = Store.Resolve(request);
-        TestContext.Current.TestOutputHelper?.WriteLine(resolution.Describe());
-        if (resolution.Key is null)
-        {
-            var missing = await capture().WaitAsync(limit, TestContext.Current.CancellationToken);
-            Emit(resolution, missing);
-            Require(resolution, missing);
-        }
-        string? actual = null;
-        try
-        {
-            return await ImageCapture.RetryAsync(async () => actual = await capture(), limit,
-                (path, report) => Validate(path, resolution.Location!, resolution.ReadBytes(), options ?? new(), report),
-                TestContext.Current.CancellationToken);
-        }
-        finally
-        {
-            if (actual is not null)
-                Emit(resolution, actual);
-        }
+        var verification = await Verifier.VerifyAsync(
+            request,
+            async () => ImageSource.FromFile(await capture()),
+            options,
+            limit,
+            TestContext.Current.CancellationToken);
+        return Complete(verification);
     }
 
-    private static void Require(GoldenResolution resolution, string actual)
+    private static string Complete(GoldenVerification verification)
     {
-        if (resolution.Key is null)
-            TestContext.Current.AddFileAttachment(actual, "image/png");
-        Assert.True(resolution.Key is not null,
-            $"Missing reviewed sample golden. {resolution.Describe()} Actual retained at {actual}.");
-    }
-
-    private static void Emit(GoldenResolution resolution, string actual)
-    {
-        var diff = Path.ChangeExtension(actual, ".diff.png");
-        var actualPng = File.Exists(actual) ? File.ReadAllBytes(actual) : null;
-        var differencePng = File.Exists(diff) ? File.ReadAllBytes(diff) : null;
-        foreach (var marker in GoldenImage.Markers(resolution, actualPng, differencePng))
+        TestContext.Current.TestOutputHelper?.WriteLine(verification.Resolution.Describe());
+        foreach (var marker in verification.Markers())
             TestContext.Current.TestOutputHelper?.WriteLine(marker);
+
+        if (File.Exists(verification.Actual.Location))
+            TestContext.Current.AddFileAttachment(verification.Actual.Location, "image/png");
+        if (verification.IsMatch)
+            return verification.Actual.Location;
+        if (verification.IsMissing)
+            Assert.Fail(verification.Failure + $" Actual retained at {verification.Actual.Location}.");
+
+        var image = verification.Image!;
+        AttachExpected(image);
+        string? diffPath = null;
+        if (image.DifferencePng is { } difference)
+        {
+            diffPath = Path.ChangeExtension(image.Actual.Location, ".diff.png");
+            GoldenImage.Write(diffPath, difference);
+            TestContext.Current.AddFileAttachment(diffPath, "image/png");
+        }
+
+        Assert.Fail(
+            $"Sample pixels differ from {image.Expected.Location}: {image.Failure} " +
+            $"Actual {image.Actual.Location}" + (diffPath == null ? "." : $"; diff {diffPath}."));
+        return verification.Actual.Location;
     }
 
     /// <summary>Saves the actual PNG bytes, checks their signature, then compares it with another image file.</summary>
-    internal static async Task Validate(byte[] bytes, string actual, string expected, GoldenComparisonOptions? options = null)
+    internal static async Task Validate(byte[] bytes, string actual, string expected, ImageComparisonOptions? options = null)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(actual)!);
 
@@ -97,89 +88,71 @@ internal static class SampleImage
     }
 
     /// <summary>Compares two image files by dimensions and pixels.</summary>
-    internal static void Validate(string actual, string expected, GoldenComparisonOptions? options = null) =>
-        Validate(actual, expected, options ?? new(), reportMismatch: true);
+    internal static void Validate(string actual, string expected, ImageComparisonOptions? options = null) =>
+        Complete(Verify(actual, expected, options));
 
     /// <summary>Captures until an image matches another image file or the timeout expires.</summary>
     internal static async Task<string> Validate(
-        Func<Task<string>> capture, string expected, TimeSpan? timeout = null, GoldenComparisonOptions? options = null)
+        Func<Task<string>> capture, string expected, TimeSpan? timeout = null, ImageComparisonOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(capture);
         var limit = timeout ?? TimeSpan.FromSeconds(2);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(limit, TimeSpan.Zero);
-        options ??= new();
-        return await ImageCapture.RetryAsync(
-            capture, limit, (actual, report) => Validate(actual, expected, options, report),
+        var verification = await ImageVerifier.VerifyAsync(
+            async () => ImageSource.FromFile(await capture()),
+            ImageSource.FromFile(expected),
+            options,
+            limit,
             TestContext.Current.CancellationToken);
+        return Complete(verification);
     }
 
-    private static bool Validate(string actual, string expected, GoldenComparisonOptions options, bool reportMismatch)
+    private static ImageVerification Verify(string actual, string expected, ImageComparisonOptions? options)
     {
-        if (reportMismatch || !File.Exists(expected))
-            TestContext.Current.AddFileAttachment(actual, "image/png");
-
         Assert.True(File.Exists(expected), $"Missing comparison image: {expected}. Actual image retained at {actual}.");
-        return Validate(actual, expected, File.ReadAllBytes(expected), options, reportMismatch, attachActual: false);
+        return ImageVerifier.Verify(ImageSource.FromFile(actual), ImageSource.FromFile(expected), options);
     }
 
-    private static bool Validate(string actual, string expected, byte[] expectedBytes, GoldenComparisonOptions options,
-        bool reportMismatch, bool attachActual = true)
+    private static string Complete(ImageVerification verification)
     {
-        if (reportMismatch && attachActual)
-            TestContext.Current.AddFileAttachment(actual, "image/png");
-        var actualBytes = File.ReadAllBytes(actual);
-        var actualDecodes = GoldenImage.TryGetSize(actualBytes, out var actualSize);
-        var expectedDecodes = GoldenImage.TryGetSize(expectedBytes, out var expectedSize);
-        if (!reportMismatch && (!actualDecodes || !expectedDecodes))
-            TestContext.Current.AddFileAttachment(actual, "image/png");
-        Assert.True(actualDecodes, $"Failed to decode image: {actual}.");
-        Assert.True(expectedDecodes, $"Failed to decode image: {expected}.");
-        var dimensionsMatch = actualSize == expectedSize &&
-            (options.ExpectedSize is not { } required || actualSize == required);
-        if (!dimensionsMatch && !reportMismatch)
-            return false;
-        if (options.ExpectedSize is { } size)
-            Assert.Equal(size, actualSize);
-        Assert.Equal(expectedSize, actualSize);
-
-        var result = GoldenImage.Compare(expectedBytes, actualBytes, options, expected, actual);
-        var failure = options.MaxAverageColorErrorFraction is { } limit
-            ? $"average RGBA color error {result.AverageColorErrorFraction:P3}, exceeding {limit:P3}"
-            : $"differing pixels {(double)result.Pixels.ErrorPixelCount / result.Pixels.TotalPixels:P3}, exceeding {options.MaxErrorPixelFraction:P3}";
-        TestContext.Current.TestOutputHelper?.WriteLine(
-            $"Image comparison: {result.Pixels.ErrorPixelCount}/{result.Pixels.TotalPixels} pixels differ; " +
-            $"average RGBA color error {result.AverageColorErrorFraction:P3}; " +
-            (options.MaxAverageColorErrorFraction is { } allowed
-                ? $"allowed average color error {allowed:P3}."
-                : $"allowed differing pixels {options.MaxErrorPixelFraction:P3}."));
-        if (result.IsMatch)
+        TestContext.Current.AddFileAttachment(verification.Actual.Location, "image/png");
+        if (verification.Comparison is { } comparison)
         {
-            if (!reportMismatch)
-                TestContext.Current.AddFileAttachment(actual, "image/png");
-            return true;
+            TestContext.Current.TestOutputHelper?.WriteLine(
+                $"Image comparison: {comparison.Pixels.ErrorPixelCount}/{comparison.Pixels.TotalPixels} pixels differ; " +
+                $"average RGBA color error {comparison.AverageColorErrorFraction:P3}.");
+        }
+        if (verification.IsMatch)
+            return verification.Actual.Location;
+
+        AttachExpected(verification);
+        string? diffPath = null;
+        if (verification.DifferencePng is { } difference)
+        {
+            diffPath = Path.ChangeExtension(verification.Actual.Location, ".diff.png");
+            GoldenImage.Write(diffPath, difference);
+            TestContext.Current.AddFileAttachment(diffPath, "image/png");
         }
 
-        if (!reportMismatch)
-            return false;
-
-        var diffPath = Path.ChangeExtension(actual, ".diff.png");
-        GoldenImage.Write(diffPath, GoldenImage.Difference(expectedBytes, actualBytes, options, expected, actual));
-
-        if (File.Exists(expected))
-            TestContext.Current.AddFileAttachment(expected, "image/png", $"expected-{Path.GetFileName(expected)}");
-        else
-        {
-            var name = $"expected-{Path.GetFileName(expected)}";
-            var unique = name;
-            for (var suffix = 2; TestContext.Current.Attachments?.ContainsKey(unique) == true; suffix++)
-                unique = $"{name}-{suffix}";
-            TestContext.Current.AddAttachment(unique, expectedBytes, "image/png");
-        }
-        TestContext.Current.AddFileAttachment(diffPath, "image/png");
-
-        Assert.Fail($"Sample pixels differ from {expected}: {result.Pixels.ErrorPixelCount}/{result.Pixels.TotalPixels} pixels; " +
-            $"{failure}; actual {actual}; diff {diffPath}.");
-        return false;
+        Assert.Fail(
+            $"Sample pixels differ from {verification.Expected.Location}: {verification.Failure} " +
+            $"Actual {verification.Actual.Location}" + (diffPath == null ? "." : $"; diff {diffPath}."));
+        return verification.Actual.Location;
     }
 
+    private static void AttachExpected(ImageVerification verification)
+    {
+        if (File.Exists(verification.Expected.Location))
+        {
+            TestContext.Current.AddFileAttachment(
+                verification.Expected.Location, "image/png", $"expected-{Path.GetFileName(verification.Expected.Location)}");
+            return;
+        }
+
+        var name = $"expected-{Path.GetFileName(verification.Expected.Location)}";
+        var unique = name;
+        for (var suffix = 2; TestContext.Current.Attachments?.ContainsKey(unique) == true; suffix++)
+            unique = $"{name}-{suffix}";
+        TestContext.Current.AddAttachment(unique, verification.ExpectedPng, "image/png");
+    }
 }

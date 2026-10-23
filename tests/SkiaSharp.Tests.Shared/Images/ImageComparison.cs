@@ -1,11 +1,8 @@
-using System;
-
 namespace SkiaSharp.Tests.Shared;
 
-/// <summary>Reports measured image differences and whether they satisfy the configured limits.</summary>
-public sealed class GoldenComparison
+public sealed class ImageComparison
 {
-	internal GoldenComparison(SKPixelComparisonResult pixels, GoldenComparisonOptions options)
+	internal ImageComparison(SKPixelComparisonResult pixels, ImageComparisonOptions options)
 	{
 		Pixels = pixels;
 		AverageColorErrorFraction = pixels.AbsoluteError / (pixels.TotalPixels * 4.0 * 255);

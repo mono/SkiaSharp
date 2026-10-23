@@ -141,7 +141,7 @@ smoke check that can miss uniform dark output. Mismatches retain actual/diff
 images; references are never accepted automatically.
 
 `SampleImage.Validate` takes `actual`, a typed golden request (for example,
-`SampleImage.Host("Console/output")`), and optional shared `GoldenComparisonOptions`.
+`SampleImage.Host("Console/output")`), and optional shared `ImageComparisonOptions`.
 Absolute expected-image paths remain available for transient screenshot checks.
 Its byte-array overload also takes
 the actual output path, saves the bytes, then calls the file overload.
