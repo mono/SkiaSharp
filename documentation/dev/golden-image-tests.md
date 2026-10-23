@@ -82,8 +82,9 @@ the trace. Lookup never creates or approves a reference.
 
 ## Packaging
 
-`tests/GoldenAssets.targets` packages the collection selected by a host's
-`GoldenRoot`. Desktop tests copy files to `Goldens/{platform}/...`; device/browser
+`tests/GoldenAssets.targets` packages the source selected by a host's
+`GoldenRoot`. Each consumer project has its own output directory and copies its
+selected references to `Goldens/{platform}/...`; device/browser
 visual hosts set `EmbedGoldens=true` and use exact logical resource names:
 
 ```text
