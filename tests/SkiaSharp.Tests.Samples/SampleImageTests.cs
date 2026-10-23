@@ -37,8 +37,8 @@ public class SampleImageTests : IDisposable
         using var bitmap = new SKBitmap(4, 4);
         bitmap.Erase(SKColors.Blue);
         var actual = SavePng(bitmap, "typed-missing.actual.png");
-        var golden = SampleImage.Store.Resolve(
-            "missing-profile", "Missing/case", new Version(12, 6, 2), "arm64", "engine");
+        var golden = SampleImage.Store.Resolve(new GoldenCase(
+            "missing-profile", "Missing/case", new Version(12, 6, 2), "arm64", "engine"));
         var error = Assert.ThrowsAny<Exception>(() => golden.Verify(actual));
         Assert.Null(golden.ReferenceKey);
         Assert.Contains(golden.Describe(), error.Message);
@@ -49,7 +49,7 @@ public class SampleImageTests : IDisposable
     [Fact]
     public void MissingTypedGoldenStillValidatesTheCapture()
     {
-        var golden = SampleImage.Store.Resolve("missing-profile", "Missing/invalid");
+        var golden = SampleImage.Store.Resolve(new GoldenCase("missing-profile", "Missing/invalid"));
         var invalid = new byte[] { 1, 2, 3 };
         var decodeError = Assert.Throws<InvalidOperationException>(() =>
             golden.Verify(invalid));

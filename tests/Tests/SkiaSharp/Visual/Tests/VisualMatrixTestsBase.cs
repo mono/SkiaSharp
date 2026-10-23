@@ -73,11 +73,11 @@ namespace SkiaSharp.Tests.Visual.Tests
 		}
 
 		internal static Golden Resolve(string rendererName, string sceneName) =>
-			goldenStore.Value.Resolve(
+			goldenStore.Value.Resolve(new GoldenCase(
 				TestConfig.Current.PlatformName,
 				sceneName,
 				architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
-				variant: rendererName);
+				variant: rendererName));
 
 		private static GoldenStore CreateStore()
 		{

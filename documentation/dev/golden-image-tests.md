@@ -5,9 +5,10 @@ Visual tests render each scene through every backend required by the host's
 browser screenshots. Both use reviewed PNG references and the non-shipping
 `SkiaSharp.Tests.Shared` project for case resolution, platform policy, disk/resource
 lookup, PNG handling, comparison, diagnostic markers and `SKPixelComparer`.
-`GoldenStore.Resolve(...)` returns one `Golden` that owns the complete compare,
-retry, diff, attachment and assertion flow. Consumers keep only profile/case
-selection, policy choices and renderer/capture operations.
+`GoldenCase` owns the validated profile, case path, version, architecture and
+variant. `GoldenStore.Resolve(GoldenCase)` returns one `Golden` that owns the
+complete compare, retry, diff, attachment and assertion flow. Consumers keep
+only case selection, policy choices and renderer/capture operations.
 
 ## Reference paths
 
@@ -47,8 +48,9 @@ baseline.
 
 ## Lookup rules
 
-`GoldenStore.Resolve(...)` accepts the profile, case path, optional `Version`,
-architecture and functional variant.
+`GoldenCase` accepts and validates the profile, case path, optional `Version`,
+architecture and functional variant. It also owns the canonical capture key and
+ordered architecture-specific/neutral filenames used during resolution.
 
 For each eligible version, candidate filenames are ordered:
 

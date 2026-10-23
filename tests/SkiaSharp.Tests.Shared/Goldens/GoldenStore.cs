@@ -26,41 +26,21 @@ public sealed class GoldenStore
 			isThreadSafe: true);
 	}
 
-	public Golden Resolve(
-		string profile,
-		string casePath,
-		Version? version = null,
-		string? architecture = null,
-		string? variant = null)
+	public Golden Resolve(GoldenCase goldenCase)
 	{
-		profile = NormalizeProfile(profile);
-		version = NormalizeVersion(version);
-		ValidateCase(casePath);
-		if (architecture != null)
-		{
-			ValidateSegment(architecture);
-			if (!IsArchitecture(architecture))
-				throw new ArgumentException("Expected a supported .NET architecture: " + architecture, nameof(architecture));
-		}
-		if (variant != null)
-		{
-			ValidateSegment(variant);
-			if (IsArchitecture(variant))
-				throw new ArgumentException("Architecture tokens cannot be used as variants: " + variant, nameof(variant));
-		}
-
-		var fileNames = FileNames(casePath, architecture, variant).ToArray();
+		if (goldenCase == null) throw new ArgumentNullException(nameof(goldenCase));
+		var fileNames = goldenCase.FileNames().ToArray();
 		var sources = this.sources.Value;
 		var attempted = new List<string>();
-		foreach (var candidateProfile in FallbackChain(profile))
+		foreach (var candidateProfile in goldenCase.FallbackChain())
 		{
-			if (version != null)
+			if (goldenCase.Version != null)
 			{
 				var versions = sources
 					.Where(source =>
 						source.Key.StartsWith(candidateProfile + "/", StringComparison.Ordinal) &&
 						source.Value.Version != null &&
-						source.Value.Version >= version)
+						source.Value.Version >= goldenCase.Version)
 					.Select(source => source.Value.Version!)
 					.Distinct()
 					.OrderBy(value => value);
@@ -70,9 +50,7 @@ public sealed class GoldenStore
 					var key = candidateProfile + "/" + candidateVersion + "/" + fileName;
 					attempted.Add(key);
 					if (sources.TryGetValue(key, out var source))
-						return new Golden(
-							profile, casePath, version, fileNames[0],
-							key, source.Location, attempted, source.Read);
+						return new Golden(goldenCase, key, source.Location, attempted, source.Read);
 				}
 			}
 
@@ -82,14 +60,12 @@ public sealed class GoldenStore
 				attempted.Add(key);
 				if (sources.TryGetValue(key, out var source))
 					return new Golden(
-						profile, casePath, version, fileNames[0],
+						goldenCase,
 						key, source.Location, attempted, source.Read);
 			}
 		}
 
-		return new Golden(
-			profile, casePath, version, fileNames[0],
-			null, null, attempted, null);
+		return new Golden(goldenCase, null, null, attempted, null);
 	}
 
 	private Dictionary<string, Source> EnumerateSources()
@@ -137,68 +113,12 @@ public sealed class GoldenStore
 		}
 	}
 
-	private static IEnumerable<string> FileNames(string casePath, string? architecture, string? variant)
-	{
-		var name = casePath + (variant == null ? "" : "." + variant);
-		if (architecture != null)
-			yield return name + "." + architecture + ".png";
-		yield return name + ".png";
-	}
-
-	private static string NormalizeProfile(string profile)
-	{
-		ValidateSegment(profile);
-		return profile == "macos" ? "mac" : profile;
-	}
-
-	private static Version? NormalizeVersion(Version? version) =>
-		version == null ? null :
-			version.Build < 0 ? new Version(version.Major, version.Minor, 0) : version;
-
-	private static IEnumerable<string> FallbackChain(string profile)
-	{
-		yield return profile;
-		if (profile == "nanoserver")
-			yield return "windows";
-		if (profile != "portable")
-			yield return "portable";
-	}
-
-	private static void ValidateCase(string value)
-	{
-		if (value == null) throw new ArgumentNullException(nameof(value));
-		foreach (var segment in value.Split('/'))
-			ValidateSegment(segment, caseSegment: true);
-	}
-
-	private static void ValidateSegment(string value, bool caseSegment = false)
-	{
-		var pattern = caseSegment
-			? @"\A[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*\z"
-			: @"\A[a-z0-9]+(?:-[a-z0-9]+)*\z";
-		if (string.IsNullOrEmpty(value) || !Regex.IsMatch(value, pattern) ||
-			Regex.IsMatch(value, @"\A(con|prn|aux|nul|com[1-9]|lpt[1-9])\z", RegexOptions.IgnoreCase))
-			throw new ArgumentException("Expected a safe golden path segment: " + value);
-	}
-
-	private static bool IsArchitecture(string value)
-	{
-		switch (value)
-		{
-			case "x86": case "x64": case "arm": case "arm64": case "armv6":
-			case "wasm": case "s390x": case "loongarch64": case "ppc64le": case "riscv64":
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	private static Version? ValidateKey(string key)
 	{
 		var parts = key.Split('/');
 		if (parts.Length < 2 || !key.EndsWith(".png", StringComparison.Ordinal))
 			throw new ArgumentException("Expected profile/[version/]case[.variant][.architecture].png: " + key);
-		ValidateSegment(parts[0]);
+		GoldenCase.ValidateSegment(parts[0]);
 		var caseStart = 1;
 		Version? parsed = null;
 		if (parts.Length >= 3 &&
@@ -215,16 +135,17 @@ public sealed class GoldenStore
 		}
 
 		foreach (var segment in parts.Skip(caseStart).Take(parts.Length - caseStart - 1))
-			ValidateSegment(segment, caseSegment: true);
+			GoldenCase.ValidateSegment(segment, caseSegment: true);
 		var names = parts[parts.Length - 1]
 			.Substring(0, parts[parts.Length - 1].Length - 4)
 			.Split('.');
 		if (names.Length > 3)
 			throw new ArgumentException("Too many golden filename suffixes: " + key);
-		ValidateSegment(names[0], caseSegment: true);
+		GoldenCase.ValidateSegment(names[0], caseSegment: true);
 		foreach (var suffix in names.Skip(1))
-			ValidateSegment(suffix);
-		if (names.Length == 3 && (IsArchitecture(names[1]) || !IsArchitecture(names[2])))
+			GoldenCase.ValidateSegment(suffix);
+		if (names.Length == 3 &&
+			(GoldenCase.IsArchitecture(names[1]) || !GoldenCase.IsArchitecture(names[2])))
 			throw new ArgumentException("Variant must precede a supported .NET architecture: " + key);
 		return parsed;
 	}

@@ -11,13 +11,13 @@ internal static class SampleImage
     internal static GoldenStore Store { get; } = new(new[] { Root });
 
     internal static Golden Host(string casePath) =>
-        Store.Resolve(
+        Store.Resolve(new GoldenCase(
             SampleLookup.HostPlatform.ToLowerInvariant(),
             casePath,
-            architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+            architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()));
 
     internal static Golden Container(string casePath) =>
-        Store.Resolve(
+        Store.Resolve(new GoldenCase(
             OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux",
-            casePath);
+            casePath));
 }

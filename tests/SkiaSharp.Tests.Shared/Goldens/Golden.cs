@@ -12,32 +12,24 @@ public sealed class Golden
 
 	private static readonly byte[] PngSignature = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-	private readonly string profile;
-	private readonly string casePath;
-	private readonly Version? version;
 	private readonly Func<byte[]>? readReference;
 
 	internal Golden(
-		string profile,
-		string casePath,
-		Version? version,
-		string captureFileName,
+		GoldenCase goldenCase,
 		string? referenceKey,
 		string? referenceLocation,
 		IEnumerable<string> attempts,
 		Func<byte[]>? readReference)
 	{
-		this.profile = profile;
-		this.casePath = casePath;
-		this.version = version;
-		CaptureKey = profile + "/" + captureFileName;
+		Case = goldenCase ?? throw new ArgumentNullException(nameof(goldenCase));
 		ReferenceKey = referenceKey;
 		ReferenceLocation = referenceLocation;
 		Attempts = attempts.ToList().AsReadOnly();
 		this.readReference = readReference;
 	}
 
-	public string CaptureKey { get; }
+	public GoldenCase Case { get; }
+	public string CaptureKey => Case.CaptureKey;
 	public string? ReferenceKey { get; }
 	public string? ReferenceLocation { get; }
 	public IReadOnlyList<string> Attempts { get; }
@@ -46,8 +38,9 @@ public sealed class Golden
 		readReference == null ? throw new InvalidOperationException(Describe()) : readReference();
 
 	public string Describe() =>
-		"Golden request: " + profile +
-		(version == null ? "" : " at " + version) + "/" + casePath + Environment.NewLine +
+		"Golden request: " + Case.Profile +
+		(Case.Version == null ? "" : " at " + Case.Version) +
+		"/" + Case.CasePath + Environment.NewLine +
 		(ReferenceKey == null
 			? "MISSING reference"
 			: "Selected: " + ReferenceKey + " at " + ReferenceLocation) +

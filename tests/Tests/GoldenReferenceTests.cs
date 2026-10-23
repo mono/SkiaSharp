@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 				File.WriteAllBytes(path, new byte[] { 1, 2, 3 });
 			}
 			return new GoldenStore(new[] { directory })
-				.Resolve(profile, casePath, version, architecture, variant);
+				.Resolve(new GoldenCase(profile, casePath, version, architecture, variant));
 		}
 
 		[Theory]
@@ -79,9 +79,9 @@ namespace SkiaSharp.Tests
 		[InlineData("12.6.2.10", "12.6.2.10")]
 		public void SystemVersionsNormalizeToAtLeastThreeComponents(string input, string expected)
 		{
-			var golden = Resolve(Array.Empty<string>(), "mac", "Text", Version.Parse(input));
-			Assert.Contains("mac at " + expected + "/Text", golden.Describe());
-			Assert.Equal("mac/Text.png", golden.CaptureKey);
+			var goldenCase = new GoldenCase("mac", "Text", Version.Parse(input));
+			Assert.Equal(Version.Parse(expected), goldenCase.Version);
+			Assert.Equal("mac/Text.png", goldenCase.CaptureKey);
 		}
 
 		[Theory]
@@ -92,10 +92,11 @@ namespace SkiaSharp.Tests
 		[InlineData("docker-linux", "docker-linux")]
 		public void PlatformsNormalizeAndUseTheGeneralPortableFallback(string platform, string normalized)
 		{
-			var golden = Resolve(new[] { "portable/Text.png" }, platform, "Text");
-			Assert.StartsWith(normalized + "/", golden.CaptureKey);
-			Assert.Equal("portable/Text.png",
-				golden.ReferenceKey);
+			var goldenCase = new GoldenCase(platform, "Text");
+			Assert.Equal(normalized, goldenCase.Profile);
+			Assert.Equal(
+				"portable/Text.png",
+				Resolve(new[] { "portable/Text.png" }, platform, "Text").ReferenceKey);
 		}
 
 		[Fact]
@@ -145,6 +146,7 @@ namespace SkiaSharp.Tests
 		[InlineData("3D")]
 		public void HierarchicalCasePathsPreserveCase(string casePath)
 		{
+			Assert.Equal(casePath, new GoldenCase("mac", casePath).CasePath);
 			var key = "mac/" + casePath + ".png";
 			Assert.Equal(key, Resolve(new[] { key }, "mac", casePath).ReferenceKey);
 		}
@@ -163,7 +165,7 @@ namespace SkiaSharp.Tests
 		[InlineData("Text/CON")]
 		public void UnsafeCasePathsAreRejected(string casePath) =>
 			Assert.Throws<ArgumentException>(() =>
-				new GoldenStore(Array.Empty<string>()).Resolve("mac", casePath));
+				new GoldenCase("mac", casePath));
 
 		[Theory]
 		[InlineData("x86")]
@@ -178,6 +180,12 @@ namespace SkiaSharp.Tests
 		[InlineData("riscv64")]
 		public void ArchitectureTokensAreReserved(string architecture)
 		{
+			var goldenCase = new GoldenCase(
+				"portable",
+				"Text",
+				architecture: architecture,
+				variant: "raster");
+			Assert.Equal(architecture, goldenCase.Architecture);
 			var key = "portable/Text.raster." + architecture + ".png";
 			Assert.Equal(
 				key,
@@ -185,7 +193,7 @@ namespace SkiaSharp.Tests
 					new[] { key }, "portable", "Text", architecture: architecture, variant: "raster")
 					.ReferenceKey);
 			Assert.Throws<ArgumentException>(() =>
-				new GoldenStore(Array.Empty<string>()).Resolve("mac", "Text", variant: architecture));
+				new GoldenCase("mac", "Text", variant: architecture));
 		}
 
 		[Theory]
@@ -212,7 +220,7 @@ namespace SkiaSharp.Tests
 				File.WriteAllBytes(path, new byte[] { directory == first ? (byte)1 : (byte)2 });
 			}
 			var store = new GoldenStore(new[] { first, second, first });
-			var result = store.Resolve("portable", "Group/Text");
+			var result = store.Resolve(new GoldenCase("portable", "Group/Text"));
 			Assert.Equal(
 				Path.Combine(first, key.Replace('/', Path.DirectorySeparatorChar)),
 				result.ReferenceLocation);
@@ -223,7 +231,7 @@ namespace SkiaSharp.Tests
 			var added = Path.Combine(first, "portable", "Group", "Added.png");
 			Directory.CreateDirectory(Path.GetDirectoryName(added)!);
 			File.WriteAllBytes(added, new byte[] { 4 });
-			Assert.Null(store.Resolve("portable", "Group/Added").ReferenceKey);
+			Assert.Null(store.Resolve(new GoldenCase("portable", "Group/Added")).ReferenceKey);
 		}
 
 		[Fact]
