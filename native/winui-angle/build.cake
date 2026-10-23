@@ -33,6 +33,7 @@ Task("sync-ANGLE")
         "third_party/zlib",
         "third_party/jsoncpp",
         "third_party/astc-encoder/src",
+        "third_party/depot_tools",
     };
     RunProcess("git", new ProcessSettings {
         Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
@@ -87,6 +88,12 @@ Task("sync-ANGLE")
                 throw new Exception($"Cannot apply the SkiaSharp config to ANGLE targets at {buildConfig}.");
             FileWriteText(buildConfig, contents.Replace(anchor, $"{anchor}\n{config}"));
         }
+    }
+
+    // set version numbers
+    var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
+    if (!FileExists(lastchange)) {
+        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
     // download rc.exe
@@ -174,6 +181,7 @@ Task("ANGLE")
                 $"angle_enable_wgpu=false " +
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
+                $"skiasharp_winappsdk={wasdk} ".ToLower() +
                 $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
                 new Dictionary<string, string> {
                     { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
