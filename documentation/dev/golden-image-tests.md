@@ -82,7 +82,7 @@ the trace. Lookup never creates or approves a reference.
 
 ## Packaging
 
-`tests/GoldenAssets.targets` packages the domain selected by a host's
+`tests/GoldenAssets.targets` packages the collection selected by a host's
 `GoldenRoot`. Desktop tests copy files to `Goldens/{platform}/...`; device/browser
 visual hosts set `EmbedGoldens=true` and use exact logical resource names:
 
@@ -135,22 +135,26 @@ python3 -m unittest discover -s scripts/infra/tests -p test_golden_images.py -v
 Each image is emitted as one unversioned marker in the test output/TRX:
 
 ```text
-##SKIA-GOLDEN## role=actual key=Visual/mac/Text.raster.arm64.png size=256x256 base64=...
+##SKIA-GOLDEN## role=actual key=mac/Text.raster.arm64.png size=256x256 base64=...
 ```
 
-Roles are `actual`, `reference` and `diff`. The key always describes the capture
-request, not a selected shared baseline; the readable lookup trace names that
-baseline separately.
+Roles are `actual`, `reference` and `diff`. The key is relative to the consumer's
+configured `GoldenRoot`; sample and visual runs already have different roots.
+It describes the capture request, not a selected shared reference; the readable
+lookup trace names that reference separately.
 
 ```sh
-python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx --dry-run
-python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx
+python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx \
+  --out output/golden-proposals/Visual --dry-run
+python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx \
+  --out output/golden-proposals/Visual
 python3 scripts/infra/tests/extract-visual-goldens.py path/to/results.trx --images-out output/golden-images
 ```
 
-The exporter validates paths, PNG integrity and dimensions. Default output is
-`output/golden-proposals/{Samples|Visual}/...`, never the committed reference
-tree. Conflicting captures fail rather than silently selecting a winner.
+The exporter validates paths, PNG integrity and dimensions. Run it against one
+consumer's results and choose that consumer's proposal root (`Visual` or
+`Samples`). Proposals remain outside the committed reference tree. Conflicting
+captures fail rather than silently selecting a winner.
 Diagnostic export retains each run, role and retry separately.
 
 Review pixels before promoting a proposal into `tests/Goldens`; never bless a

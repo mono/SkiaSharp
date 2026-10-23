@@ -72,7 +72,7 @@ namespace SkiaSharp.Tests
 		{
 			var request = new GoldenRequest("mac", "Text", Version.Parse(input));
 			Assert.Equal(Version.Parse(expected), request.Version);
-			Assert.Equal("Visual/mac/Text.png", GoldenDiagnostics.CaptureKey("Visual", request));
+			Assert.Equal("mac/Text.png", GoldenDiagnostics.CaptureKey(request));
 		}
 
 		[Theory]
@@ -208,9 +208,9 @@ namespace SkiaSharp.Tests
 			var request = new GoldenRequest("macos", "Maui/home", new Version(12, 6), "arm64", "raster");
 			var result = Resolve(new[] { "portable/Maui/home.raster.png" }, request);
 			Assert.Equal("portable/Maui/home.raster.png", result.Key);
-			Assert.Equal("Samples/mac/Maui/home.raster.arm64.png", GoldenDiagnostics.CaptureKey("Samples", request));
-			Assert.Equal("##SKIA-GOLDEN## role=actual key=Visual/mac/Maui/home.raster.arm64.png size=1x2 base64=AQID",
-				GoldenDiagnostics.Marker("Visual", "actual", request, 1, 2, new byte[] { 1, 2, 3 }));
+			Assert.Equal("mac/Maui/home.raster.arm64.png", GoldenDiagnostics.CaptureKey(request));
+			Assert.Equal("##SKIA-GOLDEN## role=actual key=mac/Maui/home.raster.arm64.png size=1x2 base64=AQID",
+				GoldenDiagnostics.Marker("actual", request, 1, 2, new byte[] { 1, 2, 3 }));
 		}
 
 		public void Dispose()

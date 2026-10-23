@@ -112,7 +112,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		private void Emit(string marker, string rendererName, string sceneName, SKImageInfo info, byte[] png)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
-			WriteOutput(GoldenDiagnostics.Marker("Visual", marker, Request(rendererName, sceneName),
+			WriteOutput(GoldenDiagnostics.Marker(marker, Request(rendererName, sceneName),
 				normalized.Width, normalized.Height, png));
 		}
 

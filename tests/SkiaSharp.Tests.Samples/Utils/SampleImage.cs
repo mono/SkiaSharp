@@ -90,7 +90,7 @@ internal static class SampleImage
             using var image = SKImage.FromEncodedData(bytes)
                 ?? throw new InvalidOperationException("Cannot emit an invalid PNG diagnostic.");
             TestContext.Current.TestOutputHelper?.WriteLine(
-                GoldenDiagnostics.Marker("Samples", role, resolution.Request, image.Width, image.Height, bytes));
+                GoldenDiagnostics.Marker(role, resolution.Request, image.Width, image.Height, bytes));
         }
     }
 

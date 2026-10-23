@@ -3,7 +3,7 @@
 
 Stage actual images in output/golden-proposals for review, or export all roles
 with --images-out. Neither operation approves a new reference automatically.
-Keys are relative to tests/Goldens, including their Samples or Visual directory.
+Keys are relative to the consumer's configured golden root.
 """
 
 import argparse
@@ -28,9 +28,9 @@ MARKER = re.compile(
 
 def validate_key(key):
     parts = key.split("/")
-    if len(parts) < 3 or parts[0] not in ("Samples", "Visual"):
-        raise ValueError(f"Expected Samples|Visual/platform/[version/]case[.variant][.architecture].png: {key}")
-    _, platform, *case = parts
+    if len(parts) < 2:
+        raise ValueError(f"Expected platform/[version/]case[.variant][.architecture].png: {key}")
+    platform, *case = parts
     if len(case) >= 2 and re.fullmatch(r"(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2,3}", case[0]):
         if any(int(component) > 2147483647 for component in case[0].split(".")):
             raise ValueError(f"Version component is out of range: {key}")

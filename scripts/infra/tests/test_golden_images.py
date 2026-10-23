@@ -21,7 +21,7 @@ def png(value=0):
             chunk(b"IDAT", zlib.compress(b"\x00" + bytes([value, 0, 0, 255]))) + chunk(b"IEND", b""))
 
 
-def marker(key="Visual/mac/Text.raster.arm64.png", role="actual", data=None):
+def marker(key="mac/Text.raster.arm64.png", role="actual", data=None):
     return (f"##SKIA-GOLDEN## role={role} key={key} size=1x1 "
             f"base64={base64.b64encode(png() if data is None else data).decode()}")
 
@@ -37,25 +37,25 @@ def workspace():
 
 class GoldenImageTests(unittest.TestCase):
     def test_safe_canonical_paths(self):
-        for key in ("Samples/mac/Console/output.png", "Visual/portable/Text.raster.png",
-                    "Visual/mac/3D.raster.png",
-                    "Samples/ubuntu/22.4.5/Web/page.firefox.x64.png",
-                    "Samples/android/1.2.3.4/Maui/home.png",
-                    "Samples/mac/Browser/wasm-page.png",
-                    "Visual/mac/2147483647.0.0/DiagonalLines.ganesh-gl.arm64.png"):
+        for key in ("mac/Console/output.png", "portable/Text.raster.png",
+                    "mac/3D.raster.png",
+                    "ubuntu/22.4.5/Web/page.firefox.x64.png",
+                    "android/1.2.3.4/Maui/home.png",
+                    "mac/Browser/wasm-page.png",
+                    "mac/2147483647.0.0/DiagonalLines.ganesh-gl.arm64.png"):
             goldens.validate_key(key)
-        for key in ("../Visual/mac/0.0.0/sample.png", "/Visual/mac/0.0.0/sample.png",
-                    "Visual/mac/../sample.png", "Visual/mac/12.0/sample.png",
-                    "Visual/mac/12.00.0/sample.png", "Visual/mac/12.0.0.r1/sample.png",
-                    "Visual/mac/1.2.3.4.5/sample.png", "Visual/mac/con.png",
-                    "Samples/Mac/sample.png", "Visual/mac/Group/CON/sample.png",
-                    "Visual/mac/Group//sample.png", "Visual/mac/Group/../sample.png",
-                    "Visual/mac/Group/./sample.png", "Visual/mac/C:/sample.png",
-                    "Visual/mac/sample..png", "Visual/mac/sample.a.b.c.png",
-                    "Visual\\mac\\sample.png", "Visual/mac/2147483648.0.0/sample.png",
-                    "Visual/mac/sample.x64.firefox.png", "Visual/mac/sample.x64.arm64.png",
-                    "Visual/mac/sample.firefox.unknown.png", "Visual/mac/sample.Raster.png",
-                    "Visual/mac/sample.PNG"):
+        for key in ("../mac/0.0.0/sample.png", "/mac/0.0.0/sample.png",
+                    "mac/../sample.png", "mac/12.0/sample.png",
+                    "mac/12.00.0/sample.png", "mac/12.0.0.r1/sample.png",
+                    "mac/1.2.3.4.5/sample.png", "mac/con.png",
+                    "Mac/sample.png", "mac/Group/CON/sample.png",
+                    "mac/Group//sample.png", "mac/Group/../sample.png",
+                    "mac/Group/./sample.png", "mac/C:/sample.png",
+                    "mac/sample..png", "mac/sample.a.b.c.png",
+                    "mac\\sample.png", "mac/2147483648.0.0/sample.png",
+                    "mac/sample.x64.firefox.png", "mac/sample.x64.arm64.png",
+                    "mac/sample.firefox.unknown.png", "mac/sample.Raster.png",
+                    "mac/sample.PNG"):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 goldens.validate_key(key)
 
@@ -121,9 +121,9 @@ class GoldenImageTests(unittest.TestCase):
             outside = root / "outside"
             destination.mkdir()
             outside.mkdir()
-            (destination / "Visual").symlink_to(outside.resolve(), target_is_directory=True)
+            (destination / "mac").symlink_to(outside.resolve(), target_is_directory=True)
             with self.assertRaisesRegex(ValueError, "escapes"):
-                goldens.contained(destination, "Visual/mac/sample.png")
+                goldens.contained(destination, "mac/sample.png")
 
     @unittest.skipIf(sys.platform == "win32", "Creating symlinks requires Windows host privileges")
     def test_final_diagnostic_filename_and_run_directory_cannot_escape(self):
