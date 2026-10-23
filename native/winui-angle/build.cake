@@ -33,7 +33,6 @@ Task("sync-ANGLE")
         "third_party/zlib",
         "third_party/jsoncpp",
         "third_party/astc-encoder/src",
-        "third_party/depot_tools",
     };
     RunProcess("git", new ProcessSettings {
         Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
@@ -90,10 +89,32 @@ Task("sync-ANGLE")
         }
     }
 
-    // set version numbers
+    // Set deterministic Chromium version metadata from the pinned ANGLE commit.
     var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
-    if (!FileExists(lastchange)) {
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
+    var committime = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE.committime");
+    if (!FileExists(lastchange) || !FileExists(committime)) {
+        RunProcess("git", new ProcessSettings {
+            Arguments = "log -1 --format=%H%n%ct%n%B --grep=^Change-Id: HEAD",
+            WorkingDirectory = ANGLE_PATH.FullPath,
+        }, out var versionOutput);
+
+        var versionLines = versionOutput.ToArray();
+        if (versionLines.Length < 2 || !long.TryParse(versionLines[1], out var timestamp))
+            throw new Exception("Could not resolve ANGLE commit metadata.");
+
+        var revision = versionLines[0];
+        var position = versionLines
+            .Skip(2)
+            .Reverse()
+            .FirstOrDefault(line => line.StartsWith("Cr-Commit-Position:", StringComparison.Ordinal));
+        if (!string.IsNullOrEmpty(position))
+            revision += $"-{position.Substring("Cr-Commit-Position:".Length).Trim()}";
+
+        FileWriteLines(lastchange, new[] {
+            $"LASTCHANGE={revision}",
+            $"LASTCHANGE_YEAR={DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime.Year}",
+        });
+        FileWriteText(committime, timestamp.ToString());
     }
 
     // download rc.exe
@@ -181,7 +202,6 @@ Task("ANGLE")
                 $"angle_enable_wgpu=false " +
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
-                $"skiasharp_winappsdk={wasdk} ".ToLower() +
                 $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
                 new Dictionary<string, string> {
                     { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
