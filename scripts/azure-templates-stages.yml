@@ -60,6 +60,7 @@ stages:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
 
   # Exclude public builds and both policy-triggered and manually queued PR refs
   # before expanding any internal signing, compliance, or publishing stages.
