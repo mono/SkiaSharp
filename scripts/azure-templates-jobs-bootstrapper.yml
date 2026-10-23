@@ -86,28 +86,38 @@ jobs:
         condition: always()
 
       - ${{ if and(ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
-        - pwsh: |
-            $architecture = $env:AGENT_OSARCHITECTURE.ToLowerInvariant()
-            if ($architecture -notin @('x86', 'x64', 'arm64')) {
-              throw "Unsupported Python architecture: $architecture"
-            }
-            Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
-          displayName: Configure Python architecture
-        - task: UsePythonVersion@0
-          name: usePython
-          displayName: Install Python
-          retryCountOnTaskFailure: 3
-          inputs:
-            versionSpec: '3.x'
-            architecture: $(PYTHON_ARCHITECTURE)
-        - pwsh: |
-            $executable = if ($IsMacOS -or $IsLinux) { 'bin/python' } else { 'python.exe' }
-            $python = Join-Path '$(usePython.pythonLocation)' $executable
-            if (!(Test-Path $python -PathType Leaf)) {
-              throw "Python executable was not installed: $python"
-            }
-            Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
-          displayName: Configure Python
+        - ${{ if and(eq(parameters.use1ESPipelineTemplates, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
+          - pwsh: |
+              $python = 'C:\1ESPT\Python\python.exe'
+              if (!(Test-Path $python -PathType Leaf)) {
+                throw "1ES Python executable was not installed: $python"
+              }
+              & $python --version
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure 1ES Python
+        - ${{ else }}:
+          - pwsh: |
+              $architecture = $env:AGENT_OSARCHITECTURE.ToLowerInvariant()
+              if ($architecture -notin @('x86', 'x64', 'arm64')) {
+                throw "Unsupported Python architecture: $architecture"
+              }
+              Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
+            displayName: Configure Python architecture
+          - task: UsePythonVersion@0
+            name: usePython
+            displayName: Install Python
+            retryCountOnTaskFailure: 3
+            inputs:
+              versionSpec: '3.x'
+              architecture: $(PYTHON_ARCHITECTURE)
+          - pwsh: |
+              $executable = if ($IsMacOS -or $IsLinux) { 'bin/python' } else { 'python.exe' }
+              $python = Join-Path '$(usePython.pythonLocation)' $executable
+              if (!(Test-Path $python -PathType Leaf)) {
+                throw "Python executable was not installed: $python"
+              }
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure Python
 
       # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
