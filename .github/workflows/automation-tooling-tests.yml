@@ -82,7 +82,12 @@ jobs:
           done
 
       - name: Run review-skia-update tooling tests
-        run: python3 .agents/skills/review-skia-update/scripts/check_companion_test.py
+        working-directory: .agents/skills/review-skia-update/scripts
+        run: |
+          set -euo pipefail
+          python3 -c "import jsonschema" 2>/dev/null \
+            || python3 -m pip install --quiet --break-system-packages jsonschema
+          python3 -m unittest discover -p "*_test.py" -v
 
       - name: Run workflow safety tests
         run: python3 -m unittest discover -s .github/scripts/tests -p "test_*.py" -v
