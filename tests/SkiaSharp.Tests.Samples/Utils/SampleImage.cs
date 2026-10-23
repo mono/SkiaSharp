@@ -20,6 +20,12 @@ internal static class SampleImage
             casePath,
             architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()));
 
+    internal static Golden Browser(string casePath) =>
+        Store.Resolve(new(
+            SampleLookup.HostPlatform.ToLowerInvariant(),
+            casePath,
+            architecture: RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant()));
+
     internal static Golden Container(string casePath) =>
         Store.Resolve(new(
             OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux",

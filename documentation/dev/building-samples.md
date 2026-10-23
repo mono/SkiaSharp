@@ -184,14 +184,17 @@ SampleImage.Host("Web/output").Verify(
     GoldenInput.Bytes(png, "output.png"),
     new(expectedSize: new(512, 512)));
 
-await SampleImage.Host("Blazor/cpu").VerifyAsync(
+await SampleImage.Browser("Blazor/cpu").VerifyAsync(
     GoldenInput.Capture(app.Screenshot),
     SampleImage.DefaultTimeout,
     TestContext.Current.CancellationToken);
 ```
 
 Samples use zero channel tolerance and allow 0.075% differing pixels by
-default. Animated GPU pages may use a 6% mean RGBA error limit.
+default. Animated GPU pages may use a 6% mean RGBA error limit. Browser
+references use the operating-system architecture because Playwright selects its
+bundled browser for the host hardware independently of the managed process
+architecture.
 
 See [golden-image tests](golden-image-tests.md) for lookup, packaging,
 diagnostics and reference review.

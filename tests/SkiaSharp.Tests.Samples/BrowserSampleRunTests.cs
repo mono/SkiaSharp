@@ -19,7 +19,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement(".card img");
             var screenshot = await app.Screenshot();
-            SampleImage.Host("Web/page").Verify(GoldenInput.Path(screenshot));
+            SampleImage.Browser("Web/page").Verify(GoldenInput.Path(screenshot));
         });
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.Navigate("/");
             await app.WaitForElement("#output");
             var screenshot = await app.Screenshot();
-            SampleImage.Host("Browser/wasm-page").Verify(GoldenInput.Path(screenshot));
+            SampleImage.Browser("Browser/wasm-page").Verify(GoldenInput.Path(screenshot));
         });
 
     [Fact]
@@ -46,7 +46,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/");
             await app.WaitForElement(".canvas-container canvas");
-            await SampleImage.Host("Blazor/cpu").VerifyAsync(
+            await SampleImage.Browser("Blazor/cpu").VerifyAsync(
                 GoldenInput.Capture(app.Screenshot),
                 TimeSpan.FromSeconds(10),
                 TestContext.Current.CancellationToken);
@@ -62,8 +62,10 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
         {
             await app.Navigate("/gpu");
             await app.WaitForElement(".canvas-container canvas");
+            await app.Page.WaitForFunctionAsync(
+                "() => /^FPS: [1-9]\\d*$/.test(document.querySelector('.overlay-stats')?.textContent?.trim() ?? '')");
             var screenshot = await app.Screenshot();
-            SampleImage.Host("Blazor/gpu").Verify(
+            SampleImage.Browser("Blazor/gpu").Verify(
                 GoldenInput.Path(screenshot),
                 new(maxAverageColorErrorFraction: 0.06));
         });
@@ -126,8 +128,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                 """);
             var cleared = await app.Screenshot();
 
-            SampleImage.Host("Blazor/drawing-drawn").Verify(GoldenInput.Path(drawn));
-            SampleImage.Host("Blazor/drawing-cleared").Verify(GoldenInput.Path(cleared));
+            SampleImage.Browser("Blazor/drawing-drawn").Verify(GoldenInput.Path(drawn));
+            SampleImage.Browser("Blazor/drawing-cleared").Verify(GoldenInput.Path(cleared));
         });
 
     [Fact]
@@ -216,7 +218,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                     case "navigate": await app.Navigate("/"); break;
                     case "wait": await app.WaitForElement("body"); break;
                     case "screenshot":
-                        await SampleImage.Host("Web/page").VerifyAsync(
+                        await SampleImage.Browser("Web/page").VerifyAsync(
                             GoldenInput.Capture(app.Screenshot),
                             SampleImage.DefaultTimeout,
                             TestContext.Current.CancellationToken);
