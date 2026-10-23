@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;

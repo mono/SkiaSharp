@@ -9,9 +9,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Samples</GoldenRoot>
     <SignAssembly>false</SignAssembly>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Samples</GoldenRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,15 +21,13 @@
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
     <PackageReference Include="Appium.WebDriver" Version="9.0.0" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests.Shared\SkiaSharp.Tests.Shared.csproj" />
     <ProjectReference Include="..\SkiaSharp.Tests.Samples.Analyzers\SkiaSharp.Tests.Samples.Analyzers.csproj"
       OutputItemType="Analyzer" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="TargetFramework;TargetFrameworks" />
   </ItemGroup>
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="SampleTest.RepositoryDirectory" Value="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..'))" />
-    <Compile Include="..\Tests\Utils\SKPixelComparer.cs" Link="Utils\SKPixelComparer.cs" />
-    <Compile Include="..\Tests\Utils\GoldenReferences.cs" Link="Utils\GoldenReferences.cs" />
-    <Compile Include="..\Tests\Utils\GoldenEnvironment.cs" Link="Utils\GoldenEnvironment.cs" />
   </ItemGroup>
 
   <Target Name="ValidateSamplePlatformPackages" BeforeTargets="CollectPackageReferences;Restore;Build">
@@ -51,7 +49,6 @@
       Text="SkiaSharp and HarfBuzzSharp core packages must share the exact producing build suffix." />
   </Target>
 
-  <Import Project="..\GoldenAssets.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
   <Target Name="InstallSampleBrowser" BeforeTargets="InvokeTestingPlatform"
@@ -59,8 +56,7 @@
     <Error Condition="!Exists('$(TargetDir)playwright.ps1')"
       Text="Build the sample test runner before installing its Playwright browser: $(TargetDir)playwright.ps1." />
     <Message Importance="high" Text="Installing Chromium for CI sample tests." />
-    <Exec Command="pwsh -NoLogo -NoProfile -File &quot;$(TargetDir)playwright.ps1&quot; install --with-deps chromium"
-      IgnoreStandardErrorWarningFormat="true" />
+    <Exec Command="pwsh -NoLogo -NoProfile -File &quot;$(TargetDir)playwright.ps1&quot; install --with-deps chromium" />
   </Target>
 
 </Project>

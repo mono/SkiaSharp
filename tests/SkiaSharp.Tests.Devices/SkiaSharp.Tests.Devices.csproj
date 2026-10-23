@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <EmbedGoldens>true</EmbedGoldens>
     <TargetFrameworks>$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
@@ -13,6 +12,8 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Visual</GoldenRoot>
+    <EmbedGoldens>true</EmbedGoldens>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -74,7 +75,6 @@
     <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
-  <Import Project="..\GoldenAssets.targets" />
   <ItemGroup>
     <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\iOS\**\*.cs" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))" />
     <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\macOS\**\*.cs" Condition="$(TargetFramework.Contains('-macos'))" />

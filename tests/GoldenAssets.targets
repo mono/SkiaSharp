@@ -1,7 +1,4 @@
 <Project>
-  <PropertyGroup>
-    <GoldenRoot Condition="'$(GoldenRoot)' == ''">$(MSBuildThisFileDirectory)Goldens/Visual</GoldenRoot>
-  </PropertyGroup>
   <ItemGroup>
     <_GoldenImage Include="$(GoldenRoot)/**/*.png">
       <GoldenKey>$([System.String]::Copy('%(RecursiveDir)%(Filename)%(Extension)').Replace('\', '/'))</GoldenKey>
@@ -13,5 +10,9 @@
     <EmbeddedResource Include="@(_GoldenImage)" Condition="'$(EmbedGoldens)' == 'true'">
       <LogicalName>SkiaSharp.Goldens/%(GoldenKey)</LogicalName>
     </EmbeddedResource>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>SkiaSharp.Tests.EmbedGoldens</_Parameter1>
+      <_Parameter2>$(EmbedGoldens)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

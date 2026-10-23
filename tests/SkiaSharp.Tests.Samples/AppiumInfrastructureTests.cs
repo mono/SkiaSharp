@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using OpenQA.Selenium;
 using SkiaSharp.Tests.Samples.Utils;
-using SkiaSharp.Tests.Goldens;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
@@ -205,9 +205,21 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 	private static string Reference(string profile, string version, string name, string architecture = "arm64")
 	{
-		var resolved = SampleReferences.Resolve(new GoldenRequest(profile, version, name, architecture));
-		Assert.NotNull(resolved.Path);
-		return resolved.Path;
+		var resolved = SampleImage.Store.Resolve(new(
+			profile,
+			name,
+			ReferenceVersion(version),
+			architecture));
+		Assert.NotNull(resolved.ReferenceLocation);
+		return resolved.ReferenceLocation;
+	}
+
+	private static Version ReferenceVersion(string value)
+	{
+		var version = value.Contains('.', StringComparison.Ordinal)
+			? Version.Parse(value)
+			: new Version(int.Parse(value), 0, 0);
+		return version.Build < 0 ? new Version(version.Major, version.Minor, 0) : version;
 	}
 
 	private SampleWorkspace Workspace()
@@ -270,7 +282,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		{
 			var name = AppiumSampleRunTestBase.CaseName("basic-cpu", family);
 			var expected = Reference(profile, version, name);
-			Assert.Equal(Path.Combine(SampleReferences.Root, profile, version, name + ".png"), expected);
+			Assert.Equal(Path.Combine(SampleImage.Root, profile, ReferenceVersion(version).ToString(3), name + ".png"), expected);
 		}
 	}
 
@@ -282,8 +294,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var x64 = Reference(profile, "26.2", "maui-basic-cpu", "x64");
 		var arm64 = Reference(profile, "26.2", "maui-basic-cpu", "arm64");
 
-		Assert.EndsWith(Path.Combine("26.2", "maui-basic-cpu.x64.png"), x64);
-		Assert.EndsWith(Path.Combine("26.2", "maui-basic-cpu.png"), arm64);
+		Assert.EndsWith(Path.Combine("26.2.0", "maui-basic-cpu.x64.png"), x64);
+		Assert.EndsWith(Path.Combine("26.2.0", "maui-basic-cpu.png"), arm64);
 		Assert.True(File.Exists(x64));
 		Assert.True(File.Exists(arm64));
 	}
@@ -294,15 +306,24 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public void IosGoldensFailWithoutFallingBackToAnotherProfile(string version, string name)
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
-		var request = new GoldenRequest(profile, version, AppiumSampleRunTestBase.CaseName(name, "Maui"), "arm64");
-		var expected = Path.Combine(SampleReferences.Root, profile, version, request.CaseName + ".png");
+		var request = new GoldenCase(
+			profile,
+			AppiumSampleRunTestBase.CaseName(name, "Maui"),
+			ReferenceVersion(version),
+			"arm64");
+		var expected = Path.Combine(
+			SampleImage.Root,
+			profile,
+			request.Version!.ToString(3),
+			request.CasePath + ".png");
 		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
 		Assert.True(File.Exists(actual));
 		Assert.False(File.Exists(expected));
 
 		// Missing references fail before image decoding and must never be created by a test.
-		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, request));
-		Assert.Contains("Missing reviewed sample golden", failure.Message);
+		var failure = Assert.ThrowsAny<Exception>(() =>
+			SampleImage.Store.Resolve(request).Verify(GoldenInput.Path(actual)));
+		Assert.Contains("Missing reviewed golden", failure.Message);
 		Assert.False(File.Exists(expected));
 	}
 
@@ -384,10 +405,15 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		{
 			var name = AppiumSampleRunTestBase.CaseName("basic-cpu", family);
 			var expected = Reference(profile, version, name, architecture.ToString().ToLowerInvariant());
-			Assert.Equal(Path.Combine(SampleReferences.Root, profile, version, name + ".png"), expected);
-			var missing = new GoldenRequest(profile, version, "unit-fixture-not-reviewed", architecture.ToString().ToLowerInvariant());
-			var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(expected, missing));
-			Assert.Contains("Missing reviewed sample golden", failure.Message);
+			Assert.Equal(Path.Combine(SampleImage.Root, profile, $"{version}.0.0", name + ".png"), expected);
+			var missing = new GoldenCase(
+				profile,
+				"unit-fixture-not-reviewed",
+				ReferenceVersion(version),
+				architecture.ToString().ToLowerInvariant());
+			var failure = Assert.ThrowsAny<Exception>(() =>
+				SampleImage.Store.Resolve(missing).Verify(GoldenInput.Path(expected)));
+			Assert.Contains("Missing reviewed golden", failure.Message);
 		}
 	}
 
@@ -459,8 +485,10 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
 		Assert.Equal(expected, app.Operations.TransformReference(expected));
 		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
-		var failure = Assert.ThrowsAny<Exception>(() => SampleImage.Validate(actual, expected));
-		Assert.Contains("Missing reviewed sample golden:", failure.Message);
+		var failure = Assert.ThrowsAny<Exception>(() =>
+			SampleImage.Store.Resolve(new("unit-fixture", "not-reviewed"))
+				.Verify(GoldenInput.Path(actual)));
+		Assert.Contains("Missing reviewed golden", failure.Message);
 		Assert.False(File.Exists(expected));
 	}
 

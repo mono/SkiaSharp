@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using SkiaSharp.Tests.Goldens;
+using SkiaSharp.Tests.Shared;
 using System.Drawing;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
@@ -24,7 +24,7 @@ internal abstract class AppiumOperations
 
 	internal string Platform => App.Platform;
 
-	internal GoldenRequest Reference(string caseName) => App.Reference(caseName);
+	internal GoldenCase Reference(string caseName) => App.Reference(caseName);
 
 	protected string ApplicationId => App.ApplicationId;
 

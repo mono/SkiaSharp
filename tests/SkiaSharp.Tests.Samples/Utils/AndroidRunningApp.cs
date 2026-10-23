@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
-using SkiaSharp.Tests.Goldens;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
@@ -27,11 +27,15 @@ internal sealed class AndroidRunningApp : AppiumRunningApp
 
 	internal override string DeviceProfile => ReferenceProfile(model, image, RuntimeInformation.OSArchitecture);
 
-	internal override GoldenRequest Reference(string caseName)
+	internal override GoldenCase Reference(string caseName)
 	{
 		_ = DeviceProfile;
 		var selectedImage = image ?? throw new InvalidOperationException("TEST_ANDROID_IMAGE is required.");
-		return new(DeviceProfile, selectedImage[8..selectedImage.IndexOf(';')], caseName,
+		var api = selectedImage[8..selectedImage.IndexOf(';')];
+		return new(
+			DeviceProfile,
+			caseName,
+			new Version(int.Parse(api), 0, 0),
 			actualArchitecture ?? RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant());
 	}
 

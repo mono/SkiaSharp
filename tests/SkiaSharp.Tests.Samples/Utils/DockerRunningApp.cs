@@ -1,45 +1,10 @@
 using Xunit;
-using SkiaSharp.Tests.Goldens;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
 internal sealed class DockerRunningApp(string containerName, string diagnostics)
     : RunningApp(diagnostics)
 {
-    private GoldenEnvironment? environment;
-
-    internal async Task<GoldenRequest> Reference(string caseName, string? variant = null)
-    {
-        if (environment is null)
-        {
-            Directory.CreateDirectory(Diagnostics);
-            var image = await Docker.ImageId(containerName);
-            var metadata = await Docker.ImageEnvironment(image);
-            var parts = metadata.Split('|');
-            Assert.Equal(3, parts.Length);
-            var architecture = parts[1] switch
-            {
-                "amd64" => "x64",
-                "arm64" => "arm64",
-                _ => throw new InvalidOperationException($"Unsupported rendering image architecture: {metadata}")
-            };
-            if (parts[0] == "linux")
-            {
-                var release = Path.Combine(Diagnostics, "os-release");
-                await DownloadFile("/etc/os-release", release);
-                environment = GoldenEnvironment.Linux(await File.ReadAllTextAsync(release), architecture);
-            }
-            else
-            {
-                Assert.Equal("windows", parts[0]);
-                Assert.True(Version.TryParse(parts[2], out var version), $"Image OS version is required: {metadata}");
-                environment = new("windows-nanoserver", $"{version!.Build}.{version.Revision}", architecture, metadata);
-            }
-            TestContext.Current.TestOutputHelper?.WriteLine($"Rendering image: {image}; {environment.Description}");
-        }
-        return environment.Request(caseName, variant);
-    }
-
     internal override async Task<Uri> GetAddress()
     {
         var binding = await Docker.Port(containerName, "8080/tcp");

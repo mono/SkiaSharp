@@ -28,6 +28,7 @@
     <SignAssembly>false</SignAssembly>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <Platforms>AnyCPU;x64;x86</Platforms>
+    <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Visual</GoldenRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,7 +55,6 @@
     <None Remove="TestResults\**" />
   </ItemGroup>
 
-  <Import Project="..\GoldenAssets.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 

@@ -1,6 +1,6 @@
 ﻿using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.iOS;
-using SkiaSharp.Tests.Goldens;
+using SkiaSharp.Tests.Shared;
 using System.Runtime.InteropServices;
 using Xunit;
 using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
@@ -29,8 +29,11 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 	internal override string Platform => "iOS";
 
-	internal override GoldenRequest Reference(string caseName) =>
-		new(DeviceProfile, actualVersion ?? version, caseName,
+	internal override GoldenCase Reference(string caseName) =>
+		new(
+			DeviceProfile,
+			caseName,
+			ParseReferenceVersion(actualVersion ?? version),
 			RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 
 	protected override SKRectI ScreenshotInsets(SKSizeI size) =>
@@ -61,6 +64,11 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			throw new InvalidOperationException($"No approved iOS capture profile for '{model}' at '{version}'.");
 		return "iphone-16-pro";
 	}
+
+	internal static Version ParseReferenceVersion(string version) =>
+		Version.TryParse(version, out var parsed)
+			? parsed
+			: throw new InvalidOperationException($"Invalid iOS reference version: {version}.");
 
 	protected override Task Start(Uri address)
 	{

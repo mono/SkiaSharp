@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using SkiaSharp.Tests.Samples.Utils;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples;
@@ -104,8 +105,8 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			using var expectedStroke = expectedImage.Subset(region);
 			Assert.NotNull(actualStroke);
 			Assert.NotNull(expectedStroke);
-			var result = SkiaSharp.Extended.SKPixelComparer.Compare(expectedStroke, actualStroke, 0);
-			Assert.True(result.ErrorPixelCount <= result.TotalPixels * new SampleImageOptions().MaxErrorPixelFraction,
+			var result = SKPixelComparer.Compare(expectedStroke, actualStroke, 0);
+			Assert.True(result.ErrorPixelCount <= result.TotalPixels * GoldenOptions.DefaultMaxErrorPixelFraction,
 				$"Drawing stroke region {region} differs: {result.ErrorPixelCount}/{result.TotalPixels} pixels; actual {actual}; expected {expected}.");
 		}
 	}
