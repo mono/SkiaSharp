@@ -88,6 +88,5 @@ namespace SkiaSharp.Tests.Visual.Tests
 			assemblies.Add(typeof(VisualMatrixTestsBase).Assembly);
 			return new GoldenStore(roots, assemblies);
 		}
-
 	}
 }

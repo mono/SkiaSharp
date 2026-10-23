@@ -17,5 +17,7 @@ internal static class SampleImage
             architecture: RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 
     internal static Golden Container(string casePath) =>
-        Store.Resolve(OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux", casePath);
+        Store.Resolve(
+            OperatingSystem.IsWindows() ? "docker-windows" : "docker-linux",
+            casePath);
 }
