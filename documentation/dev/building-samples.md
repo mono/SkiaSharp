@@ -70,6 +70,60 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 Use the Release script path for Release builds. CI installs Chromium for Host
 and unfiltered runs. Filtered runs do not replace the full suite.
 
+## Mobile Appium runs
+
+The `Ios` and `Android` groups run the Basic MAUI/native and Gallery MAUI
+applications against staged packages.
+
+- `--appiumMode=build` prepares apps and the compiled runner without a device.
+- `--appiumMode=run` runs those prepared artifacts without building.
+- `--appiumMode=all` (default) builds everything before creating the device.
+
+Prepared apps and runners are under `output/appium-apps/` and
+`output/appium-runner/`. Keep them with the exact producing `output/nugets`
+packages and use a matching host platform and architecture.
+
+### iOS simulators
+
+Install the selected Xcode/runtime and the pinned Appium XCUITest driver, then
+run one declared profile:
+
+```sh
+IOS_VERSION=18.6
+sudo scripts/infra/native/apple/select-xcode.sh "$XCODE_VERSION"
+pwsh scripts/infra/tests/install-appium.ps1 -Platform iOS
+pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
+dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
+  --iosModel="iPhone 16 Pro" --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+For an existing simulator, set `TEST_IOS_SIMULATOR_VERSION`,
+`TEST_IOS_SIMULATOR_MODEL` and `TEST_IOS_SIMULATOR_UDID`. Cake deletes only a
+simulator it creates.
+
+### Android emulators
+
+Restore the pinned tools, install one complete image/model profile from
+`scripts/azure-templates-stages-samples.yml`, and install Appium:
+
+```sh
+export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+dotnet tool restore
+pwsh scripts/infra/managed/install-android-package.ps1 \
+  -Package 'cmdline-tools;latest','platform-tools','emulator'
+pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
+dotnet cake --target=samples --runGroup=Android --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+The pinned `dotnet android` tool provisions and starts the AVD. Cake requires
+the expected serial before running tests and uses direct ADB only to stop that
+owned emulator because the tool has no stop command. For an existing device,
+set its exact `TEST_ANDROID_UDID`; tests never select the first available
+device.
+
 ## Test groups and diagnostics
 
 | Group | Coverage | CI hosts |
@@ -77,6 +131,8 @@ and unfiltered runs. Filtered runs do not replace the full suite.
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
 | Host | Console, Web API and browser execution | Windows, macOS, Linux |
 | Docker | Container builds and execution | Windows, Linux |
+| Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | Configured macOS simulator pools |
+| Android | Basic MAUI/native Android and Gallery MAUI Appium execution | Configured Android emulator pool |
 
 Choose a `RunGroup` by execution target. Each test requires exactly one typed
 attribute such as `[RunGroup(SampleRunGroup.Build)]`; place it on the class only
@@ -95,6 +151,15 @@ References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
 `mac`, `linux` and `windows`; Docker uses `docker-linux` and `docker-windows`.
 Cases use paths such as `Console/output`, `Web/page` and
 `Blazor/drawing-drawn`.
+
+Mobile profiles use optional max-version directories:
+
+- `iphone-16-pro/18.6.0/maui-basic-cpu.png`
+- `pixel-9/36.0.0/gallery-gradient-gpu.x64.png`
+
+Architecture-specific files override the unsuffixed reference. iOS references
+retain raw captures; comparison removes only the declared system-owned inset.
+Initial, drawn and cleared states use separate case names where needed.
 
 Use the sample helpers to select the profile:
 
