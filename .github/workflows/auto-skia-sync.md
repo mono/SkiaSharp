@@ -221,7 +221,7 @@ pre-agent-steps:
     # .NET cross-compilation image; for this host build we must install libc++-dev +
     # libc++abi-dev or the compile fails with "cannot find <libc++ headers>". Keep this in
     # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
-    run: bash scripts/infra/cloud/setup.sh
+    run: bash scripts/infra/cloud/setup.sh skia-sync
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
 # then push branches and create/update PRs with the write credential.
@@ -299,9 +299,9 @@ the supplied values.
 - No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
   takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
   cancel it, or restart it solely because of its duration.
-- Clang, libc++, fontconfig/fonts, Ninja, Xvfb, and Mesa software GL/Vulkan are installed. Mesa
-  softpipe and the lavapipe ICD are pinned so every Linux backend required by `GpuPolicy` executes
-  deterministically. Desktop validation does not install unrelated mobile workloads.
+- Clang, libc++, fontconfig/fonts, Ninja, Xvfb, Mesa software GL/Vulkan, and the Android workload
+  required by the sync's full test gate are installed. Mesa softpipe and the lavapipe ICD are pinned
+  so every Linux backend required by `GpuPolicy` executes deterministically.
 - The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
   durable repository configuration; do not alter flags to mask a missing prerequisite.
 
