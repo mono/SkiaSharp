@@ -48,6 +48,7 @@ namespace SkiaSharp.Tests
 		[InlineData(null, new byte[] { 0 })]
 		[InlineData("", new byte[] { 0 })]
 		[InlineData("ABC", new byte[] { 65, 66, 67, 0 })]
+		[InlineData("上田", new byte[] { 63, 63, 0 })]
 		public void Issue5426_FromCStringIncludesNullTerminator(string str, byte[] expected)
 		{
 			using var data = SKData.FromCString(str);

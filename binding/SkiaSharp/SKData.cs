@@ -325,7 +325,9 @@ namespace SkiaSharp
 
 		internal static SKData FromCString (string str)
 		{
-			var bytes = Encoding.ASCII.GetBytes ((str ?? string.Empty) + '\0');
+			str ??= string.Empty;
+			var bytes = new byte[Encoding.ASCII.GetByteCount (str) + 1];
+			Encoding.ASCII.GetBytes (str, 0, str.Length, bytes, 0);
 			return SKData.CreateCopy (bytes);
 		}
 
