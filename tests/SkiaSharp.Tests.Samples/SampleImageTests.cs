@@ -275,6 +275,34 @@ public class SampleImageTests : IDisposable
         Assert.Equal(2, attempts);
     }
 
+    [Fact]
+    public async Task ScreenshotComparisonConfirmsFirstMismatchAfterDeadline()
+    {
+        using var bitmap = new SKBitmap(4, 4);
+        bitmap.Erase(SKColors.Blue);
+        var expected = SavePng(bitmap, "deadline.expected.png");
+        using var small = new SKBitmap(2, 2);
+        small.Erase(SKColors.Blue);
+        var actual = SavePng(small, "deadline.actual.png");
+        var attempts = 0;
+
+        await Golden.VerifyAsync(
+            GoldenInput.Capture(() =>
+            {
+                if (++attempts == 1)
+                    Thread.Sleep(50);
+                else
+                    File.Copy(expected, actual, overwrite: true);
+                return Task.FromResult(actual);
+            }),
+            GoldenInput.Path(expected),
+            TimeSpan.FromMilliseconds(20),
+            TestContext.Current.CancellationToken,
+            new(expectedSize: new(4, 4)));
+
+        Assert.Equal(2, attempts);
+    }
+
     [Theory]
     [InlineData("missing-reference")]
     [InlineData("corrupt-reference")]
