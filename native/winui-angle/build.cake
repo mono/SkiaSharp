@@ -60,9 +60,13 @@ Task("sync-ANGLE")
     {
         var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
         var contents = FileReadText(toolchain);
+        const string importLibrary = "\"{{output_dir}}/{{target_output_name}}.lib\"";
+        const string programDatabase = "\"{{output_dir}}/{{target_output_name}}.pdb\"";
         var newContents = contents
-            .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
-            .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
+            .Replace("\"${dllname}.lib\"", importLibrary)
+            .Replace("\"${dllname}.pdb\"", programDatabase);
+        if (!newContents.Contains(importLibrary) || !newContents.Contains(programDatabase))
+            throw new Exception($"Cannot apply conventional import library and PDB names at {toolchain}.");
         if (contents != newContents)
             FileWriteText(toolchain, newContents);
     }
