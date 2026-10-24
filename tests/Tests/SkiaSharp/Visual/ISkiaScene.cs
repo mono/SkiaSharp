@@ -18,8 +18,8 @@ namespace SkiaSharp.Tests.Visual
 	public interface ISkiaScene
 	{
 		/// <summary>
-		/// Stable identifier, used as the golden-file basename
-		/// (<c>Content/Goldens/{renderer}.{platform}/{Name}.png</c>).
+		/// Stable identifier used as the golden case name
+		/// (<c>{platform}/{Name}.{renderer}[.{architecture}].png</c>).
 		/// </summary>
 		string Name { get; }
 

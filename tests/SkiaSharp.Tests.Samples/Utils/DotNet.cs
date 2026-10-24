@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Xml.Linq;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;

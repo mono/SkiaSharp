@@ -2,6 +2,18 @@
 
   <Import Project="$(MSBuildThisFileDirectory)SkiaSharp.NuGet.targets" />
 
+  <ItemGroup
+      Condition=" ( $(TargetFramework.StartsWith('net4'))
+                    or '$(TargetFramework)' == 'netstandard2.0'
+                    or '$(TargetFramework)' == 'netstandard2.1' )
+                  and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
+    <!-- Use PolySharp to support modern C# language features on older TFMs. -->
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <PropertyGroup>
     <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(SDK40ToolsPath)sn.exe') ">$(SDK40ToolsPath)sn.exe</_SnExePath>
     <_SnExePath Condition=" $(IsWindows) and '$(_SnExePath)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe') ">$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\sn.exe</_SnExePath>
