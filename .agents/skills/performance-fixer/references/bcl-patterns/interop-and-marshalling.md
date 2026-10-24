@@ -16,16 +16,16 @@ parity for anything that reaches native ([../measuring.md](../measuring.md)).
   `bool` is 1 byte; default .NET `bool` marshals as 4.
 
 ## Avoid temp strings/byte[] in text-encoding interop
-- **Do:**
-  1. When the target is a new `SKData` (such as `SKData.FromCString`), compute `var byteCount = encoding.GetByteCount(span)`, allocate writable native memory once with `var data = SKData.Create(byteCount + 1)`, encode directly into `var bytes = data.Data.AsSpan(byteCount + 1)` via `encoding.GetBytes(span, bytes)`, and explicitly zero the terminator (`bytes[byteCount] = 0`).
-  2. When a transient buffer is only passed to a native P/Invoke for the duration of the call, encode into a bounded `stackalloc byte[...]` or `Utils.RentArray<byte>(...)` `Span<byte>` rather than allocating `new byte[]`.
-  3. Rely on `binding/SkiaSharp/Util.cs` (`Utils.GetByteCount`, `Utils.GetBytes`, `Utils.AsSpan`) so `ReadOnlySpan<char>` / `Span<byte>` calls compile across all TFMs without `#if` clutter at call sites.
-- **Instead of:** appending a NUL by string concatenation (`(str ?? string.Empty) + '\0'`), or allocating an intermediate `new byte[byteCount + 1]` and copying it a second time via `SKData.CreateCopy(bytes)`.
-- **Why:** writing directly into `SKData.Create(size)` eliminates both the managed array allocation and the extra copy into native memory; using `data.Data.AsSpan(size)` instead of `data.Span` also avoids a redundant `sk_data_get_size` P/Invoke when `size` is already known (#5429).
-- **Complexity:** low · **TFM:** all TFMs via `Util.cs` span polyfills · **ABI:** internal (don't change public return types unless adding an overload).
-- **Watch out:**
-  - `SKData.Create(size)` allocates **uninitialized** native memory (`sk_data_new_uninitialized`), so you must explicitly write any trailing NUL terminator bytes (`bytes[byteCount] = 0`).
-  - `GetEncodedText` is **not** UTF-8-only — it switches on `SKTextEncoding` (`Utf8`→UTF8, `Utf16`→Unicode, `Utf32`→UTF32) with an `addNull` variant. Prove parity for **every encoding AND both `addNull` cases** — the NUL terminator is 1/2/4 bytes.
+- **Do:** compute the encoded size first, then write into the final destination when it exposes a
+  writable buffer. Otherwise use bounded `stackalloc` or `Utils.RentArray<byte>` for transient
+  interop buffers. Reuse the `Util.cs` span polyfills rather than adding call-site `#if` blocks.
+- **Instead of:** concatenating a terminator onto the source string or allocating an intermediate
+  encoded array that is immediately copied again.
+- **Why:** removes temporary strings, managed arrays, and redundant copies/P/Invokes.
+- **Complexity:** low–medium · **TFM:** all TFMs via `Util.cs` polyfills · **ABI:** internal.
+- **Watch out:** the destination may be uninitialized, so write every sentinel/terminator byte.
+  `GetEncodedText` supports UTF-8/16/32; prove parity for every encoding and `addNull` value.
+  See [../repo-helpers.md](../repo-helpers.md) for the concrete `SKData` pattern.
 
 ## Cache delegates / prefer static callbacks
 - **Do:** cache a `static` delegate for a native callback, or use `delegate* unmanaged` /

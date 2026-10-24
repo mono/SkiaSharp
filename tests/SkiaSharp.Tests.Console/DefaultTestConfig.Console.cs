@@ -35,10 +35,9 @@ namespace SkiaSharp.Tests
 			UnicodeFontFamilies =
 				IsLinux ? (SkiaSharp.Internals.PlatformConfiguration.IsGlibc
 					// glibc images resolve emoji via "Symbola" (ttf-ancient-fonts, on the desktop
-					// Ubuntu agent), "Noto Emoji" (downloaded into the Azure Linux container image),
-					// or "Noto Color Emoji" (fonts-noto-color-emoji, preinstalled on Ubuntu 24.04);
+					// Ubuntu agent) or "Noto Emoji" (downloaded into the Azure Linux container image);
 					// Alpine/musl images install font-noto-emoji, matching "Noto Color Emoji".
-					? new[] { "Symbola", "Noto Emoji", "Noto Color Emoji" }
+					? new[] { "Symbola", "Noto Emoji" }
 					: new[] { "Noto Color Emoji" }) :
 				IsMac ? new[] { "Apple Color Emoji" } :
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };

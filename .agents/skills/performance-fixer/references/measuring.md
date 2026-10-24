@@ -4,16 +4,18 @@ Every SkiaSharp perf fix needs **two proofs**, and this file is how to produce b
 repo's real harness. Neither alone is sufficient: a benchmark with no parity test can ship a
 rendering regression; a parity test with no benchmark can ship a "fix" that isn't faster.
 
-Before either proof or any local source build, complete this bootstrap exactly once:
+Before either proof or any local source build, ensure tools and pre-built natives are available:
 
 ```bash
-dotnet tool restore && dotnet cake --target=externals-download
+dotnet tool restore
+dotnet cake --target=externals-download  # only when setup has not already populated output/native
 ```
 
 In the autonomous workflow, Phase 1.4 owns this command after the candidate clears the source
 evidence and de-dup gates. In interactive scan, author, and review modes, run it after selecting
-the candidate and before the first proof. Do not run it during source scanning or de-duplication,
-and do not repeat it in later phases; all proof commands reuse the same bootstrap.
+the candidate and before the first proof. A configured Copilot environment may already contain the
+natives; reuse them instead of downloading again. Do not bootstrap during source scanning or
+de-duplication.
 
 ## Proof 1 — faster (BenchmarkDotNet, New vs Old, one process)
 
@@ -54,24 +56,21 @@ House style, from the README and existing benchmarks:
 - **Defeat constant-folding.** A benchmark whose result the JIT folds to a constant measures
   nothing. **Return/consume every result** (return it, or accumulate into a sink), feed inputs via
   `[Params]`/non-`const` fields, and sanity-check the absolute times are plausible for the work.
-- **Benchmark the complete end-to-end operation across all serious candidates.** Never benchmark an
-  isolated BCL call (such as `Encoding.ASCII.GetBytes` returning `byte[]`) as a proxy for a
-  SkiaSharp method that creates a native object (`SKData.FromCString` / `SKData.CreateCopy`).
-  Omitting the native creation/copy hides the dominant cost and makes direct-to-native-buffer writes
-  (`SKData.Create(size)` + `data.Data.AsSpan(size)`) impossible to compare. Include `Old` (baseline),
-  intermediate candidates (e.g. `ByteArray` + `SKData.CreateCopy`), and `New` (direct write) as
-  separate `[Benchmark]` methods in the same class so BenchmarkDotNet measures their true end-to-end
-  ratio and allocations side by side.
+- **Benchmark the complete end-to-end operation across all serious candidates.** An isolated BCL
+  helper is not a proxy for a SkiaSharp method that also allocates/copies native data. Include those
+  native operations in `Old`, each credible intermediate candidate, and `New` so the ratio and
+  allocations describe the user-visible operation.
 
 Read the result with statistical rigor — BenchmarkDotNet noise is the default failure mode:
 
 - Look at the full row: **Mean, Error, StdDev, Ratio, RatioSD.** A "win" whose Error/StdDev bands
   overlap `Old`'s is **within noise — not a finding.**
-- **Validate the exported report after every run.** Open
-  `BenchmarkDotNet.Artifacts/results/*-report-github.md` and verify every expected row has numeric
-  `Mean`, `Error`, `StdDev`, and `Allocated` values. Reject any run with `NA` rows, zero executed
-  benchmarks, build errors, or `DllNotFoundException`. Copy or record the report before running
-  again because BenchmarkDotNet overwrites `BenchmarkDotNet.Artifacts`.
+- **Validate the exported report after every run.** A `--job dry` smoke run intentionally has
+  `NA` statistical columns and cannot prove a win. For final default-job evidence, verify every
+  expected benchmark completed and has numeric Mean/Error/StdDev (the latter may be in detailed
+  results). `Allocated` may be `-`, meaning zero bytes. Reject zero executed benchmarks, build
+  errors, or benchmark exceptions such as `DllNotFoundException`. Preserve the report before the
+  next run because BenchmarkDotNet overwrites `BenchmarkDotNet.Artifacts`.
 - **Never edit benchmark `.cs` files to inject `InProcessEmitToolchain`.** `benchmarks/Directory.Build.targets`
   already scopes NuGet restore of referenced binding projects to `$(TFMCurrent)` for both `dotnet run`
   and BenchmarkDotNet's out-of-process child `.csproj`. If you want a fast in-process sanity check,

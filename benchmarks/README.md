@@ -53,7 +53,7 @@ Look at the existing benchmarks for the real patterns:
 # Discover (fast): list every benchmark
 dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks -- --list flat
 
-# Quick in-process check (skips child-project build; use to verify no exceptions or NA rows):
+# Quick in-process check (skips child-project build; use to verify no benchmark exceptions):
 dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks -- --filter '*MyBenchmark*' --job short --inProcess
 
 # Iterate (fast, directional signal): one class, ShortRun job. Wide confidence intervals —
@@ -71,11 +71,12 @@ Tips:
   `.csproj` requires mobile workloads (`android`/`ios`/`maccatalyst`). Never edit benchmark `.cs`
   files to hardcode `InProcessEmitToolchain`; pass `--inProcess` on the CLI if you want an
   in-process run.
-- Always inspect the exported `BenchmarkDotNet.Artifacts/results/*-report-github.md` after a run to
-  confirm every row has numeric `Mean`/`Error`/`StdDev`/`Allocated` values (`NA` or 0 executed
-  benchmarks means the benchmark threw at runtime, e.g. `DllNotFoundException` if `output/native/`
-  was missing when the project was first built). Copy or record the report before starting a second
-  run, because BenchmarkDotNet overwrites `BenchmarkDotNet.Artifacts`.
+- Always inspect the exported `BenchmarkDotNet.Artifacts/results/*-report-github.md`. Smoke jobs
+  such as `--job dry` intentionally omit statistics and cannot prove a win. Final default-job
+  results must contain complete timing statistics for every expected benchmark; `Allocated` may be
+  `-`, meaning zero bytes. Reject zero executed benchmarks, build failures, and benchmark exceptions
+  such as `DllNotFoundException`. Preserve the report before rerunning because BenchmarkDotNet
+  overwrites `BenchmarkDotNet.Artifacts`.
 - The dominant cost is BenchmarkDotNet building a host per benchmark × `[Params]` combination, so
   **narrow the `--filter` and trim `[Params]`** while iterating; widen for the final run.
 - A win is only real if it is **outside the Mean/Error bands and stable across ≥2 runs**, with **no

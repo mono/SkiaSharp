@@ -337,17 +337,19 @@ Stop investigating when you can answer:
 
 ## Phase 6: Fix
 
-**Principle: Minimal, optimal change.** Fix only what's broken, but explore the full solution space so the fix uses SkiaSharp's idiomatic zero-copy and polyfill patterns:
-- When creating/populating an `SKData` or native buffer from managed data (e.g. `SKData.FromCString`), prefer writing directly into writable native memory (`var data = SKData.Create(size); var bytes = data.Data.AsSpan(size);`) instead of allocating an intermediate `new byte[]` and copying it again via `SKData.CreateCopy(bytes)`.
-- Watch out for hidden P/Invokes in convenience properties: `SKData.Span` calls both `Data` (`sk_data_get_data`) and `Size` (`sk_data_get_size`). When the caller already knows `size`, use `data.Data.AsSpan(size)` to save a P/Invoke.
-- Use `binding/SkiaSharp/Util.cs` (`Utils`) span polyfill extension methods (such as `Encoding.GetByteCount(ReadOnlySpan<char>)`, `Encoding.GetBytes(ReadOnlySpan<char>, Span<byte>)`, `IntPtr.AsSpan(int)`) instead of scattering `#if` directives at call sites.
-- Always **commit your code, test, and benchmark changes before calling permission-gated external tools** (such as posting GitHub issue/PR comments) so that a permission prompt or timeout never loses uncommitted work.
+**Principle: Minimal root-cause change.** Fix only what's broken, but do not stop at the first
+plausible implementation. Compare the credible approaches and existing repository helpers, then
+choose the simplest one that preserves behavior and avoids unnecessary allocations, copies, or
+interop calls. Route performance-sensitive bugs through the `performance-fixer` guidance for
+candidate enumeration and measurement.
+
+Commit each verified, coherent code/test checkpoint before posting progress comments or invoking
+other permission-gated external tools, so a timeout cannot discard completed work.
 
 For guidance on specific types of fixes, see:
 - [Memory management](../../../documentation/dev/memory-management.md) - disposal patterns, ownership
 - [API design](../../../documentation/dev/api-design.md) - same-instance returns, null checks
 - [Debugging methodology](../../../documentation/dev/debugging-methodology.md) - native linking issues
-- [Performance helpers & interop patterns](../performance-fixer/references/repo-helpers.md) - `Util.cs` polyfills, `SKData.Create`, `Utils.RentArray`
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Made the fix

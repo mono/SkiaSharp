@@ -51,6 +51,9 @@ front (e.g. `SKData.FromCString`):
   (`sk_data_get_data`) and `Size` (`sk_data_get_size`). When you already know `size` (because you
   just called `SKData.Create(size)`), use `data.Data.AsSpan(size)` to avoid the redundant
   `sk_data_get_size` P/Invoke.
+- **Initialize every byte the contract requires:** `SKData.Create(size)` is uninitialized native
+  memory. Explicitly write terminators/sentinels and prove parity for null, empty, non-ASCII, and
+  embedded-NUL inputs.
 
 ### `StringUtilities.GetEncodedText(...)` / `SKString`
 `StringUtilities.GetEncodedText` encodes text for native calls, switching on `SKTextEncoding`
@@ -89,16 +92,17 @@ possible:
 
 The native library is consumed as a **pre-built package** — you never build native code for this
 skill. In every mode, bootstrap only after the source candidate has a citable hot path/invariant
-and clears de-dup, then run this command exactly once:
+and clears de-dup:
 
 ```bash
-dotnet tool restore && dotnet cake --target=externals-download
+dotnet tool restore
+dotnet cake --target=externals-download  # only when setup has not already populated output/native
 ```
 
 Do not restore tools or download natives while selecting a focus area, scanning source, or
 checking duplicates; quiet and duplicate runs do neither. Autonomous runs perform this in Phase
-1.4; interactive modes perform it after selecting a candidate and before the first proof. Any
-source build, test, or benchmark reuses that bootstrap rather than running it again.
+1.4; interactive modes perform it after selecting a candidate and before the first proof. Reuse
+natives provisioned by the Copilot setup workflow instead of downloading the packages again.
 
 If you have modified anything under `externals/skia/**` you are out of scope for this skill (that
 requires a source build). This skill's fixes are always managed-C# only.
