@@ -2,10 +2,12 @@
 
 string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "10.0.28000.0");
 
-if (string.IsNullOrEmpty(VS_INSTALL))
-    throw new Exception("A Visual Studio installation is required. Pass --vsinstall or set VS_INSTALL.");
-if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
-    throw new Exception("A Windows SDK version is required. Pass --windowsSdkVersion or set WINDOWS_SDK_VERSION.");
+if (IsRunningOnWindows()) {
+    if (string.IsNullOrEmpty(VS_INSTALL))
+        throw new Exception("A Visual Studio installation is required. Pass --vsinstall or set VS_INSTALL.");
+    if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
+        throw new Exception("A Windows SDK version is required. Pass --windowsSdkVersion or set WINDOWS_SDK_VERSION.");
+}
 
 string LLVM_HOME = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? $"{VS_INSTALL}/VC/Tools/Llvm/x64");
 
