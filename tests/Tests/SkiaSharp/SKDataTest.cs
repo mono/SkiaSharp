@@ -39,6 +39,23 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void CreateCopyRejectsLengthLargerThanArray()
+		{
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.CreateCopy(OddData, (ulong)OddData.Length + 1));
+		}
+
+		[Theory]
+		[InlineData(null, new byte[] { 0 })]
+		[InlineData("", new byte[] { 0 })]
+		[InlineData("ABC", new byte[] { 65, 66, 67, 0 })]
+		public void Issue5426_FromCStringIncludesNullTerminator(string str, byte[] expected)
+		{
+			using var data = SKData.FromCString(str);
+
+			Assert.Equal(expected, data.ToArray());
+		}
+
+		[Fact]
 		public void AsStreamReturnsCorrectStreamData()
 		{
 			var data = SKData.CreateCopy(OddData);

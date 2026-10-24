@@ -99,6 +99,9 @@ namespace SkiaSharp
 		/// <remarks />
 		public static SKData CreateCopy (byte[] bytes, ulong length)
 		{
+			if (length > (ulong)bytes.LongLength)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of the array.");
+
 			fixed (byte* b = bytes) {
 				return GetObject (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
 			}
@@ -322,8 +325,8 @@ namespace SkiaSharp
 
 		internal static SKData FromCString (string str)
 		{
-			var bytes = Encoding.ASCII.GetBytes (str ?? string.Empty);
-			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
+			var bytes = Encoding.ASCII.GetBytes ((str ?? string.Empty) + '\0');
+			return SKData.CreateCopy (bytes);
 		}
 
 		// Subset
