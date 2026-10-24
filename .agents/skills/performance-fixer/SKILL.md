@@ -63,20 +63,46 @@ and [`documentation/dev/architecture.md`](../../../documentation/dev/architectur
 8. **Honest, numeric scope note.** Report the **actual measured numbers** (Mean/Error/StdDev,
    allocations, ratio) on named hardware/TFM; say what is *empirically measured* vs *statically
    reasoned*, plus ABI impact. Never claim a speedup you did not measure.
-9. **Finding nothing is the expected outcome.** SkiaSharp is mature; most obvious overhead is already
-   optimized. Most runs should end with **no candidate**. A 2% win on a synthetic micro-loop no real
-   caller hits is **not** a finding. A quiet run is a first-class success — emit a `noop`.
+9. **Explore the full solution space before picking a fix.** Do not stop at the first idea that
+   works. Before coding, inventory all credible alternatives across BCL overloads and repository
+   helpers ([repo-helpers.md](references/repo-helpers.md)):
+   - Can you write **directly into writable native memory** (e.g. `SKData.Create(size)` +
+     `data.Data.AsSpan(size)`) instead of allocating a managed `byte[]` and copying it again via
+     `SKData.CreateCopy(bytes)`?
+   - Does a convenience property hide redundant P/Invokes (e.g. `SKData.Span` calls both
+     `sk_data_get_data` and `sk_data_get_size`; when the length is already known,
+     `data.Data.AsSpan(length)` saves a P/Invoke)?
+   - Does `binding/SkiaSharp/Util.cs` (`Utils`) already provide a polyfill extension method (such
+     as `Encoding.GetByteCount(ReadOnlySpan<char>)`, `Encoding.GetBytes(ReadOnlySpan<char>, Span<byte>)`,
+     or `IntPtr.AsSpan(int)`) so call sites stay clean without `#if` directives?
+   Put every serious alternative in the same end-to-end benchmark as a separately named method before
+   selecting `New`.
+10. **Validate the benchmark run itself.** A zero exit code is not proof. Inspect the exported
+    report after every run and reject any report containing `NA`, zero executed benchmarks, build
+    errors, `DllNotFoundException`, or a benchmark method that only measures an isolated BCL call
+    instead of the complete SkiaSharp operation. Preserve the report before starting the next run.
+11. **Commit code changes before calling permission-gated external tools.** Always commit (and push
+    when applicable) verified code, test, and benchmark changes *before* invoking external comment
+    or review-reply tools that may block on a permission prompt or time out.
+12. **Finding nothing is the expected outcome.** SkiaSharp is mature; most obvious overhead is already
+    optimized. Most runs should end with **no candidate**. A 2% win on a synthetic micro-loop no real
+    caller hits is **not** a finding. A quiet run is a first-class success — emit a `noop`.
 
 ## How to use this skill
 
 1. **Decide if it's worth it.** [decision-framework.md](references/decision-framework.md): be
    aggressive with low-complexity wins on hot paths; reserve high-complexity (native-math ports,
    SIMD, caching) for measured cases. Confirm a **realistic hot caller** first.
-2. **Reuse before you build.** [repo-helpers.md](references/repo-helpers.md) — a shared helper
-   (`Utils.RentArray`, `RentHandlesArray`, `SKString`) or the native oracle may already fit.
+2. **Reuse before you build.** [repo-helpers.md](references/repo-helpers.md) — check `Util.cs`
+   (`Utils.RentArray`, `RentHandlesArray`, `IntPtr.AsSpan`, `Encoding` span polyfills, `SKString`),
+   writable native buffers (`SKData.Create`), and the native oracle before writing `#if` blocks or
+   allocating scratch arrays.
 3. **Route from the signal.** [signals.md](references/signals.md) maps *what the code does* → the
    hot-path / bcl-pattern reference that covers it.
-4. **Prove it.** [measuring.md](references/measuring.md) — both proofs, against this repo's harness.
+4. **Enumerate variants.** Read the matching BCL-pattern reference and list all credible approaches
+   (direct native buffer write, `stackalloc`, pooled array, `byte[]`, span/`Try*` overloads, and any
+   reviewer-suggested variant) so the benchmark compares the full solution space end-to-end.
+5. **Prove it.** [measuring.md](references/measuring.md) — both proofs, against this repo's harness.
 
 ## The cheap wins (apply by default on hot paths)
 
@@ -190,25 +216,35 @@ command in later phases.
 ### Phase 2 — Prove it is faster
 Follow [measuring.md](references/measuring.md) §"Proof 1": a `New` vs `Old` benchmark in one process,
 `[MemoryDiagnoser]`, realistic workload, statistical rigor (Mean/Error/StdDev, ≥2 runs, no alloc
-regression, no regression on any real shape). **No measurable/repeatable win ⇒ not a finding.**
+regression, no regression on any real shape). Before running, list all plausible implementations for
+the complete end-to-end operation (including direct writes to writable native memory, span/`Try*`
+overloads, and any reviewer-requested variant) and include each as a separately named benchmark
+method. After running, open the generated report and confirm every expected row has numeric
+Mean/Error/StdDev/allocation data. **No measurable/repeatable win ⇒ not a finding.**
 
 ### Phase 3 — Fix + prove identical
 Write the equivalence test **first** ([measuring.md](references/measuring.md) §"Proof 2") — full
 behaviour parity (return value bit-exact for numeric ports; edge inputs; exceptions/validation;
 ownership/`GC.KeepAlive`; rendered pixels), confirmed to catch a deliberately-wrong result. Then
 implement the minimal fix using the matching hot-path + bcl-pattern references, honouring that
-family's **Watch out** and **all TFMs** (guard newer APIs; a float port keeps the x87 fallback).
+family's **Watch out** and **all TFMs** (prefer `Util.cs` polyfill extension methods over `#if`
+clutter at call sites; a float port keeps the x87 fallback).
 Confirm: identical (equivalence passes), faster (benchmark holds), no regressions (type's test class
 + neighbours).
 
 **Self-review gate — before the PR** (all must tick, else fix or `noop`):
 - [ ] Real, repeatable speedup outside the error bands, ≥2 runs, no alloc regression, realistic workload.
+- [ ] The benchmark measures the complete end-to-end operation and compares all serious alternatives
+      (direct native write, span/`Try*`, caller-buffer, or intermediate buffer variants).
+- [ ] All benchmark reports contain numeric rows for every expected method/parameter — no `NA`,
+      zero-run, build, or `DllNotFoundException` failure was mistaken for evidence.
 - [ ] Full behaviour parity proven (value/edges/exceptions/ownership/pixels) and the test catches a
       deliberately-wrong result.
 - [ ] Behaviour unchanged; SkiaSharp still renders identically.
 - [ ] Fix in `binding/**`/`source/**` only — no `*.generated.cs`, no `externals/skia/**`.
 - [ ] No public signature changed (body/additive overload only).
-- [ ] All TFMs handled; no ARM64/x86 SIMD regression; float port keeps the x87 fallback.
+- [ ] All TFMs handled cleanly (using `Util.cs` polyfills where appropriate instead of `#if` clutter
+      at call sites); no ARM64/x86 SIMD regression; float port keeps the x87 fallback.
 - [ ] The matching **Watch out** does not describe what you did; not already covered by an open issue/PR.
 
 ### Phase 4 — File the finding, then the linked fix PR

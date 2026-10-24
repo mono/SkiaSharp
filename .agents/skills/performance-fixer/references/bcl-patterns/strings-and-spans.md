@@ -17,6 +17,26 @@ complexity rubric and [../measuring.md](../measuring.md) to verify.
 - SkiaSharp: `SKColor.Parse`, `SKFourByteTag.Parse`, `HarfBuzzSharp.Tag/Feature/Script` (see
   [../hot-paths/color.md](../hot-paths/color.md)).
 
+## Encoding directly into writable native memory (`SKData`) or caller spans
+- **Do:** when producing an `SKData` (or filling a native buffer) from a string/span whose encoded
+  byte length can be computed up front (`var byteCount = encoding.GetByteCount(span)`), allocate the
+  destination native buffer directly (`var data = SKData.Create(byteCount + 1)`) and encode straight
+  into `data.Data.AsSpan(byteCount + 1)`. Use the `Encoding` span polyfill extension methods in
+  `binding/SkiaSharp/Util.cs` (`Utils.GetByteCount`, `Utils.GetBytes`) so the call site compiles
+  cleanly across all TFMs without `#if` directives.
+- **Instead of:** concatenating a NUL terminator onto the string (`str + '\0'`), or allocating an
+  intermediate `new byte[byteCount + 1]` and passing it to `SKData.CreateCopy(bytes)`.
+- **Why:** writing directly into `SKData.Create(size)` eliminates both the managed `byte[]`
+  allocation and the second memory copy into native `SkData` (#5429). Using `data.Data.AsSpan(size)`
+  instead of `data.Span` also avoids a redundant `sk_data_get_size` P/Invoke because `size` is
+  already known.
+- **Complexity:** low · **TFM:** all TFMs via `Utils` span polyfills in `Util.cs` · **ABI:**
+  internal / method body.
+- **Watch out:** `SKData.Create(size)` returns **uninitialized** native memory
+  (`sk_data_new_uninitialized`), unlike `new byte[]` which is zero-initialized by the runtime. You
+  **must** explicitly write the trailing NUL terminator byte(s) (`bytes[byteCount] = 0`). Preserve
+  exact behavior for `null`, `""`, non-ASCII replacement characters, and embedded `\0`.
+
 ## Allocation-free manual parse
 - **Do:** parse hex/number spans char-by-char with a small `[MethodImpl(AggressiveInlining)]` nibble
   helper straight into the target `uint`/`int`.

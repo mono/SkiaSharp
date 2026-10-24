@@ -27,6 +27,31 @@ Rents an `IntPtr[]` and fills it with the objects' handles — the idiomatic way
 of wrappers to a native function that takes `void**`. Prefer this over `objects.Select(o => o.Handle).ToArray()`
 (which allocates) in APIs like `SKImageFilter.CreateMerge`.
 
+### `Utils` span & `Encoding` polyfills (`IntPtr.AsSpan`, `Encoding.GetByteCount`, `Encoding.GetBytes`)
+`binding/SkiaSharp/Util.cs` defines `internal` extension methods so wrapper code can use modern span
+APIs on **all** target frameworks without `#if` clutter at call sites:
+- `ptr.AsSpan(int size)` / `ptr.AsReadOnlySpan(int size)` — wraps a native `IntPtr` as a
+  `Span<byte>` / `ReadOnlySpan<byte>` of known length.
+- `encoding.GetByteCount(ReadOnlySpan<char>)`, `encoding.GetBytes(ReadOnlySpan<char>, Span<byte>)`,
+  and `encoding.GetBytes(ReadOnlySpan<char>)` — on `netstandard2.1+` / `.NET`, C# overload
+  resolution picks the built-in BCL instance methods on `Encoding`; on `netstandard2.0` / `.NET
+  Framework`, it binds to these pointer-based extension methods in `Utils`.
+- **Rule:** When a BCL span method is missing on `netstandard2.0` / `net462` / `net48`, add or reuse
+  an extension method in `Util.cs` (`Utils`) rather than scattering `#if NETSTANDARD2_1_OR_GREATER`
+  blocks across wrapper methods.
+
+### Direct writes into `SKData.Create(size)` vs `SKData.CreateCopy(bytes)`
+When creating an `SKData` from encoded text or computed bytes whose final byte count is known up
+front (e.g. `SKData.FromCString`):
+- **Do:** allocate the uninitialized native buffer once with `var data = SKData.Create(size);`, wrap
+  its pointer with `var bytes = data.Data.AsSpan(size);`, and encode/write directly into `bytes`.
+- **Instead of:** allocating a managed `new byte[size]` (or renting/stackallocing a scratch buffer)
+  and then calling `SKData.CreateCopy(bytes)`, which pays for a second copy into native memory.
+- **Watch out for hidden P/Invokes on convenience properties:** `SKData.Span` calls **both** `Data`
+  (`sk_data_get_data`) and `Size` (`sk_data_get_size`). When you already know `size` (because you
+  just called `SKData.Create(size)`), use `data.Data.AsSpan(size)` to avoid the redundant
+  `sk_data_get_size` P/Invoke.
+
 ### `StringUtilities.GetEncodedText(...)` / `SKString`
 `StringUtilities.GetEncodedText` encodes text for native calls, switching on `SKTextEncoding`
 (`Utf8`→`Encoding.UTF8`, `Utf16`→`Encoding.Unicode`, `Utf32`→`Encoding.UTF32`) with an `addNull`

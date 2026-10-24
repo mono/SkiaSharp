@@ -337,12 +337,17 @@ Stop investigating when you can answer:
 
 ## Phase 6: Fix
 
-**Principle: Minimal change.** Fix only what's broken.
+**Principle: Minimal, optimal change.** Fix only what's broken, but explore the full solution space so the fix uses SkiaSharp's idiomatic zero-copy and polyfill patterns:
+- When creating/populating an `SKData` or native buffer from managed data (e.g. `SKData.FromCString`), prefer writing directly into writable native memory (`var data = SKData.Create(size); var bytes = data.Data.AsSpan(size);`) instead of allocating an intermediate `new byte[]` and copying it again via `SKData.CreateCopy(bytes)`.
+- Watch out for hidden P/Invokes in convenience properties: `SKData.Span` calls both `Data` (`sk_data_get_data`) and `Size` (`sk_data_get_size`). When the caller already knows `size`, use `data.Data.AsSpan(size)` to save a P/Invoke.
+- Use `binding/SkiaSharp/Util.cs` (`Utils`) span polyfill extension methods (such as `Encoding.GetByteCount(ReadOnlySpan<char>)`, `Encoding.GetBytes(ReadOnlySpan<char>, Span<byte>)`, `IntPtr.AsSpan(int)`) instead of scattering `#if` directives at call sites.
+- Always **commit your code, test, and benchmark changes before calling permission-gated external tools** (such as posting GitHub issue/PR comments) so that a permission prompt or timeout never loses uncommitted work.
 
 For guidance on specific types of fixes, see:
 - [Memory management](../../../documentation/dev/memory-management.md) - disposal patterns, ownership
 - [API design](../../../documentation/dev/api-design.md) - same-instance returns, null checks
 - [Debugging methodology](../../../documentation/dev/debugging-methodology.md) - native linking issues
+- [Performance helpers & interop patterns](../performance-fixer/references/repo-helpers.md) - `Util.cs` polyfills, `SKData.Create`, `Utils.RentArray`
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Made the fix
@@ -379,7 +384,7 @@ Name: `Issue_NNNN_BriefDescription()`
 ### Run Tests
 
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console.slnx
+dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
 ```
 
 Run the solution unfiltered first. If it identifies a failure, use the owning core,

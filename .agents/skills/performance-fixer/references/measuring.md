@@ -54,11 +54,28 @@ House style, from the README and existing benchmarks:
 - **Defeat constant-folding.** A benchmark whose result the JIT folds to a constant measures
   nothing. **Return/consume every result** (return it, or accumulate into a sink), feed inputs via
   `[Params]`/non-`const` fields, and sanity-check the absolute times are plausible for the work.
+- **Benchmark the complete end-to-end operation across all serious candidates.** Never benchmark an
+  isolated BCL call (such as `Encoding.ASCII.GetBytes` returning `byte[]`) as a proxy for a
+  SkiaSharp method that creates a native object (`SKData.FromCString` / `SKData.CreateCopy`).
+  Omitting the native creation/copy hides the dominant cost and makes direct-to-native-buffer writes
+  (`SKData.Create(size)` + `data.Data.AsSpan(size)`) impossible to compare. Include `Old` (baseline),
+  intermediate candidates (e.g. `ByteArray` + `SKData.CreateCopy`), and `New` (direct write) as
+  separate `[Benchmark]` methods in the same class so BenchmarkDotNet measures their true end-to-end
+  ratio and allocations side by side.
 
 Read the result with statistical rigor — BenchmarkDotNet noise is the default failure mode:
 
 - Look at the full row: **Mean, Error, StdDev, Ratio, RatioSD.** A "win" whose Error/StdDev bands
   overlap `Old`'s is **within noise — not a finding.**
+- **Validate the exported report after every run.** Open
+  `BenchmarkDotNet.Artifacts/results/*-report-github.md` and verify every expected row has numeric
+  `Mean`, `Error`, `StdDev`, and `Allocated` values. Reject any run with `NA` rows, zero executed
+  benchmarks, build errors, or `DllNotFoundException`. Copy or record the report before running
+  again because BenchmarkDotNet overwrites `BenchmarkDotNet.Artifacts`.
+- **Never edit benchmark `.cs` files to inject `InProcessEmitToolchain`.** `benchmarks/Directory.Build.targets`
+  already scopes NuGet restore of referenced binding projects to `$(TFMCurrent)` for both `dotnet run`
+  and BenchmarkDotNet's out-of-process child `.csproj`. If you want a fast in-process sanity check,
+  pass `--inProcess` on the command line.
 - **Run it at least twice** (separate processes). If the ratio is not stable, it is noise. Small
   L1-resident arrays and memory-bandwidth-bound loops swing run-to-run (#4241 saw 0.68×↔1.48× for
   identical code at 1,024 points).
@@ -129,8 +146,11 @@ class plus neighbouring consumers (e.g. for an `SKMatrix` change, also `SKPath`/
 re-measured later.
 
 ```bash
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~<YourType>"
+dotnet build binding/SkiaSharp/SkiaSharp.csproj -p:TargetFramework=net10.0
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -- --filter-class "*<YourType>*"
+dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
 ```
 
 ## Reading native Skia to prove an invariant
