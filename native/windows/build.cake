@@ -25,8 +25,21 @@ Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_P
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 
-Task("libSkiaSharp")
+Task("validate-windows-llvm")
     .IsDependentOn("validate-windows-toolchain")
+    .WithCriteria(IsRunningOnWindows())
+    .Does(() =>
+{
+    if (string.IsNullOrEmpty(LLVM_PATH.FullPath))
+        return;
+
+    var clang = LLVM_PATH.CombineWithFilePath("bin/clang-cl.exe");
+    if (!FileExists(clang))
+        throw new Exception($"Visual Studio LLVM was not installed: {clang}");
+});
+
+Task("libSkiaSharp")
+    .IsDependentOn("validate-windows-llvm")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>

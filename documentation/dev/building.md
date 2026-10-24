@@ -58,11 +58,9 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **Windows Dependencies:**
 - Windows 10/11
-- [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
-   - .NET desktop development
-   - .NET Multi-platform App UI development (MAUI)
-   - Universal Windows Platform development
-- Windows 10 SDK (latest)
+- [Visual Studio 2026](https://visualstudio.microsoft.com/vs/)
+   - Open `source/SkiaSharpSource.slnx` to install the components in `source/.vsconfig`
+   - The profile includes the .NET desktop, MAUI and UWP workloads, and the required Windows SDK
 
 **macOS Dependencies:**
 - macOS 12+ (Monterey or later)
