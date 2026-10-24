@@ -10,6 +10,7 @@ string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
 Task("sync-ANGLE")
+    .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {

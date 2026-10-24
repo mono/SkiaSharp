@@ -6,6 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
 Task("SkiaSharp.Views.WinUI.Native")
+    .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {

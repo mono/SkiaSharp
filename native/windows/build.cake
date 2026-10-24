@@ -26,6 +26,7 @@ Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 
 Task("libSkiaSharp")
+    .IsDependentOn("validate-windows-toolchain")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
@@ -85,6 +86,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
+    .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
