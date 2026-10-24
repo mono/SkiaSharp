@@ -97,19 +97,43 @@ Task("sync-ANGLE")
     }
 
     // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
+    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h")) ||
+        !FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Xaml.h")) ||
+        !FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("microsoft.ui.xaml.media.dxinterop.h"))) {
         var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
-        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
+        var webview2_version = GetVersion("Microsoft.Web.WebView2", "release");
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}-{webview2_version}.stamp");
 
         // Download and extract the NuGet package using .NET HTTP (works on restricted agents
         // where Python's urllib is blocked by firewall policy)
         if (!FileExists(stamp)) {
-            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
-            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
+            var packages = new[] {
+                new {
+                    Id = "Microsoft.WindowsAppSDK",
+                    Version = winappsdk_version,
+                },
+                new {
+                    Id = "Microsoft.Web.WebView2",
+                    Version = webview2_version,
+                },
+            };
+
+            if (DirectoryExists(WINAPPSDK_PATH)) {
+                DeleteDirectory(WINAPPSDK_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
+            }
             EnsureDirectoryExists(WINAPPSDK_PATH);
-            DownloadFile(nugetUrl, nupkgPath);
-            Unzip(nupkgPath, WINAPPSDK_PATH);
-            DeleteFile(nupkgPath);
+            foreach (var package in packages) {
+                var packageId = package.Id.ToLowerInvariant();
+                var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
+                var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{packageId}.{package.Version}.nupkg");
+                var packagePath = package.Id == "Microsoft.WindowsAppSDK"
+                    ? WINAPPSDK_PATH
+                    : WINAPPSDK_PATH.Combine(packageId);
+                DownloadFile(nugetUrl, nupkgPath);
+                EnsureDirectoryExists(packagePath);
+                Unzip(nupkgPath, packagePath);
+                DeleteFile(nupkgPath);
+            }
             FileWriteText(stamp, "");
         }
 
