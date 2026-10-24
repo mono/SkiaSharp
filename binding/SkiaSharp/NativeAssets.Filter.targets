@@ -1,0 +1,48 @@
+<Project>
+  <PropertyGroup>
+    <_SkiaSharpNativeFilterInputs>$(IntermediateOutputPath)SkiaSharp.NativeAssets.filter.inputs</_SkiaSharpNativeFilterInputs>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(_SkiaSharpNativeFilterInputs)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <Target Name="_SkiaSharpRecordNativeFilterInputs"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="ResolvePackageAssets">
+    <WriteLinesToFile File="$(_SkiaSharpNativeFilterInputs)"
+                      Lines="SkiaSharp=$(SkiaSharpFilterRuntimeIdentifiers)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_SkiaSharpNativeFilterInputs)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SkiaSharpFilterNativePackageAssets"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="_SkiaSharpRecordNativeFilterInputs"
+          Condition="'$(RuntimeIdentifier)' == '' and !$([System.String]::IsNullOrWhiteSpace('$(SkiaSharpFilterRuntimeIdentifiers)'))">
+    <ItemGroup>
+      <_SkiaSharpFilterAssets Include="@(RuntimeTargetsCopyLocalItems)"
+                              Condition="$([System.String]::Copy('%(RuntimeTargetsCopyLocalItems.NuGetPackageId)').StartsWith('SkiaSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) and '%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)' != ''" />
+      <_SkiaSharpFilterAssets Include="@(NativeCopyLocalItems)"
+                              Condition="$([System.String]::Copy('%(NativeCopyLocalItems.NuGetPackageId)').StartsWith('SkiaSharp.NativeAssets.', System.StringComparison.OrdinalIgnoreCase)) and '%(NativeCopyLocalItems.RuntimeIdentifier)' != ''" />
+      <_SkiaSharpAvailableRids Include="@(_SkiaSharpFilterAssets->'%(RuntimeIdentifier)')" />
+      <_SkiaSharpRequestedRids Include="$([MSBuild]::Unescape('$(SkiaSharpFilterRuntimeIdentifiers)'))" />
+    </ItemGroup>
+    <PickBestRid RuntimeGraphPath="$(RuntimeIdentifierGraphPath)"
+                 TargetRid="$([System.String]::Copy('%(_SkiaSharpRequestedRids.Identity)').Trim())"
+                 SupportedRids="@(_SkiaSharpAvailableRids->Distinct())"
+                 Condition="'@(_SkiaSharpFilterAssets)' != '' and '@(_SkiaSharpRequestedRids)' != ''">
+      <Output TaskParameter="MatchingRid" ItemName="_SkiaSharpSelectedRids" />
+    </PickBestRid>
+    <ItemGroup>
+      <_SkiaSharpAllowedRid Include="@(_SkiaSharpSelectedRids)">
+        <RuntimeIdentifier>%(Identity)</RuntimeIdentifier>
+      </_SkiaSharpAllowedRid>
+      <_SkiaSharpRejectedAssets Include="@(_SkiaSharpFilterAssets)" />
+      <_SkiaSharpRejectedAssets Remove="@(_SkiaSharpAllowedRid)"
+                                MatchOnMetadata="RuntimeIdentifier" MatchOnMetadataOptions="CaseInsensitive" />
+      <NativeCopyLocalItems Remove="@(_SkiaSharpRejectedAssets)" />
+      <RuntimeTargetsCopyLocalItems Remove="@(_SkiaSharpRejectedAssets)" />
+    </ItemGroup>
+  </Target>
+</Project>
