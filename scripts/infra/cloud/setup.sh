@@ -18,6 +18,15 @@ esac
 bash "$script_dir/install-linux-dependencies.sh"
 bash "$repo_root/scripts/infra/tests/start-xvfb.sh"
 
+export CC=clang
+export CXX=clang++
+if [[ -n "${GITHUB_ENV:-}" ]]; then
+    {
+        echo "CC=$CC"
+        echo "CXX=$CXX"
+    } >> "$GITHUB_ENV"
+fi
+
 case "$profile" in
     coding-agent)
         bash "$script_dir/restore-dotnet-tools.sh"

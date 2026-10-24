@@ -84,6 +84,10 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
             "bash scripts/infra/cloud/setup.sh skia-sync",
             workflow,
         )
+        self.assertIn(
+            "run: bash scripts/infra/cloud/setup.sh skia-sync",
+            COMPILED_WORKFLOW.read_text(encoding="utf-8"),
+        )
         skia_sync_profile = re.search(
             r"(?ms)^\s+skia-sync\)\n(?P<body>.*?)^\s+;;$",
             cloud_setup,
@@ -91,6 +95,10 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
         self.assertIsNotNone(skia_sync_profile)
         self.assertIn(
             'bash "$script_dir/install-android-workload.sh"',
+            skia_sync_profile.group("body"),
+        )
+        self.assertNotIn(
+            "download-prebuilt-natives.sh",
             skia_sync_profile.group("body"),
         )
         self.assertIn(
