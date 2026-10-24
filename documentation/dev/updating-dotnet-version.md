@@ -20,7 +20,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
 
 - [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`). Use `"rollForward": "latestPatch"` to accept any patch version available on CI agents.
 - [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version` and verify the selected SDK satisfies Arcade's CLI requirements for `dotnet package download`.
-- [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
+- [ ] **Native WinUI projection** — Verify the root SDK works with VS 2026 MSBuild. The projection uses the repository `global.json`; it has no separate older SDK pin.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
 - [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/azure-templates-steps-dotnet.yml`** — Review host workload defaults and explicit job descriptors.
@@ -208,10 +208,9 @@ dotnetSdks:
     tizen:
       manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
       manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-  - sdkVersion: $(DOTNET_VERSION_WINUI) # SDK-only
 ```
 
-Omitting `workloadSetVersion` installs only the SDK. When a set is present,
+Additional entries without `workloadSetVersion` install only that SDK. When a set is present,
 `workloads` optionally overrides the centralized host list with explicit IDs.
 An empty `dotnetSdks` list performs no host .NET provisioning; container images
 own their SDK installations.

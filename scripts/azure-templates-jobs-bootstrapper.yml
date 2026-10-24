@@ -24,11 +24,9 @@ parameters:
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
-  installWindowsSdk: false                      # whether or not to install the Windows SDK
   dotnetSdks:
     - sdkVersion: $(DOTNET_VERSION)              # SDK-only unless workloads are requested explicitly
   jobSdkVersion: ''                             # explicit whole-job SDK selection; empty keeps repository global.json
-  installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
   installNode: true                             # whether or not to install Node.js
@@ -88,12 +86,38 @@ jobs:
         condition: always()
 
       - ${{ if and(ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
-        - task: UsePythonVersion@0
-          displayName: Switch to the correct Python version
-          retryCountOnTaskFailure: 3
-          inputs:
-            versionSpec: '3.x'
-            architecture: 'x64'
+        - ${{ if and(eq(parameters.use1ESPipelineTemplates, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
+          - pwsh: |
+              $python = 'C:\1ESPT\Python\python.exe'
+              if (!(Test-Path $python -PathType Leaf)) {
+                throw "1ES Python executable was not installed: $python"
+              }
+              & $python --version
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure 1ES Python
+        - ${{ else }}:
+          - pwsh: |
+              $architecture = $env:AGENT_OSARCHITECTURE.ToLowerInvariant()
+              if ($architecture -notin @('x86', 'x64', 'arm64')) {
+                throw "Unsupported Python architecture: $architecture"
+              }
+              Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
+            displayName: Configure Python architecture
+          - task: UsePythonVersion@0
+            name: usePython
+            displayName: Install Python
+            retryCountOnTaskFailure: 3
+            inputs:
+              versionSpec: '3.x'
+              architecture: $(PYTHON_ARCHITECTURE)
+          - pwsh: |
+              $executable = if ($IsMacOS -or $IsLinux) { 'bin/python' } else { 'python.exe' }
+              $python = Join-Path '$(usePython.pythonLocation)' $executable
+              if (!(Test-Path $python -PathType Leaf)) {
+                throw "Python executable was not installed: $python"
+              }
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure Python
 
       # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
@@ -103,10 +127,13 @@ jobs:
         - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
         - pwsh: |
-            python3 scripts/infra/caching/repo-deps.py cache-key `
+            & "$(PYTHON_EXE)" scripts/infra/caching/repo-deps.py cache-key `
               --name '${{ parameters.name }}' `
               --job '${{ parameters.cacheJob }}' `
               --docker '${{ parameters.docker }}'
+            if ($LASTEXITCODE -ne 0) {
+              throw "Cache key calculation exited with code $LASTEXITCODE."
+            }
           displayName: Compute cache key
         - task: Cache@2
           inputs:
@@ -132,6 +159,14 @@ jobs:
             submodules: false
         - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
+
+      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
+        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
+          displayName: Select Visual Studio 2026
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - pwsh: .\scripts\infra\native\windows\install-components.ps1
+          displayName: Apply Visual Studio 2026 components
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # Native source builds only use Skia. Merge-only jobs use no submodules.
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:
@@ -177,24 +212,18 @@ jobs:
         # install ninja
         - ${{ if eq(parameters.docker, '') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
-            displayName: Install Ninja
+            displayName: Configure Ninja
             retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if or(contains(parameters.name, '_win32_'), contains(parameters.name, '_winui_angle_')) }}:
+          - pwsh: .\scripts\infra\native\windows\select-llvm.ps1
+            displayName: Select Visual Studio LLVM
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
             - pwsh: .\scripts\infra\native\android\install-android-ndk.ps1
               displayName: Install the Android NDK
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          # install llvm
-          - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
-            - pwsh: .\scripts\infra\native\windows\install-7zip.ps1
-              displayName: Install 7-zip
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\native\windows\install-llvm.ps1
-              displayName: Install LLVM
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
@@ -226,7 +255,7 @@ jobs:
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
-            displayName: Install Ninja
+            displayName: Configure Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install the bits needed for Android
@@ -277,31 +306,6 @@ jobs:
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
-      # install the Windows tools
-      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
-        # select the correct/latest version of Visual Studio
-        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
-          displayName: Select Visual Studio
-          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        - ${{ if not(contains(parameters.name, '_checks_')) }}:
-          # install the older Windows SDKs
-          - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
-              displayName: Install the Windows 10 SDK 10.0.10240
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
-              displayName: Install the Windows 10 SDK 10.0.16299
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
-              displayName: Install the Windows 10 SDK 10.0.18362
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
-              displayName: Install the Windows 10 SDK 10.0.19041
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:
         - ${{ each tool in parameters.tools }}:
@@ -353,6 +357,8 @@ jobs:
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
+                NINJA_EXE: $(NINJA_EXE)
+                PYTHON_EXE: $(PYTHON_EXE)
                 VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false

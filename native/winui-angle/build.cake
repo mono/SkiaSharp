@@ -3,6 +3,7 @@ DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/angle");
 DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
+string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
@@ -16,6 +17,14 @@ Task("sync-ANGLE")
     if (!DirectoryExists(ANGLE_PATH)) {
         RunProcess("git", $"clone https://github.com/google/angle.git --branch {ANGLE_VERSION} --depth 1 --single-branch --shallow-submodules {ANGLE_PATH}");
     }
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"fetch --depth 1 origin {ANGLE_REVISION}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"checkout --detach {ANGLE_REVISION}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
 
     // sync submodules
     var submodules = new[] {
@@ -23,41 +32,53 @@ Task("sync-ANGLE")
         "testing",
         "third_party/zlib",
         "third_party/jsoncpp",
-        "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
-        "tools/clang",
+        "third_party/depot_tools",
+        "third_party/spirv-headers/src",
+        "third_party/spirv-tools/src",
     };
-    foreach (var submodule in submodules) {
-        var sub = ANGLE_PATH.Combine(submodule);
-        if (FileExists(sub.CombineWithFilePath("BUILD.gn")) || FileExists(sub.CombineWithFilePath(".gitignore")))
-            continue;
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
 
-        RunProcess("git", new ProcessSettings {
-            Arguments = $"submodule update --init --recursive --depth 1 --single-branch {submodule}",
-            WorkingDirectory = ANGLE_PATH.FullPath,
+    // Chromium's resource compiler wrapper expects clang-cl at this path even for MSVC builds.
+    var llvmHome = MakeAbsolute(Directory(LLVM_HOME));
+    var clang = llvmHome.CombineWithFilePath("bin/clang-cl.exe");
+    if (!FileExists(clang))
+        throw new Exception($"Visual Studio LLVM was not installed: {clang}");
+    var chromiumLlvm = ANGLE_PATH.Combine("third_party/llvm-build/Release+Asserts");
+    if (!DirectoryExists(chromiumLlvm)) {
+        EnsureDirectoryExists(chromiumLlvm.GetParent());
+        RunProcess("cmd.exe", new ProcessSettings {
+            Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
+                .AppendQuoted($"mklink /J \"{chromiumLlvm}\" \"{llvmHome}\""),
         });
     }
 
-    // patch the output filenames
+    // Use conventional import library and PDB names.
     {
         var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
         var contents = FileReadText(toolchain);
+        const string importLibrary = "\"{{output_dir}}/{{target_output_name}}.lib\"";
+        const string programDatabase = "\"{{output_dir}}/{{target_output_name}}.pdb\"";
         var newContents = contents
-            .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
-            .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
+            .Replace("\"${dllname}.lib\"", importLibrary)
+            .Replace("\"${dllname}.pdb\"", programDatabase);
+        if (!newContents.Contains(importLibrary) || !newContents.Contains(programDatabase))
+            throw new Exception($"Cannot apply conventional import library and PDB names at {toolchain}.");
         if (contents != newContents)
             FileWriteText(toolchain, newContents);
     }
 
-    // set build args
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"))) {
-        var lines = new[] {
+    var gclientArgs = ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni");
+    if (!FileExists(gclientArgs)) {
+        FileWriteLines(gclientArgs, new[] {
             "checkout_angle_internal = false",
             "checkout_angle_mesa = false",
             "checkout_angle_restricted_traces = false",
-            "generate_location_tags = false"
-        };
-        FileWriteLines(ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni"), lines);
+            "generate_location_tags = false",
+        });
     }
 
     // Apply a real GN config so Ninja also tracks security-option changes.
@@ -76,47 +97,52 @@ Task("sync-ANGLE")
     }
 
     // set version numbers
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE"))) {
-        var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
+    var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
+    var committime = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE.committime");
+    if (!FileExists(lastchange) || !FileExists(committime)) {
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
     // download rc.exe
     var rc_exe = "build/toolchain/win/rc/win/rc.exe";
     var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
-    if (!FileExists(rcPath)) {
-        var shaPath = ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1");
-        var sha = FileReadText(shaPath);
-        var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-        DownloadFile(url, rcPath);
-    }
-
-    // download llvm
-    if (!FileExists(ANGLE_PATH.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision"))) {
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("tools/clang/scripts/update.py"));
-    }
-
-    // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
-        var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
-        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
-
-        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
-        // where Python's urllib is blocked by firewall policy)
-        if (!FileExists(stamp)) {
-            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
-            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
-            EnsureDirectoryExists(WINAPPSDK_PATH);
-            DownloadFile(nugetUrl, nupkgPath);
-            Unzip(nupkgPath, WINAPPSDK_PATH);
-            DeleteFile(nupkgPath);
-            FileWriteText(stamp, "");
+    {
+        string actualSha = "";
+        if (FileExists(rcPath)) {
+            using var stream = System.IO.File.OpenRead(rcPath.FullPath);
+            using var algorithm = System.Security.Cryptography.SHA1.Create();
+            actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
         }
+        var sha = FileReadText(ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1")).Trim();
+        if (actualSha != sha) {
+            var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
+            DownloadFile(url, rcPath);
+            using var stream = System.IO.File.OpenRead(rcPath.FullPath);
+            using var algorithm = System.Security.Cryptography.SHA1.Create();
+            actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
+        }
+        if (actualSha != sha)
+            throw new Exception($"Chromium resource compiler hash mismatch: expected {sha}, found {actualSha}.");
+    }
 
-        // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
+    var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
+    var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
+    var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/microsoft.windowsappsdk.{winappsdkVersion}.nupkg");
+    var generatedHeader = WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h");
+    var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{WINDOWS_SDK_VERSION}.stamp");
+    if (!FileExists(generatedHeader) || !FileExists(stamp)) {
+        CleanDirectory(WINAPPSDK_PATH);
+        DownloadFile(nugetUrl, nupkgPath);
+        Unzip(nupkgPath, WINAPPSDK_PATH);
+        DeleteFile(nupkgPath);
+
         var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
         var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
-        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" pwsh -NoProfile -ExecutionPolicy Bypass -File \"{generateScript}\" -Path \"{WINAPPSDK_PATH}\"");
+        RunProcess(vcvarsall,
+            $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
+            $"-File \"{generateScript}\" " +
+            $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
+        FileWriteText(stamp, "");
     }
 });
 
@@ -149,6 +175,12 @@ Task("ANGLE")
                 $"is_component_build=false " +
                 $"is_debug=false " +
                 $"is_clang=false " +
+                $"use_custom_libcxx=false " +
+                $"use_custom_libcxx_for_host=false " +
+                $"enable_rust=false " +
+                $"enable_rust_cxx=false " +
+                $"use_siso=false " +
+                $"angle_build_tests=false " +
                 $"angle_is_winappsdk={wasdk} ".ToLower() +
                 $"winappsdk_dir='{WINAPPSDK_PATH}' " +
                 $"enable_precompiled_headers=false " +
@@ -156,10 +188,11 @@ Task("ANGLE")
                 $"angle_enable_wgpu=false " +
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
+                $"angle_build_vulkan_system_info=false " +
                 $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
                 new Dictionary<string, string> {
                     { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
-                    { "vs2022_install", VS_INSTALL },
+                    { "vs2026_install", VS_INSTALL },
                     { "VCToolsVersion", TOOLSET_VERSION.Value },
                 });
 

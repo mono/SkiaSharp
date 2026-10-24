@@ -44,7 +44,7 @@ stages:
 
   - template: /scripts/azure-templates-stages-prepare.yml@self
     parameters:
-      buildAgentHost: ${{ parameters.buildAgentHost }}
+      buildAgent: ${{ parameters.buildAgentLinux }}
 
   - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-native.yml@self
@@ -60,6 +60,7 @@ stages:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
 
   # Exclude public builds and both policy-triggered and manually queued PR refs
   # before expanding any internal signing, compliance, or publishing stages.
