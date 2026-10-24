@@ -51,8 +51,10 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.MoveAsync(600, 500, new() { Steps = 20 });
             await app.Page.Mouse.UpAsync();
             await app.Page.Mouse.MoveAsync(0, 0);
-            var drawn = await app.Screenshot();
-            SampleImage.Browser("Uno/drawing-drawn").Verify(GoldenInput.Path(drawn));
+            await SampleImage.Browser("Uno/drawing-drawn").VerifyAsync(
+                GoldenInput.Capture(app.Screenshot),
+                TimeSpan.FromSeconds(10),
+                TestContext.Current.CancellationToken);
 
             await app.Page.Mouse.ClickAsync(1237, 76);
             await app.Page.Mouse.MoveAsync(0, 0);

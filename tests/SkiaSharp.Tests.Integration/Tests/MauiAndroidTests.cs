@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
@@ -34,36 +36,19 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     protected override string TargetFramework => "net10.0-android";
 
     /// <summary>
-    /// Get the ADB path for this machine.
-    /// </summary>
-    private static string GetAdbPath()
-    {
-        var androidHome = Environment.GetEnvironmentVariable("ANDROID_HOME") 
-            ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Android/sdk");
-        return Path.Combine(androidHome, "platform-tools", "adb");
-    }
-
-    /// <summary>
     /// Perform preflight checks before running tests.
     /// Validates device availability and API level.
     /// </summary>
     protected override async Task PerformPreflightChecks()
     {
-        var adbPath = GetAdbPath();
-        if (!File.Exists(adbPath))
-        {
-            Output.WriteLine($"Warning: adb not found at {adbPath}");
-            return;
-        }
-
-        // Get connected devices
-        var devicesOutput = await RunAdbCommand(adbPath, "devices -l");
-        var lines = devicesOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(l => l.Contains("device") && !l.StartsWith("List"))
-            .ToList();
+        using var devices = JsonDocument.Parse(await RunAndroidCommand("device", "list", "--format", "json"));
+        var lines = devices.RootElement.EnumerateArray()
+            .Select(device => device.GetProperty("serial").GetString()
+                ?? throw new InvalidOperationException("Android device inventory is missing a serial.")).ToList();
 
         Output.WriteLine($"Connected Android devices: {lines.Count}");
+        if (lines.Count == 0)
+            throw new InvalidOperationException("No Android devices are connected.");
         foreach (var line in lines)
             Output.WriteLine($"  {line.Trim()}");
 
@@ -79,7 +64,7 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         // If specific device requested, verify it exists
         if (!string.IsNullOrEmpty(DeviceUdid))
         {
-            var deviceExists = lines.Any(l => l.Contains(DeviceUdid));
+            var deviceExists = lines.Contains(DeviceUdid, StringComparer.Ordinal);
             if (!deviceExists)
             {
                 throw new InvalidOperationException(
@@ -105,13 +90,14 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     /// </summary>
     private async Task<string?> GetRawApiLevelAsync()
     {
-        var adbPath = GetAdbPath();
-        if (!File.Exists(adbPath))
-            return null;
-
-        var deviceArg = !string.IsNullOrEmpty(DeviceUdid) ? $"-s {DeviceUdid}" : "";
-        var apiLevel = await RunAdbCommand(adbPath, $"{deviceArg} shell getprop ro.build.version.sdk");
-        return apiLevel.Trim();
+        var arguments = new List<string> {
+            "device", "info", "--property", "^ro\\.build\\.version\\.sdk$", "--format", "json"
+        };
+        if (!string.IsNullOrEmpty(DeviceUdid))
+            arguments.AddRange(["--id", "^" + Regex.Escape(DeviceUdid) + "$"]);
+        using var json = JsonDocument.Parse(await RunAndroidCommand(arguments.ToArray()));
+        var device = json.RootElement.EnumerateArray().Single();
+        return device.GetProperty("properties").GetProperty("ro.build.version.sdk").GetString();
     }
 
     /// <summary>
@@ -176,66 +162,33 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     protected override IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
         driver.FindElement("id", $"{bundleId}:id/SkiaCanvas");
 
-    /// <summary>
-    /// Android-specific recovery: dismiss system dialogs and verify emulator is healthy.
-    /// </summary>
-    protected override async Task PerformRecoveryActions()
-    {
-        Output.WriteLine("Performing Android recovery actions...");
-        
-        try
-        {
-            var adbPath = GetAdbPath();
-            
-            if (!File.Exists(adbPath))
-            {
-                Output.WriteLine($"adb not found at {adbPath}, skipping recovery");
-                return;
-            }
-            
-            var deviceArg = !string.IsNullOrEmpty(DeviceUdid) ? $"-s {DeviceUdid}" : "";
-            
-            // Check if emulator is connected
-            var devices = await RunAdbCommand(adbPath, "devices");
-            if (!devices.Contains("emulator") && !devices.Contains("device"))
-            {
-                Output.WriteLine("No Android device found. Emulator may need to be restarted manually.");
-                return;
-            }
-            
-            // Dismiss any system dialogs by pressing Back and Home
-            Output.WriteLine("Dismissing any system dialogs...");
-            await RunAdbCommand(adbPath, $"{deviceArg} shell input keyevent KEYCODE_BACK");
-            await Task.Delay(500);
-            await RunAdbCommand(adbPath, $"{deviceArg} shell input keyevent KEYCODE_HOME");
-            await Task.Delay(1000);
-            
-            // Clear any ANR dialogs with specific button clicks
-            await RunAdbCommand(adbPath, $"{deviceArg} shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS");
-            await Task.Delay(500);
-            
-            Output.WriteLine("Android recovery actions completed");
-        }
-        catch (Exception ex)
-        {
-            Output.WriteLine($"Recovery action failed (non-fatal): {ex.Message}");
-        }
-    }
-
-    private async Task<string> RunAdbCommand(string adbPath, string args)
+    private async Task<string> RunAndroidCommand(params string[] arguments)
     {
         var psi = new ProcessStartInfo
         {
-            FileName = adbPath,
-            Arguments = args,
+            FileName = "dotnet",
+            WorkingDirectory = FindRepoRoot(),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
         };
+        psi.ArgumentList.Add("android");
+        foreach (var argument in arguments)
+            psi.ArgumentList.Add(argument);
+        if (Environment.GetEnvironmentVariable("ANDROID_HOME") is { Length: > 0 } sdk)
+        {
+            psi.ArgumentList.Add("--home");
+            psi.ArgumentList.Add(sdk);
+        }
         
         using var process = Process.Start(psi)!;
-        var output = await process.StandardOutput.ReadToEndAsync();
+        var stdout = process.StandardOutput.ReadToEndAsync();
+        var stderr = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
+        var output = await stdout;
+        var error = await stderr;
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException($"dotnet android failed: {output}\n{error}");
         return output;
     }
 }
