@@ -111,11 +111,7 @@ network:
     - "gn.googlesource.com"
     - dart
 
-# -- Environment -----------------------------------------------------
-# Clang is required for the Linux native build (retpoline flag).
 env:
-  CC: clang
-  CXX: clang++
   SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
 permissions:
   contents: read
@@ -206,23 +202,11 @@ steps:
       chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
-# Run on the host before the agent starts. Packages and long-lived processes
-# provisioned here are visible to the AWF chroot through the shared host. dotnet
-# tool restore does NOT carry into the chroot, so the agent must run it itself.
+# Host packages, long-lived processes, GITHUB_ENV values, and the repo-local .NET
+# workload are visible in the AWF chroot. User-scoped dotnet tools are not.
 pre-agent-steps:
   - name: Set up Linux cloud agent
-    # This runs on the HOST and uses the same setup entry point as Copilot coding and code
-    # review through copilot-setup-steps.yml and copilot-code-review.yml. The agent itself
-    # CANNOT apt-install anything (no apt inside the chroot, and the firewall blocks the
-    # Ubuntu archives), so every native build and desktop test dependency must be installed
-    # here.
-    #
-    # libc++: native/linux/build.cake builds libSkiaSharp/libHarfBuzzSharp with
-    # `-stdlib=libc++` (clang's LLVM C++ runtime). On the real CI this comes from the
-    # .NET cross-compilation image; for this host build we must install libc++-dev +
-    # libc++abi-dev or the compile fails with "cannot find <libc++ headers>". Keep this in
-    # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
-    run: bash scripts/infra/cloud/setup.sh skia-sync
+    run: bash scripts/infra/cloud/setup.sh --install-android-workload
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
 # then push branches and create/update PRs with the write credential.
@@ -300,9 +284,8 @@ the supplied values.
 - No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
   takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
   cancel it, or restart it solely because of its duration.
-- Clang, libc++, fontconfig/fonts, Ninja, Xvfb, Mesa software GL/Vulkan, and the Android workload
-  required by the sync's full test gate are installed. Mesa softpipe and the lavapipe ICD are pinned
-  so every Linux backend required by `GpuPolicy` executes deterministically.
+- The shared Linux setup installed source-build and test prerequisites plus the Android workload.
+  No native tree was downloaded; required GL/Vulkan backends use deterministic Mesa software drivers.
 - The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
   durable repository configuration; do not alter flags to mask a missing prerequisite.
 

@@ -13,6 +13,7 @@ if ! command -v apt-get >/dev/null 2>&1; then
 fi
 
 packages=(
+    # native/linux/build.cake uses Clang-only flags and links libc++.
     clang
     libc++-dev
     libc++abi-dev

@@ -6,12 +6,12 @@ on:
     paths:
       - .github/workflows/copilot-code-review.yml
       - scripts/infra/cloud/**
-      - scripts/infra/tests/start-xvfb.sh
+      - scripts/infra/tests/setup-software-gpu.sh
   pull_request:
     paths:
       - .github/workflows/copilot-code-review.yml
       - scripts/infra/cloud/**
-      - scripts/infra/tests/start-xvfb.sh
+      - scripts/infra/tests/setup-software-gpu.sh
 
 jobs:
   copilot-setup-steps:
@@ -30,4 +30,4 @@ jobs:
         with:
           global-json-file: global.json
       - name: Set up Linux code review
-        run: bash scripts/infra/cloud/setup.sh code-review
+        run: bash scripts/infra/cloud/setup.sh --restore-tools

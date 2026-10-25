@@ -81,25 +81,20 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
         android_workload_setup = ANDROID_WORKLOAD_SETUP.read_text(encoding="utf-8")
 
         self.assertIn(
-            "bash scripts/infra/cloud/setup.sh skia-sync",
+            "bash scripts/infra/cloud/setup.sh --install-android-workload",
             workflow,
         )
         self.assertIn(
-            "run: bash scripts/infra/cloud/setup.sh skia-sync",
+            "run: bash scripts/infra/cloud/setup.sh --install-android-workload",
             COMPILED_WORKFLOW.read_text(encoding="utf-8"),
         )
-        skia_sync_profile = re.search(
-            r"(?ms)^\s+skia-sync\)\n(?P<body>.*?)^\s+;;$",
+        self.assertIn(
+            'if [[ "$install_android_workload" == true ]]',
             cloud_setup,
         )
-        self.assertIsNotNone(skia_sync_profile)
         self.assertIn(
             'bash "$script_dir/install-android-workload.sh"',
-            skia_sync_profile.group("body"),
-        )
-        self.assertNotIn(
-            "download-prebuilt-natives.sh",
-            skia_sync_profile.group("body"),
+            cloud_setup,
         )
         self.assertIn(
             "./eng/common/dotnet.sh workload install android --skip-sign-check",
