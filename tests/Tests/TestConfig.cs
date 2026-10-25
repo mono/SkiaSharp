@@ -35,6 +35,19 @@ namespace SkiaSharp.Tests
 		public string PlatformName =>
 			Platform == TestPlatforms.None ? "unknown" : Platform.ToString().ToLowerInvariant();
 
+		public virtual string GoldenVersion
+		{
+			get
+			{
+				if (Platform == TestPlatforms.Android)
+					throw new InvalidOperationException("The Android host must supply its API level, not its OS release.");
+				if (Platform == TestPlatforms.Browser)
+					return "base";
+				var version = Environment.OSVersion.Version;
+				return version.ToString(version.Build >= 0 ? 3 : 2);
+			}
+		}
+
 		private static readonly Lazy<bool> _isNanoServer = new(DetectNanoServer);
 
 		// Windows Nano Server identifies itself in the registry as InstallationType

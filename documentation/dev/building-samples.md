@@ -72,8 +72,8 @@ and unfiltered runs. Filtered runs do not replace the full suite.
 
 ## Mobile Appium runs
 
-The `Ios` group runs the Basic MAUI/native and Gallery MAUI applications
-against staged packages.
+The `Ios` and `Android` groups run the Basic MAUI/native and Gallery MAUI
+applications against staged packages.
 
 - `--appiumMode=build` cleans and builds apps without a device, then retains
   their output.
@@ -130,6 +130,31 @@ Reviewed references cover 18.6.0, 26.2.0, 26.3.1, 26.5.0 and versionless Gallery
 cases. `latest` may select a newer, unreviewed runtime; missing references still
 fail strictly. Capture and review them rather than accepting an unmatched image.
 
+### Android emulators
+
+Restore the pinned tools, install one complete image/model profile from
+`scripts/azure-templates-stages-samples.yml`, and install Appium:
+
+```sh
+export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+dotnet tool restore
+pwsh scripts/infra/managed/install-android-package.ps1 \
+  -Package 'cmdline-tools;latest','platform-tools','emulator'
+pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
+dotnet cake --target=samples --runGroup=Android --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+The pinned `dotnet android` tool provisions and starts the AVD. Cake requires
+the expected serial before running tests. In CI run mode, it preinstalls
+UiAutomator2 and the prepared APKs after checking the exact owned serial.
+Local all mode builds apps within the test host, so Appium installs its server
+when each scenario starts instead of preinstalling APKs before they exist.
+Cake uses direct ADB only to stop its owned emulator because the tool has no
+stop command. For an existing device, set its exact `TEST_ANDROID_UDID`; tests
+never select the first available device.
+
 ## Test groups and diagnostics
 
 | Group | Coverage | CI hosts |
@@ -138,6 +163,7 @@ fail strictly. Capture and review them rather than accepting an unmatched image.
 | Host | Console, Web API and browser execution | Windows, macOS, Linux |
 | Docker | Container builds and execution | Windows, Linux |
 | Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | Configured macOS simulator pools |
+| Android | Basic MAUI/native Android and Gallery MAUI Appium execution | Configured Android emulator pool |
 
 Choose a `RunGroup` by execution target. Each test requires exactly one typed
 attribute such as `[RunGroup(SampleRunGroup.Build)]`; place it on the class only
@@ -157,9 +183,10 @@ References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
 Cases use paths such as `Console/output`, `Web/page` and
 `Blazor/drawing-drawn`.
 
-iOS profiles use optional max-version directories:
+Mobile profiles use optional max-version directories:
 
 - `iphone-16-pro/18.6.0/maui-basic-cpu.png`
+- `pixel-9/36.0.0/gallery-gradient-gpu.x64.png`
 
 Architecture-specific files override the unsuffixed reference. Appium captures
 the selected canvas element, not necessarily the full device screen; image
