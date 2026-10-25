@@ -14,6 +14,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	private readonly string root = Path.Combine(Repo.ArtifactsDir, SampleWorkspace.CreateIdentity("appium-infrastructure"));
 
 	private const string Target = "ios/arm64";
+	private const string AndroidTarget = "android/arm64";
 	private const string Folder = "Basic/Maui";
 	private const string Project = "SkiaSharpSample/SkiaSharpSample.csproj";
 
@@ -21,6 +22,11 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Path.GetFullPath(Path.Combine(directory, "samples", folder, "SkiaSharpSample", "bin", "Debug", "net10.0-ios", "iossimulator-arm64"));
 
 	private static string FindApp(SampleWorkspace workspace) => IosRunningApp.FindApp(AppOutput(workspace.Root));
+
+	private static string AndroidOutput(string directory) =>
+		Path.Combine(directory, "samples", Folder, "SkiaSharpSample", "bin", "Debug", "net10.0-android", "android-arm64");
+
+	private static string FindAndroidApp(SampleWorkspace workspace) => AndroidRunningApp.FindApp(AndroidOutput(workspace.Root));
 
 	private AppiumFixture Fixture(AppiumMode mode, string apps)
 	{
@@ -40,6 +46,15 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Directory.CreateDirectory(app);
 		File.WriteAllText(Path.Combine(app, "Info.plist"), "fixture-plist");
 		return app;
+	}
+
+	private static string CreateAndroidApp(string directory)
+	{
+		var output = AndroidOutput(directory);
+		Directory.CreateDirectory(output);
+		var apk = Path.Combine(output, "Fixture-Signed.apk");
+		File.WriteAllText(apk, "fixture-apk");
+		return apk;
 	}
 
 	[Theory]
@@ -231,6 +246,75 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		await using var fixture = Fixture(AppiumMode.Run, Path.Combine(root, "sample-apps"));
 		await Assert.ThrowsAsync<ArgumentException>(() =>
 			fixture.PrepareWorkspace(target, Folder, project, _ => Task.CompletedTask));
+	}
+
+	[Theory]
+	[InlineData("build")]
+	[InlineData("run")]
+	public async Task AndroidPreparedApkIsFoundInOwnedWorkspaceAndCleanedOnlyAfterRun(string phase)
+	{
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = Path.Combine(apps, AndroidTarget, Folder);
+		if (phase == "run")
+			CreateAndroidApp(directory);
+		var builds = 0;
+		var fixture = Fixture(AppiumFixture.ParseMode(phase), apps);
+		var prepared = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project, workspace =>
+		{
+			builds++;
+			CreateAndroidApp(workspace.Root);
+			FindAndroidApp(workspace);
+			return Task.CompletedTask;
+		});
+		Assert.Equal(phase == "build" ? 1 : 0, builds);
+		Assert.Equal(Path.Combine(AndroidOutput(directory), "Fixture-Signed.apk"), FindAndroidApp(prepared));
+		if (phase == "build")
+			await fixture.Run(new AndroidRunningApp(prepared, FindAndroidApp(prepared), "unit-fixture-device"),
+				_ => throw new InvalidOperationException("Build mode must not run a scenario."));
+		await fixture.DisposeAsync();
+		Assert.Equal(phase == "build", File.Exists(Path.Combine(AndroidOutput(directory), "Fixture-Signed.apk")));
+	}
+
+	[Theory]
+	[InlineData("missing")]
+	[InlineData("ambiguous")]
+	public async Task AndroidRunRejectsMissingOrAmbiguousApksWithoutBuilding(string problem)
+	{
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = Path.Combine(apps, AndroidTarget, Folder);
+		Directory.CreateDirectory(directory);
+		if (problem == "ambiguous")
+		{
+			var first = CreateAndroidApp(directory);
+			File.WriteAllText(Path.Combine(Path.GetDirectoryName(first)!, "Second-Signed.apk"), "fixture-apk");
+		}
+		await using var fixture = Fixture(AppiumMode.Run, apps);
+		await Assert.ThrowsAsync<FileNotFoundException>(() =>
+		{
+			var workspace = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project,
+				_ => throw new InvalidOperationException("Run must not build."));
+			FindAndroidApp(workspace);
+		});
+	}
+
+	[Fact]
+	public async Task AndroidMissingBuildIsNotCached()
+	{
+		var apps = Path.Combine(root, "sample-apps");
+		await using var fixture = Fixture(AppiumMode.Build, apps);
+		await Assert.ThrowsAsync<FileNotFoundException>(() =>
+			fixture.PrepareWorkspace(AndroidTarget, Folder, Project, workspace =>
+			{
+				FindAndroidApp(workspace);
+				return Task.CompletedTask;
+			}));
+		var prepared = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project, workspace =>
+		{
+			CreateAndroidApp(workspace.Root);
+			FindAndroidApp(workspace);
+			return Task.CompletedTask;
+		});
+		Assert.True(File.Exists(FindAndroidApp(prepared)));
 	}
 
 	[Fact]
@@ -502,6 +586,107 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Throws<ArgumentNullException>(() => operations.Attach(null!));
 	}
 
+	[Theory]
+	[InlineData("android-26;google_apis", "android-26", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-36;google_apis", "android-36", Architecture.Arm64, "arm64-v8a")]
+	[InlineData("android-26;google_apis", "android-26", Architecture.X64, "x86_64")]
+	[InlineData("android-36;google_apis", "android-36", Architecture.X64, "x86_64")]
+	public void AndroidGoldenProfilesShareIdenticalAbiReferencesWithinAnApi(
+		string image, string api, Architecture architecture, string abi)
+	{
+		var profile = AndroidRunningApp.ReferenceProfile("pixel_9", image, architecture);
+		Assert.Equal("pixel-9", profile);
+		Assert.Equal(architecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64", abi);
+		var version = api["android-".Length..];
+		foreach (var family in new[] { "Maui", "Native" })
+		{
+			var name = AppiumSampleRunTestBase.CaseName("basic-cpu", family);
+			var expected = Reference(profile, version, name, architecture.ToString().ToLowerInvariant());
+			Assert.Equal(Path.Combine(SampleImage.Root, profile, $"{version}.0.0", name + ".png"), expected);
+			var missing = new GoldenCase(
+				profile,
+				"unit-fixture-not-reviewed",
+				ReferenceVersion(version),
+				architecture.ToString().ToLowerInvariant());
+			var failure = Assert.ThrowsAny<Exception>(() =>
+				SampleImage.Store.Resolve(missing).Verify(GoldenInput.Path(expected)));
+			Assert.Contains("Missing reviewed golden", failure.Message);
+		}
+	}
+
+	[Theory]
+	[InlineData(null, "android-26;google_apis")]
+	[InlineData("pixel_9", null)]
+	[InlineData("pixel_9", "latest")]
+	[InlineData("../pixel_9", "android-26;google_apis")]
+	[InlineData("pixel_9", "android-26;google_apis/foreign")]
+	[InlineData("pixel_9", "android-26;google_apis_playstore")]
+	public void AndroidRequiresAnExplicitSafeProfile(string? model, string? image) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ReferenceProfile(model, image, Architecture.Arm64));
+
+	[Theory]
+	[InlineData(Architecture.X86)]
+	[InlineData(Architecture.Arm)]
+	public void AndroidRejectsUnsupportedEmulatorArchitectures(Architecture architecture) =>
+		Assert.Throws<InvalidOperationException>(() =>
+			AndroidRunningApp.ReferenceProfile("pixel_9", "android-26;google_apis", architecture));
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData(" ")]
+	public void AndroidRejectsMissingSerialBeforeAnyDeviceInteraction(string? serial)
+	{
+		using var workspace = Workspace();
+		var failure = Assert.Throws<InvalidOperationException>(() =>
+			new AndroidRunningApp(workspace, "fixture.apk", serial));
+		Assert.Contains("TEST_ANDROID_UDID", failure.Message);
+	}
+
+	[Theory]
+	[InlineData("<manifest package=\"com.skiasharp.built\" />")]
+	[InlineData("<?xml version=\"1.0\"?><manifest package=\"com.skiasharp.built\"><application /></manifest>")]
+	public void AndroidIdentityUsesTheBuiltApkManifest(string output) =>
+		Assert.Equal("com.skiasharp.built", AndroidRunningApp.ParseApplicationId(output));
+
+	[Theory]
+	[InlineData("<manifest />")]
+	[InlineData("<manifest package=\"com.skiasharp/foreign\" />")]
+	[InlineData("<manifest package=\"com.skiasharp.built&#10;com.foreign.app\" />")]
+	[InlineData("<application package=\"com.skiasharp.built\" />")]
+	public void AndroidRejectsInvalidOrAmbiguousApkIdentity(string output) =>
+		Assert.Throws<InvalidOperationException>(() => AndroidRunningApp.ParseApplicationId(output));
+
+	[Fact]
+	public void AndroidOperationsBelongToTheAppAndUseItsPackageResourceIds()
+	{
+		using var workspace = Workspace();
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
+		var operations = Assert.IsType<AndroidAppiumOperations>(app.Operations);
+		Assert.Same(operations, app.Operations);
+		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
+		Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
+		Assert.Equal(By.Id("com.skiasharp.built:id/skiaView").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "skiaView").ToString());
+		Assert.Equal(By.Id("com.skiasharp.built:id/gallery-header-cpu").ToString(),
+			AndroidAppiumOperations.ElementLocator("com.skiasharp.built", "gallery-header-cpu").ToString());
+	}
+
+	[Fact]
+	public void MissingReferenceTransformationPreservesStrictValidationAndActualCapture()
+	{
+		using var workspace = Workspace();
+		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
+		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
+		Assert.Equal(expected, app.Operations.TransformReference(expected));
+		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
+		var failure = Assert.ThrowsAny<Exception>(() =>
+			SampleImage.Store.Resolve(new("unit-fixture", "not-reviewed"))
+				.Verify(GoldenInput.Path(actual)));
+		Assert.Contains("Missing reviewed golden", failure.Message);
+		Assert.False(File.Exists(expected));
+	}
+
 	[Fact]
 	public void CapturesOfTheSameSceneKeepBothFiles()
 	{
@@ -610,16 +795,27 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("18.6", false)]
 	[InlineData("26.5", true)]
 	[InlineData("26.5", false)]
-	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
+	[InlineData("26", true, "pixel-9")]
+	[InlineData("26", false, "pixel-9")]
+	[InlineData("36", true, "pixel-9")]
+	[InlineData("36", false, "pixel-9")]
+	[InlineData("26", true, "pixel-9", "x64")]
+	[InlineData("26", false, "pixel-9", "x64")]
+	[InlineData("36", true, "pixel-9", "x64")]
+	[InlineData("36", false, "pixel-9", "x64")]
+	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(
+		string version, bool horizontal, string profile = "iphone-16-pro", string architecture = "arm64")
 	{
-		var drawn = Reference("iphone-16-pro", version, "maui-basic-drawing-two-lines");
-		var blank = Reference("iphone-16-pro", version, "maui-basic-drawing");
+		var drawn = Reference(profile, version, "maui-basic-drawing-two-lines", architecture);
+		var blank = Reference(profile, version, "maui-basic-drawing", architecture);
 		using var workspace = Workspace();
 		using var drawnBitmap = SKBitmap.Decode(drawn);
 		using var blankBitmap = SKBitmap.Decode(blank);
 		Assert.NotNull(drawnBitmap);
 		Assert.NotNull(blankBitmap);
-		var insets = IosRunningApp.ComparisonInsets("iPhone 16 Pro", version, drawnBitmap.Info.Size);
+		var insets = profile == "iphone-16-pro"
+			? IosRunningApp.ComparisonInsets("iPhone 16 Pro", version, drawnBitmap.Info.Size)
+			: SKRectI.Empty;
 		var drawnBytes = File.ReadAllBytes(drawn);
 		var blankBytes = File.ReadAllBytes(blank);
 		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(drawn, drawnBytes, _ => insets);

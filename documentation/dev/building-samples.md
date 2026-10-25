@@ -68,8 +68,8 @@ and unfiltered runs. Filtered runs do not replace the full suite.
 
 ## Mobile Appium runs
 
-The `Ios` group runs the Basic MAUI/native and Gallery MAUI applications
-against staged packages.
+The `Ios` and `Android` groups run the Basic MAUI/native and Gallery MAUI
+applications against staged packages.
 
 Use `--appiumMode=build` to build without starting a simulator, then
 `--appiumMode=run` to test those apps. Use the same host architecture and
@@ -102,6 +102,31 @@ simulator and deletes it afterward.
 
 CI requires all four scenarios to pass without skips on both runtimes.
 
+### Android emulators
+
+Restore the pinned tools, install one complete image/model profile from
+`scripts/azure-templates-stages-samples.yml`, and install Appium:
+
+```sh
+export TEST_ANDROID_IMAGE="<image>" TEST_ANDROID_MODEL="<model>"
+dotnet tool restore
+pwsh scripts/infra/managed/install-android-package.ps1 \
+  -Package 'cmdline-tools;latest','platform-tools','emulator'
+pwsh scripts/infra/managed/install-android-image.ps1 -Image "$TEST_ANDROID_IMAGE"
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Android
+dotnet cake --target=samples --runGroup=Android --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+The pinned `dotnet android` tool provisions and starts the AVD. Cake requires
+the expected serial before running tests. In CI run mode, it preinstalls
+UiAutomator2 and the prepared APKs after checking the exact owned serial.
+Local all mode builds apps within the test host, so Appium installs its server
+when each scenario starts instead of preinstalling APKs before they exist.
+Cake uses direct ADB only to stop its owned emulator because the tool has no
+stop command. For an existing device, set its exact `TEST_ANDROID_UDID`; tests
+never select the first available device.
+
 ## Test groups and diagnostics
 
 | Group | Coverage | CI hosts |
@@ -110,6 +135,7 @@ CI requires all four scenarios to pass without skips on both runtimes.
 | Host | Console, Web API and browser execution | Windows, macOS, Linux |
 | Docker | Container builds and execution | Windows, Linux |
 | Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | Configured macOS simulator pools |
+| Android | Basic MAUI/native Android and Gallery MAUI Appium execution | Configured Android emulator pool |
 
 Find output, binlogs, results and images under
 `output/logs/testlogs/samples/` or CI's `sample_logs_*` artifacts. For restore
@@ -122,14 +148,17 @@ References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
 Cases use paths such as `Console/output`, `Web/page` and
 `Blazor/drawing-drawn`.
 
-iOS references include a runtime directory, for example
-`iphone-16-pro/18.6.0/maui-basic-cpu.png`; shared Gallery cases may omit it.
+Mobile references include runtime directories, for example
+`iphone-16-pro/18.6.0/maui-basic-cpu.png` and
+`pixel-9/36.0.0/gallery-gradient-gpu.x64.png`; shared Gallery cases may omit one.
 
 Review the raw capture and diff in the test results before changing a reference.
 iOS captures show the canvas, not necessarily the whole screen. Comparison
 temporarily excludes the top 200 and bottom 322 pixels of full-height iPhone
 16 Pro captures to avoid host-dependent system chrome. Canvas-only captures and
 saved images are not cropped. Missing references fail and require manual review.
+Architecture-specific references override unsuffixed ones; Android drawing
+states use separate initial, drawn and cleared case names.
 
 Samples use zero channel tolerance and allow 0.075% differing pixels by
 default. Animated GPU pages may use a 6% mean RGBA error limit.
