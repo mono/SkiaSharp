@@ -4,7 +4,14 @@ namespace SkiaSharpSample.Controls;
 
 public partial class CategoryFacetView : Grid
 {
-    public CategoryFacetView() => InitializeComponent();
+    public CategoryFacetView()
+    {
+        InitializeComponent();
+#if ANDROID
+        // MAUI's hover recognizer consumes Android touches before Button.Clicked.
+        CategoryButton.GestureRecognizers.Clear();
+#endif
+    }
 
     private void OnTapped(object? sender, TappedEventArgs e) =>
         (BindingContext as CategoryFacet)?.Select();

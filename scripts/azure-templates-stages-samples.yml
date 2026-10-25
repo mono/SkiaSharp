@@ -7,6 +7,10 @@ parameters:
     type: object
   - name: buildAgentLinux
     type: object
+  - name: buildAgentAndroidTests
+    type: object
+  - name: buildAgentAndroidAppiumTests
+    type: object
   - name: iosSimulators
     type: object
     default:
@@ -20,6 +24,17 @@ parameters:
         version: latest
         model: iPhone 16 Pro
         installRuntime: false
+  - name: androidEmulators
+    type: object
+    default:
+      - name: android8
+        displayName: Android 8
+        image: android-26;google_apis
+        model: pixel_9
+      - name: android16
+        displayName: Android 16
+        image: android-36;google_apis
+        model: pixel_9
 
 stages:
 
@@ -54,6 +69,15 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             additionalArgs: --runGroup=Ios --skipExternals="all"
 
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_build_android
+            displayName: Build Appium apps (Android)
+            phase: build
+            platform: android
+            buildAgent: ${{ parameters.buildAgentAndroidTests }}
+            additionalArgs: --runGroup=Android --skipExternals="all"
+
         - ${{ each ios in parameters.iosSimulators }}:
           - template: /scripts/azure-templates-jobs-sample-appium.yml@self
             parameters:
@@ -69,3 +93,30 @@ stages:
                     displayName: Install the selected iOS simulator runtime
                 - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform iOS
                   displayName: Install Appium 3 and XCUITest
+
+        - ${{ each android in parameters.androidEmulators }}:
+          - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+            parameters:
+              name: samples_appium_${{ android.name }}
+              displayName: Appium (${{ android.displayName }})
+              platform: android
+              dependsOn: [samples_appium_build_android]
+              buildAgent: ${{ parameters.buildAgentAndroidAppiumTests }}
+              additionalArgs: --runGroup=Android --androidImage="${{ android.image }}" --androidModel="${{ android.model }}" --skipExternals="all"
+              preBuildSteps:
+                - pwsh: ./scripts/infra/managed/install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
+                  displayName: Install the JDK for Android SDK command-line tools
+                - pwsh: ./scripts/infra/managed/install-android-package.ps1 -Package "cmdline-tools;latest", "platform-tools", "emulator"
+                  displayName: Install Android SDK, platform tools and emulator
+                - pwsh: ./scripts/infra/managed/install-android-image.ps1 -Image "${{ android.image }}"
+                  displayName: Install the selected Android emulator image
+                - bash: |
+                    set -e
+                    getconf _NPROCESSORS_ONLN
+                    free -h
+                    sudo apt-get update
+                    sudo apt-get install -y libpulse0
+                    bash ./scripts/infra/tests/configure-emulators.sh
+                  displayName: Configure headless Android emulators (libpulse and KVM)
+                - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform Android
+                  displayName: Install Appium 3 and UiAutomator2
