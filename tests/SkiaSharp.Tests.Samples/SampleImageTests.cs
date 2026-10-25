@@ -212,9 +212,10 @@ public class SampleImageTests : IDisposable
         });
 
         var matched = resolvedGolden
-            ? await golden.VerifyAsync(input, TimeSpan.FromSeconds(10), interval, TestContext.Current.CancellationToken)
-            : await Golden.VerifyAsync(input, GoldenInput.Path(expected), TimeSpan.FromSeconds(10), interval,
-                TestContext.Current.CancellationToken);
+            ? await golden.VerifyAsync(
+                input, TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken, retryInterval: interval)
+            : await Golden.VerifyAsync(
+                input, GoldenInput.Path(expected), TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken, retryInterval: interval);
 
         Assert.Equal(actual, matched);
         Assert.Equal(3, captures.Count);

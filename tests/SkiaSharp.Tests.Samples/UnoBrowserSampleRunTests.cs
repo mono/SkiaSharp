@@ -93,8 +93,8 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
                 await drawn.VerifyAsync(
                     GoldenInput.Capture(app.Screenshot),
                     TimeSpan.FromSeconds(10),
-                    TimeSpan.FromSeconds(1),
-                    TestContext.Current.CancellationToken);
+                    TestContext.Current.CancellationToken,
+                    retryInterval: TimeSpan.FromSeconds(1));
                 return;
             }
             catch (Xunit.Sdk.FailException error) when (attempt < 3)
@@ -106,8 +106,8 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
                 await SampleImage.Browser("Uno/drawing-cleared").VerifyAsync(
                     GoldenInput.Capture(app.Screenshot),
                     TimeSpan.FromSeconds(4),
-                    TimeSpan.FromSeconds(1),
-                    TestContext.Current.CancellationToken);
+                    TestContext.Current.CancellationToken,
+                    retryInterval: TimeSpan.FromSeconds(1));
             }
         }
     }

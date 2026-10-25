@@ -69,11 +69,7 @@ public sealed class Golden
 	}
 
 	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null) =>
-		VerifyAsync(actual, timeout, TimeSpan.FromMilliseconds(100), cancellationToken, options);
-
-	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout, TimeSpan retryInterval,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null)
+		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
@@ -97,11 +93,7 @@ public sealed class Golden
 	}
 
 	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null) =>
-		VerifyAsync(actual, expected, timeout, TimeSpan.FromMilliseconds(100), cancellationToken, options);
-
-	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout, TimeSpan retryInterval,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null)
+		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (expected == null) throw new ArgumentNullException(nameof(expected));
@@ -290,13 +282,14 @@ public sealed class Golden
 	private static async Task<string> RetryAsync(
 		GoldenInput input,
 		TimeSpan timeout,
-		TimeSpan retryInterval,
+		TimeSpan? retryInterval,
 		CancellationToken cancellationToken,
 		Func<GoldenInput.Image, bool, bool> verify)
 	{
 		if (input == null) throw new ArgumentNullException(nameof(input));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
 
+		var delay = retryInterval ?? TimeSpan.FromMilliseconds(100);
 		var clock = Stopwatch.StartNew();
 		GoldenInput.Image? actual = null;
 		var attempts = 0;
@@ -333,9 +326,9 @@ public sealed class Golden
 			remaining = timeout - clock.Elapsed;
 			if (remaining > TimeSpan.Zero)
 				await Task.Delay(
-					remaining < retryInterval
+					remaining < delay
 						? remaining
-						: retryInterval,
+						: delay,
 					cancellationToken);
 		}
 	}
