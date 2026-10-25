@@ -13,6 +13,16 @@ public sealed class SampleWorkspace : IDisposable
     {
     }
 
+    private SampleWorkspace()
+    {
+        var id = CreateIdentity("appium-run");
+        Root = Path.Combine(Repo.WorkspacesDir, id);
+        DiagnosticsRoot = Path.Combine(Repo.ArtifactsDir, id);
+        Directory.CreateDirectory(Root);
+    }
+
+    internal static SampleWorkspace ForAppiumRun() => new();
+
     internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir)
     {
         packagesDir = Path.GetFullPath(packagesDir);

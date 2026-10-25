@@ -6,13 +6,15 @@ namespace SkiaSharp.Tests.Samples.Utils;
 internal static class Repo
 {
     public static string RootDir =>
-        AppContext.GetData("SampleTest.RepositoryDirectory") as string is { Length: > 0 } root
+        (Environment.GetEnvironmentVariable("TEST_SAMPLE_REPOSITORY") ??
+            AppContext.GetData("SampleTest.RepositoryDirectory") as string) is { Length: > 0 } root
             ? Path.GetFullPath(root)
             : throw new InvalidOperationException("SampleTest.RepositoryDirectory runtime configuration is missing");
 
     public static string PackagesDir => Path.Combine(RootDir, "output", "nugets");
     public static string ArtifactsDir => Path.Combine(RootDir, "output", "logs", "testlogs", "samples");
     public static string WorkspacesDir => Path.Combine(RootDir, "output", "samples-test-workspaces");
+    public static string AppiumAppsDir => Path.Combine(RootDir, "output", "appium-apps");
     public static string SamplesDir => Path.Combine(RootDir, "output", GetVersion().Contains('-') ? "samples-preview" : "samples");
 
     private static string GetVersion()
