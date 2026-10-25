@@ -50,6 +50,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         if (EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1")
             arguments.AddRange(new[] { "--cores", "2", "--memory", "4096" });
         var settings = AndroidCommandSettings(arguments.ToArray());
+        settings.Timeout = 330000;
         settings.EnvironmentVariables = new Dictionary<string, string> {
             ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(logs, "android-tool.log"),
         };
