@@ -70,6 +70,43 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 Use the Release script path for Release builds. CI installs Chromium for Host
 and unfiltered runs. Filtered runs do not replace the full suite.
 
+## Mobile Appium runs
+
+The `Ios` group runs the Basic MAUI/native and Gallery MAUI applications
+against staged packages.
+
+- `--appiumMode=build` prepares apps and the compiled runner without a device.
+- `--appiumMode=run` runs those prepared artifacts without building.
+- `--appiumMode=all` (default) builds before creating the simulator.
+
+Prepared apps and runners are under `output/appium-apps/` and
+`output/appium-runner/`. Keep them with the exact producing `output/nugets`
+packages and use a matching host platform and architecture.
+
+### iOS simulators
+
+Select Xcode, install the selected runtime and the pinned Appium 3 XCUITest
+driver with its prebuilt WDA, then run one declared profile:
+
+```sh
+IOS_VERSION=18.6
+dotnet tool restore
+sudo scripts/infra/native/apple/select-xcode.sh 26.3
+pwsh scripts/infra/tests/install-appium.ps1 -Platform iOS
+pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
+dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
+  --iosModel="iPhone 16 Pro" --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+CI runs both the declared iOS 18.6 profile and `latest` (the selected Xcode's
+installed runtime). Cake creates and deletes only its own simulator. Build
+jobs publish prepared apps and a checksummed runner; runtime jobs download
+those artifacts and execute without rebuilding the test project.
+`latest` is not guaranteed to pass: references exist for 18.6.0, 26.2.0,
+26.3.1 and versionless Gallery cases, but not 26.5. Missing references fail
+strictly; capture and review them rather than accepting an unmatched image.
+
 ## Test groups and diagnostics
 
 | Group | Coverage | CI hosts |
@@ -77,6 +114,7 @@ and unfiltered runs. Filtered runs do not replace the full suite.
 | Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
 | Host | Console, Web API and browser execution | Windows, macOS, Linux |
 | Docker | Container builds and execution | Windows, Linux |
+| Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | Configured macOS simulator pools |
 
 Choose a `RunGroup` by execution target. Each test requires exactly one typed
 attribute such as `[RunGroup(SampleRunGroup.Build)]`; place it on the class only
@@ -95,6 +133,14 @@ References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
 `mac`, `linux` and `windows`; Docker uses `docker-linux` and `docker-windows`.
 Cases use paths such as `Console/output`, `Web/page` and
 `Blazor/drawing-drawn`.
+
+iOS profiles use optional max-version directories:
+
+- `iphone-16-pro/18.6.0/maui-basic-cpu.png`
+
+Architecture-specific files override the unsuffixed reference. iOS references
+retain raw captures; comparison removes only the declared system-owned inset.
+Initial, drawn and cleared states use separate case names where needed.
 
 Use the sample helpers to select the profile:
 
