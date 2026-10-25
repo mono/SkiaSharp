@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
@@ -188,6 +189,37 @@ public class SampleImageTests : IDisposable
         Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
         Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
         Assert.DoesNotContain("expected-" + Path.GetFileName(expected), TestContext.Current.Attachments.Keys);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ScreenshotComparisonUsesRequestedRetryInterval(bool resolvedGolden)
+    {
+        var golden = SampleImage.Host("Console/output");
+        var expected = WriteFile(Path.Combine(root, "interval.expected.png"), golden.ReadBytes());
+        using var bitmap = SKBitmap.Decode(golden.ReadBytes());
+        bitmap.Erase(SKColors.Red);
+        var actual = SavePng(bitmap, "interval.actual.png");
+        var captures = new List<long>();
+        var interval = TimeSpan.FromSeconds(1);
+        var input = GoldenInput.Capture(() =>
+        {
+            captures.Add(Stopwatch.GetTimestamp());
+            if (captures.Count == 3)
+                File.Copy(expected, actual, overwrite: true);
+            return Task.FromResult(actual);
+        });
+
+        var matched = resolvedGolden
+            ? await golden.VerifyAsync(input, TimeSpan.FromSeconds(10), interval, TestContext.Current.CancellationToken)
+            : await Golden.VerifyAsync(input, GoldenInput.Path(expected), TimeSpan.FromSeconds(10), interval,
+                TestContext.Current.CancellationToken);
+
+        Assert.Equal(actual, matched);
+        Assert.Equal(3, captures.Count);
+        Assert.True(Stopwatch.GetElapsedTime(captures[1], captures[2]) >= interval);
+        Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
     }
 
     [Theory]

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.Playwright;
 using SkiaSharp.Tests.Shared;
 using SkiaSharp.Tests.Samples.Utils;
@@ -39,10 +38,6 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.MoveAsync(0, 0);
 
             await DrawUnoStrokes(app);
-            await SampleImage.Browser("Uno/drawing-drawn").VerifyAsync(
-                GoldenInput.Capture(app.Screenshot),
-                TimeSpan.FromSeconds(10),
-                TestContext.Current.CancellationToken);
 
             await app.Page.Mouse.ClickAsync(1237, 76);
             await app.Page.Mouse.MoveAsync(0, 0);
@@ -70,6 +65,8 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
 
     private static async Task DrawUnoStrokes(BrowserRunningApp app)
     {
+        var drawn = SampleImage.Browser("Uno/drawing-drawn");
+        Assert.NotNull(drawn.ReferenceKey);
         for (var attempt = 1; attempt <= 3; attempt++)
         {
             await app.Page.Mouse.ClickAsync(471, 852);
@@ -93,46 +90,25 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
 
             try
             {
-                await WaitForUnoStrokeColors(app, new SKColor(229, 57, 53), new SKColor(30, 136, 229));
+                await drawn.VerifyAsync(
+                    GoldenInput.Capture(app.Screenshot),
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromSeconds(1),
+                    TestContext.Current.CancellationToken);
                 return;
             }
-            catch (TimeoutException error) when (attempt < 3)
+            catch (Xunit.Sdk.FailException error) when (attempt < 3)
             {
                 TestContext.Current.TestOutputHelper?.WriteLine(
-                    $"Uno stroke colors were not ready on attempt {attempt}; clearing before retry: {error.Message}");
+                    $"Uno drawing did not match on attempt {attempt}; clearing before retry: {error.Message}");
                 await app.Page.Mouse.ClickAsync(1237, 76);
                 await app.Page.Mouse.MoveAsync(0, 0);
-                await WaitForUnoStrokeColors(app, SKColors.White, SKColors.White);
+                await SampleImage.Browser("Uno/drawing-cleared").VerifyAsync(
+                    GoldenInput.Capture(app.Screenshot),
+                    TimeSpan.FromSeconds(4),
+                    TimeSpan.FromSeconds(1),
+                    TestContext.Current.CancellationToken);
             }
-        }
-    }
-
-    private static async Task WaitForUnoStrokeColors(BrowserRunningApp app, SKColor red, SKColor blue)
-    {
-        var cancellation = TestContext.Current.CancellationToken;
-        var timer = Stopwatch.StartNew();
-        while (true)
-        {
-            // Uno uses WebGL without preserveDrawingBuffer; sample the compositor, not getContext('2d').
-            using var bitmap = SKBitmap.Decode(await app.Page.ScreenshotAsync(new()
-            {
-                FullPage = true,
-                Animations = ScreenshotAnimations.Disabled,
-                Timeout = Math.Max(1, 10000 - (int)timer.ElapsedMilliseconds)
-            }).WaitAsync(cancellation));
-            app.AssertNoErrors();
-            Assert.NotNull(bitmap);
-            Assert.Equal(1280, bitmap.Width);
-            Assert.Equal(900, bitmap.Height);
-            var actualRed = bitmap.GetPixel(400, 250);
-            var actualBlue = bitmap.GetPixel(400, 450);
-            if (actualRed == red && actualBlue == blue)
-                return;
-            if (timer.Elapsed >= TimeSpan.FromSeconds(10))
-                throw new TimeoutException(
-                    $"Uno stroke colors did not settle: (400,250) expected {red}, actual {actualRed}; " +
-                    $"(400,450) expected {blue}, actual {actualBlue}.");
-            await Task.Delay(100, cancellation);
         }
     }
 

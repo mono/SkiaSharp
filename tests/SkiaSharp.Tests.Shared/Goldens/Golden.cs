@@ -69,14 +69,19 @@ public sealed class Golden
 	}
 
 	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout,
+		CancellationToken cancellationToken = default, GoldenOptions? options = null) =>
+		VerifyAsync(actual, timeout, TimeSpan.FromMilliseconds(100), cancellationToken, options);
+
+	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout, TimeSpan retryInterval,
 		CancellationToken cancellationToken = default, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+		if (retryInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(retryInterval));
 
 		options = GoldenOptions.OrDefault(options);
 		var expected = ReferenceInput();
-		return RetryAsync(actual, timeout, cancellationToken,
+		return RetryAsync(actual, timeout, retryInterval, cancellationToken,
 			(image, report) => VerifyCore(this, image, expected, options, report));
 	}
 
@@ -92,14 +97,19 @@ public sealed class Golden
 	}
 
 	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout,
+		CancellationToken cancellationToken = default, GoldenOptions? options = null) =>
+		VerifyAsync(actual, expected, timeout, TimeSpan.FromMilliseconds(100), cancellationToken, options);
+
+	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout, TimeSpan retryInterval,
 		CancellationToken cancellationToken = default, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (expected == null) throw new ArgumentNullException(nameof(expected));
+		if (retryInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(retryInterval));
 
 		options = GoldenOptions.OrDefault(options);
 		GoldenInput.Image? expectedImage = null;
-		return RetryAsync(actual, timeout, cancellationToken,
+		return RetryAsync(actual, timeout, retryInterval, cancellationToken,
 			(image, report) => VerifyCore(null, image, expectedImage ??= expected.Read(), options, report));
 	}
 
@@ -280,6 +290,7 @@ public sealed class Golden
 	private static async Task<string> RetryAsync(
 		GoldenInput input,
 		TimeSpan timeout,
+		TimeSpan retryInterval,
 		CancellationToken cancellationToken,
 		Func<GoldenInput.Image, bool, bool> verify)
 	{
@@ -322,9 +333,9 @@ public sealed class Golden
 			remaining = timeout - clock.Elapsed;
 			if (remaining > TimeSpan.Zero)
 				await Task.Delay(
-					remaining < TimeSpan.FromMilliseconds(100)
+					remaining < retryInterval
 						? remaining
-						: TimeSpan.FromMilliseconds(100),
+						: retryInterval,
 					cancellationToken);
 		}
 	}
