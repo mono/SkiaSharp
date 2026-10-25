@@ -29,5 +29,9 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+      - name: Install gh-aw extension
+        uses: github/gh-aw-actions/setup-cli@9271a1804551c0dc4fb0085a97979950aa2f8489 # v0.88.2
+        with:
+          version: v0.88.2
       - name: Set up Linux code review
         run: bash scripts/infra/cloud/setup.sh --restore-tools --install-android-workload

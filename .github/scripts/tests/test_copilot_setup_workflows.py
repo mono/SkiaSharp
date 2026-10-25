@@ -13,6 +13,7 @@ REVIEW_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "copilot-code-review.yml
 AUTOMATION_WORKFLOW = (
     REPO_ROOT / ".github" / "workflows" / "automation-tooling-tests.yml"
 )
+REVIEW_SKILL = REPO_ROOT / ".github" / "skills" / "code-review" / "SKILL.md"
 CLOUD_SETUP = REPO_ROOT / "scripts" / "infra" / "cloud" / "setup.sh"
 RESTORE_TOOLS = CLOUD_SETUP.with_name("restore-dotnet-tools.sh")
 PREBUILT_NATIVES = CLOUD_SETUP.with_name("download-prebuilt-natives.sh")
@@ -41,6 +42,7 @@ class CopilotSetupWorkflowTests(unittest.TestCase):
         restore_tools = RESTORE_TOOLS.read_text(encoding="utf-8")
 
         self.assertRegex(workflow, r"(?m)^  copilot-setup-steps:$")
+        self.assertIn("github/gh-aw-actions/setup-cli@", workflow)
         self.assertIn(
             "bash scripts/infra/cloud/setup.sh --restore-tools --install-android-workload",
             workflow,
@@ -68,6 +70,19 @@ class CopilotSetupWorkflowTests(unittest.TestCase):
             2,
             workflow.count('      - "scripts/infra/tests/setup-software-gpu.sh"'),
         )
+        self.assertEqual(
+            2,
+            workflow.count('      - ".github/skills/code-review/**"'),
+        )
+
+    def test_code_review_skill_selects_safe_native_bootstrap(self):
+        skill = REVIEW_SKILL.read_text(encoding="utf-8")
+
+        self.assertIn("allowed-tools: bash", skill)
+        self.assertIn("scripts/infra/cloud/download-prebuilt-natives.sh", skill)
+        self.assertIn("never download prebuilt", skill)
+        self.assertIn("dotnet cake --target=externals-linux --arch=x64", skill)
+        self.assertIn("gh aw compile <workflow-id>", skill)
 
 
 if __name__ == "__main__":
