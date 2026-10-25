@@ -26,7 +26,7 @@ class CopilotSetupWorkflowTests(unittest.TestCase):
 
         self.assertRegex(workflow, r"(?m)^  copilot-setup-steps:$")
         self.assertIn(
-            "bash scripts/infra/cloud/setup.sh --restore-tools --download-prebuilt-natives",
+            "bash scripts/infra/cloud/setup.sh --restore-tools --download-prebuilt-natives --install-android-workload",
             workflow,
         )
         self.assertIn('if [[ "$restore_tools" == true ]]', setup)
@@ -42,11 +42,10 @@ class CopilotSetupWorkflowTests(unittest.TestCase):
 
         self.assertRegex(workflow, r"(?m)^  copilot-setup-steps:$")
         self.assertIn(
-            "bash scripts/infra/cloud/setup.sh --restore-tools",
+            "bash scripts/infra/cloud/setup.sh --restore-tools --install-android-workload",
             workflow,
         )
         self.assertNotIn("--download-prebuilt-natives", workflow)
-        self.assertNotIn("--install-android-workload", workflow)
         self.assertNotIn("externals-download", restore_tools)
 
     def test_optional_bootstraps_are_explicit(self):
@@ -55,8 +54,8 @@ class CopilotSetupWorkflowTests(unittest.TestCase):
 
         self.assertIn("--download-prebuilt-natives", coding_workflow)
         self.assertNotIn("--download-prebuilt-natives", review_workflow)
-        self.assertNotIn("--install-android-workload", coding_workflow)
-        self.assertNotIn("--install-android-workload", review_workflow)
+        self.assertIn("--install-android-workload", coding_workflow)
+        self.assertIn("--install-android-workload", review_workflow)
 
     def test_automation_tests_follow_shared_setup_changes(self):
         workflow = AUTOMATION_WORKFLOW.read_text(encoding="utf-8")

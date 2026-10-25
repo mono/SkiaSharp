@@ -48,7 +48,7 @@ if [[ "$download_prebuilt_natives" == true ]]; then
     bash "$script_dir/download-prebuilt-natives.sh"
 fi
 
-# The full managed build includes Android TFMs; desktop-only tests do not need this workload.
+# The repository's standard managed build includes Android TFMs.
 if [[ "$install_android_workload" == true ]]; then
     bash "$script_dir/install-android-workload.sh"
 fi
