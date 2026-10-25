@@ -210,7 +210,7 @@ public abstract class PlatformTestBase : IDisposable
         }
     }
 
-    protected static string FindRepoRoot()
+    private static string FindRepoRoot()
     {
         var dir = AppContext.BaseDirectory;
         while (dir != null)
