@@ -48,6 +48,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
             "--partition-size", "4096", "--camera-back", "none", "--camera-front", "none",
         };
         var settings = AndroidCommandSettings(arguments.ToArray());
+        settings.Timeout = 330000;
         settings.EnvironmentVariables = new Dictionary<string, string> {
             ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(logs, "android-tool.log"),
         };
