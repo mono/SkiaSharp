@@ -181,8 +181,7 @@ public class SampleImageTests : IDisposable
                 return Task.FromResult(actual);
             }),
             GoldenInput.Path(expected),
-            SampleImage.DefaultTimeout,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(2, attempts);
         Assert.Equal(actual, matched);
@@ -213,9 +212,9 @@ public class SampleImageTests : IDisposable
 
         var matched = resolvedGolden
             ? await golden.VerifyAsync(
-                input, TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken, retryInterval: interval)
+                input, timeout: TimeSpan.FromSeconds(10), retryInterval: interval, cancellationToken: TestContext.Current.CancellationToken)
             : await Golden.VerifyAsync(
-                input, GoldenInput.Path(expected), TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken, retryInterval: interval);
+                input, GoldenInput.Path(expected), timeout: TimeSpan.FromSeconds(10), retryInterval: interval, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(actual, matched);
         Assert.Equal(3, captures.Count);
@@ -239,8 +238,8 @@ public class SampleImageTests : IDisposable
             Golden.VerifyAsync(
                 GoldenInput.Capture(() => Task.FromResult(actual)),
                 GoldenInput.Path(expected),
-                TimeSpan.FromMilliseconds(150),
-                TestContext.Current.CancellationToken));
+                timeout: TimeSpan.FromMilliseconds(150),
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
         if (!wrongSize)
@@ -269,8 +268,8 @@ public class SampleImageTests : IDisposable
                     GoldenInput.Capture(() =>
                         ++attempts == 1 ? Task.FromResult(actual) : pending.Task),
                     GoldenInput.Path(expected),
-                    TimeSpan.FromMilliseconds(200),
-                    TestContext.Current.CancellationToken));
+                    timeout: TimeSpan.FromMilliseconds(200),
+                    cancellationToken: TestContext.Current.CancellationToken));
 
             Assert.Equal(2, attempts);
             Assert.Contains("Golden images differ", error.Message);
@@ -302,9 +301,8 @@ public class SampleImageTests : IDisposable
                 return Task.FromResult(actual);
             }),
             GoldenInput.Path(expected),
-            SampleImage.DefaultTimeout,
-            TestContext.Current.CancellationToken,
-            new(expectedSize: new(4, 4)));
+            new(expectedSize: new(4, 4)),
+            cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(2, attempts);
     }
 
@@ -334,9 +332,9 @@ public class SampleImageTests : IDisposable
                 return actual;
             }),
             GoldenInput.Path(expected),
+            new(expectedSize: new(4, 4)),
             TimeSpan.FromMilliseconds(200),
-            TestContext.Current.CancellationToken,
-            new(expectedSize: new(4, 4)));
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(2, attempts);
     }
@@ -375,8 +373,7 @@ public class SampleImageTests : IDisposable
                     };
                 }),
                 GoldenInput.Path(expected),
-                SampleImage.DefaultTimeout,
-                TestContext.Current.CancellationToken));
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal(1, attempts);
         if (failure == "capture-error")
@@ -399,8 +396,8 @@ public class SampleImageTests : IDisposable
                 Golden.VerifyAsync(
                     GoldenInput.Capture(() => pending.Task),
                     GoldenInput.Path(expected),
-                    TimeSpan.FromMilliseconds(100),
-                    TestContext.Current.CancellationToken));
+                    timeout: TimeSpan.FromMilliseconds(100),
+                    cancellationToken: TestContext.Current.CancellationToken));
         }
         finally
         {
@@ -422,8 +419,8 @@ public class SampleImageTests : IDisposable
                     return Task.FromResult("unused.png");
                 }),
                 GoldenInput.Path("unused.png"),
-                TimeSpan.FromMilliseconds(milliseconds),
-                TestContext.Current.CancellationToken));
+                timeout: TimeSpan.FromMilliseconds(milliseconds),
+                cancellationToken: TestContext.Current.CancellationToken));
         Assert.Equal(0, attempts);
     }
 

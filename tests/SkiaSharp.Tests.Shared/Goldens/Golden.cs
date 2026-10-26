@@ -79,17 +79,17 @@ public sealed class Golden
 
 	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> against this golden's resolved reference until it matches or <paramref name="timeout"/> expires.</summary>
 	/// <param name="actual">The image input or asynchronous capture callback to invoke on each attempt.</param>
-	/// <param name="timeout">The total time budget for capturing a matching image.</param>
-	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
 	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <param name="timeout">The total time budget for capturing a matching image; <see langword="null"/> defaults to 5 seconds.</param>
 	/// <param name="retryInterval">The delay between retry captures after the first confirmation retry; <see langword="null"/> defaults to 100 ms.</param>
+	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
 	/// <returns>A task that resolves to the label or file path of the verified <paramref name="actual"/> image.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="actual"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> or <paramref name="retryInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
 	/// <exception cref="TimeoutException">The initial image capture did not complete before <paramref name="timeout"/> expired.</exception>
 	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
-	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
+	public Task<string> VerifyAsync(GoldenInput actual, GoldenOptions? options = null,
+		TimeSpan? timeout = null, TimeSpan? retryInterval = null, CancellationToken cancellationToken = default)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
@@ -122,20 +122,21 @@ public sealed class Golden
 	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image until it matches or <paramref name="timeout"/> expires.</summary>
 	/// <param name="actual">The image input or asynchronous capture callback to invoke on each attempt.</param>
 	/// <param name="expected">The reference image path, encoded bytes, or raw pixels to compare against.</param>
-	/// <param name="timeout">The total time budget for capturing a matching image.</param>
-	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
 	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <param name="timeout">The total time budget for capturing a matching image; <see langword="null"/> defaults to 5 seconds.</param>
 	/// <param name="retryInterval">The delay between retry captures after the first confirmation retry; <see langword="null"/> defaults to 100 ms.</param>
+	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
 	/// <returns>A task that resolves to the label or file path of the verified <paramref name="actual"/> image.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="actual"/> or <paramref name="expected"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> or <paramref name="retryInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
 	/// <exception cref="TimeoutException">The initial image capture did not complete before <paramref name="timeout"/> expired.</exception>
 	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
-	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
+	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, GoldenOptions? options = null,
+		TimeSpan? timeout = null, TimeSpan? retryInterval = null, CancellationToken cancellationToken = default)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (expected == null) throw new ArgumentNullException(nameof(expected));
+		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
 		if (retryInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(retryInterval));
 
 		options = GoldenOptions.OrDefault(options);
@@ -320,7 +321,7 @@ public sealed class Golden
 
 	private static async Task<string> RetryAsync(
 		GoldenInput input,
-		TimeSpan timeout,
+		TimeSpan? timeout,
 		TimeSpan? retryInterval,
 		CancellationToken cancellationToken,
 		Func<GoldenInput.Image, bool, bool> verify)
@@ -328,6 +329,7 @@ public sealed class Golden
 		if (input == null) throw new ArgumentNullException(nameof(input));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
 
+		var limit = timeout ?? TimeSpan.FromSeconds(5);
 		var delay = retryInterval ?? TimeSpan.FromMilliseconds(100);
 		var clock = Stopwatch.StartNew();
 		GoldenInput.Image? actual = null;
@@ -335,7 +337,7 @@ public sealed class Golden
 		while (true)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			var remaining = timeout - clock.Elapsed;
+			var remaining = limit - clock.Elapsed;
 			if (remaining <= TimeSpan.Zero && attempts != 1)
 			{
 				if (actual == null)
@@ -349,7 +351,7 @@ public sealed class Golden
 				attempts++;
 				actual = await WaitAsync(
 					input.ReadAsync(),
-					attempts == 2 ? timeout : remaining,
+					attempts == 2 ? limit : remaining,
 					cancellationToken);
 			}
 			catch (TimeoutException) when (actual != null && !cancellationToken.IsCancellationRequested)
@@ -362,7 +364,7 @@ public sealed class Golden
 			if (attempts == 1)
 				continue;
 
-			remaining = timeout - clock.Elapsed;
+			remaining = limit - clock.Elapsed;
 			if (remaining > TimeSpan.Zero)
 				await Task.Delay(
 					remaining < delay

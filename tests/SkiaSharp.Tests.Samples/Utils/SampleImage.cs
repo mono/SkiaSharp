@@ -5,8 +5,6 @@ namespace SkiaSharp.Tests.Samples.Utils;
 
 internal static class SampleImage
 {
-    internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(2);
-
     internal static string Root => Path.Combine(AppContext.BaseDirectory, "Goldens");
     internal static GoldenStore Store { get; } = new(new[] { Root });
 

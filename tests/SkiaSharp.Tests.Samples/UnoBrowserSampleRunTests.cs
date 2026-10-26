@@ -43,8 +43,8 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.MoveAsync(0, 0);
             await SampleImage.Browser("Uno/drawing-cleared").VerifyAsync(
                 GoldenInput.Capture(app.Screenshot),
-                TimeSpan.FromSeconds(4),
-                TestContext.Current.CancellationToken);
+                timeout: TimeSpan.FromSeconds(4),
+                cancellationToken: TestContext.Current.CancellationToken);
 
             await app.Page.Mouse.ClickAsync(50, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
@@ -92,9 +92,9 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             {
                 await drawn.VerifyAsync(
                     GoldenInput.Capture(app.Screenshot),
-                    TimeSpan.FromSeconds(10),
-                    TestContext.Current.CancellationToken,
-                    retryInterval: TimeSpan.FromSeconds(1));
+                    timeout: TimeSpan.FromSeconds(10),
+                    retryInterval: TimeSpan.FromSeconds(1),
+                    cancellationToken: TestContext.Current.CancellationToken);
                 return;
             }
             catch (Xunit.Sdk.FailException error) when (attempt < 3)
@@ -105,9 +105,9 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
                 await app.Page.Mouse.MoveAsync(0, 0);
                 await SampleImage.Browser("Uno/drawing-cleared").VerifyAsync(
                     GoldenInput.Capture(app.Screenshot),
-                    TimeSpan.FromSeconds(4),
-                    TestContext.Current.CancellationToken,
-                    retryInterval: TimeSpan.FromSeconds(1));
+                    timeout: TimeSpan.FromSeconds(4),
+                    retryInterval: TimeSpan.FromSeconds(1),
+                    cancellationToken: TestContext.Current.CancellationToken);
             }
         }
     }
@@ -118,7 +118,7 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
         await app.Page.Locator(".uno-loader").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         return await SampleImage.Browser("Uno/cpu").VerifyAsync(
             GoldenInput.Capture(app.Screenshot),
-            TimeSpan.FromSeconds(10),
-            TestContext.Current.CancellationToken);
+            timeout: TimeSpan.FromSeconds(10),
+            cancellationToken: TestContext.Current.CancellationToken);
     }
 }
