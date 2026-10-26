@@ -39,11 +39,14 @@ public sealed class Golden
 	/// <summary>The ordered candidate keys checked across profile, version, and architecture fallbacks during resolution.</summary>
 	public IReadOnlyList<string> CandidateKeys { get; }
 
-	/// <summary>Reads the encoded PNG bytes of the resolved reference image, or throws if missing.</summary>
+	/// <summary>Reads the encoded PNG bytes of the resolved reference image.</summary>
+	/// <returns>The encoded PNG bytes of the matched reference image.</returns>
+	/// <exception cref="InvalidOperationException">No reference image was resolved for <see cref="Case"/>.</exception>
 	public byte[] ReadBytes() =>
 		readReference == null ? throw new InvalidOperationException(Describe()) : readReference();
 
 	/// <summary>Formats a diagnostic summary of the requested case, selected reference, and fallback keys checked.</summary>
+	/// <returns>A multi-line summary of the golden lookup and all <see cref="CandidateKeys"/>.</returns>
 	public string Describe()
 	{
 		var version = Case.Version == null ? "" : $" at {Case.Version}";
@@ -58,7 +61,13 @@ public sealed class Golden
 			$"Attempted (in order):{indent}{string.Join(indent, CandidateKeys)}");
 	}
 
-	/// <summary>Formats a base64 <c>##SKIA-GOLDEN##</c> log marker for extracting actual, reference, or diff images.</summary>
+	/// <summary>Formats a base64 <c>##SKIA-GOLDEN##</c> log marker so test logs can carry actual, reference, or diff PNGs for offline extraction.</summary>
+	/// <param name="role">The image role in the comparison: <c>"actual"</c>, <c>"reference"</c>, or <c>"diff"</c>.</param>
+	/// <param name="png">The encoded PNG image bytes to validate, measure, and base64-encode into the marker.</param>
+	/// <returns>A single-line <c>##SKIA-GOLDEN##</c> marker containing the role, <see cref="CaptureKey"/>, pixel dimensions, and base64 PNG payload.</returns>
+	/// <exception cref="ArgumentException"><paramref name="role"/> is not <c>"actual"</c>, <c>"reference"</c>, or <c>"diff"</c>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="png"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException"><paramref name="png"/> cannot be decoded as an image.</exception>
 	public string FormatMarker(string role, byte[] png)
 	{
 		if (role != "actual" && role != "reference" && role != "diff")
@@ -71,6 +80,11 @@ public sealed class Golden
 	}
 
 	/// <summary>Verifies <paramref name="actual"/> against this golden's resolved reference image once.</summary>
+	/// <param name="actual">The captured image path, encoded bytes, or raw pixels to verify.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <returns>The label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException"><paramref name="actual"/> is an asynchronous capture input or cannot be decoded.</exception>
 	public string Verify(GoldenInput actual, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -82,6 +96,16 @@ public sealed class Golden
 	}
 
 	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> against this golden's resolved reference until it matches or <paramref name="timeout"/> expires.</summary>
+	/// <param name="actual">The image input or asynchronous capture callback to invoke on each attempt.</param>
+	/// <param name="timeout">The total time budget for capturing a matching image.</param>
+	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <param name="retryInterval">The delay between retry captures after the first confirmation retry; <see langword="null"/> defaults to 100 ms.</param>
+	/// <returns>A task that resolves to the label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> or <paramref name="retryInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
+	/// <exception cref="TimeoutException">The initial image capture did not complete before <paramref name="timeout"/> expired.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
 	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout,
 		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
 	{
@@ -96,6 +120,12 @@ public sealed class Golden
 	}
 
 	/// <summary>Verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image without a golden store lookup.</summary>
+	/// <param name="actual">The captured image path, encoded bytes, or raw pixels to verify.</param>
+	/// <param name="expected">The reference image path, encoded bytes, or raw pixels to compare against.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <returns>The label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> or <paramref name="expected"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException"><paramref name="actual"/> or <paramref name="expected"/> is an asynchronous capture input or cannot be decoded.</exception>
 	public static string Verify(GoldenInput actual, GoldenInput expected, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -108,6 +138,17 @@ public sealed class Golden
 	}
 
 	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image until it matches or <paramref name="timeout"/> expires.</summary>
+	/// <param name="actual">The image input or asynchronous capture callback to invoke on each attempt.</param>
+	/// <param name="expected">The reference image path, encoded bytes, or raw pixels to compare against.</param>
+	/// <param name="timeout">The total time budget for capturing a matching image.</param>
+	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <param name="retryInterval">The delay between retry captures after the first confirmation retry; <see langword="null"/> defaults to 100 ms.</param>
+	/// <returns>A task that resolves to the label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> or <paramref name="expected"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> or <paramref name="retryInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
+	/// <exception cref="TimeoutException">The initial image capture did not complete before <paramref name="timeout"/> expired.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
 	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout,
 		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
 	{
