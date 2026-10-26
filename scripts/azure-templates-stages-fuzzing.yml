@@ -1,7 +1,7 @@
 parameters:
   - name: buildAgentLinux
     type: object
-  # Each entry submits tests/SkiaSharp.Fuzzing/OneFuzzConfig.<config>.json to the OneFuzz pool for <os>.
+  # Each entry submits the generated OneFuzzConfig.<config>.json to the fuzzing pool for <os>.
   - name: submissions
     type: object
     default:
@@ -17,16 +17,16 @@ parameters:
 
 stages:
   - stage: fuzzing
-    displayName: OneFuzz
+    displayName: Fuzzing
     dependsOn: native
     jobs:
-      # Builds, instruments and publishes the drop. Nothing here talks to OneFuzz.
+      # Builds and publishes the drop. Nothing here talks to the fuzzing service.
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
         parameters:
-          name: onefuzz_prepare
-          displayName: Prepare the OneFuzz drop
+          name: fuzzing_prepare
+          displayName: Prepare the fuzzing drop
           buildAgent: ${{ parameters.buildAgentLinux }}
-          target: onefuzz-prepare
+          target: fuzzing-prepare
           # Only scheduled builds of main use the production target names.
           ${{ if not(and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
             additionalArgs: --validationBuildId=$(Build.BuildId)
@@ -40,13 +40,13 @@ stages:
           requiredArtifacts:
             - name: native
           publishArtifacts:
-            - name: onefuzz
-              path: output/onefuzz
+            - name: fuzzing
+              path: output/fuzzing
 
       # Runs on a fresh agent: it never builds anything, it only submits the published drop.
-      - job: onefuzz_submit
-        displayName: Submit to OneFuzz
-        dependsOn: onefuzz_prepare
+      - job: fuzzing_submit
+        displayName: Submit the fuzzing drop
+        dependsOn: fuzzing_prepare
         timeoutInMinutes: 120
         pool: ${{ parameters.buildAgentLinux.pool }}
         workspace:
@@ -55,20 +55,20 @@ stages:
           - checkout: none
 
           - download: current
-            artifact: onefuzz
-            displayName: Download the OneFuzz drop
+            artifact: fuzzing
+            displayName: Download the fuzzing drop
 
           # Every submission gets its own copy so one submission can never change what another uploads.
           - ${{ each submission in parameters.submissions }}:
             - pwsh: |
                 $drop = Join-Path $env:PIPELINE_WORKSPACE 'submit/${{ submission.key }}'
                 New-Item -ItemType Directory -Force -Path $drop | Out-Null
-                Copy-Item (Join-Path $env:PIPELINE_WORKSPACE 'onefuzz/*') $drop -Recurse -Force
+                Copy-Item (Join-Path $env:PIPELINE_WORKSPACE 'fuzzing/*') $drop -Recurse -Force
                 Copy-Item (Join-Path $drop 'OneFuzzConfig.${{ submission.value.config }}.json') (Join-Path $drop 'OneFuzzConfig.json') -Force
               displayName: Stage the ${{ submission.key }} drop
 
             - task: onefuzz-task@0
-              displayName: Submit the ${{ submission.key }} targets to OneFuzz
+              displayName: Submit the ${{ submission.key }} targets for fuzzing
               inputs:
                 onefuzzOSes: ${{ submission.value.os }}
               env:

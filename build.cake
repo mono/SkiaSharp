@@ -164,9 +164,9 @@ Task ("docs-api-diff")
     .Description ("Generate the committed API diffs (incremental; --force/--minVersion/--maxVersion).")
     .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));
 
-Task ("onefuzz-prepare")
-    .Description ("Prepare the OneFuzz drop in ./output/onefuzz.")
-    .Does (() => RunCake ("./scripts/infra/security/onefuzz.cake", "Default"));
+Task ("fuzzing-prepare")
+    .Description ("Prepare the fuzzing drop in ./output/fuzzing.")
+    .Does (() => RunCake ("./scripts/infra/security/fuzzing/fuzzing.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts

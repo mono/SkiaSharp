@@ -1,8 +1,8 @@
 #!/usr/bin/env pwsh
 # Runs the OneFuzz CLI on any platform. All arguments are passed to the CLI:
 #
-#   ./scripts/infra/security/onefuzz.ps1 utils status
-#   ./scripts/infra/security/onefuzz.ps1 jobs get --job-id <guid>
+#   ./scripts/infra/security/fuzzing/onefuzz.ps1 utils status
+#   ./scripts/infra/security/fuzzing/onefuzz.ps1 jobs get --job-id <guid>
 #
 # The first run downloads the CLI into externals/onefuzz-cli. Use the CLI's own
 # `update` command to refresh it, or delete that folder to reinstall.
@@ -13,7 +13,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../..'))
 $installDir = Join-Path $repoRoot 'externals/onefuzz-cli'
 $cliDll = Join-Path $installDir 'onefuzz.dll'
 

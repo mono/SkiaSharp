@@ -16,8 +16,50 @@ internal static class Program
 			return 0;
 		}
 
-		Console.Error.WriteLine("Usage: SkiaSharp.Fuzzing --write-seeds <directory> | --smoke <directory>");
+		if (args.Length >= 3 && args[0] == "--replay")
+			return Replay(args[1], args.Skip(2));
+
+		Console.Error.WriteLine("Usage: SkiaSharp.Fuzzing --write-seeds <directory> | --smoke <directory> | --replay <target> <file|directory>...");
 		return 1;
+	}
+
+	// Runs one fuzz target over saved inputs, such as the crash inputs the fuzzing service keeps, to reproduce a finding.
+	// Each path is printed before it runs, so if the process dies (a native crash), the last line names the input.
+	private static int Replay(string target, IEnumerable<string> paths)
+	{
+		Action<byte[]>? run = target switch
+		{
+			"managed-streams" => input => FuzzTargets.FuzzManagedStreams(input),
+			"picture-deserialize" => input => FuzzTargets.FuzzPictureDeserialize(input),
+			"harfbuzz-managed-callbacks" => input => FuzzTargets.FuzzHarfBuzzManagedTableCallbacks(input),
+			"skottie-resource-providers" => input => FuzzTargets.FuzzSkottieResourceProviders(input),
+			_ => null
+		};
+
+		if (run is null)
+		{
+			Console.Error.WriteLine($"Unknown target '{target}'. Use managed-streams, picture-deserialize, harfbuzz-managed-callbacks or skottie-resource-providers.");
+			return 1;
+		}
+
+		var count = 0;
+		foreach (var path in paths)
+		{
+			IEnumerable<string> files = Directory.Exists(path)
+				? Directory.EnumerateFiles(path).OrderBy(f => f, StringComparer.Ordinal)
+				: new[] { path };
+
+			foreach (var file in files)
+			{
+				Console.WriteLine($"Replaying {file}");
+				Console.Out.Flush();
+				run(File.ReadAllBytes(file));
+				count++;
+			}
+		}
+
+		Console.WriteLine($"Replayed {count} inputs without a crash.");
+		return 0;
 	}
 
 	private static void WriteSeeds(string outputDirectory)

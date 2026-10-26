@@ -1,32 +1,32 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../../.."));
 
-#load "../shared/shared.cake"
+#load "../../shared/shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// ONEFUZZ - prepare the drop shared by every OneFuzz submission
+// FUZZING - prepare the drop shared by every fuzzing submission
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// When set, every OneFuzz target name is prefixed/suffixed so validation runs never collide with the production targets.
-var ONEFUZZ_VALIDATION_BUILD_ID = Argument("validationBuildId", EnvironmentVariable("ONEFUZZ_VALIDATION_BUILD_ID"));
+// When set, every fuzz target name is prefixed/suffixed so validation runs never collide with the production targets.
+var FUZZING_VALIDATION_BUILD_ID = Argument("validationBuildId", EnvironmentVariable("FUZZING_VALIDATION_BUILD_ID"));
 
-Task("onefuzz-prepare")
-    .Description("Publish and instrument the OneFuzz harness into ./output/onefuzz.")
+Task("fuzzing-prepare")
+    .Description("Publish the fuzzing harness and generate the per-platform configs into ./output/fuzzing.")
     .Does(() =>
 {
     string Quote(string value) => $"\"{value.Replace("\"", "\\\"")}\"";
 
     var fuzzingRoot = ROOT_PATH.Combine("tests/SkiaSharp.Fuzzing").FullPath;
-    var outputPath = ROOT_PATH.Combine("output/onefuzz").FullPath;
+    var outputPath = ROOT_PATH.Combine("output/fuzzing").FullPath;
 
     if (System.IO.Directory.Exists(outputPath))
         System.IO.Directory.Delete(outputPath, recursive: true);
 
     RunProcess("dotnet", $"publish {Quote(System.IO.Path.Combine(fuzzingRoot, "SkiaSharp.Fuzzing.csproj"))} -c Release -f net10.0 -o {Quote(outputPath)} -p:AllTargetFrameworks=net10.0");
 
-    // The drop is shared, so it must carry the native libraries of every OneFuzz platform.
+    // The drop is shared, so it must carry the native libraries of every fuzzing platform.
     foreach (var requiredFile in new[]
     {
         "SkiaSharp.Fuzzing.dll",
@@ -42,7 +42,7 @@ Task("onefuzz-prepare")
     })
     {
         if (!System.IO.File.Exists(System.IO.Path.Combine(outputPath, requiredFile)))
-            throw new Exception($"The OneFuzz drop is missing required file: {requiredFile}");
+            throw new Exception($"The fuzzing drop is missing required file: {requiredFile}");
     }
 
     var harness = System.IO.Path.Combine(outputPath, "SkiaSharp.Fuzzing.dll");
@@ -50,7 +50,7 @@ Task("onefuzz-prepare")
     RunProcess("dotnet", $"{Quote(harness)} --write-seeds {Quote(seeds)}");
     RunProcess("dotnet", $"{Quote(harness)} --smoke {Quote(seeds)}");
 
-    // The drop is intentionally not instrumented: OneFuzz instruments the harness and FuzzingTargetBinaries itself,
+    // The drop is intentionally not instrumented: the fuzzing service instruments the harness and FuzzingTargetBinaries itself,
     // and a second SharpFuzz (or its own SharpFuzz.Common.dll) in the drop breaks the harness.
 
     // Each platform ships its own config, generated from one template; the submit job selects one as OneFuzzConfig.json.
@@ -67,10 +67,10 @@ Task("onefuzz-prepare")
         var entries = new JsonArray();
         foreach (var target in template["Targets"]!.AsArray())
         {
-            var name = ONEFUZZ_VALIDATION_BUILD_ID is { Length: > 0 }
+            var name = FUZZING_VALIDATION_BUILD_ID is { Length: > 0 }
                 ? $"validation-{target!["Name"]}"
                 : target!["Name"]!.GetValue<string>();
-            var suffix = ONEFUZZ_VALIDATION_BUILD_ID is { Length: > 0 } ? $"-{ONEFUZZ_VALIDATION_BUILD_ID}" : "";
+            var suffix = FUZZING_VALIDATION_BUILD_ID is { Length: > 0 } ? $"-{FUZZING_VALIDATION_BUILD_ID}" : "";
 
             string Escape(string value) => JsonEncodedText.Encode(value).ToString();
             var entry = template["Entry"]!.ToJsonString()
@@ -95,17 +95,17 @@ Task("onefuzz-prepare")
             config.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
 
-    Information($"Prepared the OneFuzz drop at '{outputPath}'.");
+    Information($"Prepared the fuzzing drop at '{outputPath}'.");
 });
 
 // Offline checks that mirror what the service validates, so mistakes fail here instead of at submission.
 // The service still runs the authoritative validation (`onefuzz onefuzzconfig validate`, and again on submit).
-Task("onefuzz-validate")
-    .Description("Strictly validate the generated OneFuzz configs against the drop.")
-    .IsDependentOn("onefuzz-prepare")
+Task("fuzzing-validate")
+    .Description("Strictly validate the generated configs against the drop.")
+    .IsDependentOn("fuzzing-prepare")
     .Does(() =>
 {
-    var outputPath = ROOT_PATH.Combine("output/onefuzz").FullPath;
+    var outputPath = ROOT_PATH.Combine("output/fuzzing").FullPath;
     var errors = new List<string>();
     var warnings = new List<string>();
 
@@ -143,7 +143,7 @@ Task("onefuzz-validate")
     if (harnessMethods.Count == 0)
         errors.Add("Unable to find any fuzz target methods in FuzzTargets.cs.");
 
-    // OneFuzz symbolizes crashes from PDBs on Windows and from the embedded symbol table on Linux.
+    // The fuzzing service symbolizes crashes from PDBs on Windows and from the embedded symbol table on Linux.
     bool HasElfSymbols(string path)
     {
         var data = System.IO.File.ReadAllBytes(path);
@@ -169,10 +169,10 @@ Task("onefuzz-validate")
     bool IsCovered(string file, IEnumerable<string> patterns) => patterns.Any(pattern =>
         Regex.IsMatch(file, "^" + Regex.Escape(System.IO.Path.GetFileName(pattern.Replace('\\', '/'))).Replace("\\*", ".*") + "$"));
 
-    // OneFuzz instruments the harness and FuzzingTargetBinaries itself. A drop that already carries SharpFuzz
+    // The fuzzing service instruments the harness and FuzzingTargetBinaries itself. A drop that already carries SharpFuzz
     // (pre-instrumented assemblies or its own SharpFuzz.Common.dll) crashes the harness at startup.
     foreach (var sharpFuzzFile in System.IO.Directory.GetFiles(outputPath, "SharpFuzz*", System.IO.SearchOption.AllDirectories))
-        errors.Add($"The drop contains '{System.IO.Path.GetRelativePath(outputPath, sharpFuzzFile)}'; OneFuzz instruments the drop itself, so SharpFuzz must not ship with it.");
+        errors.Add($"The drop contains '{System.IO.Path.GetRelativePath(outputPath, sharpFuzzFile)}'; the fuzzing service instruments the drop itself, so SharpFuzz must not ship with it.");
 
     var configFiles = System.IO.Directory.GetFiles(outputPath, "OneFuzzConfig.*.json");
     if (configFiles.Length == 0)
@@ -259,7 +259,7 @@ Task("onefuzz-validate")
                 if (target is not null && !targetNames.Add(target))
                     errors.Add($"{jobPath}: duplicate TargetName '{target}'.");
                 if (target is not null && !Regex.IsMatch(target, "^[A-Za-z0-9._-]+$"))
-                    errors.Add($"{jobPath}: TargetName '{target}' has characters OneFuzz may reject.");
+                    errors.Add($"{jobPath}: TargetName '{target}' has characters the fuzzing service may reject.");
                 if (jobs[j]!["SeedCorpusContainer"] is null)
                     warnings.Add($"{name}: OneFuzzJobs have no SeedCorpusContainer, so the fuzzers start without a corpus.");
             }
@@ -283,13 +283,13 @@ Task("onefuzz-validate")
     }
 
     if (errors.Count > 0)
-        throw new Exception($"OneFuzz config validation failed:{Environment.NewLine}  {string.Join(Environment.NewLine + "  ", errors)}");
+        throw new Exception($"Fuzzing config validation failed:{Environment.NewLine}  {string.Join(Environment.NewLine + "  ", errors)}");
 
-    Information($"Validated {configFiles.Length} OneFuzz configs ({warnings.Distinct().Count()} warnings).");
+    Information($"Validated {configFiles.Length} fuzzing configs ({warnings.Distinct().Count()} warnings).");
 });
 
 Task("Default")
-    .IsDependentOn("onefuzz-prepare")
-    .IsDependentOn("onefuzz-validate");
+    .IsDependentOn("fuzzing-prepare")
+    .IsDependentOn("fuzzing-validate");
 
 RunTarget(TARGET);
