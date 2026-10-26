@@ -63,8 +63,10 @@ Task("Default")
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
 
     var properties = new Dictionary<string, string>();
-    if (OWNED_ANDROID_SERIAL != null)
+    if (OWNED_ANDROID_SERIAL != null) {
         properties["DeviceRunnersDevice"] = OWNED_ANDROID_SERIAL;
+        properties["AdbTarget"] = "-s " + OWNED_ANDROID_SERIAL;
+    }
     RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android", noBuild: true, properties: properties);
 });
 

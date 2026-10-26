@@ -288,11 +288,12 @@ public sealed class Golden
 
 		var clock = Stopwatch.StartNew();
 		GoldenInput.Image? actual = null;
+		var attempts = 0;
 		while (true)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			var remaining = timeout - clock.Elapsed;
-			if (remaining <= TimeSpan.Zero)
+			if (remaining <= TimeSpan.Zero && attempts != 1)
 			{
 				if (actual == null)
 					throw new TimeoutException("The image capture deadline expired before capture completed.");
@@ -302,7 +303,11 @@ public sealed class Golden
 
 			try
 			{
-				actual = await WaitAsync(input.ReadAsync(), remaining, cancellationToken);
+				attempts++;
+				actual = await WaitAsync(
+					input.ReadAsync(),
+					remaining > TimeSpan.Zero ? remaining : TimeSpan.FromMilliseconds(1),
+					cancellationToken);
 			}
 			catch (TimeoutException) when (actual != null && !cancellationToken.IsCancellationRequested)
 			{
@@ -311,6 +316,8 @@ public sealed class Golden
 			}
 			if (verify(actual, false))
 				return actual.Label;
+			if (attempts == 1)
+				continue;
 
 			remaining = timeout - clock.Elapsed;
 			if (remaining > TimeSpan.Zero)

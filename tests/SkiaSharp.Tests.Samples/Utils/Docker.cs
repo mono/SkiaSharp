@@ -32,10 +32,16 @@ internal static class Docker
         RunCommand(["wait", name], TimeSpan.FromMinutes(3));
 
     internal static Task CopyFromContainer(string name, string containerPath, string localPath) =>
-        RunCommand(["cp", $"{name}:{containerPath}", localPath]);
+        RunCommand(["cp", "--follow-link", $"{name}:{containerPath}", localPath]);
 
     internal static Task<string> InspectRunning(string name) =>
         RunCommand(["inspect", "--format", "{{.State.Running}}", name]);
+
+    internal static Task<string> ImageId(string name) =>
+        RunCommand(["inspect", "--format", "{{.Image}}", name]);
+
+    internal static Task<string> ImageEnvironment(string image) =>
+        RunCommand(["image", "inspect", "--format", "{{.Os}}|{{.Architecture}}|{{.OsVersion}}", image]);
 
     internal static Task Stop(string name) =>
         RunCommand(["container", "stop", "--time", "5", name]);
