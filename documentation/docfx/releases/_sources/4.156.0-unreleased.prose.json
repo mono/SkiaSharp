@@ -1,24 +1,31 @@
 {
-  "theme": "Runtime and platform refinements",
-  "highlights_headline": "The upcoming 4.156 release improves managed and HarfBuzz performance while refining native platform support.",
-  "highlights_body": "It reduces allocation during pixel copying and text shaping, packages WebGPU support with the native library, and improves Android rendering synchronization.",
+  "theme": "Runtime reliability and platform support",
+  "highlights_headline": "SkiaSharp 4.156.0 improves native reliability, rendering performance, and support across Apple, Android, Linux, and WebAssembly.",
+  "highlights_body": "It corrects native data handling and stream lifetime issues, reduces managed and HarfBuzz allocation overhead, and updates bundled platform components for current toolchains.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates Android texture rendering with the display refresh cycle for smoother presentation.",
+          "lead": "Native data creation handles C strings safely",
+          "detail": "SKData creation now determines the native string length correctly and writes directly into the resulting data, avoiding reads beyond the source buffer.",
           "prs": [
-            5345
+            5429
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained front-buffered stream data correctly to reduce avoidable memory use.",
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Streams that use a front buffer no longer retain data after it is no longer needed.",
           "prs": [
             5327
+          ]
+        },
+        {
+          "lead": "Android texture rendering follows the display refresh",
+          "detail": "Texture rendering is synchronized with display refresh to provide smoother Android output.",
+          "prs": [
+            5345
           ]
         }
       ]
@@ -27,8 +34,8 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed image and shaping allocations reduced",
-          "detail": "Optimizes image pixel copies, feature-string decoding, and HarfBuzz UTF-32 encoding to reduce allocation pressure in common managed workloads.",
+          "lead": "Pixel and text shaping paths allocate less",
+          "detail": "Managed image pixel copies, HarfBuzz UTF-32 encoding, and native feature-string handling reduce temporary allocation work.",
           "prs": [
             5052,
             5060,
@@ -41,34 +48,35 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support packaged with the native library",
-          "detail": "Includes emdawnwebgpu's WebGPU implementation in libSkiaSharp.a so consumers receive the required native support with the library.",
-          "prs": [
-            5316
-          ]
-        },
-        {
-          "lead": "Apple deployment baseline updated",
-          "detail": "Updates the minimum supported Apple deployment targets for the upcoming release.",
+          "lead": "Apple platform minimums updated",
+          "detail": "Apple native packages now target the current supported deployment baselines.",
           "prs": [
             5383
           ]
         },
         {
-          "lead": "Linux native artifact loading hardened",
-          "detail": "Binds bundled HarfBuzz functions locally so Linux native artifacts use the packaged implementation consistently.",
+          "lead": "Linux and WebAssembly native assets updated",
+          "detail": "Linux packages bind the bundled HarfBuzz functions locally, while WebAssembly static libraries include the emdawnwebgpu implementation.",
           "prs": [
             5352,
-            5366
+            5316
+          ]
+        },
+        {
+          "lead": "Windows native builds use current tooling",
+          "detail": "Windows packages are built with Visual Studio 2026 and a refreshed ANGLE Chromium revision.",
+          "prs": [
+            5321
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Bundled HarfBuzz function binding on Linux and Blazor CPU sample-test stabilization",
-    "dalexsoto": "Contextual PoliCheck findings cleanup",
-    "ramezgerges": "WebGPU implementation packaging in the native SkiaSharp library"
+    "VirgilMing": "Bundled HarfBuzz binding improvements for Linux and more reliable Blazor CPU sample rendering tests",
+    "dalexsoto": "Improved CI wording compliance",
+    "ramezgerges": "Included the emdawnwebgpu implementation in WebAssembly static libraries",
+    "rolfbjarne": "Removed obsolete sample files"
   },
   "preview_summaries": {},
   "harfbuzz_summary": null
