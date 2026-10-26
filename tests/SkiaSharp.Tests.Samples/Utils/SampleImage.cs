@@ -135,6 +135,21 @@ internal static class SampleImage
     private static void Emit(Golden golden, string role, string path)
     {
         var bytes = File.ReadAllBytes(path);
-        TestContext.Current.TestOutputHelper?.WriteLine(golden.FormatMarker(role, bytes));
+        TestContext.Current.TestOutputHelper?.WriteLine(FormatMarker(golden, role, bytes));
+    }
+
+    private static string FormatMarker(Golden golden, string role, byte[] png)
+    {
+        if (role != "actual" && role != "reference" && role != "diff")
+            throw new ArgumentException("Unknown image role.", nameof(role));
+        if (png == null)
+            throw new ArgumentNullException(nameof(png));
+
+        using var image = SKImage.FromEncodedData(png)
+            ?? throw new InvalidOperationException($"Failed to decode image: {role} marker.");
+        var size = image.Info.Size;
+        var base64 = Convert.ToBase64String(png);
+        var header = $"##SKIA-GOLDEN## role={role} key={golden.CaptureKey}";
+        return $"{header} size={size.Width}x{size.Height} base64={base64}";
     }
 }
