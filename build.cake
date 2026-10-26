@@ -165,7 +165,11 @@ Task ("docs-api-diff")
     .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));
 
 Task ("fuzzing-prepare")
-    .Description ("Prepare the fuzzing drop in ./output/fuzzing.")
+    .Description ("Prepare the fuzzing drop in ./output/fuzzing/drop.")
+    .Does (() => RunCake ("./scripts/infra/security/fuzzing/fuzzing.cake", "fuzzing-prepare"));
+
+Task ("fuzzing")
+    .Description ("Fuzz a target locally: --fuzzerTarget=<name> [--fuzzerMaxTime=<sec>] [--fuzzerRuns=<count>] [--fuzzerTimeout=<sec>] [--fuzzerInput=<path>].")
     .Does (() => RunCake ("./scripts/infra/security/fuzzing/fuzzing.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

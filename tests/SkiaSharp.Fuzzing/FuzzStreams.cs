@@ -10,18 +10,12 @@ internal sealed class FuzzStream : Stream
 	private readonly int earlyEndPosition;
 	private long position;
 
-	public FuzzStream(byte[] data, byte mode, bool seekable)
+	public FuzzStream(byte[] data, bool seekable, int maximumReadLength = int.MaxValue, int earlyEndPosition = -1)
 	{
 		this.data = data;
 		this.seekable = seekable;
-		maximumReadLength = (mode & 0x40) == 0
-			? int.MaxValue
-			: 1 + (mode & 0x0f);
-		earlyEndPosition = (mode & 0x80) == 0
-			? -1
-			: data.Length == 0
-				? 0
-				: (int)((long)data.Length * (1 + (mode & 0x3f)) / 64);
+		this.maximumReadLength = maximumReadLength;
+		this.earlyEndPosition = earlyEndPosition;
 	}
 
 	public override bool CanRead => true;

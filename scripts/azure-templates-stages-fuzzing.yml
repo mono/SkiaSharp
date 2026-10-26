@@ -27,11 +27,6 @@ stages:
           displayName: Prepare the fuzzing drop
           buildAgent: ${{ parameters.buildAgentLinux }}
           target: fuzzing-prepare
-          # Only scheduled builds of main use the production target names.
-          ${{ if not(and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
-            additionalArgs: --validationBuildId=$(Build.BuildId)
-          # The Linux native library needs fontconfig for the harness smoke run.
-          packages: libfontconfig1
           checkoutSubmodules: false
           installAndroidSdk: false
           installXcode: false
@@ -41,7 +36,7 @@ stages:
             - name: native
           publishArtifacts:
             - name: fuzzing
-              path: output/fuzzing
+              path: output/fuzzing/drop
 
       # Runs on a fresh agent: it never builds anything, it only submits the published drop.
       - job: fuzzing_submit
@@ -58,19 +53,11 @@ stages:
             artifact: fuzzing
             displayName: Download the fuzzing drop
 
-          # Every submission gets its own copy so one submission can never change what another uploads.
           - ${{ each submission in parameters.submissions }}:
-            - pwsh: |
-                $drop = Join-Path $env:PIPELINE_WORKSPACE 'submit/${{ submission.key }}'
-                New-Item -ItemType Directory -Force -Path $drop | Out-Null
-                Copy-Item (Join-Path $env:PIPELINE_WORKSPACE 'fuzzing/*') $drop -Recurse -Force
-                Copy-Item (Join-Path $drop 'OneFuzzConfig.${{ submission.value.config }}.json') (Join-Path $drop 'OneFuzzConfig.json') -Force
-              displayName: Stage the ${{ submission.key }} drop
-
             - task: onefuzz-task@0
               displayName: Submit the ${{ submission.key }} targets for fuzzing
               inputs:
                 onefuzzOSes: ${{ submission.value.os }}
               env:
-                onefuzzDropDirectory: $(Pipeline.Workspace)/submit/${{ submission.key }}
+                onefuzzDropDirectory: $(Pipeline.Workspace)/fuzzing/${{ submission.value.config }}
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
