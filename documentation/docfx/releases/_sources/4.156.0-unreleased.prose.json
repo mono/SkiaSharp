@@ -1,34 +1,36 @@
 {
-  "theme": "Runtime and platform refinements",
-  "highlights_headline": "The upcoming 4.156 release improves managed and HarfBuzz performance while refining native platform support.",
-  "highlights_body": "It reduces allocation during pixel copying and text shaping, packages WebGPU support with the native library, and improves Android rendering synchronization.",
+  "theme": "Runtime reliability and platform updates",
+  "highlights_headline": "SkiaSharp 4.156.0 improves native-data safety, stream lifetime handling, and platform rendering support.",
+  "highlights_body": "It also reduces allocation during pixel copies and text shaping, updates Android rendering synchronization, and refreshes platform-native packaging.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates Android texture rendering with the display refresh cycle for smoother presentation.",
+          "lead": "Native data creation respects C-string bounds",
+          "detail": "Creating SKData from C strings no longer reads past the native buffer and writes directly into the managed data object.",
+          "prs": [
+            5429
+          ]
+        },
+        {
+          "lead": "Front-buffered streams release retained data",
+          "detail": "Corrects stream lifetime handling so front-buffered streams do not retain their underlying data longer than needed.",
+          "prs": [
+            5327
+          ]
+        },
+        {
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "Synchronizes Android texture rendering with the display refresh cycle for smoother presentation.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained front-buffered stream data correctly to reduce avoidable memory use.",
-          "prs": [
-            5327
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "Managed image and shaping allocations reduced",
-          "detail": "Optimizes image pixel copies, feature-string decoding, and HarfBuzz UTF-32 encoding to reduce allocation pressure in common managed workloads.",
+          "lead": "Image and text processing allocate less",
+          "detail": "Optimizes managed pixel copies, HarfBuzz UTF-32 encoding, and native feature-string handling to reduce transient allocation.",
           "prs": [
             5052,
             5060,
@@ -41,34 +43,34 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support packaged with the native library",
-          "detail": "Includes emdawnwebgpu's WebGPU implementation in libSkiaSharp.a so consumers receive the required native support with the library.",
-          "prs": [
-            5316
-          ]
-        },
-        {
-          "lead": "Apple deployment baseline updated",
-          "detail": "Updates the minimum supported Apple deployment targets for the upcoming release.",
+          "lead": "Apple deployment targets updated",
+          "detail": "Raises the minimum Apple deployment targets used by the packages; update application targets as needed when adopting this release.",
           "prs": [
             5383
           ]
         },
         {
-          "lead": "Linux native artifact loading hardened",
-          "detail": "Binds bundled HarfBuzz functions locally so Linux native artifacts use the packaged implementation consistently.",
+          "lead": "WebGPU support is included in static native assets",
+          "detail": "Packages the emdawnwebgpu implementation with libSkiaSharp.a so static consumers have the required WebGPU source.",
           "prs": [
-            5352,
-            5366
+            5316
+          ]
+        },
+        {
+          "lead": "Linux resolves bundled HarfBuzz functions locally",
+          "detail": "Binds HarfBuzz functions from the bundled native library on Linux, avoiding reliance on an external system binding.",
+          "prs": [
+            5352
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Bundled HarfBuzz function binding on Linux and Blazor CPU sample-test stabilization",
-    "dalexsoto": "Contextual PoliCheck findings cleanup",
-    "ramezgerges": "WebGPU implementation packaging in the native SkiaSharp library"
+    "VirgilMing": "Linux bundled-HarfBuzz binding and improved Blazor CPU sample-test reliability",
+    "dalexsoto": "Addressed contextual PoliCheck findings in continuous integration",
+    "ramezgerges": "Included the WebGPU implementation in static libSkiaSharp assets",
+    "rolfbjarne": "Removed obsolete sample files"
   },
   "preview_summaries": {},
   "harfbuzz_summary": null
