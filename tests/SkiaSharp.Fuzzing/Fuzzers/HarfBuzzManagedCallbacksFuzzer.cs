@@ -133,9 +133,9 @@ public sealed class HarfBuzzManagedCallbacksFuzzer : IFuzzer
 	private static Dictionary<uint, byte[]> LoadHarfBuzzTableBytes()
 	{
 		var tables = new Dictionary<uint, byte[]>();
-		var fontPath = Path.Combine(AppContext.BaseDirectory, "assets", "font.ttf");
+		var fontPath = Path.Combine(Path.GetDirectoryName(typeof(IFuzzer).Assembly.Location)!, "assets", "font.ttf");
 		if (!File.Exists(fontPath))
-			return tables;
+			throw new FileNotFoundException("The HarfBuzz fuzzing font asset is missing.", fontPath);
 
 		using var blob = HBBlob.FromFile(fontPath);
 		using var face = new HBFace(blob, 0);

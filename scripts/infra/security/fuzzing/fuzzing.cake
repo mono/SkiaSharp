@@ -1,5 +1,3 @@
-#tool dotnet:?package=SharpFuzz.CommandLine&version=2.3.0
-
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../../.."));
 
 #load "../../shared/shared.cake"
@@ -50,41 +48,43 @@ Task("fuzzing-download")
 });
 
 Task("fuzzing-prepare")
-    .Description("Publish the fuzzing harness and stage the per-platform drops into ./output/fuzzing/drop/<platform>.")
+    .Description("Build the fuzzing harness and stage the per-platform drops into ./output/fuzzing/drop/<platform>.")
     .Does(() =>
 {
-    DotNetPublish(harnessProject.FullPath, new DotNetPublishSettings
-    {
-        Configuration = "Release",
-        Framework = "net10.0",
-        OutputDirectory = bin,
-        MSBuildSettings = new DotNetMSBuildSettings()
-            .WithProperty("AllTargetFrameworks", "net10.0")
-    });
-
-    DotNetExecute(
-        bin.CombineWithFilePath("SkiaSharp.Fuzzing.dll"),
+    DotNetRun(
+        harnessProject.FullPath,
         new ProcessArgumentBuilder()
             .Append("--prepare")
-            .AppendQuoted(drop.FullPath));
+            .AppendQuoted(drop.FullPath),
+        new DotNetRunSettings
+        {
+            Configuration = "Release",
+            Framework = "net10.0",
+            MSBuildSettings = new DotNetMSBuildSettings()
+                .WithProperty("AllTargetFrameworks", "net10.0")
+        });
 });
 
 Task("fuzzing-run")
     .Description("Fuzz one target locally: --fuzzerTarget=<name> [--fuzzerMaxTime=<sec>] [--fuzzerRuns=<count>] [--fuzzerTimeout=<sec>] [--fuzzerInput=<path>].")
     .IsDependentOn("fuzzing-download")
-    .IsDependentOn("fuzzing-prepare")
     .Does(() =>
 {
     var targetName = Argument<string>("fuzzerTarget", null) ?? throw new Exception("Specify the target with --fuzzerTarget=<name>.");
 
-    var sharpFuzz = Context.Tools.Resolve(IsRunningOnWindows() ? "sharpfuzz.exe" : "sharpfuzz");
-    DotNetExecute(
-        bin.CombineWithFilePath("SkiaSharp.Fuzzing.dll"),
+    DotNetRun(
+        harnessProject.FullPath,
         new ProcessArgumentBuilder()
             .Append("--prepare")
             .AppendQuoted(bin.FullPath)
-            .Append("--instrument")
-            .AppendQuoted(sharpFuzz.FullPath));
+            .Append("--instrument"),
+        new DotNetRunSettings
+        {
+            Configuration = "Release",
+            Framework = "net10.0",
+            MSBuildSettings = new DotNetMSBuildSettings()
+                .WithProperty("AllTargetFrameworks", "net10.0")
+        });
 
     var crashes = local.Combine("crashes");
     var corpus = local.Combine("corpus").Combine(targetName);
@@ -124,7 +124,6 @@ Task("fuzzing-run")
 
 Task("Default")
     .IsDependentOn("fuzzing-download")
-    .IsDependentOn("fuzzing-prepare")
     .IsDependentOn("fuzzing-run");
 
 RunTarget(TARGET);

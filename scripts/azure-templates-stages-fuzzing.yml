@@ -1,18 +1,15 @@
 parameters:
   - name: buildAgentLinux
     type: object
-  # Each entry submits the generated OneFuzzConfig.<config>.json to the fuzzing pool for <os>.
+  # Each entry submits drop/<config>/OneFuzzConfig.json to the fuzzing pool for <os>.
   - name: submissions
     type: object
     default:
       windows:
         config: windows
         os: Windows
-      ubuntu:
-        config: ubuntu
-        os: ubuntu
-      azurelinux:
-        config: azurelinux
+      linux:
+        config: linux
         os: azurelinux3
 
 stages:

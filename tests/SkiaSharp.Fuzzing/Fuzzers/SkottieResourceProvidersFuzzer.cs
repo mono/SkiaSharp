@@ -17,9 +17,9 @@ public sealed class SkottieResourceProvidersFuzzer : IFuzzer
 			return;
 
 		var payload = bytes.ToArray();
-		var baseDirectory = Path.Combine(AppContext.BaseDirectory, "assets", "images");
+		var baseDirectory = Path.Combine(Path.GetDirectoryName(typeof(IFuzzer).Assembly.Location)!, "assets", "images");
 		if (!Directory.Exists(baseDirectory))
-			return;
+			throw new DirectoryNotFoundException($"The Skottie fuzzing assets are missing: {baseDirectory}");
 
 		TestProviders(baseDirectory, payload, preDecode: false);
 		TestProviders(baseDirectory, payload, preDecode: true);
@@ -54,7 +54,7 @@ public sealed class SkottieResourceProvidersFuzzer : IFuzzer
 	private static void BuildAndRenderSkottie(string path, ResourceProvider provider, byte frameByte)
 	{
 		if (!File.Exists(path))
-			return;
+			throw new FileNotFoundException("A Skottie fuzzing animation asset is missing.", path);
 
 		using var data = SKData.Create(path);
 		using var animation = Animation

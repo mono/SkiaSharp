@@ -16,11 +16,11 @@ var fuzzers = typeof(IFuzzer).Assembly.GetTypes()
 switch (args)
 {
 	case ["--prepare", var dropDirectory]:
-		Prepare(fuzzers, Path.GetFullPath(dropDirectory), sharpFuzzPath: null);
+		Prepare(fuzzers, Path.GetFullPath(dropDirectory), instrument: false);
 		return 0;
 
-	case ["--prepare", var dropDirectory, "--instrument", var sharpFuzzPath]:
-		Prepare(fuzzers, Path.GetFullPath(dropDirectory), sharpFuzzPath);
+	case ["--prepare", var dropDirectory, "--instrument"]:
+		Prepare(fuzzers, Path.GetFullPath(dropDirectory), instrument: true);
 		return 0;
 
 	case [var fuzzerName, .. var rest] when rest.Length <= 1:
@@ -47,7 +47,7 @@ static void PrintUsage(FuzzerDescriptor[] fuzzers)
 		$"""
 		Usage:
 		  SkiaSharp.Fuzzing <fuzzer-name> [input-file-or-dir]
-		  SkiaSharp.Fuzzing --prepare <drop-dir> [--instrument <sharpfuzz-path>]
+		  SkiaSharp.Fuzzing --prepare <drop-dir> [--instrument]
 
 		Available fuzzers:
 		{names}
@@ -71,7 +71,7 @@ static void Run(FuzzerDescriptor fuzzer, string? inputPath)
 	Fuzzer.LibFuzzer.Run(bytes => fuzzer.Target(bytes));
 }
 
-static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, string? sharpFuzzPath)
+static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instrument)
 {
 	string[] targetAssemblies =
 	[
@@ -82,11 +82,14 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, string? sh
 		"HarfBuzzSharp.dll",
 	];
 
-	if (!string.IsNullOrEmpty(sharpFuzzPath))
+	var buildDirectory = AppContext.BaseDirectory;
+
+	if (instrument)
 	{
+		CopyDirectory(buildDirectory, dropDirectory);
 		foreach (var assembly in targetAssemblies)
 		{
-			using var process = Process.Start(sharpFuzzPath, [Path.Combine(dropDirectory, assembly)])!;
+			using var process = Process.Start("dotnet", ["tool", "run", "sharpfuzz", "--", Path.Combine(dropDirectory, assembly)])!;
 			process.WaitForExit();
 			if (process.ExitCode != 0)
 				throw new InvalidOperationException($"Failed to instrument '{assembly}' (exit code {process.ExitCode}).");
@@ -94,7 +97,6 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, string? sh
 		return;
 	}
 
-	var publishDirectory = AppContext.BaseDirectory;
 	var platforms = new[]
 	{
 		(
@@ -104,13 +106,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, string? sh
 			NativeFiles: new[] { "libSkiaSharp.dll", "libSkiaSharp.pdb", "libHarfBuzzSharp.dll", "libHarfBuzzSharp.pdb" }
 		),
 		(
-			Platform: "ubuntu",
-			NativeExtension: "so",
-			DependencyPath: "./*",
-			NativeFiles: new[] { "libSkiaSharp.so", "libHarfBuzzSharp.so" }
-		),
-		(
-			Platform: "azurelinux",
+			Platform: "linux",
 			NativeExtension: "so",
 			DependencyPath: "./*",
 			NativeFiles: new[] { "libSkiaSharp.so", "libHarfBuzzSharp.so" }
@@ -126,20 +122,19 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, string? sh
 
 		foreach (var assembly in targetAssemblies.Append("SkiaSharp.Fuzzing.dll"))
 		{
-			File.Copy(Path.Combine(publishDirectory, assembly), Path.Combine(platformDirectory, assembly), overwrite: true);
+			File.Copy(Path.Combine(buildDirectory, assembly), Path.Combine(platformDirectory, assembly), overwrite: true);
 			var pdb = Path.ChangeExtension(assembly, ".pdb");
-			File.Copy(Path.Combine(publishDirectory, pdb), Path.Combine(platformDirectory, pdb), overwrite: true);
+			File.Copy(Path.Combine(buildDirectory, pdb), Path.Combine(platformDirectory, pdb), overwrite: true);
 		}
 
 		foreach (var nativeFile in platform.NativeFiles)
 		{
-			var source = Path.Combine(publishDirectory, nativeFile);
+			var source = Path.Combine(buildDirectory, nativeFile);
 			if (File.Exists(source))
 				File.Copy(source, Path.Combine(platformDirectory, nativeFile), overwrite: true);
 		}
 
-		CopyDirectory(Path.Combine(publishDirectory, "seeds"), Path.Combine(platformDirectory, "seeds"));
-		CopyDirectory(Path.Combine(publishDirectory, "assets"), Path.Combine(platformDirectory, "assets"));
+		CopyDirectory(Path.Combine(buildDirectory, "assets"), Path.Combine(platformDirectory, "assets"));
 
 		var entries = new JsonArray();
 		foreach (var fuzzer in fuzzers)
@@ -169,9 +164,11 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, string? sh
 					{
 						["ProjectName"] = "SkiaSharp",
 						["TargetName"] = $"{fuzzer.Name}-{platform.Platform}-x64",
+						["SeedCorpusContainer"] = $"skiasharp-{fuzzer.Name}-seeds",
 						["FuzzingTargetOptions"] = new JsonArray("-timeout=60")
 					}),
 				["JobDependencies"] = new JsonArray(platform.DependencyPath),
+				["PreservePathsJobDependencies"] = new JsonArray("./assets/**/*"),
 				["SdlWorkItemId"] = 3082348
 			});
 		}
