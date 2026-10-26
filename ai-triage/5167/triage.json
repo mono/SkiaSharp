@@ -1,0 +1,174 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 5167,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-26T04:29:42Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "A .NET MAUI application on Windows intermittently terminates with FAST_FAIL_GUARD_ICALL_CHECK_FAILURE while navigating between pages with and without SKGLView; loading opengl32.dll at application startup prevents the crash.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.99
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/Windows-WinUI"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "critical",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "FAST_FAIL_GUARD_ICALL_CHECK_FAILURE (0xC0000409)",
+      "stackTrace": "ExceptionAddress: ntdll!RtlFailFast2\nExceptionCode: c0000409 (Security check failure or stack buffer overrun)\nParameter[0]: 0xA FAST_FAIL_GUARD_ICALL_CHECK_FAILURE",
+      "reproQuality": "partial"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKGLView in a .NET MAUI application on Windows.",
+        "Navigate repeatedly between a page that contains SKGLView and a page that does not.",
+        "Observe the intermittent native fast-fail crash."
+      ],
+      "environmentDetails": "Windows, .NET MAUI, SkiaSharp 4.152.0.",
+      "relatedIssues": [
+        4647,
+        5331
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/skia/commit/b9427929f7b06a5dde92db60be883109c09b44fc",
+          "description": "Cited mono/skia commit that introduced dynamic WGL function loading."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/4647",
+          "description": "Earlier report with the same MakeWin stale WGL function-pointer root cause, deterministic reproduction, and MAUI/WinUI confirmation."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/5331",
+          "description": "Independent WinUI SKSwapChainPanel reproduction with the same 0xC0000409 failure."
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "4.152.0",
+        "3.x"
+      ],
+      "workedIn": "3.x",
+      "brokeIn": "4.152.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The duplicate report #4647 confirms the same static WGL cache remains on main and in later 4.x builds."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.97,
+      "reason": "The reporter states that SkiaSharp 3.x does not crash, and #4647 identifies the WGL dynamic-loading change that introduced the stale pointer path in SkiaSharp 4.x.",
+      "workedInVersion": "3.x",
+      "brokeInVersion": "4.152.0"
+    }
+  },
+  "analysis": {
+    "summary": "This is a duplicate of #4647. On Windows, the MAUI SKGLView handler uses SKSwapChainPanel; its first render creates a GRGlInterface, reaching the native MakeWin WGL interface path. #4647 documents that this path caches WGL function pointers while releasing opengl32.dll, allowing a later relocated load to invoke a stale pointer and trigger an unrecoverable Control Flow Guard fast-fail.",
+    "rationale": "The issue reports the same Windows-only fast-fail, regression range, navigation trigger, cited mono/skia commit, and startup opengl32.dll mitigation as #4647. The related #5331 independently reaches the same MakeWin path through SKSwapChainPanel. The active duplicate already has a deterministic reproduction and documented native root cause, so #5167 should be consolidated there rather than investigated separately.",
+    "keySignals": [
+      {
+        "text": "The crash went away after adding NativeLibrary.Load(\"opengl32.dll\") to the start of the application.",
+        "source": "issue body",
+        "interpretation": "Keeping the module resident prevents the cached WGL addresses from becoming dangling pointers."
+      },
+      {
+        "text": "The crash does not reproduce with SkiaSharp 3.",
+        "source": "issue body",
+        "interpretation": "The report identifies a 4.x regression."
+      },
+      {
+        "text": "#4647 reports that #5167 and #5331 look like duplicates of this issue.",
+        "source": "#4647 comment",
+        "interpretation": "An earlier active report has the same root cause, reproduction, and workaround."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs",
+        "lines": "16",
+        "finding": "The Windows MAUI SKGLView handler creates a MauiSKSwapChainPanel, establishing the reported control's WinUI GPU path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs",
+        "lines": "64-68",
+        "finding": "On the first render, SKSwapChainPanel creates GRGlInterface through GRGlInterface.Create(), the managed entry point implicated by #4647 and #5331.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "144-169",
+        "finding": "The WinUI panel constructs its GL context on load and destroys it on unload, matching the page-navigation lifecycle described in the report.",
+        "relevance": "related"
+      }
+    ],
+    "errorFingerprint": "Windows-MakeWin-stale-WGL-pointer-FAST_FAIL_GUARD_ICALL_CHECK_FAILURE",
+    "workarounds": [
+      "Before any GL view or GRGlInterface is created, load and retain opengl32.dll for the process lifetime; this is the mitigation independently confirmed in #4647.",
+      "Track the root-cause fix and any updates in #4647 rather than duplicating investigation."
+    ],
+    "nextQuestions": [
+      "Can the reporter confirm that the startup module-load mitigation is executed before any SKGLView is constructed?",
+      "Can the reporter validate the eventual native fix from #4647 on their MAUI application?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-duplicate",
+      "confidence": 0.99,
+      "reason": "The active #4647 documents the identical native root cause, application behavior, regression, workaround, and a deterministic reproduction.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the native Windows OpenGL reliability classification and triaged marker.",
+        "risk": "low",
+        "confidence": 0.99,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-WinUI",
+          "backend/OpenGL",
+          "tenet/reliability",
+          "partner/maui",
+          "triage/triaged"
+        ]
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Mark the issue as a duplicate of #4647.",
+        "risk": "medium",
+        "confidence": 0.99,
+        "linkedIssue": 4647
+      },
+      {
+        "type": "close-issue",
+        "description": "Close after linking the active root-cause report #4647.",
+        "risk": "medium",
+        "confidence": 0.99,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
