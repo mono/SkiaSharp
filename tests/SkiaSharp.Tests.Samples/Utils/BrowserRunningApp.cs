@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Playwright;
+using SkiaSharp.Tests.Shared;
 using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;

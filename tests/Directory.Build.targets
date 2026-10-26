@@ -1,6 +1,7 @@
 <Project>
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)GoldenAssets.targets" Condition="'$(GoldenRoot)' != ''" />
 
   <!--
     Carries the GPU opt-out into hosts that never see the build agent's environment: the Android,

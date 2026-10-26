@@ -221,7 +221,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/google/angle.git",
-          "commitHash": "ea1cea778c4a2312ef1b963b29a62fe595dd4df8"
+          "commitHash": "d39da9a2abc47fc5fee3711b18b461feab80d34c"
         }
       }
     },
@@ -230,7 +230,7 @@
         "type": "other",
         "other": {
           "name": "angle",
-          "version": "chromium/6275",
+          "version": "chromium/8118",
           "downloadUrl": "https://github.com/google/angle"
         }
       }
@@ -241,7 +241,7 @@
         "type": "other",
         "other": {
           "name": "jsoncpp",
-          "version": "1.9.4",
+          "version": "1.9.5",
           "downloadUrl": "https://github.com/open-source-parsers/jsoncpp"
         }
       }
@@ -252,19 +252,28 @@
         "type": "other",
         "other": {
           "name": "astc-encoder",
-          "version": "573c475389bf",
+          "version": "2319d9c4d4af53a7fc7c52985e264ce6e8a02a9b",
           "downloadUrl": "https://github.com/ARM-software/astc-encoder"
         }
       }
     },
     {
-      "comment": "ANGLE-only: meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc. (Skia pulls these individually via DEPS)",
+      "comment": "ANGLE-only: SPIR-V headers loaded by ANGLE's translator graph (not used by Skia)",
       "component": {
-        "type": "other",
-        "other": {
-          "name": "angle-vulkan-deps",
-          "version": "3834da2004ec",
-          "downloadUrl": "https://chromium.googlesource.com/vulkan-deps"
+        "type": "git",
+        "git": {
+          "repositoryUrl": "https://github.com/KhronosGroup/SPIRV-Headers.git",
+          "commitHash": "86f980c731e62ae4eaf383d320449d71687936bf"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: SPIR-V tools loaded by ANGLE's translator graph (not used by Skia)",
+      "component": {
+        "type": "git",
+        "git": {
+          "repositoryUrl": "https://github.com/KhronosGroup/SPIRV-Tools.git",
+          "commitHash": "71f287f18ed78d496e724fbfb1c3feae3a2af75a"
         }
       }
     },
@@ -274,7 +283,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "2ef241b9858f1c48c48b80885efbc32a63da0402"
+          "commitHash": "9498c6f4c8eb201ab9f21363191d855bc695d2d0"
         }
       }
     },
