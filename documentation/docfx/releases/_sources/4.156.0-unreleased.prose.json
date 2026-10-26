@@ -1,24 +1,38 @@
 {
-  "theme": "Runtime and platform refinements",
-  "highlights_headline": "The upcoming 4.156 release improves managed and HarfBuzz performance while refining native platform support.",
-  "highlights_body": "It reduces allocation during pixel copying and text shaping, packages WebGPU support with the native library, and improves Android rendering synchronization.",
+  "theme": "Platform stability and efficiency",
+  "highlights_headline": "SkiaSharp 4.156.0 strengthens platform support while removing allocation and lifetime pitfalls across managed and native code.",
+  "highlights_body": "Apple deployment baselines advance, browser WebGPU builds move their C++ support into the packaged native archive, and Android continuous rendering follows the display clock. Linux HarfBuzz integration is more robust when applications also load system HarfBuzz.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates Android texture rendering with the display refresh cycle for smoother presentation.",
+          "lead": "String data creation is bounds-safe",
+          "detail": "SKData creation from a C string no longer reads beyond the native buffer and writes directly into SKData.",
+          "prs": [
+            5429
+          ]
+        },
+        {
+          "lead": "Front-buffered streams release their retained source",
+          "detail": "Disposing a front-buffered managed stream now releases the wrapped stream instead of retaining it.",
+          "prs": [
+            5327
+          ]
+        },
+        {
+          "lead": "Android texture rendering follows the display clock",
+          "detail": "Automatic continuous frames for Android GL texture views are paced by display refresh callbacks, avoiding redraws driven by buffer-swap throughput while preserving explicit render requests.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained front-buffered stream data correctly to reduce avoidable memory use.",
+          "lead": "Linux HarfBuzz stays within the bundled library",
+          "detail": "The Linux native library binds its internal HarfBuzz function calls locally, preventing conflicts with a system HarfBuzz library loaded by another framework such as GTK.",
           "prs": [
-            5327
+            5352
           ]
         }
       ]
@@ -27,10 +41,16 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed image and shaping allocations reduced",
-          "detail": "Optimizes image pixel copies, feature-string decoding, and HarfBuzz UTF-32 encoding to reduce allocation pressure in common managed workloads.",
+          "lead": "Managed pixel copies avoid an intermediate allocation",
+          "detail": "Valid managed pixel buffers can now be copied directly into raster images, reducing allocation overhead without changing validation behavior.",
           "prs": [
-            5052,
+            5052
+          ]
+        },
+        {
+          "lead": "HarfBuzz text processing allocates less",
+          "detail": "UTF-32 buffer encoding and feature-string conversion reuse stack or pooled storage, reducing transient allocations while preserving existing shaping and decoding behavior.",
+          "prs": [
             5060,
             5230
           ]
@@ -41,35 +61,27 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support packaged with the native library",
-          "detail": "Includes emdawnwebgpu's WebGPU implementation in libSkiaSharp.a so consumers receive the required native support with the library.",
-          "prs": [
-            5316
-          ]
-        },
-        {
-          "lead": "Apple deployment baseline updated",
-          "detail": "Updates the minimum supported Apple deployment targets for the upcoming release.",
+          "lead": "Apple native package baselines are updated",
+          "detail": "The native libraries now require macOS 11.0 and iOS, tvOS, and Mac Catalyst 14.0; applications targeting older operating-system versions must remain on an earlier SkiaSharp release.",
           "prs": [
             5383
           ]
         },
         {
-          "lead": "Linux native artifact loading hardened",
-          "detail": "Binds bundled HarfBuzz functions locally so Linux native artifacts use the packaged implementation consistently.",
+          "lead": "Browser WebGPU C++ support ships inside the native archive",
+          "detail": "WebGPU-enabled browser applications no longer compile emdawnwebgpu C++ source during their final link, avoiding C++ flags on application C sources while retaining the required JavaScript glue.",
           "prs": [
-            5352,
-            5366
+            5316
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Bundled HarfBuzz function binding on Linux and Blazor CPU sample-test stabilization",
-    "dalexsoto": "Contextual PoliCheck findings cleanup",
-    "ramezgerges": "WebGPU implementation packaging in the native SkiaSharp library"
+    "VirgilMing": "Linux HarfBuzz symbol binding and improved Blazor CPU sample test synchronization",
+    "dalexsoto": "CI language compliance cleanup",
+    "ramezgerges": "Bundled the emdawnwebgpu C++ support into the browser native archive",
+    "rolfbjarne": "Sample cleanup"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
