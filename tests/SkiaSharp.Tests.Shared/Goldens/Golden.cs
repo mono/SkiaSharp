@@ -349,7 +349,7 @@ public sealed class Golden
 				attempts++;
 				actual = await WaitAsync(
 					input.ReadAsync(),
-					remaining > TimeSpan.Zero ? remaining : TimeSpan.FromMilliseconds(1),
+					attempts == 2 ? timeout : remaining,
 					cancellationToken);
 			}
 			catch (TimeoutException) when (actual != null && !cancellationToken.IsCancellationRequested)

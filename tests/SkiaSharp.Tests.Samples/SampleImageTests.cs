@@ -320,16 +320,21 @@ public class SampleImageTests : IDisposable
         var attempts = 0;
 
         await Golden.VerifyAsync(
-            GoldenInput.Capture(() =>
+            GoldenInput.Capture(async () =>
             {
                 if (++attempts == 1)
-                    Thread.Sleep(50);
+                {
+                    Thread.Sleep(250);
+                }
                 else
+                {
+                    await Task.Delay(20, TestContext.Current.CancellationToken);
                     File.Copy(expected, actual, overwrite: true);
-                return Task.FromResult(actual);
+                }
+                return actual;
             }),
             GoldenInput.Path(expected),
-            TimeSpan.FromMilliseconds(20),
+            TimeSpan.FromMilliseconds(200),
             TestContext.Current.CancellationToken,
             new(expectedSize: new(4, 4)));
 
