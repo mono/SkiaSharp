@@ -24,15 +24,26 @@ public sealed class Golden
 		this.readReference = readReference;
 	}
 
+	/// <summary>The requested runtime and case metadata used to resolve this golden.</summary>
 	public GoldenCase Case { get; }
+
+	/// <summary>The primary candidate key for capturing or proposing a reference image.</summary>
 	public string CaptureKey => Case.CaptureKey;
+
+	/// <summary>The matched reference key in the store, or <see langword="null"/> if no reference was found.</summary>
 	public string? ReferenceKey { get; }
+
+	/// <summary>The file path or embedded resource location of the matched reference, or <see langword="null"/> if missing.</summary>
 	public string? ReferenceLocation { get; }
+
+	/// <summary>The ordered candidate keys checked across profile, version, and architecture fallbacks during resolution.</summary>
 	public IReadOnlyList<string> Attempts { get; }
 
+	/// <summary>Reads the encoded PNG bytes of the resolved reference image, or throws if missing.</summary>
 	public byte[] ReadBytes() =>
 		readReference == null ? throw new InvalidOperationException(Describe()) : readReference();
 
+	/// <summary>Formats a diagnostic summary of the requested case, selected reference, and fallback keys checked.</summary>
 	public string Describe()
 	{
 		var version = Case.Version == null ? "" : $" at {Case.Version}";
@@ -47,6 +58,7 @@ public sealed class Golden
 			$"Attempted (in order):{indent}{string.Join(indent, Attempts)}");
 	}
 
+	/// <summary>Formats a base64 <c>##SKIA-GOLDEN##</c> log marker for extracting actual, reference, or diff images.</summary>
 	public string FormatMarker(string role, byte[] png)
 	{
 		if (role != "actual" && role != "reference" && role != "diff")
@@ -58,6 +70,7 @@ public sealed class Golden
 		return Marker(role, png, image.Info.Size);
 	}
 
+	/// <summary>Verifies <paramref name="actual"/> against this golden's resolved reference image once.</summary>
 	public string Verify(GoldenInput actual, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -68,6 +81,7 @@ public sealed class Golden
 		return image.Label;
 	}
 
+	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> against this golden's resolved reference until it matches or <paramref name="timeout"/> expires.</summary>
 	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout,
 		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
 	{
@@ -81,6 +95,7 @@ public sealed class Golden
 			(image, report) => VerifyCore(this, image, expected, options, report));
 	}
 
+	/// <summary>Verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image without a golden store lookup.</summary>
 	public static string Verify(GoldenInput actual, GoldenInput expected, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -92,6 +107,7 @@ public sealed class Golden
 		return image.Label;
 	}
 
+	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image until it matches or <paramref name="timeout"/> expires.</summary>
 	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout,
 		CancellationToken cancellationToken = default, GoldenOptions? options = null, TimeSpan? retryInterval = null)
 	{
