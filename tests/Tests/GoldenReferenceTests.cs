@@ -242,17 +242,6 @@ namespace SkiaSharp.Tests
 				"macos", "Maui/home", new Version(12, 6), "arm64", "raster");
 			Assert.Equal("portable/Maui/home.raster.png", result.ReferenceKey);
 			Assert.Equal("mac/Maui/home.raster.arm64.png", result.CaptureKey);
-			Assert.StartsWith(
-				"##SKIA-GOLDEN## role=actual key=mac/Maui/home.raster.arm64.png size=1x2 base64=",
-				result.FormatMarker("actual", OneByTwoPng()));
-		}
-
-		private static byte[] OneByTwoPng()
-		{
-			using var bitmap = new SKBitmap(1, 2);
-			using var image = SKImage.FromBitmap(bitmap);
-			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-			return data.ToArray();
 		}
 
 		public void Dispose()

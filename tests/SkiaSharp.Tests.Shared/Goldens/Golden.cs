@@ -61,24 +61,6 @@ public sealed class Golden
 			$"Attempted (in order):{indent}{string.Join(indent, CandidateKeys)}");
 	}
 
-	/// <summary>Formats a base64 <c>##SKIA-GOLDEN##</c> log marker so test logs can carry actual, reference, or diff PNGs for offline extraction.</summary>
-	/// <param name="role">The image role in the comparison: <c>"actual"</c>, <c>"reference"</c>, or <c>"diff"</c>.</param>
-	/// <param name="png">The encoded PNG image bytes to validate, measure, and base64-encode into the marker.</param>
-	/// <returns>A single-line <c>##SKIA-GOLDEN##</c> marker containing the role, <see cref="CaptureKey"/>, pixel dimensions, and base64 PNG payload.</returns>
-	/// <exception cref="ArgumentException"><paramref name="role"/> is not <c>"actual"</c>, <c>"reference"</c>, or <c>"diff"</c>.</exception>
-	/// <exception cref="ArgumentNullException"><paramref name="png"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException"><paramref name="png"/> cannot be decoded as an image.</exception>
-	public string FormatMarker(string role, byte[] png)
-	{
-		if (role != "actual" && role != "reference" && role != "diff")
-			throw new ArgumentException("Unknown image role.", nameof(role));
-		if (png == null)
-			throw new ArgumentNullException(nameof(png));
-
-		using var image = Decode(png, $"{role} marker");
-		return Marker(role, png, image.Info.Size);
-	}
-
 	/// <summary>Verifies <paramref name="actual"/> against this golden's resolved reference image once.</summary>
 	/// <param name="actual">The captured image path, encoded bytes, or raw pixels to verify.</param>
 	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
