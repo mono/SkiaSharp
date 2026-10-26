@@ -60,7 +60,7 @@ public class SampleImageTests : IDisposable
         Assert.Null(golden.ReferenceKey);
         Assert.Contains(golden.Describe(), error.Message);
         Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
-        Assert.False(File.Exists(Path.Combine(SampleImage.Root, golden.Attempts[0])));
+        Assert.False(File.Exists(Path.Combine(SampleImage.Root, golden.CandidateKeys[0])));
     }
 
     [Fact]

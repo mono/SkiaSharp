@@ -14,13 +14,13 @@ public sealed class Golden
 		GoldenCase goldenCase,
 		string? referenceKey,
 		string? referenceLocation,
-		IEnumerable<string> attempts,
+		IEnumerable<string> candidateKeys,
 		Func<byte[]>? readReference)
 	{
 		Case = goldenCase ?? throw new ArgumentNullException(nameof(goldenCase));
 		ReferenceKey = referenceKey;
 		ReferenceLocation = referenceLocation;
-		Attempts = attempts.ToList().AsReadOnly();
+		CandidateKeys = candidateKeys.ToList().AsReadOnly();
 		this.readReference = readReference;
 	}
 
@@ -37,7 +37,7 @@ public sealed class Golden
 	public string? ReferenceLocation { get; }
 
 	/// <summary>The ordered candidate keys checked across profile, version, and architecture fallbacks during resolution.</summary>
-	public IReadOnlyList<string> Attempts { get; }
+	public IReadOnlyList<string> CandidateKeys { get; }
 
 	/// <summary>Reads the encoded PNG bytes of the resolved reference image, or throws if missing.</summary>
 	public byte[] ReadBytes() =>
@@ -55,7 +55,7 @@ public sealed class Golden
 			Environment.NewLine,
 			$"Golden request: {Case.Profile}{version}/{Case.CasePath}",
 			selected,
-			$"Attempted (in order):{indent}{string.Join(indent, Attempts)}");
+			$"Attempted (in order):{indent}{string.Join(indent, CandidateKeys)}");
 	}
 
 	/// <summary>Formats a base64 <c>##SKIA-GOLDEN##</c> log marker for extracting actual, reference, or diff images.</summary>
