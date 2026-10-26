@@ -16,8 +16,6 @@ There are 2 main types of sample apps in this folder:
     Each app contains several sample drawing to demonstrate different features
     of SkiaSharp.
 
-The "AppStoreCertificates" folder just contains the keystores and certificates to build the samples. This is more fore CI so it can build Release apps, so feel free to use your own.
-
 ## Basic Samples
 
 There are several simple samples, each of which demonstrate the simplest way to use SkiaSharp on a particular platform.
@@ -40,14 +38,14 @@ Currently there are samples for all the supported platforms, and variations of f
 
 ## Gallery Samples
 
-For more complex samples that demonstrates specific features, there is a nice gallery app for several platforms:
+The [Gallery](Gallery/README.md) shares its drawing samples between three hosts:
 
- - macOS
- - tvOS
- - UWP
- - Windows.Forms
- - WPF
- - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS, WPF)
+ - [Blazor WebAssembly](Gallery/Blazor) for the browser
+ - [Uno Platform](Gallery/Uno/README.md) for browser, desktop, and mobile
+ - [.NET MAUI](Gallery/Maui/README.md) for Android, iOS, Mac Catalyst, and Windows
+
+All three use the same sample catalog in `Gallery/Shared`, including live controls,
+animations, typography, image effects, and document generation.
 
 [samples]: https://github.com/mono/SkiaSharp/releases
 [skip]: https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp#preparation-1

@@ -450,6 +450,8 @@ $script:FakeLiveReleaseTagReads = 0
 $script:FakeTargetOwnsRelease = $true
 $script:FakeOwnershipKind = ''
 $script:FakeCreatedMilestone = $false
+$script:LinkedIssueBody = ''
+$script:FallbackFailure = 'original API failure (HTTP 403)'
 function Get-CurrentRemoteReleaseTags([string] $Root) {
     $script:FakeLiveReleaseTagReads++
     if (
@@ -478,6 +480,7 @@ function Test-LiveReleaseAssignmentOwnership(
 function global:gh {
     $command = $args -join ' '
     $script:FakeGhCalls.Add($command)
+    $global:LASTEXITCODE = 0
     if ($script:FakeGhScenario -eq 'create-milestone') {
         if ($command -match 'repos/mono/SkiaSharp/milestones .*POST .*title=4\.152\.1') {
             $script:FakeCreatedMilestone = $true
@@ -641,6 +644,33 @@ function global:gh {
         '{"body":"Fixes #34 and resolved: #56\n<!-- \"Fixes #123\" / \"Closes #123\" template example -->\n<!--\nResolves #789\n-->"}'
     } elseif ($command -match 'pulls/78') {
         '{"body":"Fixes #64\n<!-- Closes #456"}'
+    } elseif ($command -match 'pulls/5213$') {
+        [pscustomobject] @{
+            body = @'
+The read-only Release - Finish run for `4.155.0-preview.2.26479.13` passed package/source verification but failed during milestone reconciliation: #5155 retained the PR template's hidden `"Fixes #123"` example. The body scanner treated it as a real closing reference, then queried #123 as an issue even though it is a pull request. Ignore HTML comments when scanning PR-body closing keywords, while retaining GitHub closing references and visible closing text. Regression tests cover inline, multiline, and unterminated comments.
+'@
+        } | ConvertTo-Json -Compress
+    } elseif ($command -match 'pulls/79$') {
+        [pscustomobject] @{ body = $script:LinkedIssueBody } | ConvertTo-Json -Compress
+    } elseif ($command -match 'issues/(?<number>\d+)$') {
+        $number = [int] $Matches['number']
+        if ($number -eq 90) {
+            return '{"number":90,"pull_request":{"url":"https://api.github.com/repos/mono/SkiaSharp/pulls/90"}}'
+        }
+        if ($number -eq 91) {
+            $global:LASTEXITCODE = 1
+            Write-Error 'gh: Not Found (HTTP 404)' -ErrorAction Continue
+            return '{"message":"Not Found","status":"404"}'
+        }
+        if ($number -eq 92) {
+            $global:LASTEXITCODE = 1
+            Write-Error $script:FallbackFailure -ErrorAction Continue
+            return '{"message":"request failed"}'
+        }
+        if ($number -notin @(34, 56, 64, 65, 66)) {
+            throw "Unexpected fallback issue lookup: $number"
+        }
+        [pscustomobject] @{ number = $number } | ConvertTo-Json -Compress
     } else {
         throw "Unexpected fake gh command: $command"
     }
@@ -732,6 +762,96 @@ Assert-Equal @(12, 13, 34, 56) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -
     'GitHub references and visible closing keywords were not combined without HTML comment examples.'
 Assert-Equal @(12, 13, 64) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 78) `
     'An unterminated HTML comment was treated as a closing reference.'
+Assert-Equal @(12, 13) @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 5213) `
+    'The PR #5213 description treated its inline example as a real closing reference.'
+
+foreach ($bodyCase in @(
+    [pscustomobject] @{
+        Name = 'inline code spans with variable delimiters'
+        Body = 'Fixes #34; `Fixes #123`; ``Closes #124 with `nested` ticks``; ```Resolves #125```. Resolved: #56'
+        Expected = @(12, 13, 34, 56)
+    },
+    [pscustomobject] @{
+        Name = 'multiline code spans'
+        Body = "``Fixes`n#123`` and Closes #64"
+        Expected = @(12, 13, 64)
+    },
+    [pscustomobject] @{
+        Name = 'backtick fences with shorter embedded delimiters'
+        Body = @'
+Fixes #34
+````markdown
+Fixes #123
+```
+Closes #124
+`````
+Resolves #56
+'@
+        Expected = @(12, 13, 34, 56)
+    },
+    [pscustomobject] @{
+        Name = 'tilde fences with indentation and mismatched fence characters'
+        Body = @'
+Closes #64
+  ~~~~text
+Fixes #123
+`````
+Resolves #124
+~~~
+Closes #125
+  ~~~~~
+Fixes #65
+'@
+        Expected = @(12, 13, 64, 65)
+    },
+    [pscustomobject] @{
+        Name = 'unterminated fences'
+        Body = "Fixes #66`n~~~`nCloses #123"
+        Expected = @(12, 13, 66)
+    },
+    [pscustomobject] @{
+        Name = 'comments and inline examples together'
+        Body = '<!-- Fixes #123 --> Fixes #34; `Closes #124`; <!-- Resolves #125'
+        Expected = @(12, 13, 34)
+    },
+    [pscustomobject] @{
+        Name = 'unmatched inline backticks remain visible text'
+        Body = 'A stray ` character. Fixes #34'
+        Expected = @(12, 13, 34)
+    }
+)) {
+    $script:LinkedIssueBody = $bodyCase.Body
+    Assert-Equal $bodyCase.Expected @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 79) `
+        "Closing reference scanning failed for $($bodyCase.Name)."
+}
+$script:LinkedIssueBody = 'Fixes #34, fixes #34, closes #12; resolves #90; fixes #91.'
+$callsBeforeFallbackValidation = $script:FakeGhCalls.Count
+$fallbackResults = @(Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 79 3>&1)
+$fallbackWarnings = @($fallbackResults | Where-Object { $_ -is [Management.Automation.WarningRecord] })
+Assert-Equal @(12, 13, 34) @($fallbackResults | Where-Object { $_ -is [int] }) `
+    'A fallback closing directive accepted a pull request or nonexistent issue.'
+Assert-Equal 2 $fallbackWarnings.Count 'Skipped fallback targets were not explicitly warned about.'
+Assert-True (($fallbackWarnings -join "`n") -match 'pull request #79.*#90.*pull request' -and
+    ($fallbackWarnings -join "`n") -match 'pull request #79.*#91.*HTTP 404') `
+    'Fallback warnings did not identify the source PR, invalid target, and reason.'
+$fallbackCalls = @($script:FakeGhCalls | Select-Object -Skip $callsBeforeFallbackValidation)
+Assert-Equal 1 @($fallbackCalls | Where-Object { $_ -match 'issues/34$' }).Count `
+    'Duplicate fallback references triggered repeated issue validation.'
+Assert-Equal 0 @($fallbackCalls | Where-Object { $_ -match 'issues/(12|13)$' }).Count `
+    'Authoritative GraphQL references were unnecessarily revalidated as fallback candidates.'
+
+$script:LinkedIssueBody = 'Fixes #92'
+foreach ($failure in @(
+    'original authentication failure (HTTP 401)',
+    'original authorization failure (HTTP 403)',
+    'original server failure (HTTP 500)',
+    'original network failure: connection refused'
+)) {
+    $script:FallbackFailure = $failure
+    Assert-Throws {
+        Get-LinkedIssues -Repository 'mono/SkiaSharp' -PullRequest 79
+    } ([regex]::Escape($failure)) 'A fallback lookup silently ignored an operational GitHub failure.'
+}
 $linkedIssueOwner = Get-LinkedIssueOwner `
     -Repository 'mono/SkiaSharp' `
     -Issue 12 `

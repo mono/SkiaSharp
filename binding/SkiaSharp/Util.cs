@@ -42,22 +42,39 @@ namespace SkiaSharp
 		internal static bool NearlyEqual (float a, float b, float tolerance) =>
 			Math.Abs (a - b) <= tolerance;
 
+		internal static int GetByteCount (this Encoding encoding, ReadOnlySpan<char> text)
+		{
+			if (text.Length == 0)
+				return 0;
+
+			fixed (char* t = text) {
+				return encoding.GetByteCount (t, text.Length);
+			}
+		}
+
+		internal static int GetBytes (this Encoding encoding, ReadOnlySpan<char> text, Span<byte> bytes)
+		{
+			if (text.Length == 0)
+				return 0;
+
+			fixed (char* t = text)
+			fixed (byte* b = bytes) {
+				return encoding.GetBytes (t, text.Length, b, bytes.Length);
+			}
+		}
+
 		internal static byte[] GetBytes (this Encoding encoding, ReadOnlySpan<char> text)
 		{
 			if (text.Length == 0)
 				return new byte[0];
 
-			fixed (char* t = text) {
-				var byteCount = encoding.GetByteCount (t, text.Length);
-				if (byteCount == 0)
-					return new byte[0];
+			var byteCount = encoding.GetByteCount (text);
+			if (byteCount == 0)
+				return new byte[0];
 
-				var bytes = new byte[byteCount];
-				fixed (byte* b = bytes) {
-					encoding.GetBytes (t, text.Length, b, byteCount);
-				}
-				return bytes;
-			}
+			var bytes = new byte[byteCount];
+			encoding.GetBytes (text, bytes);
+			return bytes;
 		}
 
 		public static RentedArray<T> RentArray<T> (int length, bool nullIfEmpty = false) =>

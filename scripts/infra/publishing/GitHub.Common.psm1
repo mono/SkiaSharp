@@ -10,18 +10,20 @@ function Invoke-GitHub(
     $nativePreference = $PSNativeCommandUseErrorActionPreference
     $PSNativeCommandUseErrorActionPreference = $false
     try {
-        $LASTEXITCODE = 0
-        $output = @(& gh @Arguments 2>&1)
-        $exitCode = $LASTEXITCODE
+        $global:LASTEXITCODE = 0
+        $records = @(& gh @Arguments 2>&1)
+        $exitCode = $global:LASTEXITCODE
     } finally {
         $PSNativeCommandUseErrorActionPreference = $nativePreference
     }
-    $errorText = if ($exitCode -eq 0) { '' } else { $output -join "`n" }
-    if ($WriteOutput -and $output) {
-        $output | Out-Host
+    $output = @($records | Where-Object { $_ -isnot [Management.Automation.ErrorRecord] })
+    $errorText = @($records | Where-Object { $_ -is [Management.Automation.ErrorRecord] }) -join "`n"
+    if ($WriteOutput -and $records) {
+        $records | Out-Host
     }
     if ($exitCode -ne 0 -and !$AllowFailure) {
-        throw "gh failed ($exitCode): $($errorText.Trim())"
+        $detail = ($records -join "`n").Trim()
+        throw "gh failed ($exitCode) [$($Arguments -join ' ')]: $detail"
     }
     return [pscustomobject] @{
         ExitCode = $exitCode

@@ -1,0 +1,311 @@
+parameters:
+  - name: buildPipelineType
+    type: string
+  - name: buildAgentHost
+    type: object
+  - name: buildAgentWindows
+    type: object
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+  - name: buildAgentAndroidTests
+    type: object
+  - name: androidDevices
+    type: object
+    default:
+      # API 21 is the minimum supported Android version. Vulkan is unavailable
+      # before API 24, so this leg validates the remaining CPU, GL and UI suite.
+      - name: oldest
+        displayName: Android (API 21)
+        image: 'android-21;google_apis'
+        model: Nexus 5X
+        additionalArgs: '--skipGpu="ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk"'
+      # API 36 is the newest google_apis system image currently available.
+      - name: latest
+        displayName: Android (API 36)
+        image: 'android-36;google_apis'
+        model: Nexus 5X
+        additionalArgs: ''
+  - name: iosSimulators
+    type: object
+    default:
+      - name: oldest
+        displayName: iOS 18.6
+        version: '18.6'
+        model: iPhone 16
+        installRuntime: true
+      - name: latest
+        displayName: iOS (latest)
+        version: latest
+        model: iPhone 16
+        installRuntime: false
+
+stages:
+
+    - stage: tests
+      displayName: Tests
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
+        dependsOn: prepare
+      ${{ else }}:
+        dependsOn: native
+      jobs:
+        - ${{ each arch in split('x64,x86', ',') }}:
+          - template: /scripts/azure-templates-jobs-tests.yml@self
+            parameters:
+              name: tests_netfx_windows_${{ arch }}
+              displayName: Windows (.NET Framework, ${{ arch }})
+              buildAgent: ${{ parameters.buildAgentWindows }}
+              target: tests-netfx
+              additionalArgs: --arch=${{ arch }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+              resultLabel: .NET Framework ${{ arch }}
+              # SwiftShader's LLVM JIT cannot resolve __chkstk in a 32-bit process, so
+              # the software Vulkan ICD crashes the host outright ("exit code is '7'")
+              # instead of failing a test. x64 runs the identical suite green, which is
+              # why the two architectures are separate jobs. OpenGL and Direct3D stay
+              # required on both — Mesa provisions fine in either bitness.
+              ${{ if eq(arch, 'x86') }}:
+                env:
+                  SKIASHARP_TEST_SKIP_GPU: ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk
+              preBuildSteps:
+                # Provision a software GL driver (Mesa) and a software Vulkan ICD
+                # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
+                - pwsh: .\scripts\infra\tests\windows\install-mesa-gl.ps1
+                  displayName: Provision software OpenGL (Mesa) for the GL tests
+                - pwsh: .\scripts\infra\tests\windows\install-vulkan-icd.ps1
+                  displayName: Provision software Vulkan (SwiftShader) for visual tests
+
+        - template: /scripts/azure-templates-jobs-tests.yml@self
+          parameters:
+            name: tests_netcore_windows
+            displayName: Windows (.NET Core)
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            publishCoverage: true
+            preBuildSteps:
+              - pwsh: .\scripts\infra\tests\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
+              - pwsh: .\scripts\infra\tests\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
+
+        - template: /scripts/azure-templates-jobs-tests.yml@self
+          parameters:
+            name: tests_netcore_macos
+            displayName: macOS
+            buildAgent: ${{ parameters.buildAgentMac }}
+            publishCoverage: true
+            # This pool is x64 and virtualizes Metal. Merely calling
+            # MTLCreateSystemDefaultDevice + newCommandQueue on that driver leaves
+            # state that never signals, so the test host hangs on shutdown until the
+            # job times out at 180 min — no results, no TRX. See #4598.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+
+        - template: /scripts/azure-templates-jobs-tests.yml@self
+          parameters:
+            name: tests_netcore_linux
+            displayName: Linux
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            publishCoverage: true
+            # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
+            # headless agent deterministic GPU output. ganesh-gl, ganesh-vulkan and
+            # graphite-vulkan are required here, so missing provisioning fails.
+            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
+            preBuildSteps:
+              - bash: bash ./scripts/infra/tests/start-xvfb.sh
+                displayName: Start Xvfb and select software GPU (visual tests)
+
+        - ${{ each android in parameters.androidDevices }}:
+          - template: /scripts/azure-templates-jobs-tests-device.yml@self
+            parameters:
+              name: tests_android_${{ android.name }}_linux
+              displayName: ${{ android.displayName }}
+              buildAgent: ${{ parameters.buildAgentAndroidTests }}
+              target: tests-android
+              additionalArgs: --androidImage="${{ android.image }}" --androidModel="${{ android.model }}" ${{ android.additionalArgs }} --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+              installAndroidSdk: true
+              installXcode: false
+              dotnetSdks:
+                - sdkVersion: $(DOTNET_VERSION)
+                  workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                  workloads: [android, maui-android]
+              resultLabel: ${{ android.displayName }}
+              logArtifact: testlogs_android_${{ android.name }}
+              preBuildSteps:
+                - bash: bash ./scripts/infra/tests/configure-emulators.sh
+                  displayName: Configure Android emulators (KVM and AVD home)
+                - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
+                  displayName: Install the Android emulator
+                - pwsh: .\scripts\infra\managed\install-android-image.ps1 -Image "${{ android.image }}"
+                  displayName: Install the Android emulator image
+
+        - ${{ each ios in parameters.iosSimulators }}:
+          - template: /scripts/azure-templates-jobs-tests-device.yml@self
+            parameters:
+              name: tests_ios_${{ ios.name }}_macos
+              displayName: ${{ ios.displayName }}
+              buildAgent: ${{ parameters.buildAgentMac }}
+              target: tests-ios
+              additionalArgs: --iosModel="${{ ios.model }}" --iosVersion="${{ ios.version }}" --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+              installAndroidSdk: true
+              resultLabel: ${{ ios.displayName }}
+              logArtifact: testlogs_ios_${{ ios.name }}
+              # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
+              # device: creating a command queue on it leaves dispatch-queue state that
+              # never signals, hanging the test host's shutdown for hours. Declared here
+              # rather than sniffed at runtime — this describes the pool we run on today,
+              # so if the pool moves to Apple Silicon this line is what has to change.
+              # Same shutdown hang as #4598; the simulator additionally cannot compile
+              # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
+              env:
+                SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+              ${{ if eq(ios.installRuntime, true) }}:
+                preBuildSteps:
+                  - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
+                    displayName: Install the iOS ${{ ios.version }} simulator runtime
+
+        - template: /scripts/azure-templates-jobs-tests-device.yml@self
+          parameters:
+            name: tests_maccatalyst_macos
+            displayName: Mac Catalyst
+            buildAgent: ${{ parameters.buildAgentMac }}
+            target: tests-maccatalyst
+            additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            logArtifact: testlogs_maccatalyst
+            # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
+            # the device reports none of the families Ganesh or Graphite require and
+            # bring-up fails outright (#4599). macOS on this same pool is opted out
+            # too, for a different reason — its virtualized Metal hangs the host on
+            # shutdown (#4598). #4591 tracks the wider picture.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
+
+        - template: /scripts/azure-templates-jobs-tests-device.yml@self
+          parameters:
+            name: tests_wasm_linux
+            displayName: WASM
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            target: tests-wasm
+            additionalArgs: --skipExternals="all" --coverage=false
+            packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+            installEmsdk: true
+            initScript: source ~/emsdk/emsdk_env.sh
+            logArtifact: testlogs_wasm
+            # navigator.gpu.requestAdapter() returns null in the headless browser the
+            # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
+            # `wasm test` command takes no browser arguments, so the WebGPU flags
+            # cannot be passed through without an upstream change to that package. See #4591.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
+            preBuildSteps:
+              - bash: bash ./scripts/infra/tests/install-chrome.sh
+                displayName: Install Chrome for WASM tests
+
+        - template: /scripts/azure-templates-jobs-tests-device.yml@self
+          parameters:
+            # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
+            # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
+            # mismatch in the native lib, fail CI. Provisioning and whole-job SDK selection
+            # are separate; only this job selects the preview SDK for its source build.
+            name: tests_wasm_preview_linux
+            displayName: WASM (.NET Preview)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            target: tests-wasm
+            additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
+            packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+              - sdkVersion: $(DOTNET_VERSION_PREVIEW)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
+                workloads: [wasm-tools, android]
+            jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
+            resultLabel: WASM preview
+            logArtifact: testlogs_wasm_preview
+            extractVisualImages: false
+            # See the WASM leg above: the headless browser exposes no WebGPU adapter (#4591).
+            env:
+              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
+            preBuildSteps:
+              - bash: bash ./scripts/infra/tests/install-chrome.sh
+                displayName: Install Chrome for WASM tests
+
+        - template: /scripts/azure-templates-jobs-tests-container.yml@self
+          parameters:
+            name: tests_container_linux
+            displayName: Linux (Azure Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            image: azurelinux
+            nativePlatform: linux
+            resultLabel: Azure Linux
+            logArtifact: testlogs_container_linux
+
+        - template: /scripts/azure-templates-jobs-tests-container.yml@self
+          parameters:
+            name: tests_container_linux_nodeps
+            displayName: Linux (Azure Linux, No Dependencies)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            image: azurelinux-nodeps
+            nativePlatform: linuxnodeps
+            resultLabel: Azure Linux NoDeps
+            logArtifact: testlogs_container_linux_nodeps
+
+        - template: /scripts/azure-templates-jobs-tests-container.yml@self
+          parameters:
+            name: tests_container_alpine_linux
+            displayName: Linux (Alpine)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            image: alpine
+            nativePlatform: alpine
+            resultLabel: Alpine
+            logArtifact: testlogs_container_alpine
+
+        - template: /scripts/azure-templates-jobs-tests-container.yml@self
+          parameters:
+            name: tests_container_alpine_nodeps
+            displayName: Linux (Alpine, No Dependencies)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            image: alpine-nodeps
+            nativePlatform: alpinenodeps
+            resultLabel: Alpine NoDeps
+            logArtifact: testlogs_container_alpine_nodeps
+
+        - template: /scripts/azure-templates-jobs-tests-container.yml@self
+          parameters:
+            name: tests_container_nanoserver_windows
+            displayName: Windows (Nano Server)
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            image: nanoserver
+            nativePlatform: nanoserver
+            resultLabel: Nano Server
+            logArtifact: testlogs_container_nanoserver
+
+        - job: coverage_reports                      # Coverage Reports
+          displayName: Coverage Reports
+          pool: ${{ parameters.buildAgentHost.pool }}
+          dependsOn:
+            - tests_netcore_windows
+            - tests_netcore_macos
+            - tests_netcore_linux
+          steps:
+            - checkout: self
+            - pwsh: ./scripts/infra/shared/set-build-variables.ps1
+              displayName: Configure build variables
+            - task: DownloadBuildArtifacts@1
+              displayName: Download the coverage_netcore_windows artifact
+              inputs:
+                artifactName: coverage_netcore_windows
+                downloadPath: output
+            - task: DownloadBuildArtifacts@1
+              displayName: Download the coverage_netcore_macos artifact
+              inputs:
+                artifactName: coverage_netcore_macos
+                downloadPath: output
+            - task: DownloadBuildArtifacts@1
+              displayName: Download the coverage_netcore_linux artifact
+              inputs:
+                artifactName: coverage_netcore_linux
+                downloadPath: output
+            - task: PublishCodeCoverageResults@1
+              displayName: 'Publish the code coverage results'
+              inputs:
+                codeCoverageTool: Cobertura
+                summaryFileLocation: 'output/**/Cobertura.xml'

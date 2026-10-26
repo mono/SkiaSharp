@@ -135,6 +135,7 @@ safe-outputs:
   staged: true
   create-pull-request:
     staged: true
+    allowed-base-branches: "${{ github.event.inputs.target_branch || 'main,release/*' }}"
     if-no-changes: ignore
   # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
   # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)

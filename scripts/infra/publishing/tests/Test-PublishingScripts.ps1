@@ -253,6 +253,79 @@ $pages = @(
 )
 Assert-Equal @(1, 2, 3) @((Expand-GitHubPages $pages).number) 'GitHub pages were not flattened.'
 
+# Uses the current PowerShell executable as gh to exercise native streams offline.
+$gitHubModule = Get-Module GitHub.Common
+& $gitHubModule {
+    Set-Alias -Name gh -Value (Get-Process -Id $PID).Path -Scope Script
+}
+try {
+    $nativeFailureArguments = @(
+        '-NoLogo', '-NoProfile', '-Command',
+        '[Console]::Out.WriteLine(''{"message":"Not Found"}''); [Console]::Error.WriteLine("original API failure (HTTP 404)"); exit 7'
+    )
+    $nativeFailure = Invoke-GitHub -Arguments $nativeFailureArguments -AllowFailure
+    Assert-Equal 7 $nativeFailure.ExitCode 'A native gh failure lost its exit code.'
+    Assert-Equal '{"message":"Not Found"}' $nativeFailure.Output `
+        'Native stderr contaminated the gh stdout result.'
+    Assert-Equal 'original API failure (HTTP 404)' $nativeFailure.Error `
+        'A native gh failure lost its original stderr.'
+    Assert-Throws {
+        Invoke-GitHub -Arguments $nativeFailureArguments
+    } 'gh.*failed \(7\).*original API failure \(HTTP 404\)' `
+        'A native gh failure did not report its operation, exit code, and original error.'
+    Assert-Throws {
+        Invoke-GitHubJson -Arguments $nativeFailureArguments
+    } 'original API failure \(HTTP 404\)' `
+        'A failed gh JSON request hid the original error behind JSON parsing.'
+
+    $nativeWarningArguments = @(
+        '-NoLogo', '-NoProfile', '-Command',
+        '[Console]::Error.WriteLine("successful stderr warning"); [Console]::Out.WriteLine(''{"number":42}''); exit 0'
+    )
+    $nativeWarning = Invoke-GitHub -Arguments $nativeWarningArguments -WriteOutput
+    Assert-Equal 0 $nativeWarning.ExitCode 'A successful native gh warning became a failure.'
+    Assert-Equal '{"number":42}' $nativeWarning.Output 'A successful warning contaminated gh JSON.'
+    Assert-Equal 'successful stderr warning' $nativeWarning.Error `
+        'Successful native stderr was not retained separately.'
+    Assert-Equal 42 (Invoke-GitHubJson -Arguments $nativeWarningArguments).number `
+        'A successful native stderr warning prevented JSON parsing.'
+} finally {
+    & $gitHubModule { Remove-Item Alias:\gh }
+}
+
+$script:GhFailureArguments = @()
+function global:gh {
+    $script:GhFailureArguments = @($args)
+    $global:LASTEXITCODE = 23
+    Write-Error 'original fake failure (HTTP 403)' -ErrorAction Continue
+    '{"message":"Forbidden"}'
+}
+try {
+    $fakeFailure = Invoke-GitHub -Arguments @('api', 'repos/mono/SkiaSharp/issues/42') -AllowFailure
+    Assert-Equal 23 $fakeFailure.ExitCode 'A fake gh global exit code was shadowed.'
+    Assert-Equal '{"message":"Forbidden"}' $fakeFailure.Output 'Fake stderr contaminated stdout.'
+    Assert-Equal 'original fake failure (HTTP 403)' $fakeFailure.Error 'Fake stderr was lost.'
+    Assert-Equal @('api', 'repos/mono/SkiaSharp/issues/42') $script:GhFailureArguments `
+        'The gh argument array was not preserved.'
+    Assert-Throws {
+        Invoke-GitHub -Arguments @('api', 'repos/mono/SkiaSharp/issues/42')
+    } 'api repos/mono/SkiaSharp/issues/42.*original fake failure \(HTTP 403\)' `
+        'A fake gh failure did not retain the API operation and original error.'
+} finally {
+    Remove-Item Function:\gh
+}
+function global:gh {
+    $global:LASTEXITCODE = 0
+    Write-Error 'successful fake warning' -ErrorAction Continue
+    '{"number":43}'
+}
+try {
+    Assert-Equal 43 (Invoke-GitHubJson -Arguments @('api', 'test')).number `
+        'A successful fake stderr warning prevented JSON parsing.'
+} finally {
+    Remove-Item Function:\gh
+}
+
 $buildBranch = 'release/4.152.1'
 $buildCommit = 'a' * 40
 $greenBuildFixture = [pscustomobject] @{
@@ -1804,6 +1877,12 @@ Assert-True (@($greenReleaseBuildState.Actions.Kind) -contains 'publish') `
 Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
     'build #202 succeeded with BAR 330714') `
     'The publication action omitted exact build and BAR evidence.'
+Assert-True ((@($greenReleaseBuildState.Actions | Where-Object Kind -eq 'publish').Message -join "`n") -match
+    'Verify the matching producing Build/Tests runs and BAR before publication') `
+    'The publication action did not require producing CI evidence.'
+Assert-True ((@($greenReleaseBuildState.Actions | Where-Object Kind -eq 'publish').Message -join "`n") -notmatch
+    'release-testing') `
+    'The publication action still recommends retired local release testing.'
 Assert-True ((@($greenReleaseBuildState.Actions.Message) -join "`n") -match
     'Newer exact-tip attempt.*#203 canceled') `
     'The publication action omitted the newer canceled rerun.'

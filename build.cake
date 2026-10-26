@@ -107,6 +107,10 @@ Task ("tests-container")
     .Description ("Run the console test suite against prebuilt natives (used by the containerized test legs).")
     .Does (() => RunCake ("./scripts/infra/tests/tests-container.cake", "Default"));
 
+Task ("tests-native")
+    .Description ("Run folder-based native tests against prebuilt artifacts.")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-native.cake", "Default"));
+
 Task ("tests-msbuild")
     .Description ("Test MSBuild consumers of the already-packed NuGets.")
     .Does (() => RunCake ("./scripts/infra/tests/tests-msbuild.cake", "Default"));
@@ -119,12 +123,12 @@ Task ("tests-android")
 Task ("tests-ios")
     .Description ("Run all iOS tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-ios"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-ios.cake", "Default"));
 
 Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
-    .Does (() => RunCake ("./scripts/infra/tests/tests-apple.cake", "tests-maccatalyst"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-maccatalyst.cake", "Default"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
@@ -219,20 +223,12 @@ Task ("clean-managed")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .Description ("Generate, prepare, and run all sample projects.")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "Default"));
+    .Description ("Generate and test sample builds and Docker applications.")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-samples.cake", "Default"));
 
 Task ("samples-generate")
     .Description ("Generate sample project files.")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-generate"));
-
-Task ("samples-prepare")
-    .Description ("Prepare samples for building (copy NuGet packages, etc.).")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-prepare"));
-
-Task ("samples-run")
-    .Description ("Build and run the generated samples.")
-    .Does (() => RunCake ("./scripts/infra/samples/samples.cake", "samples-run"));
+    .Does (() => RunCake ("./scripts/infra/tests/tests-samples.cake", "samples-generate"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEFAULT - target for common development

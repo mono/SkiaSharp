@@ -1,0 +1,44 @@
+parameters:
+  name: ''
+  displayName: ''
+  buildAgent: {}
+  image: ''
+  nativePlatform: ''
+  resultLabel: ''
+  logArtifact: ''
+
+jobs:
+  # Containerized test legs — see documentation/dev/containerized-testing.md
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      buildAgent: ${{ parameters.buildAgent }}
+      docker: scripts/infra/tests/docker/${{ parameters.image }}
+      target: tests-container
+      additionalArgs: --nativePlatform=${{ parameters.nativePlatform }}
+      dotnetSdks: []
+      # No GPU stack in these images, by design: they exist to prove SkiaSharp
+      # works without those dependencies, so OpenGL genuinely cannot come up.
+      # Declared here rather than inferred from the DllNotFoundException the
+      # test would otherwise throw; the desktop Linux and Windows legs carry
+      # the ganesh-gl coverage. Tracked by #4591.
+      env:
+        SKIASHARP_TEST_SKIP_GPU: ganesh-gl
+      installAndroidSdk: false
+      installXcode: false
+      shouldPublish: false
+      requiredArtifacts:
+        - name: native
+      postBuildSteps:
+        - task: PublishTestResults@2
+          displayName: Publish the ${{ parameters.resultLabel }} container test results
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: 'output/logs/testlogs/**/*.trx'
+            testRunTitle: ${{ parameters.displayName }} Tests
+      publishArtifacts:
+        - name: ${{ parameters.logArtifact }}
+          always: true
+          path: 'output/logs/testlogs'

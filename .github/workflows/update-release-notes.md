@@ -243,7 +243,7 @@ tools:
   # mkdir + jq assemble the multiline repository-template body into the JSON
   # request consumed by the safeoutputs CLI; GitHub writes still remain isolated
   # behind create-pull-request.
-  bash: ["cat", "grep", "sort", "head", "tail", "git", "python3", "mkdir", "jq"]
+  bash: ["cat", "grep", "sort", "head", "tail", "git", "python3", "mkdir", "jq", "set", "read", "basename", "wc", "printf"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}

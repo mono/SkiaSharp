@@ -23,12 +23,20 @@
                 <button class="cat-item @(SelectedCategory == null ? "active" : "")"
                         @onclick="() => SelectCategory(null)">
                     <span>All</span>
-                    <span class="cat-count">@TotalCount</span>
+                    @if (TotalCount > 0)
+                    {
+                        <span class="cat-count">@TotalCount</span>
+                    }
                 </button>
+                @if (TotalCount == 0)
+                {
+                    <button class="cat-item" @onclick="ResetAll">Reset filters</button>
+                }
                 @foreach (var catName in AllCategories)
                 {
                     var cat = SampleManager.GetCategoryFor(catName);
-                    var count = SampleManager.GetSampleCount(catName, AllSamples);
+                    var count = LiveCategoryCounts.GetValueOrDefault(catName);
+                    if (count == 0) continue;
                     <button class="cat-item @(SelectedCategory == catName ? "active" : "")"
                             style="--cat-color: @cat.Color;"
                             @onclick="() => SelectCategory(catName)">
@@ -55,7 +63,6 @@
                     var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
                     <TagPill @key="tag.Tag" Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Type"
                              IsActive="@SelectedTags.Contains(tag.Tag)"
-                             IsZero="@(liveCount == 0)"
                              Size="@GetPillSize(tag.Count)"
                              OnTagClicked="ToggleTag" />
                 }
@@ -77,7 +84,6 @@
                     var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
                     <TagPill @key="tag.Tag" Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Method"
                              IsActive="@SelectedTags.Contains(tag.Tag)"
-                             IsZero="@(liveCount == 0)"
                              Size="@GetPillSize(tag.Count)"
                              OnTagClicked="ToggleTag" />
                 }
@@ -95,10 +101,12 @@
     [Parameter] public string SearchText { get; set; } = "";
     [Parameter] public string? SelectedCategory { get; set; }
     [Parameter] public IReadOnlySet<string> SelectedTags { get; set; } = new HashSet<string>();
+    [Parameter] public Dictionary<string, int> LiveCategoryCounts { get; set; } = new();
     [Parameter] public Dictionary<string, int> LiveTagCounts { get; set; } = new();
     [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
     [Parameter] public EventCallback<string?> OnCategoryChanged { get; set; }
     [Parameter] public EventCallback<string> OnTagToggled { get; set; }
+    [Parameter] public EventCallback OnResetAll { get; set; }
 
     private bool categoriesOpen = true;
     private bool typesOpen = true;
@@ -108,7 +116,7 @@
 
     private IReadOnlyList<(string Tag, int Count, TagKind Kind)>? allTags;
 
-    private int TotalCount => AllSamples.Length;
+    private int TotalCount => LiveCategoryCounts.Values.Sum();
 
     protected override void OnParametersSet()
     {
@@ -119,16 +127,11 @@
     }
 
     /// <summary>
-    /// Sort tags: active (selected) first, then by live count descending.
-    /// Materialized to a list so Blazor diffing with @key sees a stable sequence.
+    /// The shared registry orders by displayed name; hide facets with no matches.
     /// </summary>
     private List<(string Tag, int Count, TagKind Kind)> GetSortedTags(TagKind kind) =>
         (allTags ?? [])
-            .Where(t => t.Kind == kind)
-            .OrderByDescending(t => SelectedTags.Contains(t.Tag) ? 1 : 0)
-            .ThenByDescending(t => LiveTagCounts.GetValueOrDefault(t.Tag, 0))
-            .ThenByDescending(t => t.Count)
-            .ThenBy(t => t.Tag)
+            .Where(t => t.Kind == kind && LiveTagCounts.GetValueOrDefault(t.Tag, 0) > 0)
             .ToList();
 
     private static TagPill.TagPillSize GetPillSize(int corpusCount) =>
@@ -162,6 +165,8 @@
     {
         await OnTagToggled.InvokeAsync(tag);
     }
+
+    private async Task ResetAll() => await OnResetAll.InvokeAsync();
 
     public void Dispose()
     {
