@@ -11,15 +11,6 @@ SkiaSharp uses coverage-guided fuzzing (SharpFuzz + libFuzzer) both in the inter
 | **Docker Helper** | `scripts/infra/security/fuzzing/docker/run-local.sh` | Runs `dotnet cake --target=fuzzing` inside an Azure Linux 3.0 container (for macOS or containerized Linux runs). |
 | **OneFuzz CLI** | `scripts/infra/security/fuzzing/onefuzz.ps1` | Cross-platform wrapper that downloads the internal OneFuzz CLI into `externals/onefuzz-cli` and forwards arguments. |
 
-### Available Fuzzers
-
-| Name | Class | What It Exercises |
-|------|-------|-------------------|
-| `managed-streams` | `ManagedStreamsFuzzer` | `SKCodec`, `SKBitmap`, `SKPicture`, and `SKFontManager` over seekable and non-seekable managed streams (normal reads, short reads, and early end-of-stream). |
-| `picture-deserialize` | `PictureDeserializeFuzzer` | `SKPicture.Deserialize` from `ReadOnlySpan<byte>`, `SKData`, and `Stream`, followed by canvas playback. |
-| `harfbuzz-managed-callbacks` | `HarfBuzzManagedCallbacksFuzzer` | `HarfBuzzSharp.Face` managed table callbacks (normal tables, truncated tables, missing tags, and disposal ordering). |
-| `skottie-resource-providers` | `SkottieResourceProvidersFuzzer` | `FileResourceProvider`, `DataUriResourceProvider`, `CachingResourceProvider`, and Skottie animation seeking/rendering. |
-
 ---
 
 ## Running Fuzzers Locally
