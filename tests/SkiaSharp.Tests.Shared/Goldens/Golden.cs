@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SkiaSharp.Testing;
 using Xunit;
 
 namespace SkiaSharp.Tests.Shared;
@@ -223,23 +224,33 @@ public sealed class Golden
 			return new(false, actualSize, expectedSize, null, null, failure);
 		}
 
-		var pixels = SKPixelComparer.Compare(expectedImage, actualImage, options.ChannelTolerance);
-		var matched = options.MaxAverageColorErrorFraction is { } average
-			? pixels.AverageColorErrorFraction <= average
-			: pixels.ErrorPixelCount <= (long)Math.Floor(pixels.TotalPixels * options.MaxErrorPixelFraction);
+		var comparisonOptions = new SKComparisonOptions
+		{
+			AlphaType = SKAlphaType.Premul,
+			RedTolerance = SKPixelTolerance.Absolute(options.ChannelTolerance),
+			GreenTolerance = SKPixelTolerance.Absolute(options.ChannelTolerance),
+			BlueTolerance = SKPixelTolerance.Absolute(options.ChannelTolerance),
+			AlphaTolerance = SKPixelTolerance.Absolute(options.ChannelTolerance),
+			MismatchBudget = options.MaxAverageColorErrorFraction.HasValue
+				? null
+				: SKPixelMismatchBudget.Percent(options.MaxErrorPixelFraction * 100),
+			MaxNormalizedMeanAbsoluteError = options.MaxAverageColorErrorFraction,
+		};
+		var pixels = SKImageComparison.Compare(expectedImage, actualImage, comparisonOptions);
+		var matched = pixels.IsMatch;
 		if (matched)
 			return new(true, actualSize, expectedSize, pixels, null, null);
 
-		var pixelDifference = $"{pixels.ErrorPixelCount}/{pixels.TotalPixels} pixels differ";
+		var pixelDifference = $"{pixels.MismatchedPixelCount}/{pixels.TotalPixels} pixels differ";
 		var budget = $"{pixelDifference}, exceeding {options.MaxErrorPixelFraction:P3};";
 		var message = options.MaxAverageColorErrorFraction is { } limit
-			? $"average RGBA color error {pixels.AverageColorErrorFraction:P3} exceeds {limit:P3}."
-			: $"{budget} max channel delta {pixels.MaxChannelDelta}.";
+			? $"average RGBA color error {pixels.RawMetrics.NormalizedMeanAbsoluteError:P3} exceeds {limit:P3}."
+			: $"{budget} max channel delta {pixels.MaxChannelDifference}.";
 		byte[]? differencePng = null;
 		if (createDifference)
 		{
-			using var difference = SKPixelComparer.GenerateDifferenceImage(
-				expectedImage, actualImage, options.ChannelTolerance);
+			using var difference = SKImageComparison.GenerateDifferenceImage(
+				expectedImage, actualImage, SKDifferenceStyle.ThresholdOverlay, comparisonOptions);
 			using var data = difference.Encode(SKEncodedImageFormat.Png, 100);
 			differencePng = data.ToArray();
 		}
@@ -267,10 +278,10 @@ public sealed class Golden
 		if (comparison.Pixels != null)
 		{
 			var difference =
-				$"{comparison.Pixels.ErrorPixelCount}/{comparison.Pixels.TotalPixels} pixels differ";
+				$"{comparison.Pixels.MismatchedPixelCount}/{comparison.Pixels.TotalPixels} pixels differ";
 			var summary = $"Image comparison: {difference};";
 			TestContext.Current.TestOutputHelper?.WriteLine(
-				$"{summary} average RGBA color error {comparison.Pixels.AverageColorErrorFraction:P3}.");
+				$"{summary} average RGBA color error {comparison.Pixels.RawMetrics.NormalizedMeanAbsoluteError:P3}.");
 		}
 		if (comparison.Matched)
 			return;
@@ -397,7 +408,7 @@ public sealed class Golden
 		bool Matched,
 		SKSizeI ActualSize,
 		SKSizeI ExpectedSize,
-		SKPixelComparisonResult? Pixels,
+		SKComparisonResult? Pixels,
 		byte[]? DifferencePng,
 		string? Failure);
 }
