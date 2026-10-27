@@ -40,6 +40,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Snippets compile against the loaded managed SkiaSharp and HarfBuzzSharp. Listed here so a generated copy
+         pins them to the product version; Uno.Sdk only versions the native assets. -->
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+  </ItemGroup>
+
   <Import Project="..\_UnoPlatformSamples.targets" />
 
   <ItemGroup>
