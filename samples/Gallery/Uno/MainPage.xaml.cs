@@ -19,17 +19,29 @@ public sealed partial class MainPage : Page
             UpdateThemeIcon();
         };
 #if HAS_UNO
-        // WinAppSDK has no SystemNavigationManager; on Uno it carries the Android back button.
-        Windows.UI.Core.SystemNavigationManager.GetForCurrentView().BackRequested += (_, args) =>
-        {
-            if (ContentFrame.Content is SamplePage)
-            {
-                args.Handled = true;
-                NavigateHome();
-            }
-        };
+        ContentFrame.Navigated += (_, _) => UpdateBackHandler();
 #endif
     }
+
+#if HAS_UNO
+    // WinAppSDK has no SystemNavigationManager; on Uno it carries the Android back button. Any subscriber makes
+    // Android hand the button to the app, so subscribe only on a sample page and let back leave the app from home.
+    private void UpdateBackHandler()
+    {
+        var navigation = Windows.UI.Core.SystemNavigationManager.GetForCurrentView();
+        navigation.BackRequested -= OnBackRequested;
+        if (ContentFrame.Content is SamplePage)
+        {
+            navigation.BackRequested += OnBackRequested;
+        }
+    }
+
+    private void OnBackRequested(object? sender, Windows.UI.Core.BackRequestedEventArgs args)
+    {
+        args.Handled = true;
+        NavigateHome();
+    }
+#endif
 
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
