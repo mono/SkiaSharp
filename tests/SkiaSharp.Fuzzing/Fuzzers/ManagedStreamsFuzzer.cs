@@ -78,6 +78,10 @@ public sealed class ManagedStreamsFuzzer : IFuzzer
 			return;
 
 		_ = codec.GetPixels(bitmap.Info, bitmap.GetPixels());
+
+		var frameCount = Math.Min(codec.FrameCount, 4);
+		for (var frame = 1; frame < frameCount; frame++)
+			_ = codec.GetPixels(bitmap.Info, bitmap.GetPixels(), new SKCodecOptions(frame));
 	}
 
 	private static void DecodeBitmap(Stream stream)
