@@ -24,7 +24,6 @@ $ErrorActionPreference = 'Stop'
 
 $includePath = Join-Path $Path 'include'
 $libPath = Join-Path $Path 'lib'
-$uapVersion = '10.0.18362'
 
 $winSdkDir = $env:WindowsSdkDir
 if (!$winSdkDir) { throw 'vcvarsall did not set WindowsSdkDir.' }
@@ -49,12 +48,9 @@ Write-Host "WinAppSDK path: $Path"
 Push-Location $includePath
 try {
     $packageWinmdFiles = @(Get-ChildItem $libPath -Filter '*.winmd' -Recurse)
-    $dependencyMetadataDirs = $packageWinmdFiles | ForEach-Object { $_.DirectoryName }
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
-        (Join-Path $libPath "uap$uapVersion")
-        (Join-Path $libPath 'uap10.0')
-    ) + $dependencyMetadataDirs
+    ) + ($packageWinmdFiles | ForEach-Object { $_.DirectoryName })
     $metadataDirs = $metadataDirs | Select-Object -Unique
     foreach ($directory in $metadataDirs) {
         if (!(Test-Path $directory -PathType Container)) { throw "Missing metadata directory: $directory" }
