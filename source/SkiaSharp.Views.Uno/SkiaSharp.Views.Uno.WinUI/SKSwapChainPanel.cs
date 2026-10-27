@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using Uno;
+using Windows.UI.Core;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -16,6 +18,7 @@ namespace SkiaSharp.Views.Windows
 		private GRBackendRenderTarget renderTarget;
 		private bool enableRenderLoop;
 		private bool renderLoopAttached;
+		private int invalidatePending;
 
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> class.</summary>
 		/// <remarks />
@@ -75,8 +78,19 @@ namespace SkiaSharp.Views.Windows
 
 		/// <summary>Requests that the control be redrawn.</summary>
 		/// <remarks />
-		public void Invalidate() =>
-			canvas.Invalidate();
+		public void Invalidate()
+		{
+			// Deferred and coalesced, as the panel always was: drawing synchronously would make a PaintSurface handler
+			// that calls Invalidate re-enter itself.
+			if (Interlocked.Exchange(ref invalidatePending, 1) == 1)
+				return;
+
+			_ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+			{
+				Interlocked.Exchange(ref invalidatePending, 0);
+				canvas.Invalidate();
+			});
+		}
 
 		/// <summary>Occurs when the surface needs to be repainted.</summary>
 		/// <remarks>Handle this event to perform drawing operations on the GPU-accelerated surface.</remarks>
