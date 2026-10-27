@@ -85,7 +85,7 @@ stages:
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
 
-      - ${{ if or(eq(parameters.runFuzzing, 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.CronSchedule.DisplayName'], 'Weekly Sunday build for main'))) }}:
+      - ${{ if or(eq(parameters.runFuzzing, 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
         - template: /scripts/azure-templates-stages-fuzzing.yml@self
           parameters:
             buildAgentLinux: ${{ parameters.buildAgentLinux }}
