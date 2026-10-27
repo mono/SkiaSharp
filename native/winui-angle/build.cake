@@ -1,6 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/angle");
 DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
+DirectoryPath WEBVIEW2_PATH = ROOT_PATH.Combine("externals/webview2");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
 string ANGLE_REVISION = GetVersion("ANGLE", "revision");
@@ -136,9 +137,10 @@ Task("sync-ANGLE")
     var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{webview2Version}-{WINDOWS_SDK_VERSION}.stamp");
     if (requiredHeaders.Any(header => !FileExists(header)) || !FileExists(stamp)) {
         CleanDirectory(WINAPPSDK_PATH);
+        CleanDirectory(WEBVIEW2_PATH);
         foreach (var package in new[] {
             new { Id = "Microsoft.WindowsAppSDK", Version = winappsdkVersion, Path = WINAPPSDK_PATH },
-            new { Id = "Microsoft.Web.WebView2", Version = webview2Version, Path = WINAPPSDK_PATH.Combine("microsoft.web.webview2") },
+            new { Id = "Microsoft.Web.WebView2", Version = webview2Version, Path = WEBVIEW2_PATH },
         }) {
             var packageId = package.Id.ToLowerInvariant();
             var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
@@ -154,7 +156,8 @@ Task("sync-ANGLE")
         RunProcess(vcvarsall,
             $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
             $"-File \"{generateScript}\" " +
-            $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
+            $"-Path \"{WINAPPSDK_PATH}\" -WebView2Path \"{WEBVIEW2_PATH}\" " +
+            $"-WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
         FileWriteText(stamp, "");
     }
 });

@@ -11,10 +11,16 @@
 
 .PARAMETER Path
     Root of the extracted Microsoft.WindowsAppSDK NuGet package.
+
+.PARAMETER WebView2Path
+    Root of the extracted Microsoft.Web.WebView2 NuGet package.
 #>
 param(
     [Parameter(Mandatory)]
     [string] $Path,
+
+    [Parameter(Mandatory)]
+    [string] $WebView2Path,
 
     [Parameter(Mandatory)]
     [string] $WindowsSdkVersion
@@ -38,8 +44,7 @@ if ($selectedSdkVersion -ne $sdkVersion) {
 
 # Dependency packages also ship native interop headers that cannot be generated
 # from WINMD. Merge those with the generated headers.
-$dependencyIncludePaths = Get-ChildItem $Path -Directory -Filter 'include' -Recurse |
-    Where-Object { $_.FullName -ne $includePath }
+$dependencyIncludePaths = Get-ChildItem $WebView2Path -Directory -Filter 'include' -Recurse
 foreach ($dependencyIncludePath in $dependencyIncludePaths) {
     Copy-Item (Join-Path $dependencyIncludePath.FullName '*') $includePath -Recurse -Force
 }
@@ -58,7 +63,8 @@ Push-Location $includePath
 try {
     # Scan package metadata and lib directories so WINMD references can resolve
     # across the Windows App SDK and its dependencies.
-    $metadataRoots = Get-ChildItem $Path -Directory -Recurse |
+    $metadataRoots = @($Path, $WebView2Path) |
+        ForEach-Object { Get-ChildItem $_ -Directory -Recurse } |
         Where-Object { $_.Name -in @('lib', 'metadata') }
     $packageWinmdFiles = @($metadataRoots |
         ForEach-Object { Get-ChildItem $_ -Filter '*.winmd' -Recurse })
