@@ -58,6 +58,8 @@ public class DrawingViewController : NSViewController
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
+		skiaView.AccessibilityIdentifier = "basic-canvas-drawing";
+		clearButton.AccessibilityIdentifier = "basic-drawing-clear";
 
 		skiaView.IgnorePixelScaling = true;
 		skiaView.PaintSurface += OnPaintSurface;

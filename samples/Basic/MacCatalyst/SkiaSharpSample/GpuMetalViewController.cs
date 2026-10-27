@@ -85,6 +85,8 @@ half4 main(float2 fragCoord) {
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
+		skiaView.AccessibilityIdentifier = "basic-canvas-gpu-metal";
+		fpsLabel.AccessibilityIdentifier = "basic-gpu-metal-fps";
 		fpsLabel.Layer.BorderColor = UIColor.White.ColorWithAlpha(0.2f).CGColor;
 		skiaView.PaintSurface += OnPaintSurface;
 		skiaView.Paused = true;

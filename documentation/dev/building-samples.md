@@ -70,10 +70,11 @@ dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
 Use the Release script path for Release builds. CI installs Chromium for Host
 and unfiltered runs. Filtered runs do not replace the full suite.
 
-## Mobile Appium runs
+## Appium runs
 
-The `Ios` and `Android` groups run the Basic MAUI/native and Gallery MAUI
-applications against staged packages.
+The `Ios`, `Android`, `Mac` and `Windows` groups run Basic MAUI/native and
+Gallery MAUI applications against staged packages. The desktop groups include
+Mac Catalyst, native macOS and native WinUI.
 
 - `--appiumMode=build` cleans and builds apps without a device, then retains
   their output.
@@ -155,6 +156,30 @@ Cake uses direct ADB only to stop its owned emulator because the tool has no
 stop command. For an existing device, set its exact `TEST_ANDROID_UDID`; tests
 never select the first available device.
 
+### Desktop
+
+On Windows, install Appium 3 with the Windows driver and WinAppDriver. On macOS,
+install Appium 3 with mac2; the agent needs accessibility permission and an
+Xcode installation compatible with the selected .NET workload. Do not start
+WinAppDriver or an Appium server separately: the tests own their service,
+application and window lifetimes.
+
+```sh
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Windows # on Windows
+pwsh scripts/infra/tests/install-appium.ps1 -Platform Mac     # on macOS
+dotnet cake --target=samples --runGroup=Windows --appiumMode=build --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+dotnet cake --target=samples --runGroup=Windows --appiumMode=run --skipExternals=all \
+  --previewLabel=pr.1234 --buildNumber=26509.10
+```
+
+Use `--runGroup=Mac` for both Mac Catalyst and native macOS. Match the app
+workspaces' OS/architecture and retain their exact `output/nugets` cohort. Desktop
+goldens belong to `windows-desktop`, `mac-catalyst` and `macos-desktop`; they
+cannot reuse mobile captures. Until a maintainer reviews and commits each
+desktop reference set, missing references fail strictly. Inspect the captured
+PNG images in the CI sample logs' `golden-images` directory before adding them.
+
 ## Test groups and diagnostics
 
 | Group | Coverage | CI hosts |
@@ -164,6 +189,8 @@ never select the first available device.
 | Docker | Container builds and execution | Windows, Linux |
 | Ios | Basic MAUI/native iOS and Gallery MAUI Appium execution | Configured macOS simulator pools |
 | Android | Basic MAUI/native Android and Gallery MAUI Appium execution | Configured Android emulator pool |
+| Mac | Basic MAUI/native Mac Catalyst, native macOS and Gallery MAUI | macOS desktop agent |
+| Windows | Basic MAUI/native WinUI and Gallery MAUI | Windows desktop agent |
 
 Choose a `RunGroup` by execution target. Each test requires exactly one typed
 attribute such as `[RunGroup(SampleRunGroup.Build)]`; place it on the class only

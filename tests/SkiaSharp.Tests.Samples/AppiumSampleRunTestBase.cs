@@ -27,10 +27,17 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		AppiumOperations app,
 		string family,
 		IReadOnlyList<BasicPageCommand> pages,
-		Action<AppiumOperations, string> navigate)
+		Action<AppiumOperations, string> navigate,
+		bool collectReferenceFailures = false)
 	{
 		Assert.NotEmpty(pages);
-		foreach (var page in pages)
+		if (collectReferenceFailures)
+			await Assert.MultipleAsync(pages.Select(page => (Func<Task>)(() => RunPage(page))).ToArray());
+		else
+			foreach (var page in pages)
+				await RunPage(page);
+
+		async Task RunPage(BasicPageCommand page)
 		{
 			navigate(app, page.NavigationId);
 			app.Find(page.CanvasId);
@@ -57,10 +64,30 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 
 	private protected static async Task MauiDrawing(
 		AppiumOperations app,
-		Action<AppiumOperations, string> navigate)
+		Action<AppiumOperations, string> navigate,
+		bool collectReferenceFailures = false)
 	{
 		const string canvasId = "basic-canvas-drawing";
 		navigate(app, "Drawing");
+		if (collectReferenceFailures)
+		{
+			await Assert.MultipleAsync(
+				async () => await Compare(app, canvasId, "basic-drawing-initial", "Maui"),
+				async () =>
+				{
+					app.Drag(app.Find(canvasId), 0.3, 0.45, 0.7, 0.45);
+					app.Drag(app.Find(canvasId), 0.5, 0.3, 0.5, 0.6);
+					var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui");
+					AssertDrawingStrokeRegions(drawn.Actual, drawn.Expected.ReadBytes(), app.ComparisonInsets);
+				},
+				async () =>
+				{
+					app.Click("basic-drawing-clear");
+					var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui");
+					AssertDrawingStrokeRegions(cleared.Actual, cleared.Expected.ReadBytes(), app.ComparisonInsets);
+				});
+			return;
+		}
 		await Compare(app, canvasId, "basic-drawing-initial", "Maui");
 
 		// Axis-aligned strokes avoid timing-dependent diagonal interpolation.
