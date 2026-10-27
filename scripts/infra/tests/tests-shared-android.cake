@@ -10,18 +10,19 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
 {
     if (IsCakeListingCommand())
         return;
+
+    ListAndroidDevices();
+
     if (ownedAvd != null || ownedSerial != null)
         throw new InvalidOperationException("This Cake run already owns an Android emulator.");
 
     var device = TEST_ANDROID_DEVICE.Trim().ToLowerInvariant();
-    if (device == "physical") {
-        ListAndroidDevices();
+    if (device == "physical")
         return;
-    }
     if (device != "emulator")
         throw new ArgumentException($"Invalid Android device type '{TEST_ANDROID_DEVICE}'. Expected emulator or physical.");
-    if (!System.Text.RegularExpressions.Regex.IsMatch(TEST_ANDROID_IMAGE ?? "",
-        @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+\z"))
+
+    if (!System.Text.RegularExpressions.Regex.IsMatch(TEST_ANDROID_IMAGE ?? "", @"^android-[0-9]+(?:\.[0-9]+)?;[a-zA-Z0-9_]+\z"))
         throw new ArgumentException($"Invalid Android emulator image: {TEST_ANDROID_IMAGE}");
     if (string.IsNullOrWhiteSpace(TEST_ANDROID_MODEL) || TEST_ANDROID_MODEL.Any(char.IsControl))
         throw new ArgumentException("Declare an Android emulator model.");
@@ -31,6 +32,9 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         System.Runtime.InteropServices.Architecture.Arm64 => "arm64-v8a",
         _ => throw new ArgumentException("Android emulators require an arm64 or x64 host."),
     };
+
+    StopCIAndroidEmulators();
+
     var port = AndroidEmulatorPort();
     ownedAvd = $"SkiaSharp-Tests-{Guid.NewGuid():N}";
     ownedSerial = $"emulator-{port}";
@@ -84,6 +88,25 @@ string[] AndroidDeviceSerials()
     return json.RootElement.EnumerateArray().Select(device => device.GetProperty("serial").GetString()).ToArray();
 }
 
+void StopCIAndroidEmulators()
+{
+    if (BuildSystem.IsLocalBuild || IsCakeListingCommand())
+        return;
+
+    // CI agents are disposable; stop emulator processes even when ADB is unavailable.
+    foreach (var process in System.Diagnostics.Process.GetProcesses()) {
+        using (process) {
+            if ((process.ProcessName != "emulator"
+                && !process.ProcessName.StartsWith("qemu-system-", StringComparison.Ordinal)) || process.HasExited)
+                continue;
+            Information("Stopping CI Android emulator process {0} ({1}).", process.Id, process.ProcessName);
+            process.Kill(entireProcessTree: true);
+            if (!process.WaitForExit(30000))
+                throw new TimeoutException($"CI Android emulator process did not stop within 30 seconds: {process.Id}.");
+        }
+    }
+}
+
 void ListAndroidDevices()
 {
     Information("Available Android devices:");
@@ -116,7 +139,9 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
 
     try {
         // The released CLI has no strict stop operation. Keep direct ADB cleanup-only.
-        if (ownedSerial != null) {
+        if (!BuildSystem.IsLocalBuild) {
+            StopCIAndroidEmulators();
+        } else if (ownedSerial != null) {
             var serial = ownedSerial;
             var sdk = EnvironmentVariable("ANDROID_HOME");
             if (string.IsNullOrWhiteSpace(sdk))
