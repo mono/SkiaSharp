@@ -92,12 +92,13 @@ void LogAndroidDeviceProperties(string ownedAvd, string ownedSerial)
 {
     Information("Android cleanup identity: expected AVD {0}, serial {1}.",
         System.Text.Json.JsonSerializer.Serialize(ownedAvd), System.Text.Json.JsonSerializer.Serialize(ownedSerial));
+    var logs = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "logs", "testlogs", "android-cleanup", ownedAvd);
+    System.IO.Directory.CreateDirectory(logs);
     var settings = AndroidCommandSettings("device", "info", "--id",
         "^" + System.Text.RegularExpressions.Regex.Escape(ownedSerial) + "$", "--format", "json");
     settings.Timeout = 30000;
     settings.EnvironmentVariables = new Dictionary<string, string> {
-        ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(
-            ROOT_OUTPUT_PATH.FullPath, "logs", "android", ownedAvd, "android-cleanup.log"),
+        ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(logs, "android-cleanup.log"),
     };
     RunProcess("dotnet", settings);
 }
