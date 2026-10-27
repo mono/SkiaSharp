@@ -18,7 +18,7 @@ internal static class Appium
 		catch (Win32Exception error)
 		{
 			throw new InvalidOperationException(
-				"Install Appium 3 and the XCUITest driver before selecting iOS UI tests. " +
+				"Install Appium 3 and the selected platform driver before running sample UI tests. " +
 				"The test runner does not install prerequisites.", error);
 		}
 	}
