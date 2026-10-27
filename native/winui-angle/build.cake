@@ -129,19 +129,15 @@ Task("sync-ANGLE")
 
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
     var webview2Version = GetVersion("Microsoft.Web.WebView2", "release");
-    var requiredHeaders = new[] {
-        WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"),
-        WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Xaml.h"),
-        WINAPPSDK_PATH.Combine("include").CombineWithFilePath("microsoft.ui.xaml.media.dxinterop.h"),
-    };
     var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{webview2Version}-{WINDOWS_SDK_VERSION}.stamp");
-    if (requiredHeaders.Any(header => !FileExists(header)) || !FileExists(stamp)) {
+    if (!FileExists(stamp)) {
         CleanDirectory(WINAPPSDK_PATH);
         CleanDirectory(WEBVIEW2_PATH);
-        foreach (var package in new[] {
+        var packages = new[] {
             new { Id = "Microsoft.WindowsAppSDK", Version = winappsdkVersion, Path = WINAPPSDK_PATH },
             new { Id = "Microsoft.Web.WebView2", Version = webview2Version, Path = WEBVIEW2_PATH },
-        }) {
+        };
+        foreach (var package in packages) {
             var packageId = package.Id.ToLowerInvariant();
             var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
             var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/{packageId}.{package.Version}.nupkg");
