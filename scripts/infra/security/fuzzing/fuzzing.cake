@@ -4,7 +4,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../../.."));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUZZING - prepare the drop shared by every fuzzing submission, or fuzz a target locally
-//   dotnet cake --target=fuzzing-download
 //   dotnet cake --target=fuzzing-prepare
 //   dotnet cake --target=fuzzing --fuzzerTarget=managed-streams [--fuzzerMaxTime=60] [--fuzzerRuns=1000] [--fuzzerTimeout=60] [--fuzzerInput=<path>]
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +61,7 @@ Task("fuzzing-prepare")
             Framework = "net10.0",
             MSBuildSettings = new DotNetMSBuildSettings()
                 .WithProperty("AllTargetFrameworks", "net10.0")
+                .WithProperty("BuildArch", "x64")
         });
 });
 

@@ -44,10 +44,8 @@ On macOS (or Linux arm64), use `run-local.sh` to run inside an Azure Linux conta
 
 ### Cake Targets & Arguments
 
-- `fuzzing-download`: downloads `libfuzzer-dotnet` into `externals/fuzzing` (skipped when `FUZZER_EXE` / `--fuzzer` is provided).
+- `fuzzing`: downloads `libfuzzer-dotnet` into `externals/fuzzing` (skipped when `FUZZER_EXE` / `--fuzzer` is provided), runs `SkiaSharp.Fuzzing --prepare output/fuzzing/local/bin --instrument` to stage and instrument the local assemblies, and runs `libfuzzer-dotnet`.
 - `fuzzing-prepare`: runs `SkiaSharp.Fuzzing --prepare output/fuzzing/drop` to stage the per-platform cloud drops (`windows` and `linux`), each with its own `OneFuzzConfig.json`, in `output/fuzzing/drop/<platform>/`.
-- `fuzzing-run`: runs `SkiaSharp.Fuzzing --prepare output/fuzzing/local/bin --instrument` to stage and instrument the local assemblies, then runs `libfuzzer-dotnet`.
-- `fuzzing` (`Default`): runs `fuzzing-download` and `fuzzing-run`.
 
 | Argument | Maps To | Description |
 |----------|---------|-------------|

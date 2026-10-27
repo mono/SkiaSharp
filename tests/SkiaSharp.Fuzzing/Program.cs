@@ -128,11 +128,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 		}
 
 		foreach (var nativeFile in platform.NativeFiles)
-		{
-			var source = Path.Combine(buildDirectory, nativeFile);
-			if (File.Exists(source))
-				File.Copy(source, Path.Combine(platformDirectory, nativeFile), overwrite: true);
-		}
+			File.Copy(Path.Combine(buildDirectory, nativeFile), Path.Combine(platformDirectory, nativeFile), overwrite: true);
 
 		CopyDirectory(Path.Combine(buildDirectory, "assets"), Path.Combine(platformDirectory, "assets"));
 

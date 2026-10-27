@@ -40,15 +40,17 @@ public sealed class SkottieResourceProvidersFuzzer : IFuzzer
 			_ = loaded?.Size ?? 0;
 		}
 
-		var dataUri = "data:application/octet-stream;base64," +
-			Convert.ToBase64String(payload.AsSpan(0, Math.Min(payload.Length, 512)).ToArray());
-		using (var loaded = dataUriProvider.Load(dataUri))
-		{
-			_ = loaded?.Size ?? 0;
-		}
+		var dataUri = "data:image/png;base64," +
+			Convert.ToBase64String(payload.AsSpan(0, Math.Min(payload.Length, 4096)));
+		var inlineJson =
+			$$$"""
+			{"v":"5.5.2","fr":60,"ip":0,"op":60,"w":64,"h":64,"assets":[{"id":"img_0","w":16,"h":16,"u":"","p":"{{{dataUri}}}","e":1}],"layers":[{"ty":2,"refId":"img_0","ip":0,"op":60,"st":0,"ks":{}}]}
+			""";
+		using (var inlineData = SKData.CreateCopy(Encoding.UTF8.GetBytes(inlineJson)))
+			BuildAndRenderSkottie(inlineData, cachingProvider, payload[0]);
 
-		BuildAndRenderSkottie(Path.Combine(baseDirectory, "LottieLogo1.json"), cachingProvider, payload[0]);
-		BuildAndRenderSkottie(Path.Combine(baseDirectory, "lottie-base64_dotnet-bot.json"), cachingProvider, payload[0]);
+		BuildAndRenderSkottie(Path.Combine(baseDirectory, "animation.json"), cachingProvider, payload[0]);
+		BuildAndRenderSkottie(Path.Combine(baseDirectory, "animation-embedded.json"), cachingProvider, payload[0]);
 	}
 
 	private static void BuildAndRenderSkottie(string path, ResourceProvider provider, byte frameByte)
@@ -57,8 +59,13 @@ public sealed class SkottieResourceProvidersFuzzer : IFuzzer
 			throw new FileNotFoundException("A Skottie fuzzing animation asset is missing.", path);
 
 		using var data = SKData.Create(path);
-		using var animation = Animation
-			.CreateBuilder()
+		BuildAndRenderSkottie(data, provider, frameByte);
+	}
+
+	private static void BuildAndRenderSkottie(SKData data, ResourceProvider provider, byte frameByte)
+	{
+		using var builder = Animation.CreateBuilder();
+		using var animation = builder
 			.SetResourceProvider(provider)
 			.Build(data);
 		if (animation is null)
@@ -84,11 +91,11 @@ public sealed class SkottieResourceProvidersFuzzer : IFuzzer
 	private static string GetResourceName(byte[] payload)
 	{
 		if (payload.Length < 4)
-			return "baboon.png";
+			return "image.png";
 
 		var start = payload.Length / 2;
 		var raw = Encoding.UTF8.GetString(payload, start, Math.Min(payload.Length - start, 64)).Trim();
-		return string.IsNullOrWhiteSpace(raw) ? "baboon.png" : raw.Replace('\0', '_');
+		return string.IsNullOrWhiteSpace(raw) ? "image.png" : raw.Replace('\0', '_');
 	}
 
 	private static bool TryResolveContainedPath(string root, string resourcePath, string resourceName, out string fullPath)
