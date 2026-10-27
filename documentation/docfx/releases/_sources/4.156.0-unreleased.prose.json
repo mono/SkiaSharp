@@ -1,24 +1,24 @@
 {
-  "theme": "Runtime and platform refinements",
-  "highlights_headline": "The upcoming 4.156 release improves managed and HarfBuzz performance while refining native platform support.",
-  "highlights_body": "It reduces allocation during pixel copying and text shaping, packages WebGPU support with the native library, and improves Android rendering synchronization.",
+  "theme": "Platform and runtime reliability",
+  "highlights_headline": "SkiaSharp 4.156.0 improves platform support and eliminates avoidable native and managed memory overhead.",
+  "highlights_body": "This update refreshes native build and packaging support across Windows, Apple platforms, Linux, and WebGPU while making image, text, stream, and string handling more efficient and reliable.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates Android texture rendering with the display refresh cycle for smoother presentation.",
+          "lead": "Android texture presentation synchronized",
+          "detail": "Texture rendering now follows the display refresh cycle, improving the consistency of front-buffered rendering on Android.",
           "prs": [
             5345
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained front-buffered stream data correctly to reduce avoidable memory use.",
+          "lead": "Native string creation made safe",
+          "detail": "Creating SKData from C strings no longer risks reading past the native buffer and writes directly into the managed data object.",
           "prs": [
-            5327
+            5429
           ]
         }
       ]
@@ -27,12 +27,19 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed image and shaping allocations reduced",
-          "detail": "Optimizes image pixel copies, feature-string decoding, and HarfBuzz UTF-32 encoding to reduce allocation pressure in common managed workloads.",
+          "lead": "Image pixel copies use less managed overhead",
+          "detail": "Managed image pixel-copy operations avoid unnecessary work, reducing overhead when moving pixel data.",
           "prs": [
-            5052,
+            5052
+          ]
+        },
+        {
+          "lead": "Text and stream handling retain fewer native resources",
+          "detail": "Feature-string decoding avoids a native allocation, HarfBuzz UTF-32 conversion reuses buffers, and front-buffered streams no longer retain resources unnecessarily.",
+          "prs": [
+            5230,
             5060,
-            5230
+            5327
           ]
         }
       ]
@@ -41,35 +48,30 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support packaged with the native library",
-          "detail": "Includes emdawnwebgpu's WebGPU implementation in libSkiaSharp.a so consumers receive the required native support with the library.",
-          "prs": [
-            5316
-          ]
-        },
-        {
-          "lead": "Apple deployment baseline updated",
-          "detail": "Updates the minimum supported Apple deployment targets for the upcoming release.",
+          "lead": "Apple platform deployment baselines updated",
+          "detail": "Apple targets now use newer deployment minimums; verify that applications target supported OS versions before updating.",
           "prs": [
             5383
           ]
         },
         {
-          "lead": "Linux native artifact loading hardened",
-          "detail": "Binds bundled HarfBuzz functions locally so Linux native artifacts use the packaged implementation consistently.",
+          "lead": "Native packages updated across Windows, Linux, and WebGPU",
+          "detail": "Windows native and ANGLE builds use the modern Visual Studio toolchain, Linux resolves bundled HarfBuzz functions locally, and the WebGPU implementation is included in libSkiaSharp.a.",
           "prs": [
+            5321,
             5352,
-            5366
+            5316
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Bundled HarfBuzz function binding on Linux and Blazor CPU sample-test stabilization",
-    "dalexsoto": "Contextual PoliCheck findings cleanup",
-    "ramezgerges": "WebGPU implementation packaging in the native SkiaSharp library"
+    "VirgilMing": "Bundled Linux HarfBuzz linkage and Blazor CPU sample test stabilization",
+    "dalexsoto": "PoliCheck validation cleanup in continuous integration",
+    "ramezgerges": "WebGPU native implementation packaging",
+    "rolfbjarne": "Removed obsolete sample files",
+    "Saad-elnagar": "Removed an obsolete libmicrohttpd notice"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
