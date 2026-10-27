@@ -39,23 +39,40 @@ public sealed class ManagedStreamsFuzzer : IFuzzer
 
 	private static void ExerciseStreams(byte[] payload, int maximumReadLength, int earlyEndPosition)
 	{
-		ExerciseOperations(() => new FuzzStream(payload, seekable: true, maximumReadLength, earlyEndPosition));
-		ExerciseOperations(() => new FuzzStream(payload, seekable: false, maximumReadLength, earlyEndPosition));
+		ExerciseOperations(
+			() => new FuzzStream(payload, seekable: true, maximumReadLength, earlyEndPosition),
+			() => new FuzzWStream(seekable: true));
+		ExerciseOperations(
+			() => new FuzzStream(payload, seekable: false, maximumReadLength, earlyEndPosition),
+			() => new FuzzWStream(seekable: false));
 	}
 
-	private static void ExerciseOperations(Func<Stream> streamFactory)
+	private static void ExerciseOperations(Func<Stream> streamFactory, Func<Stream> wstreamFactory)
 	{
+		using (var stream = streamFactory())
+		using (var output = wstreamFactory())
+			CopyStream(stream, output);
+
 		using (var stream = streamFactory())
 			DecodeImage(stream);
 
 		using (var stream = streamFactory())
-			DecodeBitmap(stream);
+			DecodeBitmap(stream, wstreamFactory);
 
 		using (var stream = streamFactory())
-			DeserializePicture(stream);
+			DeserializePicture(stream, wstreamFactory);
 
 		using (var stream = streamFactory())
 			CreateTypeface(stream);
+	}
+
+	private static void CopyStream(Stream stream, Stream output)
+	{
+		using var managed = new SKManagedStream(stream);
+		using var wstream = new SKManagedWStream(output);
+		_ = managed.CopyTo(wstream);
+		if (output.CanSeek)
+			_ = wstream.BytesWritten;
 	}
 
 	private static void DecodeImage(Stream stream)
@@ -84,7 +101,7 @@ public sealed class ManagedStreamsFuzzer : IFuzzer
 			_ = codec.GetPixels(bitmap.Info, bitmap.GetPixels(), new SKCodecOptions(frame));
 	}
 
-	private static void DecodeBitmap(Stream stream)
+	private static void DecodeBitmap(Stream stream, Func<Stream> wstreamFactory)
 	{
 		using var codec = SKCodec.Create(stream);
 		if (codec is null)
@@ -104,9 +121,19 @@ public sealed class ManagedStreamsFuzzer : IFuzzer
 			return;
 
 		_ = bitmap.Bytes.Length;
+
+		if (bitmap.Width <= 64 && bitmap.Height <= 64)
+		{
+			using var output = wstreamFactory();
+			using var wstream = new SKManagedWStream(output);
+			_ = bitmap.Encode(wstream, SKEncodedImageFormat.Png, 80);
+			wstream.Flush();
+			if (output.CanSeek)
+				_ = wstream.BytesWritten;
+		}
 	}
 
-	private static void DeserializePicture(Stream stream)
+	private static void DeserializePicture(Stream stream, Func<Stream> wstreamFactory)
 	{
 		using var picture = SKPicture.Deserialize(stream);
 		if (picture is null)
@@ -117,6 +144,9 @@ public sealed class ManagedStreamsFuzzer : IFuzzer
 		canvas.Clear(SKColors.Transparent);
 		canvas.DrawPicture(picture);
 		canvas.Flush();
+
+		using var output = wstreamFactory();
+		picture.Serialize(output);
 	}
 
 	private static void CreateTypeface(Stream stream)
