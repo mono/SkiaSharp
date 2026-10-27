@@ -214,9 +214,9 @@ public class SampleInfrastructureTests : IDisposable
         var file = Path.Combine(root, "NuGet.Config");
         DotNet.WriteNuGetConfig(file, "packages");
         var config = XDocument.Load(file).Root!;
-        Assert.Equal(new[] { "artifacts", "dotnet-public", "dotnet-eng", "nuget.org" },
+        Assert.Equal(new[] { "artifacts", "dotnet-public", "dotnet-eng" },
             config.Element("packageSources")!.Elements("add").Select(element => (string?)element.Attribute("key")));
-        Assert.Equal(new[] { "artifacts", "dotnet-public", "dotnet-eng", "nuget.org" },
+        Assert.Equal(new[] { "artifacts", "dotnet-public", "dotnet-eng" },
             config.Element("packageSourceMapping")!.Elements("packageSource").Select(element => (string?)element.Attribute("key")));
     }
 
