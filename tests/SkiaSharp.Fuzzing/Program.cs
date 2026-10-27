@@ -2,8 +2,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using SharpFuzz;
@@ -208,30 +206,3 @@ internal sealed record FuzzerDescriptor(string Name, Type Type, Action<ReadOnlyS
 		return new FuzzerDescriptor(name, type, method.CreateDelegate<Action<ReadOnlySpan<byte>>>());
 	}
 }
-
-internal static partial class ParentProcessGuard
-{
-	private const int PR_SET_PDEATHSIG = 1;
-	private const int SIGKILL = 9;
-
-	[ModuleInitializer]
-	internal static void Initialize()
-	{
-		// On Linux, libfuzzer-dotnet forks the .NET child process without setting PR_SET_PDEATHSIG.
-		// Ensure the kernel kills the child if the parent libfuzzer-dotnet process exits on timeout or crash,
-		// so inherited stdout/stderr pipes close immediately and do not hang the supervisor.
-		if (!OperatingSystem.IsLinux() || Environment.GetEnvironmentVariable("__LIBFUZZER_SHM_ID") is null)
-			return;
-
-		_ = prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0);
-		if (getppid() == 1)
-			Environment.FailFast("Parent libfuzzer-dotnet process already exited.");
-	}
-
-	[LibraryImport("libc", SetLastError = true)]
-	private static partial int prctl(int option, nuint arg2, nuint arg3, nuint arg4, nuint arg5);
-
-	[LibraryImport("libc")]
-	private static partial int getppid();
-}
-
