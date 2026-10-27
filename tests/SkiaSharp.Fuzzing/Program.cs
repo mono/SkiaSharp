@@ -157,7 +157,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 					["Method"] = nameof(IFuzzer.FuzzTarget),
 					["FuzzingTargetBinaries"] = binaries
 				},
-				["FuzzerTimeoutInSeconds"] = 120,
+				["FuzzerTimeoutInSeconds"] = 60,
 				["MinAvailableMemoryMB"] = 100,
 				["OneFuzzJobs"] = new JsonArray(
 					new JsonObject
@@ -165,6 +165,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 						["ProjectName"] = "SkiaSharp",
 						["TargetName"] = $"{fuzzer.Name}-{platform.Platform}-x64",
 						["SeedCorpusContainer"] = $"skiasharp-{fuzzer.Name}-seeds",
+						["TargetOptions"] = new JsonArray("-timeout=60"),
 						["FuzzingTargetOptions"] = new JsonArray("-timeout=60")
 					}),
 				["JobDependencies"] = new JsonArray(platform.DependencyPath),
