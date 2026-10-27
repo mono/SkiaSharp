@@ -89,12 +89,8 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 	protected override async Task OnUpdate(CancellationToken token)
 	{
 		await Task.Delay(Math.Max(16, _frameDurationMs), token);
-		lock (SyncRoot)
-		{
-			token.ThrowIfCancellationRequested();
-			if (_codec != null && _codec.FrameCount > 0)
-				_currentFrame = (_currentFrame + 1) % _codec.FrameCount;
-		}
+		if (_codec != null && _codec.FrameCount > 0)
+			_currentFrame = (_currentFrame + 1) % _codec.FrameCount;
 	}
 
 	private void RebuildAnimation()

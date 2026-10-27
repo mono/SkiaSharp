@@ -43,9 +43,9 @@ public partial class MainPage
 				.GetAssemblies()
 				.Select(a => a.GetName().Name)
 				.OrderBy(n => n);
-			foreach (var assemblyName in assemblies)
+			foreach (var ass in assemblies)
 			{
-				modules.Items.Add(new MenuFlyoutItem { Text = assemblyName });
+				modules.Items.Add(new MenuFlyoutItem { Text = ass });
 			}
 		};
 

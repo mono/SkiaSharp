@@ -10,31 +10,41 @@ namespace SkiaSharpSample.Pages;
 public sealed partial class HomePage : Page
 {
     private readonly SampleService sampleService;
-    private readonly SampleBase[] allSamples;
-    private List<SampleCardItem> currentItems = new();
-    private string? selectedCategory;
+    private readonly HashSet<string> selectedCategories = new();
+    private readonly List<Button> categoryButtons = new();
+    private Button? allClearButton;
     private string[] allCategories = Array.Empty<string>();
     private string searchText = string.Empty;
-    private int currentColumns = 3;
 
     public HomePage()
     {
         this.InitializeComponent();
         sampleService = App.SampleService;
-        allSamples = sampleService.GetAllSamples().ToArray();
 
-        allCategories = SampleManager.GetCategories()
-            .Select(c => c.Name)
-            .Where(name => allSamples.Any(s => s.Category == name))
+        allCategories = sampleService.GetAllSamples()
+            .Select(s => s.Category)
+            .Distinct()
+            .OrderBy(c => c)
             .ToArray();
+        foreach (var c in allCategories) selectedCategories.Add(c);
+
+        BuildCategoryChips();
         RefreshCards();
         FooterText.Text = BuildFooter();
+    }
+
+    private double lastKnownWidth;
+    protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
         SizeChanged += (_, args) =>
         {
-            var columns = GetColumns(args.NewSize.Width);
-            if (columns == currentColumns) return;
-            currentColumns = columns;
-            RenderCards();
+            var newCols = GetColumns(args.NewSize.Width);
+            if (Math.Abs(args.NewSize.Width - lastKnownWidth) > 50)
+            {
+                lastKnownWidth = args.NewSize.Width;
+                RefreshCards();
+            }
         };
     }
 
@@ -45,62 +55,67 @@ public sealed partial class HomePage : Page
         return 3;
     }
 
-    private void BuildCategoryChips(Dictionary<string, int> liveCounts, int resultCount)
+    private void BuildCategoryChips()
     {
         CategoryChipsHost.Children.Clear();
+        categoryButtons.Clear();
 
-        var all = new Button
+        foreach (var category in allCategories)
         {
-            Content = new TextBlock
+            var cat = SampleManager.GetCategoryFor(category);
+            var color = ParseBrush(cat.Color);
+            var button = new Button
             {
-                Text = resultCount == 0 ? "Reset filters" :
-                    $"All categories  {resultCount}",
-                FontSize = 11
-            },
+                Content = "● " + category,
+                Padding = new Thickness(10, 4, 12, 4),
+                Tag = (category, true),
+                CornerRadius = new CornerRadius(16),
+                BorderThickness = new Thickness(1),
+            };
+            button.Click += OnCategoryChipClicked;
+            UpdateCategoryChipVisual(button, color, selected: true);
+            categoryButtons.Add(button);
+            CategoryChipsHost.Children.Add(button);
+        }
+
+        allClearButton = new Button
+        {
+            Content = new TextBlock { Text = "Clear", FontSize = 11 },
             Padding = new Thickness(8, 2, 8, 2),
             MinHeight = 0,
             MinWidth = 0,
             Background = new SolidColorBrush(Colors.Transparent),
             BorderThickness = new Thickness(0),
         };
-        all.Click += (_, _) => OnAllClearClicked(resultCount == 0);
-        CategoryChipsHost.Children.Add(all);
-
-        foreach (var category in allCategories)
-        {
-            var count = liveCounts.GetValueOrDefault(category);
-            if (count == 0) continue;
-            var cat = SampleManager.GetCategoryFor(category);
-            var color = ParseBrush(cat.Color);
-            var button = new Button
-            {
-                Content = $"● {category}  {count}",
-                Padding = new Thickness(10, 4, 12, 4),
-                Tag = category,
-                CornerRadius = new CornerRadius(16),
-                BorderThickness = new Thickness(1),
-            };
-            button.Click += OnCategoryChipClicked;
-            UpdateCategoryChipVisual(button, color, selected: selectedCategory == category);
-            CategoryChipsHost.Children.Add(button);
-        }
+        allClearButton.Click += (_, _) => OnAllClearClicked();
+        CategoryChipsHost.Children.Add(allClearButton);
     }
 
     private void OnCategoryChipClicked(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: string category }) return;
-        selectedCategory = category;
+        if (sender is not Button btn || btn.Tag is not (string category, bool selected)) return;
+        var newSelected = !selected;
+        btn.Tag = (category, newSelected);
+        UpdateCategoryChipVisual(btn, ParseBrush(SampleManager.GetCategoryFor(category).Color), newSelected);
+        if (newSelected) selectedCategories.Add(category);
+        else selectedCategories.Remove(category);
+        UpdateAllClearLabel();
         RefreshCards();
     }
 
-    private void OnAllClearClicked(bool noResults)
+    private void OnAllClearClicked()
     {
-        selectedCategory = null;
-        if (noResults)
+        var allSelected = selectedCategories.Count == allCategories.Length;
+        var target = !allSelected;
+        foreach (var btn in categoryButtons)
         {
-            searchText = "";
-            SearchBox.Text = "";
+            if (btn.Tag is not (string category, _)) continue;
+            btn.Tag = (category, target);
+            UpdateCategoryChipVisual(btn, ParseBrush(SampleManager.GetCategoryFor(category).Color), target);
+            if (target) selectedCategories.Add(category);
+            else selectedCategories.Remove(category);
         }
+        UpdateAllClearLabel();
         RefreshCards();
     }
 
@@ -120,48 +135,43 @@ public sealed partial class HomePage : Page
         }
     }
 
+    private void UpdateAllClearLabel()
+    {
+        if (allClearButton?.Content is TextBlock tb)
+            tb.Text = selectedCategories.Count == allCategories.Length ? "Clear" : "All";
+    }
+
     private void OnSearchChanged(object sender, TextChangedEventArgs e)
     {
-        var text = SearchBox.Text ?? string.Empty;
-        if (searchText == text) return;
-        searchText = text;
+        searchText = SearchBox.Text ?? string.Empty;
         RefreshCards();
     }
 
     private void RefreshCards()
     {
-        ISet<string>? categories = selectedCategory is { } category
-            ? new HashSet<string>(StringComparer.Ordinal) { category }
-            : null;
-        var filtered = SampleManager.SearchSamples(allSamples, searchText, categories, sort: SampleSortOrder.NewestFirst)
-            .ToArray();
-        currentItems = filtered
+        var allSamples = sampleService.GetAllSamples();
+        var items = SampleManager.SearchSamples(allSamples, searchText, selectedCategories, sort: SampleSortOrder.NewestFirst)
             .Select(s => new SampleCardItem(s, allSamples))
             .ToList();
-        BuildCategoryChips(SampleManager.GetCategoryCounts(filtered), filtered.Length);
-        currentColumns = GetColumns(ActualWidth > 0 ? ActualWidth : 1200);
-        RenderCards();
-    }
 
-    private void RenderCards()
-    {
         CardGridHost.Children.Clear();
+        var columns = GetColumns(ActualWidth > 0 ? ActualWidth : 1200);
         Grid? currentRow = null;
-        for (int i = 0; i < currentItems.Count; i++)
+        for (int i = 0; i < items.Count; i++)
         {
-            if (i % currentColumns == 0)
+            if (i % columns == 0)
             {
                 currentRow = new Grid { ColumnSpacing = 12 };
-                for (int c = 0; c < currentColumns; c++)
+                for (int c = 0; c < columns; c++)
                     currentRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 CardGridHost.Children.Add(currentRow);
             }
             var card = new Controls.SampleCard
             {
-                Sample = currentItems[i].Sample,
-                CategoryColor = currentItems[i].CategoryColorBrush,
-                Icon = currentItems[i].Icon,
-                Supported = currentItems[i].Supported,
+                Sample = items[i].Sample,
+                CategoryColor = items[i].CategoryColorBrush,
+                Icon = items[i].Icon,
+                Supported = items[i].Supported,
             };
             // UserControl PointerReleased is unreliable under SkiaRenderer; HyperlinkButton.Click is not.
             var link = new HyperlinkButton
@@ -174,11 +184,11 @@ public sealed partial class HomePage : Page
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Stretch,
-                IsEnabled = currentItems[i].Supported,
-                Tag = currentItems[i].Sample,
+                IsEnabled = items[i].Supported,
+                Tag = items[i].Sample,
             };
             link.Click += OnCardClicked;
-            Grid.SetColumn(link, i % currentColumns);
+            Grid.SetColumn(link, i % columns);
             currentRow!.Children.Add(link);
         }
     }
