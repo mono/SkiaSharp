@@ -11,9 +11,6 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     if (IsCakeListingCommand())
         return;
 
-    if (BuildSystem.IsLocalBuild)
-        ListAndroidDevices();
-
     if (ownedAvd != null || ownedSerial != null)
         throw new InvalidOperationException("This Cake run already owns an Android emulator.");
 
@@ -37,38 +34,24 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     var port = AndroidEmulatorPort();
     ownedAvd = $"SkiaSharp-Tests-{Guid.NewGuid():N}";
     ownedSerial = $"emulator-{port}";
-    var logs = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "logs", "android", ownedAvd);
-    System.IO.Directory.CreateDirectory(logs);
+    var logs = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "logs", "testlogs", "android", ownedAvd);
 
     try {
-        AndroidCommand("avd", "create", "--name", ownedAvd, "--sdk",
+        RunAndroidCli(System.IO.Path.Combine(logs, "android-create.log"), "avd", "create", "--name", ownedAvd, "--sdk",
             $"system-images;{TEST_ANDROID_IMAGE};{abi}", "--device", TEST_ANDROID_MODEL, "--force");
-        var arguments = new List<string> {
+        RunAndroidCli(System.IO.Path.Combine(logs, "android-start.log"),
             "avd", "start", "--name", ownedAvd, "--port", port.ToString(),
             "--no-window", "--gpu", IsRunningOnLinux() ? "swiftshader_indirect" : "guest",
             "--no-snapshot", "--no-audio", "--no-boot-anim", "--wait", "--timeout", "300",
             "--no-animations", "--cpu-threshold", "3", "--response-threshold", "5",
-            "--partition-size", "4096", "--camera-back", "none", "--camera-front", "none",
-        };
-        var settings = AndroidCommandSettings(arguments.ToArray());
-        settings.Timeout = 330000;
-        settings.EnvironmentVariables = new Dictionary<string, string> {
-            ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(logs, "android-tool.log"),
-        };
-        RunProcess("dotnet", settings);
-
-        if (BuildSystem.IsLocalBuild) {
-            ListAndroidDevices();
-            if (!AndroidDeviceSerials().Contains(ownedSerial, StringComparer.Ordinal))
-                throw new Exception($"Android startup did not list the expected owned emulator: {ownedSerial} ({ownedAvd}).");
-        }
+            "--partition-size", "4096", "--camera-back", "none", "--camera-front", "none");
     } catch (Exception error) when (BuildSystem.IsLocalBuild) {
         TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, error);
         throw;
     }
 }
 
-ProcessSettings AndroidCommandSettings(params string[] arguments)
+void RunAndroidCli(FilePath logFile, params string[] arguments)
 {
     var builder = new ProcessArgumentBuilder().Append("android");
     foreach (var argument in arguments)
@@ -76,32 +59,14 @@ ProcessSettings AndroidCommandSettings(params string[] arguments)
     var sdk = EnvironmentVariable("ANDROID_HOME");
     if (!string.IsNullOrWhiteSpace(sdk))
         builder.Append("--home").AppendQuoted(sdk);
-    return new ProcessSettings { Arguments = builder, WorkingDirectory = ROOT_PATH };
-}
-
-void AndroidCommand(params string[] arguments) =>
-    RunProcess("dotnet", AndroidCommandSettings(arguments));
-
-string[] AndroidDeviceSerials()
-{
-    RunProcess("dotnet", AndroidCommandSettings("device", "list", "--format", "json"), out var output);
-    using var json = System.Text.Json.JsonDocument.Parse(string.Join("\n", output));
-    return json.RootElement.EnumerateArray().Select(device => device.GetProperty("serial").GetString()).ToArray();
-}
-
-void LogAndroidDeviceProperties(string ownedAvd, string ownedSerial)
-{
-    Information("Android cleanup identity: expected AVD {0}, serial {1}.",
-        System.Text.Json.JsonSerializer.Serialize(ownedAvd), System.Text.Json.JsonSerializer.Serialize(ownedSerial));
-    var logs = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "logs", "testlogs", "android-cleanup", ownedAvd);
-    System.IO.Directory.CreateDirectory(logs);
-    var settings = AndroidCommandSettings("device", "info", "--id",
-        "^" + System.Text.RegularExpressions.Regex.Escape(ownedSerial) + "$", "--format", "json");
-    settings.Timeout = 30000;
-    settings.EnvironmentVariables = new Dictionary<string, string> {
-        ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(logs, "android-cleanup.log"),
-    };
-    RunProcess("dotnet", settings);
+    System.IO.Directory.CreateDirectory(logFile.GetDirectory().FullPath);
+    RunProcess("dotnet", new ProcessSettings {
+        Arguments = builder,
+        WorkingDirectory = ROOT_PATH,
+        EnvironmentVariables = new Dictionary<string, string> {
+            ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = logFile.FullPath,
+        },
+    });
 }
 
 void StopCIAndroidEmulators()
@@ -112,21 +77,14 @@ void StopCIAndroidEmulators()
     // CI agents are disposable; stop emulator processes even when ADB is unavailable.
     foreach (var process in System.Diagnostics.Process.GetProcesses()) {
         using (process) {
-            if ((process.ProcessName != "emulator"
-                && !process.ProcessName.StartsWith("qemu-system-", StringComparison.Ordinal)) || process.HasExited)
+            if ((process.ProcessName != "emulator" && !process.ProcessName.StartsWith("qemu-system-", StringComparison.Ordinal)) || process.HasExited)
                 continue;
             Information("Stopping CI Android emulator process {0} ({1}).", process.Id, process.ProcessName);
             process.Kill(entireProcessTree: true);
             if (!process.WaitForExit(30000))
-                throw new TimeoutException($"CI Android emulator process did not stop within 30 seconds: {process.Id}.");
+                Warning("CI Android emulator process {0} has not exited after 30 seconds; continuing cleanup.", process.Id);
         }
     }
-}
-
-void ListAndroidDevices()
-{
-    Information("Available Android devices:");
-    AndroidCommand("device", "list");
 }
 
 int AndroidEmulatorPort()
@@ -151,11 +109,14 @@ int AndroidEmulatorPort()
 void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Exception originalError)
 {
     try {
-        // The released CLI has no strict stop operation. Keep direct ADB cleanup-only.
         if (!BuildSystem.IsLocalBuild) {
             try {
-                if (ownedAvd != null && ownedSerial != null)
-                    LogAndroidDeviceProperties(ownedAvd, ownedSerial);
+                if (ownedAvd != null && ownedSerial != null) {
+                    Information("Android cleanup: AVD {0}, serial {1}.", ownedAvd, ownedSerial);
+                    FilePath logFile = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "logs", "testlogs",
+                        "android-cleanup", ownedAvd, "android-cleanup.log");
+                    RunAndroidCli(logFile, "device", "info", "--id", "^" + ownedSerial + "$", "--format", "json");
+                }
             } finally {
                 StopCIAndroidEmulators();
             }
@@ -163,74 +124,11 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
         if (ownedAvd == null)
             return;
 
-        if (BuildSystem.IsLocalBuild && ownedSerial != null) {
-            var serial = ownedSerial;
-            var sdk = EnvironmentVariable("ANDROID_HOME");
-            if (string.IsNullOrWhiteSpace(sdk))
-                throw new Exception("ANDROID_HOME must select the SDK for cleanup.");
-            var adb = System.IO.Path.Combine(sdk, "platform-tools", IsRunningOnWindows() ? "adb.exe" : "adb");
-            var port = int.Parse(ownedSerial.Substring("emulator-".Length));
-            var clock = System.Diagnostics.Stopwatch.StartNew();
-            var nextStopAttempt = TimeSpan.Zero;
-            while (true) {
-                var state = DeviceState();
-                if (state == null && ConsolePortAvailable())
-                    break;
-                if (clock.Elapsed > TimeSpan.FromSeconds(30))
-                    throw new TimeoutException($"Owned Android emulator did not stop: {ownedSerial} (transport: {state ?? "missing"}).");
-                if (state == "device" && clock.Elapsed >= nextStopAttempt) {
-                    var identity = Property("ro.boot.qemu.avd_name");
-                    if (identity.Length == 0)
-                        identity = Property("ro.kernel.qemu.avd_name");
-                    if (identity != ownedAvd)
-                        throw new Exception($"Cleanup refused: {ownedSerial} identifies AVD " +
-                            $"{System.Text.Json.JsonSerializer.Serialize(identity)}, expected " +
-                            $"{System.Text.Json.JsonSerializer.Serialize(ownedAvd)}.");
-                    Information("Stopping owned Android emulator {0} ({1}).", serial, ownedAvd);
-                    RunProcess(adb, new ProcessSettings {
-                        Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(serial).Append("emu kill"),
-                        Timeout = 30000,
-                    });
-                    nextStopAttempt = clock.Elapsed + TimeSpan.FromSeconds(5);
-                }
-                System.Threading.Thread.Sleep(500);
-            }
-
-            string DeviceState()
-            {
-                RunProcess(adb, new ProcessSettings { Arguments = "devices", Timeout = 30000 }, out var devices);
-                return devices.Select(line => line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
-                    .Where(fields => fields.Length >= 2 && fields[0] == serial)
-                    .Select(fields => fields[1]).SingleOrDefault();
-            }
-
-            string Property(string property)
-            {
-                RunProcess(adb, new ProcessSettings {
-                    Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(serial)
-                        .Append("shell getprop").Append(property),
-                    Timeout = 30000,
-                }, out var output);
-                var raw = string.Join("\n", output);
-                Information("Android cleanup {0} {1}: raw {2}, trimmed {3}.", serial, property,
-                    System.Text.Json.JsonSerializer.Serialize(raw), System.Text.Json.JsonSerializer.Serialize(raw.Trim()));
-                return raw.Trim();
-            }
-
-            bool ConsolePortAvailable()
-            {
-                var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, port);
-                try {
-                    listener.Start();
-                    return true;
-                } catch (System.Net.Sockets.SocketException) {
-                    return false;
-                } finally {
-                    listener.Stop();
-                }
-            }
-        }
-        AndroidCommand("avd", "delete", "--name", ownedAvd);
+        if (BuildSystem.IsLocalBuild && ownedSerial != null)
+            StopLocalAndroidEmulator(ownedSerial);
+        FilePath deleteLog = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "logs", "testlogs",
+            "android", ownedAvd, "android-delete.log");
+        RunAndroidCli(deleteLog, "avd", "delete", "--name", ownedAvd);
         ownedAvd = null;
         ownedSerial = null;
     } catch (Exception error) {
@@ -238,4 +136,12 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
             throw new AggregateException("Android operation and cleanup failed.", originalError, error);
         throw;
     }
+}
+
+// Replace with dotnet android avd stop when available in a released tool.
+void StopLocalAndroidEmulator(string serial)
+{
+    var adb = System.IO.Path.Combine(EnvironmentVariable("ANDROID_HOME"), "platform-tools", IsRunningOnWindows() ? "adb.exe" : "adb");
+    Information("Stopping owned Android emulator {0}.", serial);
+    RunProcess(adb, $"-s {serial} emu kill");
 }
