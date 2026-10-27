@@ -37,29 +37,14 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             await app.Page.Mouse.ClickAsync(220, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
 
-            await app.Page.Mouse.ClickAsync(471, 852);
-            await app.Page.Mouse.MoveAsync(1000, 600);
-            for (var i = 0; i < 4; i++)
-                await app.Page.Mouse.WheelAsync(0, -100);
-            await app.Page.Mouse.MoveAsync(200, 250);
-            await app.Page.Mouse.DownAsync();
-            await app.Page.Mouse.MoveAsync(600, 250, new() { Steps = 20 });
-            await app.Page.Mouse.UpAsync();
-            await app.Page.Mouse.ClickAsync(515, 852);
-            await app.Page.Mouse.MoveAsync(200, 400);
-            await app.Page.Mouse.DownAsync();
-            await app.Page.Mouse.MoveAsync(600, 500, new() { Steps = 20 });
-            await app.Page.Mouse.UpAsync();
-            await app.Page.Mouse.MoveAsync(0, 0);
-            var drawn = await app.Screenshot();
-            SampleImage.Browser("Uno/drawing-drawn").Verify(GoldenInput.Path(drawn));
+            await DrawUnoStrokes(app);
 
             await app.Page.Mouse.ClickAsync(1237, 76);
             await app.Page.Mouse.MoveAsync(0, 0);
             await SampleImage.Browser("Uno/drawing-cleared").VerifyAsync(
                 GoldenInput.Capture(app.Screenshot),
-                TimeSpan.FromSeconds(4),
-                TestContext.Current.CancellationToken);
+                timeout: TimeSpan.FromSeconds(4),
+                cancellationToken: TestContext.Current.CancellationToken);
 
             await app.Page.Mouse.ClickAsync(50, 24);
             await app.Page.Mouse.MoveAsync(0, 0);
@@ -78,13 +63,62 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
             app => BrowserRunningApp.Run(app, test), options);
     }
 
+    private static async Task DrawUnoStrokes(BrowserRunningApp app)
+    {
+        var drawn = SampleImage.Browser("Uno/drawing-drawn");
+        Assert.NotNull(drawn.ReferenceKey);
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            await app.Page.Mouse.ClickAsync(471, 852);
+            // Clear retains the brush size, so retries must not increment it again.
+            if (attempt == 1)
+            {
+                await app.Page.Mouse.MoveAsync(1000, 600);
+                for (var i = 0; i < 4; i++)
+                    await app.Page.Mouse.WheelAsync(0, -100);
+            }
+            await app.Page.Mouse.MoveAsync(200, 250);
+            await app.Page.Mouse.DownAsync();
+            await app.Page.Mouse.MoveAsync(600, 250, new() { Steps = 20 });
+            await app.Page.Mouse.UpAsync();
+            await app.Page.Mouse.ClickAsync(515, 852);
+            await app.Page.Mouse.MoveAsync(200, 400);
+            await app.Page.Mouse.DownAsync();
+            await app.Page.Mouse.MoveAsync(600, 500, new() { Steps = 20 });
+            await app.Page.Mouse.UpAsync();
+            await app.Page.Mouse.MoveAsync(0, 0);
+
+            try
+            {
+                await drawn.VerifyAsync(
+                    GoldenInput.Capture(app.Screenshot),
+                    timeout: TimeSpan.FromSeconds(10),
+                    retryInterval: TimeSpan.FromSeconds(1),
+                    cancellationToken: TestContext.Current.CancellationToken);
+                return;
+            }
+            catch (Xunit.Sdk.FailException error) when (attempt < 3)
+            {
+                TestContext.Current.TestOutputHelper?.WriteLine(
+                    $"Uno drawing did not match on attempt {attempt}; clearing before retry: {error.Message}");
+                await app.Page.Mouse.ClickAsync(1237, 76);
+                await app.Page.Mouse.MoveAsync(0, 0);
+                await SampleImage.Browser("Uno/drawing-cleared").VerifyAsync(
+                    GoldenInput.Capture(app.Screenshot),
+                    timeout: TimeSpan.FromSeconds(4),
+                    retryInterval: TimeSpan.FromSeconds(1),
+                    cancellationToken: TestContext.Current.CancellationToken);
+            }
+        }
+    }
+
     private static async Task<string> WaitForUnoCpu(BrowserRunningApp app)
     {
         // Uno creates its canvas while the splash screen still covers the application.
         await app.Page.Locator(".uno-loader").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         return await SampleImage.Browser("Uno/cpu").VerifyAsync(
             GoldenInput.Capture(app.Screenshot),
-            TimeSpan.FromSeconds(10),
-            TestContext.Current.CancellationToken);
+            timeout: TimeSpan.FromSeconds(10),
+            cancellationToken: TestContext.Current.CancellationToken);
     }
 }

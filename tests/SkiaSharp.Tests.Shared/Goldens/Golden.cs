@@ -7,6 +7,8 @@ namespace SkiaSharp.Tests.Shared;
 public sealed class Golden
 {
 	private const string MarkerPrefix = "##SKIA-GOLDEN##";
+	private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
+	private static readonly TimeSpan DefaultRetryInterval = TimeSpan.FromMilliseconds(100);
 
 	private readonly Func<byte[]>? readReference;
 
@@ -14,25 +16,39 @@ public sealed class Golden
 		GoldenCase goldenCase,
 		string? referenceKey,
 		string? referenceLocation,
-		IEnumerable<string> attempts,
+		IEnumerable<string> candidateKeys,
 		Func<byte[]>? readReference)
 	{
 		Case = goldenCase ?? throw new ArgumentNullException(nameof(goldenCase));
 		ReferenceKey = referenceKey;
 		ReferenceLocation = referenceLocation;
-		Attempts = attempts.ToList().AsReadOnly();
+		CandidateKeys = candidateKeys.ToList().AsReadOnly();
 		this.readReference = readReference;
 	}
 
+	/// <summary>The requested runtime and case metadata used to resolve this golden.</summary>
 	public GoldenCase Case { get; }
-	public string CaptureKey => Case.CaptureKey;
-	public string? ReferenceKey { get; }
-	public string? ReferenceLocation { get; }
-	public IReadOnlyList<string> Attempts { get; }
 
+	/// <summary>The primary candidate key for capturing or proposing a reference image.</summary>
+	public string CaptureKey => Case.CaptureKey;
+
+	/// <summary>The matched reference key in the store, or <see langword="null"/> if no reference was found.</summary>
+	public string? ReferenceKey { get; }
+
+	/// <summary>The file path or embedded resource location of the matched reference, or <see langword="null"/> if missing.</summary>
+	public string? ReferenceLocation { get; }
+
+	/// <summary>The ordered candidate keys checked across profile, version, and architecture fallbacks during resolution.</summary>
+	public IReadOnlyList<string> CandidateKeys { get; }
+
+	/// <summary>Reads the encoded PNG bytes of the resolved reference image.</summary>
+	/// <returns>The encoded PNG bytes of the matched reference image.</returns>
+	/// <exception cref="InvalidOperationException">No reference image was resolved for <see cref="Case"/>.</exception>
 	public byte[] ReadBytes() =>
 		readReference == null ? throw new InvalidOperationException(Describe()) : readReference();
 
+	/// <summary>Formats a diagnostic summary of the requested case, selected reference, and fallback keys checked.</summary>
+	/// <returns>A multi-line summary of the golden lookup and all <see cref="CandidateKeys"/>.</returns>
 	public string Describe()
 	{
 		var version = Case.Version == null ? "" : $" at {Case.Version}";
@@ -44,20 +60,15 @@ public sealed class Golden
 			Environment.NewLine,
 			$"Golden request: {Case.Profile}{version}/{Case.CasePath}",
 			selected,
-			$"Attempted (in order):{indent}{string.Join(indent, Attempts)}");
+			$"Attempted (in order):{indent}{string.Join(indent, CandidateKeys)}");
 	}
 
-	public string FormatMarker(string role, byte[] png)
-	{
-		if (role != "actual" && role != "reference" && role != "diff")
-			throw new ArgumentException("Unknown image role.", nameof(role));
-		if (png == null)
-			throw new ArgumentNullException(nameof(png));
-
-		using var image = Decode(png, $"{role} marker");
-		return Marker(role, png, image.Info.Size);
-	}
-
+	/// <summary>Verifies <paramref name="actual"/> against this golden's resolved reference image once.</summary>
+	/// <param name="actual">The captured image path, encoded bytes, or raw pixels to verify.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <returns>The label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException"><paramref name="actual"/> is an asynchronous capture input or cannot be decoded.</exception>
 	public string Verify(GoldenInput actual, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -68,18 +79,37 @@ public sealed class Golden
 		return image.Label;
 	}
 
-	public Task<string> VerifyAsync(GoldenInput actual, TimeSpan timeout,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null)
+	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> against this golden's resolved reference until it matches or <paramref name="timeout"/> expires.</summary>
+	/// <param name="actual">The image input or asynchronous capture callback to invoke on each attempt.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <param name="timeout">The total time budget for capturing a matching image; <see langword="null"/> defaults to 5 seconds.</param>
+	/// <param name="retryInterval">The delay between retry captures after the first confirmation retry; <see langword="null"/> defaults to 100 ms.</param>
+	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
+	/// <returns>A task that resolves to the label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> or <paramref name="retryInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
+	/// <exception cref="TimeoutException">The initial image capture did not complete before <paramref name="timeout"/> expired.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public Task<string> VerifyAsync(GoldenInput actual, GoldenOptions? options = null,
+		TimeSpan? timeout = null, TimeSpan? retryInterval = null, CancellationToken cancellationToken = default)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+		if (retryInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(retryInterval));
 
 		options = GoldenOptions.OrDefault(options);
 		var expected = ReferenceInput();
-		return RetryAsync(actual, timeout, cancellationToken,
+		return RetryAsync(actual, timeout, retryInterval, cancellationToken,
 			(image, report) => VerifyCore(this, image, expected, options, report));
 	}
 
+	/// <summary>Verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image without a golden store lookup.</summary>
+	/// <param name="actual">The captured image path, encoded bytes, or raw pixels to verify.</param>
+	/// <param name="expected">The reference image path, encoded bytes, or raw pixels to compare against.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <returns>The label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> or <paramref name="expected"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException"><paramref name="actual"/> or <paramref name="expected"/> is an asynchronous capture input or cannot be decoded.</exception>
 	public static string Verify(GoldenInput actual, GoldenInput expected, GoldenOptions? options = null)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
@@ -91,15 +121,29 @@ public sealed class Golden
 		return image.Label;
 	}
 
-	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, TimeSpan timeout,
-		CancellationToken cancellationToken = default, GoldenOptions? options = null)
+	/// <summary>Repeatedly captures and verifies <paramref name="actual"/> directly against an explicit <paramref name="expected"/> image until it matches or <paramref name="timeout"/> expires.</summary>
+	/// <param name="actual">The image input or asynchronous capture callback to invoke on each attempt.</param>
+	/// <param name="expected">The reference image path, encoded bytes, or raw pixels to compare against.</param>
+	/// <param name="options">Optional dimension and pixel tolerance overrides; <see langword="null"/> uses <see cref="GoldenOptions"/> defaults.</param>
+	/// <param name="timeout">The total time budget for capturing a matching image; <see langword="null"/> defaults to 5 seconds.</param>
+	/// <param name="retryInterval">The delay between retry captures after the first confirmation retry; <see langword="null"/> defaults to 100 ms.</param>
+	/// <param name="cancellationToken">A token to cancel waiting or image capture.</param>
+	/// <returns>A task that resolves to the label or file path of the verified <paramref name="actual"/> image.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="actual"/> or <paramref name="expected"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeout"/> or <paramref name="retryInterval"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
+	/// <exception cref="TimeoutException">The initial image capture did not complete before <paramref name="timeout"/> expired.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public static Task<string> VerifyAsync(GoldenInput actual, GoldenInput expected, GoldenOptions? options = null,
+		TimeSpan? timeout = null, TimeSpan? retryInterval = null, CancellationToken cancellationToken = default)
 	{
 		if (actual == null) throw new ArgumentNullException(nameof(actual));
 		if (expected == null) throw new ArgumentNullException(nameof(expected));
+		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
+		if (retryInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(retryInterval));
 
 		options = GoldenOptions.OrDefault(options);
 		GoldenInput.Image? expectedImage = null;
-		return RetryAsync(actual, timeout, cancellationToken,
+		return RetryAsync(actual, timeout, retryInterval, cancellationToken,
 			(image, report) => VerifyCore(null, image, expectedImage ??= expected.Read(), options, report));
 	}
 
@@ -279,20 +323,24 @@ public sealed class Golden
 
 	private static async Task<string> RetryAsync(
 		GoldenInput input,
-		TimeSpan timeout,
+		TimeSpan? timeout,
+		TimeSpan? retryInterval,
 		CancellationToken cancellationToken,
 		Func<GoldenInput.Image, bool, bool> verify)
 	{
 		if (input == null) throw new ArgumentNullException(nameof(input));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
 
+		var limit = timeout ?? DefaultTimeout;
+		var delay = retryInterval ?? DefaultRetryInterval;
 		var clock = Stopwatch.StartNew();
 		GoldenInput.Image? actual = null;
+		var attempts = 0;
 		while (true)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			var remaining = timeout - clock.Elapsed;
-			if (remaining <= TimeSpan.Zero)
+			var remaining = limit - clock.Elapsed;
+			if (remaining <= TimeSpan.Zero && attempts != 1)
 			{
 				if (actual == null)
 					throw new TimeoutException("The image capture deadline expired before capture completed.");
@@ -302,7 +350,11 @@ public sealed class Golden
 
 			try
 			{
-				actual = await WaitAsync(input.ReadAsync(), remaining, cancellationToken);
+				attempts++;
+				actual = await WaitAsync(
+					input.ReadAsync(),
+					remaining > TimeSpan.Zero ? remaining : DefaultTimeout,
+					cancellationToken);
 			}
 			catch (TimeoutException) when (actual != null && !cancellationToken.IsCancellationRequested)
 			{
@@ -311,13 +363,15 @@ public sealed class Golden
 			}
 			if (verify(actual, false))
 				return actual.Label;
+			if (attempts == 1)
+				continue;
 
-			remaining = timeout - clock.Elapsed;
+			remaining = limit - clock.Elapsed;
 			if (remaining > TimeSpan.Zero)
 				await Task.Delay(
-					remaining < TimeSpan.FromMilliseconds(100)
+					remaining < delay
 						? remaining
-						: TimeSpan.FromMilliseconds(100),
+						: delay,
 					cancellationToken);
 		}
 	}

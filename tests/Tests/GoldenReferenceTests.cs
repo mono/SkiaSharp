@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 		{
 			var result = Resolve(new[] { "mac/18.2.0/Text.png", "mac/Text.png" }, "mac", "Text");
 			Assert.Equal("mac/Text.png", result.ReferenceKey);
-			Assert.Equal(new[] { "mac/Text.png" }, result.Attempts);
+			Assert.Equal(new[] { "mac/Text.png" }, result.CandidateKeys);
 		}
 
 		[Fact]
@@ -67,7 +67,7 @@ namespace SkiaSharp.Tests
 				"mac/26.1.0/Group/Text.arm64.png", "mac/26.1.0/Group/Text.png",
 				"mac/Group/Text.arm64.png", "mac/Group/Text.png",
 				"portable/Group/Text.arm64.png", "portable/Group/Text.png",
-			}, result.Attempts);
+			}, result.CandidateKeys);
 			Assert.Contains("Golden request: mac at 18.2.1/Group/Text", result.Describe());
 			Assert.Contains("MISSING reference", result.Describe());
 			Assert.Throws<InvalidOperationException>(() => result.ReadBytes());
@@ -135,7 +135,7 @@ namespace SkiaSharp.Tests
 				"portable/Text.ganesh-metal.arm64.png", "portable/Text.ganesh-gl.x64.png",
 			}, "portable", "Text", architecture: "arm64", variant: "ganesh-gl");
 			Assert.Null(missing.ReferenceKey);
-			Assert.Equal(ordered, missing.Attempts);
+			Assert.Equal(ordered, missing.CandidateKeys);
 		}
 
 		[Theory]
@@ -242,17 +242,6 @@ namespace SkiaSharp.Tests
 				"macos", "Maui/home", new Version(12, 6), "arm64", "raster");
 			Assert.Equal("portable/Maui/home.raster.png", result.ReferenceKey);
 			Assert.Equal("mac/Maui/home.raster.arm64.png", result.CaptureKey);
-			Assert.StartsWith(
-				"##SKIA-GOLDEN## role=actual key=mac/Maui/home.raster.arm64.png size=1x2 base64=",
-				result.FormatMarker("actual", OneByTwoPng()));
-		}
-
-		private static byte[] OneByTwoPng()
-		{
-			using var bitmap = new SKBitmap(1, 2);
-			using var image = SKImage.FromBitmap(bitmap);
-			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-			return data.ToArray();
 		}
 
 		public void Dispose()

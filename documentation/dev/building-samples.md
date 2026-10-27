@@ -109,8 +109,7 @@ SampleImage.Host("Web/output").Verify(
 
 await SampleImage.Browser("Blazor/cpu").VerifyAsync(
     GoldenInput.Capture(app.Screenshot),
-    SampleImage.DefaultTimeout,
-    TestContext.Current.CancellationToken);
+    cancellationToken: TestContext.Current.CancellationToken);
 ```
 
 Samples use zero channel tolerance and allow 0.075% differing pixels by

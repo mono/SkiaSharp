@@ -48,8 +48,8 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
             await app.WaitForElement(".canvas-container canvas");
             await SampleImage.Browser("Blazor/cpu").VerifyAsync(
                 GoldenInput.Capture(app.Screenshot),
-                TimeSpan.FromSeconds(10),
-                TestContext.Current.CancellationToken);
+                timeout: TimeSpan.FromSeconds(10),
+                cancellationToken: TestContext.Current.CancellationToken);
         });
 
     [Fact]
@@ -191,8 +191,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                     return actual;
                 }),
                 GoldenInput.Path(expected),
-                SampleImage.DefaultTimeout,
-                TestContext.Current.CancellationToken);
+                cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Equal(2, attempts);
             Assert.True(File.Exists(matched));
@@ -220,8 +219,7 @@ public class BrowserSampleRunTests : DotNetSampleTestBase
                     case "screenshot":
                         await SampleImage.Browser("Web/page").VerifyAsync(
                             GoldenInput.Capture(app.Screenshot),
-                            SampleImage.DefaultTimeout,
-                            TestContext.Current.CancellationToken);
+                            cancellationToken: TestContext.Current.CancellationToken);
                         break;
                 }
             }));
