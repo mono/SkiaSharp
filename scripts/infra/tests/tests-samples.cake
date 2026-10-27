@@ -6,6 +6,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/msbuild.cake"
 #load "tests-shared.cake"
 #load "tests-shared-apple.cake"
+#load "tests-shared-android.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
@@ -24,6 +25,14 @@ if (APPIUM_MODE != "all" && !APPIUM_RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Select an Appium run group ({string.Join(", ", APPIUM_RUN_GROUPS)}) with an explicit phase.");
 
 string OWNED_IOS_SIMULATOR = null;
+string OWNED_ANDROID_AVD = null;
+string OWNED_ANDROID_SERIAL = null;
+
+Setup(context =>
+{
+    if (TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase) && RUN_GROUP == "Android")
+        StopCIAndroidEmulators();
+});
 
 void SetupSampleDevices()
 {
@@ -38,6 +47,9 @@ void SetupSampleDevices()
 
 Teardown(context =>
 {
+    if (TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase) && RUN_GROUP == "Android" && !IsCakeListingCommand())
+        TeardownAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, context.ThrownException);
+
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
         TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
     }
