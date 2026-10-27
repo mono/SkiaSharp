@@ -322,18 +322,18 @@ public class SampleImageTests : IDisposable
             {
                 if (++attempts == 1)
                 {
-                    Thread.Sleep(250);
+                    Thread.Sleep(150);
                 }
                 else
                 {
-                    await Task.Delay(20, TestContext.Current.CancellationToken);
                     File.Copy(expected, actual, overwrite: true);
+                    await Task.Delay(20, TestContext.Current.CancellationToken);
                 }
                 return actual;
             }),
             GoldenInput.Path(expected),
             new(expectedSize: new(4, 4)),
-            TimeSpan.FromMilliseconds(200),
+            TimeSpan.FromMilliseconds(100),
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(2, attempts);

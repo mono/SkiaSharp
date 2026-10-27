@@ -7,6 +7,8 @@ namespace SkiaSharp.Tests.Shared;
 public sealed class Golden
 {
 	private const string MarkerPrefix = "##SKIA-GOLDEN##";
+	private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
+	private static readonly TimeSpan DefaultRetryInterval = TimeSpan.FromMilliseconds(100);
 
 	private readonly Func<byte[]>? readReference;
 
@@ -329,8 +331,8 @@ public sealed class Golden
 		if (input == null) throw new ArgumentNullException(nameof(input));
 		if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
 
-		var limit = timeout ?? TimeSpan.FromSeconds(5);
-		var delay = retryInterval ?? TimeSpan.FromMilliseconds(100);
+		var limit = timeout ?? DefaultTimeout;
+		var delay = retryInterval ?? DefaultRetryInterval;
 		var clock = Stopwatch.StartNew();
 		GoldenInput.Image? actual = null;
 		var attempts = 0;
@@ -351,7 +353,7 @@ public sealed class Golden
 				attempts++;
 				actual = await WaitAsync(
 					input.ReadAsync(),
-					attempts == 2 ? limit : remaining,
+					remaining > TimeSpan.Zero ? remaining : DefaultTimeout,
 					cancellationToken);
 			}
 			catch (TimeoutException) when (actual != null && !cancellationToken.IsCancellationRequested)
