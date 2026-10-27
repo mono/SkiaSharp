@@ -216,6 +216,11 @@ namespace SkiaSharp.Views.Windows
 			if (designMode)
 				return;
 
+			// A redraw queued before the last unload would otherwise pin a new buffer that no unload frees; loading
+			// invalidates again.
+			if (loadUnloadCounter == 0)
+				return;
+
 			if (!isVisible)
 				return;
 
