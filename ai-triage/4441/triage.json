@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4441,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-27T04:27:03Z",
+    "currentLabels": [
+      "tenet/performance",
+      "partner/agentic-workflows",
+      "perf/memory-leak"
+    ]
+  },
+  "summary": "The issue reports that SKRuntimeEffectUniforms.Reset() replaced its internally owned SKData buffer without disposing the previous native allocation, causing repeated resets to retain buffers until finalization.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.99
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.99
+    },
+    "tenets": [
+      "tenet/performance"
+    ],
+    "perf": [
+      "perf/memory-leak"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "Repeated Reset() calls retain the previous native SkData allocation until finalization.",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKRuntimeEffectUniforms instance with at least one uniform.",
+        "Capture its internal SKData buffer and call Reset().",
+        "Verify that the previous buffer is disposed immediately rather than remaining registered until finalization."
+      ],
+      "codeSnippets": [
+        "data = SKData.Create(data.Size);"
+      ],
+      "relatedIssues": [
+        4782
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4442",
+          "description": "Open PR originally linked from this issue."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/4782",
+          "description": "Later duplicate report closed after the same repair was merged."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4783",
+          "description": "Merged PR that disposes the replaced uniform buffer."
+        }
+      ]
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.99,
+      "reason": "The current Reset() implementation saves the old SKData, assigns a replacement, and disposes the old buffer. The matching regression test is present, and mono/SkiaSharp#4783 was merged for the same defect.",
+      "relatedPRs": [
+        4442,
+        4783
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The original defect was an ownership leak: Reset() overwrote the SKRuntimeEffectUniforms-owned SKData field without disposing its previous native wrapper. Current source retains the old reference, creates the replacement, then disposes the old buffer, and the regression test verifies the old native handle is deregistered immediately.",
+    "rationale": "This is a managed SkiaSharp defect in an internal owned native buffer, so it is a bug in area/SkiaSharp. Repeated calls can accumulate native allocations until finalization, making perf/memory-leak and tenet/performance applicable. The checked-in repair and regression test, together with the merged matching mono/SkiaSharp#4783, establish that the issue is already fixed.",
+    "keySignals": [
+      {
+        "text": "old data never disposed",
+        "source": "issue body",
+        "interpretation": "The report identifies replacement of an owned native buffer without deterministic disposal."
+      },
+      {
+        "text": "var old = data; data = SKData.Create(old.Size); old.Dispose();",
+        "source": "binding/SkiaSharp/SKRuntimeEffect.cs",
+        "interpretation": "The current implementation performs the required dispose-then-replace operation."
+      },
+      {
+        "text": "ResetDisposesPreviousUniformBuffer",
+        "source": "tests/Tests/SkiaSharp/SKRuntimeEffectTest.cs",
+        "interpretation": "A targeted regression test verifies immediate deregistration of the old buffer after Reset()."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKRuntimeEffect.cs",
+        "lines": "388-397",
+        "finding": "Reset() returns for an empty buffer; otherwise it stores the existing SKData, creates the replacement from its size, and calls Dispose() on the previous buffer.",
+        "relevance": "direct"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKRuntimeEffectTest.cs",
+        "lines": "395-427",
+        "finding": "ResetDisposesPreviousUniformBuffer captures the private buffer, calls Reset(), and asserts that the former handle is no longer registered before disposing the uniforms instance.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKRuntimeEffect.cs",
+        "lines": "350-361, 450-451",
+        "finding": "The class initializes its SKData field for uniform storage and exposes a Dispose() method that disposes the current field, confirming the class owns the buffer lifecycle.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Until consuming a build that contains the repair, avoid repeatedly calling Reset() on the same uniform collection when deterministic native-memory release is required."
+    ],
+    "resolution": {
+      "hypothesis": "The prior implementation lost the only deterministic owner reference to the old SKData during Reset(), deferring native release to finalization.",
+      "proposals": [
+        {
+          "title": "Close as fixed by the merged uniform-buffer disposal repair",
+          "description": "The current implementation and its regression test contain the required dispose-then-replace behavior, matching the repair merged in mono/SkiaSharp#4783.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.99,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Close as fixed by the merged uniform-buffer disposal repair",
+      "recommendedReason": "The root cause, code repair, and regression coverage are all present in the current repository."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.99,
+      "reason": "The defect is repaired and covered by a current regression test; mono/SkiaSharp#4783 was merged for the identical leak."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the bug, core SkiaSharp, performance, and memory-leak labels.",
+        "risk": "low",
+        "confidence": 0.99,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/performance",
+          "perf/memory-leak"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link the later identical issue that was closed after the merged repair.",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 4782
+      },
+      {
+        "type": "close-issue",
+        "description": "Close the issue as fixed by the merged repair.",
+        "risk": "medium",
+        "confidence": 0.99,
+        "stateReason": "completed"
+      }
+    ]
+  }
+}
