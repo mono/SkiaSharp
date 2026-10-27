@@ -146,14 +146,16 @@ Task("sync-ANGLE")
             Unzip(nupkgPath, package.Path);
             DeleteFile(nupkgPath);
         }
+        CopyDirectory(WEBVIEW2_PATH.Combine("lib"), WINAPPSDK_PATH.Combine("lib"));
+        CopyDirectory(WEBVIEW2_PATH.Combine("build/native/include"), WINAPPSDK_PATH.Combine("include"));
+        DeleteDirectory(WEBVIEW2_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
 
         var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
         var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
         RunProcess(vcvarsall,
             $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
             $"-File \"{generateScript}\" " +
-            $"-Path \"{WINAPPSDK_PATH}\" -WebView2Path \"{WEBVIEW2_PATH}\" " +
-            $"-WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
+            $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
         FileWriteText(stamp, "");
     }
 });

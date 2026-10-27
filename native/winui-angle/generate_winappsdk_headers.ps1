@@ -10,17 +10,11 @@
     Must be run in a vcvarsall environment so midlrt can find cl.exe.
 
 .PARAMETER Path
-    Root of the extracted Microsoft.WindowsAppSDK NuGet package.
-
-.PARAMETER WebView2Path
-    Root of the extracted Microsoft.Web.WebView2 NuGet package.
+    Root of the merged Microsoft.WindowsAppSDK and Microsoft.Web.WebView2 metadata.
 #>
 param(
     [Parameter(Mandatory)]
     [string] $Path,
-
-    [Parameter(Mandatory)]
-    [string] $WebView2Path,
 
     [Parameter(Mandatory)]
     [string] $WindowsSdkVersion
@@ -42,13 +36,6 @@ if ($selectedSdkVersion -ne $sdkVersion) {
     throw "vcvarsall selected Windows SDK $selectedSdkVersion, expected $sdkVersion."
 }
 
-# Dependency packages also ship native interop headers that cannot be generated
-# from WINMD. Merge those with the generated headers.
-$dependencyIncludePaths = Get-ChildItem $WebView2Path -Directory -Filter 'include' -Recurse
-foreach ($dependencyIncludePath in $dependencyIncludePaths) {
-    Copy-Item (Join-Path $dependencyIncludePath.FullName '*') $includePath -Recurse -Force
-}
-
 $winSdkBin = Join-Path $winSdkDir "bin\$sdkVersion\x64"
 $winmdidl = Join-Path $winSdkBin 'winmdidl.exe'
 $midlrt = Join-Path $winSdkBin 'midlrt.exe'
@@ -61,13 +48,7 @@ Write-Host "WinAppSDK path: $Path"
 
 Push-Location $includePath
 try {
-    # Scan package metadata and lib directories so WINMD references can resolve
-    # across the Windows App SDK and its dependencies.
-    $metadataRoots = @($Path, $WebView2Path) |
-        ForEach-Object { Get-ChildItem $_ -Directory -Recurse } |
-        Where-Object { $_.Name -in @('lib', 'metadata') }
-    $packageWinmdFiles = @($metadataRoots |
-        ForEach-Object { Get-ChildItem $_ -Filter '*.winmd' -Recurse })
+    $packageWinmdFiles = @(Get-ChildItem $libPath -Filter '*.winmd' -Recurse)
     $dependencyMetadataDirs = $packageWinmdFiles | ForEach-Object { $_.DirectoryName }
     $metadataDirs = @(
         'C:\Windows\System32\WinMetadata'
