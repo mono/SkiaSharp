@@ -1,6 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/angle");
 DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
+DirectoryPath WEBVIEW2_PATH = ROOT_PATH.Combine("externals/webview2");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
 string ANGLE_REVISION = GetVersion("ANGLE", "revision");
@@ -127,15 +128,27 @@ Task("sync-ANGLE")
     }
 
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
-    var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdkVersion}/microsoft.windowsappsdk.{winappsdkVersion}.nupkg";
-    var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/microsoft.windowsappsdk.{winappsdkVersion}.nupkg");
-    var generatedHeader = WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h");
-    var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{WINDOWS_SDK_VERSION}.stamp");
-    if (!FileExists(generatedHeader) || !FileExists(stamp)) {
+    var webview2Version = GetVersion("Microsoft.Web.WebView2", "release");
+    var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{webview2Version}-{WINDOWS_SDK_VERSION}.stamp");
+    if (!FileExists(stamp)) {
         CleanDirectory(WINAPPSDK_PATH);
-        DownloadFile(nugetUrl, nupkgPath);
-        Unzip(nupkgPath, WINAPPSDK_PATH);
-        DeleteFile(nupkgPath);
+        CleanDirectory(WEBVIEW2_PATH);
+        var packages = new[] {
+            new { Id = "Microsoft.WindowsAppSDK", Version = winappsdkVersion, Path = WINAPPSDK_PATH },
+            new { Id = "Microsoft.Web.WebView2", Version = webview2Version, Path = WEBVIEW2_PATH },
+        };
+        foreach (var package in packages) {
+            var packageId = package.Id.ToLowerInvariant();
+            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
+            var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/{packageId}.{package.Version}.nupkg");
+            DownloadFile(nugetUrl, nupkgPath);
+            EnsureDirectoryExists(package.Path);
+            Unzip(nupkgPath, package.Path);
+            DeleteFile(nupkgPath);
+        }
+        CopyDirectory(WEBVIEW2_PATH.Combine("lib"), WINAPPSDK_PATH.Combine("lib"));
+        CopyDirectory(WEBVIEW2_PATH.Combine("build/native/include"), WINAPPSDK_PATH.Combine("include"));
+        DeleteDirectory(WEBVIEW2_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
 
         var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
         var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));

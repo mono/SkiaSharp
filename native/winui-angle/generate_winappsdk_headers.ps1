@@ -10,7 +10,7 @@
     Must be run in a vcvarsall environment so midlrt can find cl.exe.
 
 .PARAMETER Path
-    Root of the extracted Microsoft.WindowsAppSDK NuGet package.
+    Root of the merged Microsoft.WindowsAppSDK and Microsoft.Web.WebView2 metadata.
 #>
 param(
     [Parameter(Mandatory)]
@@ -24,8 +24,8 @@ $ErrorActionPreference = 'Stop'
 
 $includePath = Join-Path $Path 'include'
 $libPath = Join-Path $Path 'lib'
-$uapVersion = '10.0.18362'
 
+# Validate the vcvarsall-selected SDK and locate its metadata tools.
 $winSdkDir = $env:WindowsSdkDir
 if (!$winSdkDir) { throw 'vcvarsall did not set WindowsSdkDir.' }
 if (!$env:WindowsSDKVersion) { throw 'vcvarsall did not set WindowsSDKVersion.' }
@@ -48,18 +48,15 @@ Write-Host "WinAppSDK path: $Path"
 
 Push-Location $includePath
 try {
-    $metadataDirs = @(
-        'C:\Windows\System32\WinMetadata'
-        (Join-Path $libPath "uap$uapVersion")
-        (Join-Path $libPath 'uap10.0')
-    )
-    foreach ($directory in $metadataDirs) {
-        if (!(Test-Path $directory -PathType Container)) { throw "Missing metadata directory: $directory" }
-    }
-
+    # Discover the merged App SDK and WebView2 metadata and build its resolver search path.
     $winmdFiles = @(Get-ChildItem $libPath -Filter '*.winmd' -Recurse)
+    $systemMetadataDir = 'C:\Windows\System32\WinMetadata'
+    $packageMetadataDirs = $winmdFiles | Select-Object -ExpandProperty DirectoryName
+    $metadataDirs = (@($systemMetadataDir) + $packageMetadataDirs) | Select-Object -Unique
+
     if (!$winmdFiles.Count) { throw "No WINMD files found under $libPath" }
 
+    # Convert every package WINMD into ABI IDL files in a clean intermediate directory.
     $abiIdlPath = Join-Path $includePath 'winmdidl'
     if (Test-Path $abiIdlPath) {
         Remove-Item $abiIdlPath -Recurse -Force
@@ -76,6 +73,7 @@ try {
     if (!$abiIdls.Count) { throw "winmdidl produced no ABI IDLs under $abiIdlPath" }
     $abiIdls | Copy-Item -Destination $includePath -Force
 
+    # Select the ANGLE namespaces and follow their local imports to form the required IDL set.
     $idlFiles = Get-ChildItem $includePath -Filter '*.idl' |
         Where-Object { $_.Name -like 'Microsoft.UI*.idl' -or $_.Name -like 'Microsoft.Graphics*.idl' } |
         Select-Object -ExpandProperty Name
@@ -100,13 +98,14 @@ try {
         }
     }
 
+    # Compile the required IDLs into C++ ABI headers in the include root consumed by ANGLE.
     foreach ($idl in ($requiredIdls | Sort-Object)) {
-        $noExt = [System.IO.Path]::GetFileNameWithoutExtension($idl)
         Write-Host "  midlrt: $idl"
         & $midlrt $idl /metadata_dir C:\Windows\System32\WinMetadata /ns_prefix /nomidl /nologo
         if ($LASTEXITCODE -ne 0) { throw "midlrt failed for $idl (exit code $LASTEXITCODE)." }
     }
 
+    # Verify the core headers used by ANGLE before marking generation complete.
     foreach ($header in @('Microsoft.Foundation.h', 'Microsoft.UI.Dispatching.h', 'Microsoft.UI.Xaml.h')) {
         if (!(Test-Path (Join-Path $includePath $header))) { throw "Missing required ANGLE header: $header" }
     }
