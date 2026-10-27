@@ -109,7 +109,14 @@ public sealed class ManagedStreamsFuzzer : IFuzzer
 	private static void DeserializePicture(Stream stream)
 	{
 		using var picture = SKPicture.Deserialize(stream);
-		PictureDeserializeFuzzer.ExercisePicture(picture);
+		if (picture is null)
+			return;
+
+		using var bitmap = new SKBitmap(64, 64);
+		using var canvas = new SKCanvas(bitmap);
+		canvas.Clear(SKColors.Transparent);
+		canvas.DrawPicture(picture);
+		canvas.Flush();
 	}
 
 	private static void CreateTypeface(Stream stream)
