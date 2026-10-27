@@ -11,7 +11,8 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     if (IsCakeListingCommand())
         return;
 
-    ListAndroidDevices();
+    if (BuildSystem.IsLocalBuild)
+        ListAndroidDevices();
 
     if (ownedAvd != null || ownedSerial != null)
         throw new InvalidOperationException("This Cake run already owns an Android emulator.");
@@ -32,8 +33,6 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         System.Runtime.InteropServices.Architecture.Arm64 => "arm64-v8a",
         _ => throw new ArgumentException("Android emulators require an arm64 or x64 host."),
     };
-
-    StopCIAndroidEmulators();
 
     var port = AndroidEmulatorPort();
     ownedAvd = $"SkiaSharp-Tests-{Guid.NewGuid():N}";
@@ -58,10 +57,12 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         };
         RunProcess("dotnet", settings);
 
-        ListAndroidDevices();
-        if (!AndroidDeviceSerials().Contains(ownedSerial, StringComparer.Ordinal))
-            throw new Exception($"Android startup did not list the expected owned emulator: {ownedSerial} ({ownedAvd}).");
-    } catch (Exception error) {
+        if (BuildSystem.IsLocalBuild) {
+            ListAndroidDevices();
+            if (!AndroidDeviceSerials().Contains(ownedSerial, StringComparer.Ordinal))
+                throw new Exception($"Android startup did not list the expected owned emulator: {ownedSerial} ({ownedAvd}).");
+        }
+    } catch (Exception error) when (BuildSystem.IsLocalBuild) {
         TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, error);
         throw;
     }
@@ -149,19 +150,20 @@ int AndroidEmulatorPort()
 
 void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Exception originalError)
 {
-    if (ownedAvd == null)
-        return;
-
     try {
         // The released CLI has no strict stop operation. Keep direct ADB cleanup-only.
         if (!BuildSystem.IsLocalBuild) {
             try {
-                if (ownedSerial != null)
+                if (ownedAvd != null && ownedSerial != null)
                     LogAndroidDeviceProperties(ownedAvd, ownedSerial);
             } finally {
                 StopCIAndroidEmulators();
             }
-        } else if (ownedSerial != null) {
+        }
+        if (ownedAvd == null)
+            return;
+
+        if (BuildSystem.IsLocalBuild && ownedSerial != null) {
             var serial = ownedSerial;
             var sdk = EnvironmentVariable("ANDROID_HOME");
             if (string.IsNullOrWhiteSpace(sdk))
