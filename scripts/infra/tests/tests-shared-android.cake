@@ -88,6 +88,20 @@ string[] AndroidDeviceSerials()
     return json.RootElement.EnumerateArray().Select(device => device.GetProperty("serial").GetString()).ToArray();
 }
 
+void LogAndroidDeviceProperties(string ownedAvd, string ownedSerial)
+{
+    Information("Android cleanup identity: expected AVD {0}, serial {1}.",
+        System.Text.Json.JsonSerializer.Serialize(ownedAvd), System.Text.Json.JsonSerializer.Serialize(ownedSerial));
+    var settings = AndroidCommandSettings("device", "info", "--id",
+        "^" + System.Text.RegularExpressions.Regex.Escape(ownedSerial) + "$", "--format", "json");
+    settings.Timeout = 30000;
+    settings.EnvironmentVariables = new Dictionary<string, string> {
+        ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = System.IO.Path.Combine(
+            ROOT_OUTPUT_PATH.FullPath, "logs", "android", ownedAvd, "android-cleanup.log"),
+    };
+    RunProcess("dotnet", settings);
+}
+
 void StopCIAndroidEmulators()
 {
     if (BuildSystem.IsLocalBuild || IsCakeListingCommand())
@@ -140,7 +154,12 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
     try {
         // The released CLI has no strict stop operation. Keep direct ADB cleanup-only.
         if (!BuildSystem.IsLocalBuild) {
-            StopCIAndroidEmulators();
+            try {
+                if (ownedSerial != null)
+                    LogAndroidDeviceProperties(ownedAvd, ownedSerial);
+            } finally {
+                StopCIAndroidEmulators();
+            }
         } else if (ownedSerial != null) {
             var serial = ownedSerial;
             var sdk = EnvironmentVariable("ANDROID_HOME");
@@ -161,7 +180,9 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
                     if (identity.Length == 0)
                         identity = Property("ro.kernel.qemu.avd_name");
                     if (identity != ownedAvd)
-                        throw new Exception($"Cleanup refused: {ownedSerial} does not identify owned AVD {ownedAvd}.");
+                        throw new Exception($"Cleanup refused: {ownedSerial} identifies AVD " +
+                            $"{System.Text.Json.JsonSerializer.Serialize(identity)}, expected " +
+                            $"{System.Text.Json.JsonSerializer.Serialize(ownedAvd)}.");
                     Information("Stopping owned Android emulator {0} ({1}).", serial, ownedAvd);
                     RunProcess(adb, new ProcessSettings {
                         Arguments = new ProcessArgumentBuilder().Append("-s").AppendQuoted(serial).Append("emu kill"),
@@ -187,7 +208,10 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
                         .Append("shell getprop").Append(property),
                     Timeout = 30000,
                 }, out var output);
-                return string.Join("\n", output).Trim();
+                var raw = string.Join("\n", output);
+                Information("Android cleanup {0} {1}: raw {2}, trimmed {3}.", serial, property,
+                    System.Text.Json.JsonSerializer.Serialize(raw), System.Text.Json.JsonSerializer.Serialize(raw.Trim()));
+                return raw.Trim();
             }
 
             bool ConsolePortAvailable()
