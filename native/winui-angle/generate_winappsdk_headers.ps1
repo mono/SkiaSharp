@@ -47,16 +47,11 @@ Write-Host "WinAppSDK path: $Path"
 
 Push-Location $includePath
 try {
-    $packageWinmdFiles = @(Get-ChildItem $libPath -Filter '*.winmd' -Recurse)
-    $metadataDirs = @(
-        'C:\Windows\System32\WinMetadata'
-    ) + ($packageWinmdFiles | ForEach-Object { $_.DirectoryName })
-    $metadataDirs = $metadataDirs | Select-Object -Unique
-    foreach ($directory in $metadataDirs) {
-        if (!(Test-Path $directory -PathType Container)) { throw "Missing metadata directory: $directory" }
-    }
+    $winmdFiles = @(Get-ChildItem $libPath -Filter '*.winmd' -Recurse)
+    $systemMetadataDir = 'C:\Windows\System32\WinMetadata'
+    $packageMetadataDirs = $winmdFiles | Select-Object -ExpandProperty DirectoryName
+    $metadataDirs = (@($systemMetadataDir) + $packageMetadataDirs) | Select-Object -Unique
 
-    $winmdFiles = $packageWinmdFiles
     if (!$winmdFiles.Count) { throw "No WINMD files found under $libPath" }
 
     $abiIdlPath = Join-Path $includePath 'winmdidl'
