@@ -23,7 +23,6 @@ source instead (see [AGENTS.md](../../AGENTS.md)); never use `externals-download
 **Windows or Linux x64** (runs natively; `libfuzzer-dotnet` is downloaded into `externals/fuzzing`):
 
 ```bash
-dotnet tool restore   # SharpFuzz.CommandLine is pinned in .config/dotnet-tools.json
 dotnet cake --target=fuzzing --fuzzerTarget=image-streams --fuzzerMaxTime=60
 ```
 

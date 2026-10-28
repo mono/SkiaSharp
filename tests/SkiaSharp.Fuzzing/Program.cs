@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -88,12 +87,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 	{
 		CopyDirectory(buildDirectory, dropDirectory);
 		foreach (var assembly in targetAssemblies)
-		{
-			using var process = Process.Start("dotnet", ["tool", "run", "sharpfuzz", "--", Path.Combine(dropDirectory, assembly)])!;
-			process.WaitForExit();
-			if (process.ExitCode != 0)
-				throw new InvalidOperationException($"Failed to instrument '{assembly}' (exit code {process.ExitCode}).");
-		}
+			Fuzzer.Instrument(Path.Combine(dropDirectory, assembly), static _ => true, Options.Value);
 		return;
 	}
 
