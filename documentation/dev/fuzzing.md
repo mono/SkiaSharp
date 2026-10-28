@@ -108,11 +108,15 @@ native branches.
 A finding is anything libFuzzer reports: an unhandled managed exception, a native crash or access violation, a hang
 (over the timeout), or an out-of-memory condition.
 
-### Why we fuzz when OSS-Fuzz already fuzzes Skia
+### Why we fuzz when OSS-Fuzz already fuzzes Skia and HarfBuzz
 
-Google's OSS-Fuzz continuously fuzzes native Skia and HarfBuzz (see `externals/skia/fuzz/oss_fuzz/`). That does not
-cover what SkiaSharp adds on top. Those C++ fuzzers hand an `SkMemoryStream` or raw pointer straight to the engine, so
-they never touch:
+Google's [OSS-Fuzz](https://github.com/google/oss-fuzz) continuously fuzzes native
+[Skia](https://github.com/google/oss-fuzz/tree/master/projects/skia) (see [Skia fuzzing docs](https://skia.org/docs/dev/testing/fuzz/)
+and [`externals/skia/fuzz/oss_fuzz/`](../../externals/skia/fuzz/oss_fuzz)) and
+[HarfBuzz](https://github.com/google/oss-fuzz/tree/master/projects/harfbuzz) (see
+[`harfbuzz/test/fuzzing`](https://github.com/harfbuzz/harfbuzz/tree/main/test/fuzzing)). That does not
+cover what SkiaSharp adds on top. Those C++ fuzzers hand an `SkMemoryStream`, `hb_blob_t`, or raw pointer straight to
+the native engine, so they never touch:
 
 - SkiaSharp's own **C# parsers**, such as `SKColor.TryParse`, `SKPath.ParseSvgPathData`, and the HarfBuzz `Tag`/`Feature`
   parsers.
@@ -407,7 +411,7 @@ Once a crash is downloaded to `output/fuzzing/local/crashes/`, replay it with th
 - [Google Fuzzing: Splitting inputs](https://github.com/google/fuzzing/blob/master/docs/split-inputs.md)
 - [LLVM libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html)
 - [`dotnet/runtime` fuzzing documentation](https://github.com/dotnet/runtime/blob/main/src/libraries/Fuzzing/README.md)
-- [Skia fuzzing documentation](https://skia.org/docs/dev/testing/fuzz/) and the upstream OSS-Fuzz targets in
-  [`externals/skia/fuzz/oss_fuzz/`](../../externals/skia/fuzz/oss_fuzz)
+- [Skia fuzzing documentation](https://skia.org/docs/dev/testing/fuzz/), [OSS-Fuzz Skia project](https://github.com/google/oss-fuzz/tree/master/projects/skia), and the upstream targets in [`externals/skia/fuzz/oss_fuzz/`](../../externals/skia/fuzz/oss_fuzz)
+- [HarfBuzz fuzzing suite](https://github.com/harfbuzz/harfbuzz/tree/main/test/fuzzing) and [OSS-Fuzz HarfBuzz project](https://github.com/google/oss-fuzz/tree/master/projects/harfbuzz)
 - [SharpFuzz](https://github.com/Metalnem/sharpfuzz) and
   [libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer-dotnet)
