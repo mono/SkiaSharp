@@ -201,7 +201,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void FailingWriteStream_ReturnsFalseWithoutAbortingProcess()
 		{
-			using var failing = new FailingWriteStream();
+			using var failing = new ThrowingWriteStream();
 			using var wstream = new SKManagedWStream(failing);
 
 			Assert.False(wstream.Write(new byte[] { 1, 2, 3 }, 3));
@@ -219,7 +219,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void FlushFailure_LatchesFaultAndRejectsSubsequentWrites()
 		{
-			using var failingFlush = new FailingFlushStream();
+			using var failingFlush = new ThrowingWriteStream(throwOnWrite: false, throwOnFlush: true);
 			using var wstream = new SKManagedWStream(failingFlush);
 
 			Assert.True(wstream.Write(new byte[] { 1, 2, 3 }, 3));
@@ -242,47 +242,6 @@ namespace SkiaSharp.Tests
 			Assert.True(wstream.OnWrite(IntPtr.Zero, (IntPtr)16));
 			Assert.Equal(16, wstream.BytesWritten);
 			Assert.Equal(new byte[16], ms.ToArray());
-		}
-
-		private sealed class FailingFlushStream : MemoryStream
-		{
-			public override void Flush() => throw new IOException("Simulated flush error.");
-		}
-
-		private sealed class FailingWriteStream : Stream
-		{
-			public override bool CanRead => false;
-			public override bool CanSeek => false;
-			public override bool CanWrite => true;
-			public override long Length => throw new NotSupportedException();
-			public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-			public override void Flush() => throw new IOException("Simulated flush error.");
-			public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-			public override void SetLength(long value) => throw new NotSupportedException();
-			public override void Write(byte[] buffer, int offset, int count) => throw new IOException("Simulated write error.");
-		}
-
-		private sealed class NonSeekableWriteOnlyStream : Stream
-		{
-			private readonly MemoryStream inner = new MemoryStream();
-
-			public byte[] ToArray() => inner.ToArray();
-
-			public override bool CanRead => false;
-			public override bool CanSeek => false;
-			public override bool CanWrite => true;
-			public override long Length => throw new NotSupportedException();
-			public override long Position
-			{
-				get => throw new NotSupportedException();
-				set => throw new NotSupportedException();
-			}
-			public override void Flush() => inner.Flush();
-			public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-			public override void SetLength(long value) => throw new NotSupportedException();
-			public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
 		}
 	}
 }
