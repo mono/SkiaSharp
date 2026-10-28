@@ -1,37 +1,30 @@
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace SkiaSharp.Fuzzing;
 
 /// <summary>
 /// Stages bundled seed files from <c>{setup_dir}/seeds/&lt;target&gt;/</c> into OneFuzz's watched
-/// <c>task_inputs_0</c> directory when the assembly loads on a worker VM, so seeds committed to
-/// the repository flow into the cloud corpus automatically without manual container uploads.
+/// <c>task_inputs_0</c> directory on worker startup, so seeds committed to the repository flow into
+/// the cloud corpus automatically without manual container uploads.
 /// </summary>
-internal static class FuzzSeeds
+public static class FuzzSeeds
 {
-	[ModuleInitializer]
-	internal static void Initialize()
+	private static int initialized;
+
+	public static void EnsureInitialized(string fuzzerName)
 	{
+		if (Interlocked.Exchange(ref initialized, 1) != 0)
+			return;
+
 		var inputsDirectory = Path.Combine(Environment.CurrentDirectory, "task_inputs_0");
 		if (!Directory.Exists(inputsDirectory))
 			return;
 
-		var targetClass = Environment.GetEnvironmentVariable("LIBFUZZER_DOTNET_TARGET_CLASS")
-			?? Environment.GetEnvironmentVariable("LIBFUZZER_DOTNET_TARGET")?.Split(':').ElementAtOrDefault(1);
-		if (string.IsNullOrEmpty(targetClass))
-			return;
-
-		var type = typeof(IFuzzer).Assembly.GetType(targetClass);
-		if (type is null || !type.IsAssignableTo(typeof(IFuzzer)))
-			return;
-
-		var fuzzer = FuzzerDescriptor.Create(type);
 		var seedsDirectory = Path.Combine(
 			Path.GetDirectoryName(typeof(IFuzzer).Assembly.Location)!,
 			"seeds",
-			fuzzer.Name);
+			fuzzerName);
 		if (!Directory.Exists(seedsDirectory))
 			return;
 
@@ -42,5 +35,15 @@ internal static class FuzzSeeds
 			File.Copy(seedFile, tempFile, overwrite: true);
 			File.Move(tempFile, destinationFile, overwrite: true);
 		}
+	}
+}
+
+public static class FuzzSeeds<TFuzzer>
+	where TFuzzer : IFuzzer
+{
+	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+	{
+		FuzzSeeds.EnsureInitialized(TFuzzer.Name);
+		TFuzzer.FuzzTarget(bytes);
 	}
 }

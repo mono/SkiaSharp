@@ -143,7 +143,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 				{
 					["$type"] = "libfuzzerDotNet",
 					["Dll"] = "SkiaSharp.Fuzzing.dll",
-					["Class"] = fuzzer.Type.FullName,
+					["Class"] = $"{typeof(FuzzSeeds<>).FullName}[[{fuzzer.Type.FullName}]]",
 					["Method"] = nameof(IFuzzer.FuzzTarget),
 					["FuzzingTargetBinaries"] = binaries
 				},
