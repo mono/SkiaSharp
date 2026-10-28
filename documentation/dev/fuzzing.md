@@ -49,9 +49,11 @@ To replay through libFuzzer instead (instrumented, same as the fuzz run), pass `
 the repo root and can be a file or a directory:
 
 ```bash
+# Windows or Linux x64
 dotnet cake --target=fuzzing --fuzzerTarget=image-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
-./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=image-streams \
-    --fuzzerInput=output/fuzzing/local/crashes/crash-123
+
+# macOS / Docker
+./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=image-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
 ```
 
 ### Built-in fuzzers
@@ -377,8 +379,7 @@ Seeds are uploaded once per target and read by every submission. Re-upload after
 
 ```bash
 ./scripts/infra/security/fuzzing/onefuzz.ps1 containers create --name skiasharp-image-streams-seeds
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir \
-    skiasharp-image-streams-seeds tests/SkiaSharp.Fuzzing/seeds/image-streams
+./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir skiasharp-image-streams-seeds tests/SkiaSharp.Fuzzing/seeds/image-streams
 ```
 
 ### Submit a drop from the CLI
