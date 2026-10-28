@@ -40,7 +40,6 @@ internal static class FuzzSeeds
 			var destinationFile = Path.Combine(inputsDirectory, Path.GetFileName(seedFile));
 			var tempFile = Path.Combine(Environment.CurrentDirectory, $".seed-{Guid.NewGuid():N}.tmp");
 			File.Copy(seedFile, tempFile, overwrite: true);
-			File.Delete(destinationFile);
 			File.Move(tempFile, destinationFile, overwrite: true);
 		}
 	}
