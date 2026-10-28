@@ -1,9 +1,7 @@
 #nullable disable
 
 using System;
-using System.Buffers;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -80,9 +78,17 @@ namespace SkiaSharp
 			try {
 				if (buffer != IntPtr.Zero) {
 					var src = (byte*)buffer;
+#if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP2_1_OR_GREATER
+					using var scratch = Utils.RentArray<byte> ((int)Math.Min (count, (ulong)SKData.CopyBufferSize));
+#endif
 					for (var left = count; left > 0;) {
 						var toWrite = (int)Math.Min (left, (ulong)SKData.CopyBufferSize);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
 						stream.Write (new ReadOnlySpan<byte> (src, toWrite));
+#else
+						new ReadOnlySpan<byte> (src, toWrite).CopyTo (scratch.Span);
+						stream.Write (scratch.Array, 0, toWrite);
+#endif
 						bytesWritten += (ulong)toWrite;
 						left -= (ulong)toWrite;
 						src += toWrite;
