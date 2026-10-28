@@ -72,7 +72,7 @@ namespace SkiaSharp.Tests
 			Assert.False(stream.OwnsHandle);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -80,18 +80,18 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			var exists = SKObject.GetInstance<SKManagedStream>(handle, out _);
-			Assert.False(exists);
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
-			IntPtr DoWork()
+			void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var dotnet = CreateTestStream();
 				var stream = new SKManagedStream(dotnet, true);
-				return stream.Handle;
+				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 			}
 		}
 
@@ -347,7 +347,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -367,7 +367,7 @@ namespace SkiaSharp.Tests
 			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
 			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -377,17 +377,18 @@ namespace SkiaSharp.Tests
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
-			DoWork(out var codecH, out var streamH);
+			DoWork(out var codecH, out var weakCodec, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKManagedStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
-			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var codec = CreateCodec(out streamHandle);
+				var codec = CreateCodec(out streamHandle, out streamRef);
 				codecHandle = codec.Handle;
+				codecRef = new WeakReference(codec);
 
 				CollectGarbage();
 
@@ -397,12 +398,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKManagedStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
 				Assert.True(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(codec);
 			}
 
-			SKCodec CreateCodec(out IntPtr streamHandle)
+			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedStream(new MemoryStream(bytes), true);
 				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
@@ -555,7 +559,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			dupe2.Dispose();
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, dupe2);
 
 			dupe1.Dispose();
 		}
@@ -565,13 +569,13 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakDupe);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakDupe);
 
-			IntPtr DoWork()
+			void DoWork(out IntPtr dupeHandle, out WeakReference dupeRef)
 			{
 				var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 				var stream = new SKManagedStream(dotnet, true);
@@ -588,7 +592,8 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, dupe2.ReadByte());
 				Assert.Equal(2, dupe2.ReadByte());
 
-				return dupe2.Handle;
+				dupeHandle = dupe2.Handle;
+				dupeRef = new WeakReference(dupe2);
 			}
 		}
 

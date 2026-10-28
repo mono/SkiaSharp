@@ -190,6 +190,23 @@ namespace SkiaSharp.Tests
 					$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
 		}
 
+		// Asserts that an unrooted wrapper has been garbage-collected (finalized/disposed) and
+		// deregistered from HandleDictionary, without failing if a concurrent test reuses the
+		// freed native pointer for a new wrapper.
+		public static void AssertCollected (IntPtr handle, WeakReference instance)
+		{
+			var target = instance.Target as SKObject;
+			if (target != null)
+				Assert.True (
+					target.IsDisposed,
+					$"Expected {target.GetType ().Name} (handle 0x{handle.ToString ("x")}) to be collected and disposed, but it is still alive.");
+
+			if (HandleDictionary.GetInstance<SKObject> (handle, out var found))
+				Assert.False (
+					ReferenceEquals (found, target),
+					$"Collected wrapper is still registered under handle 0x{handle.ToString ("x")}.");
+		}
+
 		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests and the
 		// managed-stream concurrency tests. Those tests need one worker that PARKS inside a gated window while a SECOND worker
 		// concurrently registers a replacement for the same handle. On the mobile interpreter runtimes

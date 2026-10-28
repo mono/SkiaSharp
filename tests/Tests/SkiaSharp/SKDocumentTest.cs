@@ -200,15 +200,15 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void StreamIsNotCollectedPrematurely()
 		{
-			DoWork(out var handle);
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
-			static void DoWork(out IntPtr streamHandle)
+			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				using (var document = CreateDocument(out streamHandle))
+				using (var document = CreateDocument(out streamHandle, out streamRef))
 				{
 					using (var pageCanvas = document.BeginPage(792, 842))
 					{
@@ -225,10 +225,11 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(streamHandle, out _));
 			}
 
-			static SKDocument CreateDocument(out IntPtr streamHandle)
+			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKDynamicMemoryWStream();
 				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 
 				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
 			}

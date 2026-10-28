@@ -683,19 +683,20 @@ namespace SkiaSharp.Tests
 			var bitmap = CreateTestBitmap();
 			var image = SKImage.FromBitmap(bitmap);
 
-			var handle = DoEncode();
+			DoEncode(out var handle, out var weakData);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKData>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakData);
 
-			IntPtr DoEncode()
+			void DoEncode(out IntPtr dataHandle, out WeakReference dataRef)
 			{
 				var result = image.Encode();
 				Assert.NotNull(result);
 				Assert.Equal(1, result.GetReferenceCount());
 
-				return result.Handle;
+				dataHandle = result.Handle;
+				dataRef = new WeakReference(result);
 			}
 		}
 

@@ -318,7 +318,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(typeface.GetTableTags());
 
 			typeface.Dispose();
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -339,7 +339,7 @@ namespace SkiaSharp.Tests
 			// IsDisposed->IgnorePublicDispose rename was correct for the success/reparent path but wrong
 			// for this failure path, where there is no new owner to protect the wrapper for.)
 			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -375,11 +375,11 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var font = CreateFont(out var typefaceHandle);
+			var font = CreateFont(out var typefaceHandle, out var weakTypeface);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(typefaceHandle, weakTypeface);
 
 			var tf = font.Typeface;
 
@@ -387,7 +387,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKFont CreateFont(out IntPtr handle)
+			SKFont CreateFont(out IntPtr handle, out WeakReference typefaceRef)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -395,6 +395,7 @@ namespace SkiaSharp.Tests
 
 				var typeface = SKTypeface.FromStream(stream);
 				handle = typeface.Handle;
+				typefaceRef = new WeakReference(typeface);
 
 				return new SKFont
 				{
@@ -428,18 +429,19 @@ namespace SkiaSharp.Tests
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 			var dotnet = new MemoryStream(bytes);
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 
-			IntPtr DoWork()
+			void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedStream(dotnet, true);
 				var typeface = SKTypeface.FromStream(stream);
-				return stream.Handle;
+				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 			}
 		}
 
@@ -450,17 +452,18 @@ namespace SkiaSharp.Tests
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 
-			DoWork(out var typefaceH, out var streamH);
+			DoWork(out var typefaceH, out var weakTypeface, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(typefaceH, weakTypeface);
 
-			void DoWork(out IntPtr typefaceHandle, out IntPtr streamHandle)
+			void DoWork(out IntPtr typefaceHandle, out WeakReference typefaceRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var typeface = CreateTypeface(out streamHandle);
+				var typeface = CreateTypeface(out streamHandle, out streamRef);
 				typefaceHandle = typeface.Handle;
+				typefaceRef = new WeakReference(typeface);
 
 				CollectGarbage();
 
@@ -469,12 +472,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
 				Assert.True(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(typeface);
 			}
 
-			SKTypeface CreateTypeface(out IntPtr streamHandle)
+			SKTypeface CreateTypeface(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKMemoryStream(bytes);
 				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
@@ -559,13 +565,13 @@ namespace SkiaSharp.Tests
 			SkipOnNonWindows("Test uses Windows-specific font path");
 			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakTypeface);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKTypeface>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakTypeface);
 
-			static IntPtr DoWork()
+			static void DoWork(out IntPtr typefaceHandle, out WeakReference typefaceRef)
 			{
 				var tf1 = SKTypeface.FromFamilyName("Times New Roman");
 				var tf2 = SKTypeface.FromFamilyName("Times New Roman");
@@ -587,7 +593,8 @@ namespace SkiaSharp.Tests
 				Assert.Equal(IntPtr.Zero, tf3.Handle);
 				Assert.True(tf3.IsDisposed);
 
-				return tf1.Handle;
+				typefaceHandle = tf1.Handle;
+				typefaceRef = new WeakReference(tf1);
 			}
 		}
 

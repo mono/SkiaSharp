@@ -49,18 +49,18 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			var exists = SKObject.GetInstance<SKManagedWStream>(handle, out _);
-			Assert.False(exists);
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
-			static IntPtr DoWork()
+			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var dotnet = new MemoryStream();
 				var stream = new SKManagedWStream(dotnet, true);
-				return stream.Handle;
+				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 			}
 		}
 
@@ -113,17 +113,18 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			DoWork(out var docH, out var streamH);
+			DoWork(out var docH, out var weakDoc, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKManagedWStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKDocument>(docH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(docH, weakDoc);
 
-			static void DoWork(out IntPtr documentHandle, out IntPtr streamHandle)
+			static void DoWork(out IntPtr documentHandle, out WeakReference documentRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var document = CreateDocument(out streamHandle);
+				var document = CreateDocument(out streamHandle, out streamRef);
 				documentHandle = document.Handle;
+				documentRef = new WeakReference(document);
 
 				CollectGarbage();
 
@@ -134,12 +135,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKManagedWStream>(streamHandle, out var stream));
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(document);
 			}
 
-			static SKDocument CreateDocument(out IntPtr streamHandle)
+			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedWStream(new MemoryStream(), true);
 				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);

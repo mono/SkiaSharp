@@ -124,7 +124,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -144,7 +144,7 @@ namespace SkiaSharp.Tests
 			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
 			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -154,17 +154,18 @@ namespace SkiaSharp.Tests
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
-			DoWork(out var codecH, out var streamH);
+			DoWork(out var codecH, out var weakCodec, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
-			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var codec = CreateCodec(out streamHandle);
+				var codec = CreateCodec(out streamHandle, out streamRef);
 				codecHandle = codec.Handle;
+				codecRef = new WeakReference(codec);
 
 				CollectGarbage();
 
@@ -174,12 +175,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
 				Assert.True(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(codec);
 			}
 
-			SKCodec CreateCodec(out IntPtr streamHandle)
+			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKMemoryStream(bytes);
 				streamHandle = stream.Handle;
+				streamRef = new WeakReference(stream);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);

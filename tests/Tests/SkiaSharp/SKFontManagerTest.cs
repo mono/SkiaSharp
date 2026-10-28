@@ -122,11 +122,11 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var paint = CreateFont(out var typefaceHandle);
+			var paint = CreateFont(out var typefaceHandle, out var weakTypeface);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(typefaceHandle, weakTypeface);
 
 			var tf = paint.Typeface;
 
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKFont CreateFont(out IntPtr handle)
+			SKFont CreateFont(out IntPtr handle, out WeakReference typefaceRef)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
@@ -142,6 +142,7 @@ namespace SkiaSharp.Tests
 
 				var typeface = SKFontManager.Default.CreateTypeface(stream);
 				handle = typeface.Handle;
+				typefaceRef = new WeakReference(typeface);
 
 				return new SKFont
 				{
@@ -281,13 +282,13 @@ namespace SkiaSharp.Tests
 			SkipOnNonWindows("Test uses Windows-specific font path");
 			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakTypeface);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKTypeface>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakTypeface);
 
-			static IntPtr DoWork()
+			static void DoWork(out IntPtr typefaceHandle, out WeakReference typefaceRef)
 			{
 				var fonts = SKFontManager.Default;
 
@@ -311,7 +312,8 @@ namespace SkiaSharp.Tests
 				Assert.Equal(IntPtr.Zero, tf3.Handle);
 				Assert.True(tf3.IsDisposed);
 
-				return tf1.Handle;
+				typefaceHandle = tf1.Handle;
+				typefaceRef = new WeakReference(tf1);
 			}
 		}
 
