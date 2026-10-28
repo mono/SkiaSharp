@@ -26,12 +26,12 @@ public class PooledByteBufferTest
 	[Theory]
 	[InlineData(false)]
 	[InlineData(true)]
-	public void PartialAdvancesReuseTheCurrentChunk(bool afterFullFirstChunk)
+	public void PartialAdvancesReuseTheCurrentDataBuffer(bool afterFullFirstBuffer)
 	{
 		var pool = new TrackingPool();
 		{
 			using var buffer = new PooledByteBuffer(pool);
-			if (afterFullFirstChunk)
+			if (afterFullFirstBuffer)
 			{
 				var prefix = buffer.GetBuffer();
 				buffer.Advance(prefix.Count);
@@ -42,17 +42,17 @@ public class PooledByteBufferTest
 			var remaining = buffer.GetBuffer();
 			Assert.Same(first.Array, remaining.Array);
 			Assert.Equal(17, remaining.Offset);
-			Assert.Equal(PooledByteBuffer.ChunkSize - 17, remaining.Count);
+			Assert.Equal(PooledByteBuffer.DataBufferSize - 17, remaining.Count);
 			remaining.AsSpan().Slice(0, 3).Fill(84);
 			buffer.Advance(3);
 
-			Assert.Equal((ulong)(afterFullFirstChunk ? PooledByteBuffer.ChunkSize : 0) + 20, buffer.Length);
-			Assert.Equal(!afterFullFirstChunk, buffer.TryGetSingleBuffer(out var single));
-			if (!afterFullFirstChunk)
+			Assert.Equal((ulong)(afterFullFirstBuffer ? PooledByteBuffer.DataBufferSize : 0) + 20, buffer.Length);
+			Assert.Equal(!afterFullFirstBuffer, buffer.TryGetSingleBuffer(out var single));
+			if (!afterFullFirstBuffer)
 				Assert.Equal(20, single.Count);
 			Assert.Equal(42, first.Array[16]);
 			Assert.Equal(84, first.Array[17]);
-			Assert.Equal(afterFullFirstChunk ? 2 : 1, pool.Rents);
+			Assert.Equal(afterFullFirstBuffer ? 2 : 1, pool.Rents);
 		}
 		Assert.Equal(0, pool.Outstanding);
 	}
@@ -63,7 +63,7 @@ public class PooledByteBufferTest
 	[InlineData(18)]
 	[InlineData(49)]
 	[InlineData(50)]
-	public void EnumerationPreservesChunksAcrossMetadataSegments(int count)
+	public void EnumerationPreservesDataAcrossEntryBlocks(int count)
 	{
 		var pool = new TrackingPool();
 		{
@@ -75,14 +75,14 @@ public class PooledByteBufferTest
 				chunk.AsSpan().Slice(0, length).Fill((byte)(i + 1));
 				buffer.Advance(length);
 			}
-			Assert.Equal((ulong)(count - 1) * PooledByteBuffer.ChunkSize + 7, buffer.Length);
+			Assert.Equal((ulong)(count - 1) * PooledByteBuffer.DataBufferSize + 7, buffer.Length);
 			Assert.Equal(count == 1, buffer.TryGetSingleBuffer(out _));
 
-			var expected = new byte[PooledByteBuffer.ChunkSize];
+			var expected = new byte[PooledByteBuffer.DataBufferSize];
 			var index = 0;
 			foreach (var chunk in buffer)
 			{
-				var length = index == count - 1 ? 7 : PooledByteBuffer.ChunkSize;
+				var length = index == count - 1 ? 7 : PooledByteBuffer.DataBufferSize;
 				expected.AsSpan().Fill((byte)(index + 1));
 				Assert.Equal(length, chunk.Count);
 				Assert.True(chunk.AsSpan().SequenceEqual(expected.AsSpan(0, length)));
@@ -96,9 +96,9 @@ public class PooledByteBufferTest
 
 	[Theory]
 	[InlineData(-1, 0)]
-	[InlineData(PooledByteBuffer.ChunkSize + 1, 0)]
+	[InlineData(PooledByteBuffer.DataBufferSize + 1, 0)]
 	[InlineData(int.MaxValue, 0)]
-	[InlineData(PooledByteBuffer.ChunkSize, 1)]
+	[InlineData(PooledByteBuffer.DataBufferSize, 1)]
 	public void AdvanceRejectsInvalidCounts(int count, int alreadyWritten)
 	{
 		var pool = new TrackingPool();
@@ -131,7 +131,7 @@ public class PooledByteBufferTest
 	[InlineData(2)]
 	[InlineData(18)]
 	[InlineData(50)]
-	public void FailedRentDoesNotLosePreviouslyOwnedChunks(int failAtRent)
+	public void FailedRentDoesNotLosePreviouslyOwnedBuffers(int failAtRent)
 	{
 		var pool = new TrackingPool { FailAtRent = failAtRent };
 		Assert.Throws<IOException>(() => FillUntilFailure(pool, failAtRent));

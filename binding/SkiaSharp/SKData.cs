@@ -20,7 +20,7 @@ namespace SkiaSharp
 
 		// Retained chunks use a 64 KiB shared-pool bucket, below the default large object heap threshold.
 		// An 80 KiB request rounds up to 128 KiB, wasting capacity in each chunk held until EOF.
-		internal const int UnknownLengthStreamChunkSize = PooledByteBuffer.ChunkSize;
+		internal const int UnknownLengthStreamChunkSize = PooledByteBuffer.DataBufferSize;
 
 		private static SKData empty;
 		private static bool emptyInitialized;
