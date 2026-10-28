@@ -1,0 +1,19 @@
+<Project>
+  <Target Name="_SkiaSharpPreferNoDependencies"
+          BeforeTargets="_SkiaSharpFilterNativePackageAssets;ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts"
+          DependsOnTargets="ResolvePackageAssets;ResolveTargetingPackAssets">
+    <ItemGroup>
+      <_SkiaSharpNoDependenciesAssets Include="@(NativeCopyLocalItems->WithMetadataValue('NuGetPackageId', 'SkiaSharp.NativeAssets.Linux.NoDependencies'))" />
+      <_SkiaSharpNoDependenciesAssets Include="@(RuntimeTargetsCopyLocalItems->WithMetadataValue('NuGetPackageId', 'SkiaSharp.NativeAssets.Linux.NoDependencies'))" />
+      <_SkiaSharpRegularNative Include="@(NativeCopyLocalItems->WithMetadataValue('NuGetPackageId', 'SkiaSharp.NativeAssets.Linux'))"
+                                Condition="'@(_SkiaSharpNoDependenciesAssets)' != ''" />
+      <_SkiaSharpRegularRuntime Include="@(RuntimeTargetsCopyLocalItems->WithMetadataValue('NuGetPackageId', 'SkiaSharp.NativeAssets.Linux'))"
+                                 Condition="'@(_SkiaSharpNoDependenciesAssets)' != ''" />
+      <NativeCopyLocalItems Remove="@(_SkiaSharpRegularNative)" />
+      <RuntimeTargetsCopyLocalItems Remove="@(_SkiaSharpRegularRuntime)" />
+    </ItemGroup>
+    <PropertyGroup Condition="'@(_SkiaSharpNoDependenciesAssets)' != ''">
+      <PackageConflictPreferredPackages>SkiaSharp.NativeAssets.Linux.NoDependencies;$(PackageConflictPreferredPackages)</PackageConflictPreferredPackages>
+    </PropertyGroup>
+  </Target>
+</Project>

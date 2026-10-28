@@ -49,7 +49,7 @@ For drawing shaped text with SkiaSharp, install `SkiaSharp.HarfBuzz` and use `SK
 dotnet add package SkiaSharp.HarfBuzz
 ```
 
-> **Linux and WebAssembly:** add the matching `HarfBuzzSharp.NativeAssets.*` package directly to the application project when the target does not receive native assets transitively. See the [package deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md).
+> **Linux and WebAssembly:** non-platform targets include both native packages by default. For optional RID-less build/publish filtering of copied native assets (not WebAssembly link inputs), use `HarfBuzzSharpFilterRuntimeIdentifiers` as described in the [package deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md).
 
 ## Documentation and resources
 

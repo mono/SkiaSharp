@@ -12,7 +12,7 @@ Includes Dockerfiles for both Linux and Windows (Nano Server) containers.
 - **`SKCanvas.DrawText`** — Centered text rendered with measured alignment. Text is customizable via command-line argument.
 - **Bundled Noto Sans** — Copies the font to the output directory and loads it with `SKTypeface.FromFile`, so text renders without installed system fonts.
 
-- **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required).
+- **Linux container** — Uses `SkiaSharp.NativeAssets.Linux.NoDependencies` (no system packages required); this direct application reference takes precedence over the regular Linux assets included by SkiaSharp.
 - **Windows container** — Uses `SkiaSharp.NativeAssets.NanoServer` on Nano Server LTSC 2025.
 
 ## Font license

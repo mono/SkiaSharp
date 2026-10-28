@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests.MSBuild.Utils;
 public sealed class DotNet : IDisposable
 {
     private readonly string root;
-    private readonly string cache = Path.Combine(Path.GetTempPath(), $"skiasharp-msbuild-{Guid.NewGuid():N}");
+    private readonly string cache;
     private readonly string host = Setting("DotNetHost");
 
     public string PackageDirectory { get; } = Path.GetFullPath(Setting("PackageDirectory"));
@@ -17,12 +17,17 @@ public sealed class DotNet : IDisposable
     public DotNet()
     {
         root = Path.Combine(Path.GetFullPath(Setting("ArtifactsDirectory")), Guid.NewGuid().ToString("N"));
+        cache = Path.Combine(root, ".cache");
         Directory.CreateDirectory(root);
         File.WriteAllText(Path.Combine(root, "Directory.Build.props"), "<Project />");
         File.WriteAllText(Path.Combine(root, "Directory.Build.targets"), "<Project />");
         File.WriteAllText(Path.Combine(root, "global.json"), JsonSerializer.Serialize(new
         {
-            sdk = new { version = Setting("SdkVersion"), rollForward = "disable" }
+            sdk = new
+            {
+                version = Setting("SdkVersion"),
+                rollForward = "disable"
+            }
         }));
         new XDocument(new XElement("configuration",
             new XElement("packageSources",
@@ -45,22 +50,32 @@ public sealed class DotNet : IDisposable
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
-        File.WriteAllText(Path.Combine(directory, "Program.cs"), "System.Console.WriteLine(\"Package consumer\");");
+        File.WriteAllText(Path.Combine(directory, "Program.cs"), """
+            class Program
+            {
+                static void Main()
+                {
+                }
+            }
+            """);
         return directory;
     }
 
-    public Task Build(string directory, string? framework = null, string? outputDirectory = "output") =>
-        Run(directory, "build", framework: framework, outputDirectory: outputDirectory);
+    public Task Build(string directory, string? rid = null, IReadOnlyDictionary<string, string>? properties = null,
+        string? framework = null, string? outputDirectory = "output") =>
+        Run(directory, "build", rid, properties, framework, outputDirectory);
 
-    public Task Publish(string directory, string? rid = null, string? framework = null,
+    public Task Publish(string directory, string? rid = null, IReadOnlyDictionary<string, string>? properties = null,
+        string? framework = null,
         string? outputDirectory = "output", string? diagnosticLabel = null) =>
-        Run(directory, "publish", rid, framework, outputDirectory, diagnosticLabel);
+        Run(directory, "publish", rid, properties, framework, outputDirectory, diagnosticLabel);
 
     public Task<string> EvaluateNativeFileReferences(string directory) =>
         RunCommand(directory, ["msbuild", "Consumer.csproj", "--nologo", "-getItem:NativeFileReference"],
             TimeSpan.FromMinutes(1));
 
-    private Task<string> Run(string directory, string command, string? rid = null, string? framework = null,
+    private Task<string> Run(string directory, string command, string? rid = null,
+        IReadOnlyDictionary<string, string>? properties = null, string? framework = null,
         string? outputDirectory = "output", string? diagnosticLabel = null)
     {
         var diagnostics = diagnosticLabel is null ? directory : Path.Combine(directory, diagnosticLabel);
@@ -82,6 +97,11 @@ public sealed class DotNet : IDisposable
             arguments.Add("-r");
             arguments.Add(rid);
         }
+        if (properties is not null)
+        {
+            foreach (var (name, value) in properties)
+                arguments.Add($"-p:{name}={value.Replace(";", "%3B")}");
+        }
         return RunCommand(directory, arguments, TimeSpan.FromMinutes(5), diagnosticLabel);
     }
 
@@ -99,11 +119,12 @@ public sealed class DotNet : IDisposable
         };
         foreach (var argument in arguments)
             start.ArgumentList.Add(argument);
-        foreach (var key in start.Environment.Keys.Where(k =>
+        var environmentKeys = start.Environment.Keys.Where(k =>
             k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("Restore", StringComparison.OrdinalIgnoreCase) ||
             k.StartsWith("NUGET_", StringComparison.OrdinalIgnoreCase) ||
-            k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray())
+            k.Equals("NuGetPackageRoot", StringComparison.OrdinalIgnoreCase)).ToArray();
+        foreach (var key in environmentKeys)
             start.Environment.Remove(key);
         start.Environment["NUGET_PACKAGES"] = Path.Combine(cache, "packages");
         start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
