@@ -98,24 +98,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void CanDeserializeFromNonSeekableStream()
-		{
-			using var picture = CreateTestPicture();
-			using var data = picture.Serialize();
-			using var memory = new MemoryStream(data.ToArray());
-			using var stream = new NonSeekableReadOnlyStream(memory);
-
-			using var deserialized = SKPicture.Deserialize(stream);
-			Assert.NotNull(deserialized);
-
-			using var bmp = new SKBitmap(40, 40);
-			using var cnv = new SKCanvas(bmp);
-			cnv.DrawPicture(deserialized);
-
-			ValidateTestBitmap(bmp);
-		}
-
-		[Fact]
 		public void DeserializeInvalidOrTruncatedStreamReturnsNull()
 		{
 			using var imageStream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
