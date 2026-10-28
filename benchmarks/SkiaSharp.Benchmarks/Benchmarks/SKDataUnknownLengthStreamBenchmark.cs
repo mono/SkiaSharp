@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using BenchmarkDotNet.Attributes;
 
@@ -33,6 +34,10 @@ public class SKDataUnknownLengthStreamBenchmark
 		using var filledChunks = CreateBufferedFilledChunks(stream);
 		if (!filledChunks.AsSpan().SequenceEqual(bytes))
 			throw new InvalidOperationException("The batched native stream produced different data.");
+		stream.Position = 0;
+		using var previous = CreateHandRolled(stream);
+		if (!previous.AsSpan().SequenceEqual(bytes))
+			throw new InvalidOperationException("The previous collector produced different data.");
 	}
 
 	[GlobalCleanup]
@@ -60,6 +65,82 @@ public class SKDataUnknownLengthStreamBenchmark
 		stream.Position = 0;
 		using var data = SKData.Create(stream);
 		return data.Size;
+	}
+
+	[Benchmark]
+	public long Previous_HandRolledChunks()
+	{
+		stream.Position = 0;
+		using var data = CreateHandRolled(stream);
+		return data.Size;
+	}
+
+	private static unsafe SKData CreateHandRolled(Stream source)
+	{
+		var chunks = Utils.RentArray<(byte[] Array, int Length)>(8);
+		var chunkCount = 0;
+		ulong totalLength = 0;
+		try
+		{
+			while (true)
+			{
+				if (chunkCount == chunks.Length)
+				{
+					var expanded = Utils.RentArray<(byte[] Array, int Length)>(checked(chunkCount * 2));
+					chunks.Span.CopyTo(expanded.Span);
+					chunks.Span.Clear();
+					chunks.Dispose();
+					chunks = expanded;
+				}
+				var buffer = ArrayPool<byte>.Shared.Rent(SKData.UnknownLengthStreamChunkSize);
+				chunks[chunkCount++] = (buffer, 0);
+				var filled = 0;
+				while (filled < SKData.UnknownLengthStreamChunkSize)
+				{
+					var toRead = SKData.UnknownLengthStreamChunkSize - filled;
+					var read = source.Read(buffer, filled, toRead);
+					if ((uint)read > (uint)toRead)
+						throw new IOException("The stream returned an invalid byte count.");
+					if (read == 0)
+						break;
+					filled += read;
+				}
+				chunks[chunkCount - 1] = (buffer, filled);
+				totalLength = checked(totalLength + (ulong)filled);
+				if (IntPtr.Size == 4 && totalLength > uint.MaxValue)
+					throw new ArgumentOutOfRangeException("length");
+				if (filled < SKData.UnknownLengthStreamChunkSize)
+					break;
+			}
+			if (chunkCount == 1)
+				return SKData.CreateCopy(chunks[0].Array, (ulong)chunks[0].Length);
+			var data = SKData.Create(totalLength);
+			if (data == null)
+				return null;
+			try
+			{
+				var dst = (byte*)data.Data;
+				for (var i = 0; i < chunkCount; i++)
+				{
+					var (buffer, length) = chunks[i];
+					new ReadOnlySpan<byte>(buffer, 0, length).CopyTo(new Span<byte>(dst, length));
+					dst += length;
+				}
+				return data;
+			}
+			catch
+			{
+				data.Dispose();
+				throw;
+			}
+		}
+		finally
+		{
+			for (var i = 0; i < chunkCount; i++)
+				ArrayPool<byte>.Shared.Return(chunks[i].Array);
+			chunks.Span.Clear();
+			chunks.Dispose();
+		}
 	}
 
 	[Benchmark]

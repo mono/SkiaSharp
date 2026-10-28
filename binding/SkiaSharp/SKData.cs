@@ -20,7 +20,7 @@ namespace SkiaSharp
 
 		// Retained chunks use a 64 KiB shared-pool bucket, below the default large object heap threshold.
 		// An 80 KiB request rounds up to 128 KiB, wasting capacity in each chunk held until EOF.
-		internal const int UnknownLengthStreamChunkSize = 64 * 1024;
+		internal const int UnknownLengthStreamChunkSize = PooledByteBuffer.ChunkSize;
 
 		private static SKData empty;
 		private static bool emptyInitialized;
@@ -235,63 +235,43 @@ namespace SkiaSharp
 		private static SKData CreateFromUnknownLengthStream (Stream stream)
 		{
 			// Keep the bytes in pooled chunks until their total length is known, then copy once into SKData.
-			var chunks = Utils.RentArray<(byte[] Array, int Length)> (8);
-			var chunkCount = 0;
-			ulong totalLength = 0;
-			try {
-				while (true) {
-					if (chunkCount == chunks.Length) {
-						var expanded = Utils.RentArray<(byte[] Array, int Length)> (checked (chunkCount * 2));
-						chunks.Span.CopyTo (expanded.Span);
-						chunks.Span.Clear ();
-						chunks.Dispose ();
-						chunks = expanded;
-					}
-
-					var buffer = ArrayPool<byte>.Shared.Rent (UnknownLengthStreamChunkSize);
-					chunks[chunkCount++] = (buffer, 0);
-					var filled = 0;
-					while (filled < UnknownLengthStreamChunkSize) {
-						var toRead = UnknownLengthStreamChunkSize - filled;
-						var readLen = stream.Read (buffer, filled, toRead);
-						if ((uint)readLen > (uint)toRead)
-							throw new IOException ("The stream returned an invalid byte count.");
-						if (readLen == 0)
-							break;
-						filled += readLen;
-					}
-
-					chunks[chunkCount - 1] = (buffer, filled);
-					totalLength = checked (totalLength + (ulong)filled);
-					if (!PlatformConfiguration.Is64Bit && totalLength > UInt32.MaxValue)
-						throw new ArgumentOutOfRangeException ("length", "The length exceeds the size of pointers.");
-					if (filled < UnknownLengthStreamChunkSize)
+			using var chunks = new PooledByteBuffer (ArrayPool<byte>.Shared);
+			while (true) {
+				var buffer = chunks.GetBuffer ();
+				var filled = 0;
+				while (filled < buffer.Count) {
+					var toRead = buffer.Count - filled;
+					var readLen = stream.Read (buffer.Array, buffer.Offset + filled, toRead);
+					if ((uint)readLen > (uint)toRead)
+						throw new IOException ("The stream returned an invalid byte count.");
+					if (readLen == 0)
 						break;
+					filled += readLen;
 				}
 
-				if (chunkCount == 1)
-					return CreateCopy (chunks[0].Array, (ulong)chunks[0].Length);
+				chunks.Advance (filled);
+				if (!PlatformConfiguration.Is64Bit && chunks.Length > UInt32.MaxValue)
+					throw new ArgumentOutOfRangeException ("length", "The length exceeds the size of pointers.");
+				if (filled < buffer.Count)
+					break;
+			}
 
-				var data = Create (totalLength);
-				if (data == null)
-					return null;
-				try {
-					var dst = (byte*)data.Data;
-					for (var i = 0; i < chunkCount; i++) {
-						var (buffer, length) = chunks[i];
-						new ReadOnlySpan<byte> (buffer, 0, length).CopyTo (new Span<byte> (dst, length));
-						dst += length;
-					}
-					return data;
-				} catch {
-					data.Dispose ();
-					throw;
+			if (chunks.TryGetSingleBuffer (out var single))
+				return CreateCopy (single.Array, (ulong)single.Count);
+
+			var data = Create (chunks.Length);
+			if (data == null)
+				return null;
+			try {
+				var dst = (byte*)data.Data;
+				foreach (var buffer in chunks) {
+					new ReadOnlySpan<byte> (buffer.Array, buffer.Offset, buffer.Count).CopyTo (new Span<byte> (dst, buffer.Count));
+					dst += buffer.Count;
 				}
-			} finally {
-				for (var i = 0; i < chunkCount; i++)
-					ArrayPool<byte>.Shared.Return (chunks[i].Array);
-				chunks.Span.Clear ();
-				chunks.Dispose ();
+				return data;
+			} catch {
+				data.Dispose ();
+				throw;
 			}
 		}
 
