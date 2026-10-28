@@ -321,6 +321,141 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, data.ToArray());
 		}
 
+		[Theory]
+		[InlineData(0)]
+		[InlineData(1)]
+		[InlineData(65535)]
+		[InlineData(65536)]
+		[InlineData(65537)]
+		[InlineData(196608)]
+		[InlineData(2097152)]
+		[InlineData(3145728)]
+		[InlineData(10485760)]
+		public void CreateFromUnknownLengthStreamMatchesBufferedReference(int size)
+		{
+			var bytes = new byte[size];
+			for (var i = 0; i < bytes.Length; i++)
+				bytes[i] = (byte)(i * 31 + 7);
+
+			foreach (var maxRead in new[] { int.MaxValue, 997 })
+			{
+				using var actualStream = new ConfigurableTestStream(bytes, canSeek: false, maxBytesPerRead: maxRead);
+				using var expectedStream = new ConfigurableTestStream(bytes, canSeek: false, maxBytesPerRead: maxRead);
+				using var actual = SKData.Create(actualStream);
+				using var expected = CreateFromUnknownLengthBuffered(expectedStream);
+
+				Assert.NotNull(actual);
+				Assert.Equal(expected.Size, actual.Size);
+				Assert.Equal(expected.ToArray(), actual.ToArray());
+				Assert.Equal(bytes, actual.ToArray());
+				Assert.True(actualStream.CanRead);
+				Assert.Equal(1, actualStream.ZeroReadCount);
+			}
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthStreamPreservesOffsetAndEarlyEnd()
+		{
+			var bytes = new byte[3 * 1024 * 1024];
+			new Random(42).NextBytes(bytes);
+			using var inner = new ConfigurableTestStream(bytes, maxBytesPerRead: 997, earlyEndPosition: 2 * 1024 * 1024 + 17);
+			inner.Position = 7;
+			using var stream = new NonSeekableReadOnlyStream(inner);
+			using var data = SKData.Create(stream);
+
+			Assert.Equal(2 * 1024 * 1024 + 10, data.Size);
+			Assert.True(data.AsSpan().SequenceEqual(bytes.AsSpan(7, (int)data.Size)));
+			Assert.Equal(2 * 1024 * 1024 + 17, inner.Position);
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthStreamDoesNotRetainPooledBuffers()
+		{
+			var bytes = new byte[2 * 1024 * 1024];
+			bytes.AsSpan().Fill(123);
+			using var firstStream = new ConfigurableTestStream(bytes, canSeek: false);
+			using var first = SKData.Create(firstStream);
+
+			bytes.AsSpan().Fill(234);
+			using var secondStream = new ConfigurableTestStream(bytes, canSeek: false);
+			using var second = SKData.Create(secondStream);
+
+			Assert.Equal(bytes, second.ToArray());
+			bytes.AsSpan().Fill(123);
+			Assert.Equal(bytes, first.ToArray());
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthSeekableStreamReadsToEnd()
+		{
+			var bytes = new byte[2 * 1024 * 1024 + 17];
+			new Random(42).NextBytes(bytes);
+			using var stream = new ConfigurableTestStream(bytes, maxBytesPerRead: 997, reportedLength: -1);
+			using var data = SKData.Create(stream);
+
+			Assert.Equal(bytes, data.ToArray());
+			Assert.Equal(bytes.Length, stream.Position);
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(int.MaxValue)]
+		public void CreateFromUnknownLengthStreamRejectsInvalidCountsAfterFullChunks(int invalidReturn)
+		{
+			using var stream = new FailingAfterReadStream(196608, invalidReturn);
+			Assert.Throws<IOException>(() => SKData.Create(stream));
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthStreamPropagatesExceptionAfterFullChunks()
+		{
+			using var stream = new FailingAfterReadStream(196608);
+			Assert.Throws<IOException>(() => SKData.Create(stream));
+		}
+
+		private static SKData CreateFromUnknownLengthBuffered(Stream stream)
+		{
+			using var memory = new SKDynamicMemoryWStream();
+			using var buffer = Utils.RentArray<byte>(SKData.CopyBufferSize);
+			while (true)
+			{
+				var readLen = stream.Read(buffer.Span);
+				if ((uint)readLen > (uint)buffer.Length)
+					throw new IOException("The stream returned an invalid byte count.");
+				if (readLen == 0)
+					break;
+				if (!memory.Write(buffer.Array, readLen))
+					return null;
+			}
+			return memory.DetachAsData();
+		}
+
+		private sealed class FailingAfterReadStream : MemoryStream
+		{
+			private readonly int? invalidReturn;
+
+			public FailingAfterReadStream(int length, int? invalidReturn = null)
+				: base(new byte[length], writable: false)
+			{
+				this.invalidReturn = invalidReturn;
+			}
+
+			public override bool CanSeek => false;
+
+			public override int Read(byte[] buffer, int offset, int count) =>
+				Position == Length ? Fail(count) : base.Read(buffer, offset, count);
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+			public override int Read(Span<byte> buffer) =>
+				Position == Length ? Fail(buffer.Length) : base.Read(buffer);
+#endif
+
+			private int Fail(int count) =>
+				invalidReturn.HasValue
+					? invalidReturn == int.MaxValue ? count + 1 : invalidReturn.Value
+					: throw new IOException("Simulated failure after reading full chunks.");
+		}
+
 		[Fact]
 		public void CreateFromSeekableStream_HandlesEarlyEndAndPositionPastLength()
 		{

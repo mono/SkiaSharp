@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -187,18 +188,71 @@ namespace SkiaSharp
 				return CreateFromStream (stream, (ulong)remaining, failOnEarlyEof: false);
 			}
 
-			using var memory = new SKDynamicMemoryWStream ();
-			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
-			while (true) {
-				var readLen = stream.Read (buffer.Span);
-				if ((uint)readLen > (uint)buffer.Length)
-					throw new IOException ("The stream returned an invalid byte count.");
-				if (readLen == 0)
-					break;
-				if (!memory.Write (buffer.Array, readLen))
+			return CreateFromUnknownLengthStream (stream);
+		}
+
+		private static SKData CreateFromUnknownLengthStream (Stream stream)
+		{
+			// Keep the bytes in pooled chunks until their total length is known, then copy once into SKData.
+			var chunks = Utils.RentArray<(byte[] Array, int Length)> (8);
+			var chunkCount = 0;
+			const int chunkSize = 64 * 1024;
+			ulong totalLength = 0;
+			try {
+				while (true) {
+					if (chunkCount == chunks.Length) {
+						var expanded = Utils.RentArray<(byte[] Array, int Length)> (checked (chunkCount * 2));
+						chunks.Span.CopyTo (expanded.Span);
+						chunks.Span.Clear ();
+						chunks.Dispose ();
+						chunks = expanded;
+					}
+
+					var buffer = ArrayPool<byte>.Shared.Rent (chunkSize);
+					chunks[chunkCount++] = (buffer, 0);
+					var filled = 0;
+					while (filled < chunkSize) {
+						var toRead = chunkSize - filled;
+						var readLen = stream.Read (buffer, filled, toRead);
+						if ((uint)readLen > (uint)toRead)
+							throw new IOException ("The stream returned an invalid byte count.");
+						if (readLen == 0)
+							break;
+						filled += readLen;
+					}
+
+					chunks[chunkCount - 1] = (buffer, filled);
+					totalLength = checked (totalLength + (ulong)filled);
+					if (!PlatformConfiguration.Is64Bit && totalLength > UInt32.MaxValue)
+						throw new ArgumentOutOfRangeException ("length", "The length exceeds the size of pointers.");
+					if (filled < chunkSize)
+						break;
+				}
+
+				if (chunkCount == 1)
+					return CreateCopy (chunks[0].Array, (ulong)chunks[0].Length);
+
+				var data = Create (totalLength);
+				if (data == null)
 					return null;
+				try {
+					var dst = (byte*)data.Data;
+					for (var i = 0; i < chunkCount; i++) {
+						var (buffer, length) = chunks[i];
+						new ReadOnlySpan<byte> (buffer, 0, length).CopyTo (new Span<byte> (dst, length));
+						dst += length;
+					}
+					return data;
+				} catch {
+					data.Dispose ();
+					throw;
+				}
+			} finally {
+				for (var i = 0; i < chunkCount; i++)
+					ArrayPool<byte>.Shared.Return (chunks[i].Array);
+				chunks.Span.Clear ();
+				chunks.Dispose ();
 			}
-			return memory.DetachAsData ();
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
