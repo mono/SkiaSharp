@@ -9,6 +9,9 @@ namespace HarfBuzzSharp;
 namespace SkiaSharp;
 #endif
 
+// Holds all buffers until disposal; pool reuse favors repeated, moderate-size input.
+// Large inputs can outgrow pool retention and cause allocation/GC churn; consider native dynamic-stream staging instead.
+// The crossover depends on runtime, memory pressure and concurrency, not a fixed size threshold.
 internal ref struct PooledByteBuffer
 {
 	// An exact shared-pool bucket below the default LOH threshold; 80 KiB would rent 128 KiB.
