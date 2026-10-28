@@ -13,6 +13,8 @@ internal ref struct PooledByteBuffer
 {
 	// An exact shared-pool bucket below the default LOH threshold; 80 KiB would rent 128 KiB.
 	internal const int DataBufferSize = 64 * 1024;
+	// Start with the shared pool's 16-entry bucket (~256 bytes of entries on 64-bit).
+	// Those entries describe 1 MiB of data beyond the inline buffer.
 	private const int InitialEntryBlockCapacity = 16;
 	// Geometric entry-block growth reaches managed array-size limits before this directory fills.
 	private const int MaxEntryBlocks = 32;
