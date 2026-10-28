@@ -29,6 +29,10 @@ public class SKDataUnknownLengthStreamBenchmark
 		using var candidate = SKData.Create(stream);
 		if (!candidate.AsSpan().SequenceEqual(bytes) || !candidate.AsSpan().SequenceEqual(old.AsSpan()))
 			throw new InvalidOperationException("The benchmark implementations produced different data.");
+		stream.Position = 0;
+		using var filledChunks = CreateBufferedFilledChunks(stream);
+		if (!filledChunks.AsSpan().SequenceEqual(bytes))
+			throw new InvalidOperationException("The batched native stream produced different data.");
 	}
 
 	[GlobalCleanup]
@@ -56,6 +60,39 @@ public class SKDataUnknownLengthStreamBenchmark
 		stream.Position = 0;
 		using var data = SKData.Create(stream);
 		return data.Size;
+	}
+
+	[Benchmark]
+	public long DynamicStream_FilledChunks()
+	{
+		stream.Position = 0;
+		using var data = CreateBufferedFilledChunks(stream);
+		return data.Size;
+	}
+
+	private static SKData CreateBufferedFilledChunks(Stream source)
+	{
+		using var memory = new SKDynamicMemoryWStream();
+		using var buffer = Utils.RentArray<byte>(64 * 1024);
+		while (true)
+		{
+			var filled = 0;
+			while (filled < buffer.Length)
+			{
+				var toRead = buffer.Length - filled;
+				var read = source.Read(buffer.Array, filled, toRead);
+				if ((uint)read > (uint)toRead)
+					throw new IOException("The stream returned an invalid byte count.");
+				if (read == 0)
+					break;
+				filled += read;
+			}
+			if (!memory.Write(buffer.Array, filled))
+				return null;
+			if (filled < buffer.Length)
+				break;
+		}
+		return memory.DetachAsData();
 	}
 
 	private static SKData CreateBuffered(Stream source, bool useArrayRead)
