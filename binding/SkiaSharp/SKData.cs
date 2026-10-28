@@ -14,7 +14,8 @@ namespace SkiaSharp
 	/// <remarks><para>Not only is the data immutable, but the actual pointer that is returned by the <see cref="P:SkiaSharp.SKData.Data" /> property is guaranteed to always be the same for the life of this instance.</para><para>The <see cref="M:SkiaSharp.SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this <see cref="T:SkiaSharp.SKData" /> and allows for .NET APIs to scan the contents of the <see cref="T:SkiaSharp.SKData" /> as a stream.</para></remarks>
 	public unsafe class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
-		// Match Stream.CopyTo's 80 KiB transfer window. This bounds each read/write, not the size of a pooled array.
+		// Preserve the 80 KiB transfer limit, matching Stream.CopyTo's default buffer request.
+		// Unlike Stream.CopyTo, these loops do not use the full (potentially larger) rented array.
 		internal const int CopyBufferSize = 80 * 1024;
 
 		// Retained chunks use a 64 KiB shared-pool bucket, below the default large object heap threshold.
