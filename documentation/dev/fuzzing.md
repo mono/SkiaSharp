@@ -87,26 +87,23 @@ Local outputs, all under `output/fuzzing/local/`:
 
 ## What is fuzzing, and why fuzz SkiaSharp?
 
-### How it works here
+### Fuzzers vs. unit tests
 
 A coverage-guided fuzzer mutates inputs, watches which code paths each input reaches, and keeps the inputs that reach
 something new. Over millions of cheap iterations it finds the odd inputs a human would never write.
 
-For .NET that takes two pieces:
+| | Unit test | Fuzzer |
+|---|-----------|--------|
+| Input | One known input you chose | Open-ended space explored by mutation |
+| Asserts | A specific expected output | "Nothing bad happens" |
+| Good for | Edge cases you can name: null or empty, disposal order, missing files | Bugs you cannot predict: unhandled exceptions, native crashes, hangs, OOM |
+| Runs | Every CI build, in seconds | Continuously, for hours or days |
 
-- **[SharpFuzz](https://github.com/Metalnem/sharpfuzz)** rewrites the managed assemblies at the IL level so each branch
-  reports coverage. The `fuzzing` target instruments `SkiaSharp.dll`, `HarfBuzzSharp.dll`, `SkiaSharp.Skottie.dll`,
-  `SkiaSharp.Resources.dll`, and `SkiaSharp.SceneGraph.dll`.
-- **[libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer-dotnet)** bridges LLVM's libFuzzer mutation engine to the
-  managed process. It runs our harness as a child and hands each input over shared memory to
-  `FuzzTarget(ReadOnlySpan<byte> bytes)`, in-process, with no process spawn per iteration.
+They complement each other. **Every bug a fuzzer finds should leave two things behind:**
 
-Coverage is only collected from managed code. The native libraries (`libSkiaSharp`, `libHarfBuzzSharp`) are not
-instrumented, so a fuzzer finds native bugs only by driving them from C# and seeing a crash or hang, not by guiding on
-native branches.
-
-A finding is anything libFuzzer reports: an unhandled managed exception, a native crash or access violation, a hang
-(over the timeout), or an out-of-memory condition.
+1. A deterministic regression unit test in `tests/Tests/` that reproduces it without any fuzzing tooling.
+2. The minimized crashing input added as a seed in `tests/SkiaSharp.Fuzzing/seeds/<target>/`, so the fuzzer keeps
+   exploring around it.
 
 ### Why we fuzz when OSS-Fuzz already fuzzes Skia and HarfBuzz
 
@@ -130,20 +127,23 @@ fuzzers do not: native codecs take different paths for seekable and non-seekable
 claims it cannot seek triggers behavior a memory stream never will. This is why the stream fuzzers run every input in
 both modes.
 
-### Fuzzers vs. unit tests
+### How it works in SkiaSharp
 
-| | Unit test | Fuzzer |
-|---|-----------|--------|
-| Input | One known input you chose | Open-ended space explored by mutation |
-| Asserts | A specific expected output | "Nothing bad happens" |
-| Good for | Edge cases you can name: null or empty, disposal order, missing files | Bugs you cannot predict: unhandled exceptions, native crashes, hangs, OOM |
-| Runs | Every CI build, in seconds | Continuously, for hours or days |
+For .NET, coverage-guided fuzzing takes two pieces:
 
-They complement each other. **Every bug a fuzzer finds should leave two things behind:**
+- **[SharpFuzz](https://github.com/Metalnem/sharpfuzz)** rewrites the managed assemblies at the IL level so each branch
+  reports coverage. The `fuzzing` target instruments `SkiaSharp.dll`, `HarfBuzzSharp.dll`, `SkiaSharp.Skottie.dll`,
+  `SkiaSharp.Resources.dll`, and `SkiaSharp.SceneGraph.dll`.
+- **[libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer-dotnet)** bridges LLVM's libFuzzer mutation engine to the
+  managed process. It runs our harness as a child and hands each input over shared memory to
+  `FuzzTarget(ReadOnlySpan<byte> bytes)`, in-process, with no process spawn per iteration.
 
-1. A deterministic regression unit test in `tests/Tests/` that reproduces it without any fuzzing tooling.
-2. The minimized crashing input added as a seed in `tests/SkiaSharp.Fuzzing/seeds/<target>/`, so the fuzzer keeps
-   exploring around it.
+Coverage is only collected from managed code. The native libraries (`libSkiaSharp`, `libHarfBuzzSharp`) are not
+instrumented, so a fuzzer finds native bugs only by driving them from C# and seeing a crash or hang, not by guiding on
+native branches.
+
+A finding is anything libFuzzer reports: an unhandled managed exception, a native crash or access violation, a hang
+(over the timeout), or an out-of-memory condition.
 
 ---
 
@@ -155,21 +155,51 @@ These rules combine Google's
 [`dotnet/runtime` fuzzing](https://github.com/dotnet/runtime/blob/main/src/libraries/Fuzzing/README.md), and the
 patterns in upstream Skia's [`fuzz/oss_fuzz`](https://github.com/google/skia/tree/main/fuzz/oss_fuzz). The snippets below are from the real fuzzers.
 
-### The contract
+### Adding a new fuzzer
 
 A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection, so there is no registration step:
 
-```csharp
-public interface IFuzzer
-{
-    static abstract string Name { get; }
-    static abstract void FuzzTarget(ReadOnlySpan<byte> bytes);
-}
-```
+1. Add a class implementing `IFuzzer` in `tests/SkiaSharp.Fuzzing/Fuzzers/` (use an existing fuzzer as the template).
+   Pick a kebab-case `Name`; it becomes the Cake `--fuzzerTarget`, the `seeds/<Name>/` folder, and the OneFuzz job target prefix.
 
-`FuzzTarget` runs millions of times in one process. Any unhandled exception, native crash, or hang is a finding. So
-**expected failures must not throw**: factories that return `null` for bad input are fine; wrapping the body in
-`try/catch` to hide real bugs is not.
+   ```csharp
+   namespace SkiaSharp.Fuzzing.Fuzzers;
+
+   public sealed class MyFeatureFuzzer : IFuzzer
+   {
+       private const int MaximumInputBytes = 1 * 1024 * 1024;
+
+       public static string Name => "my-feature";
+
+       public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+       {
+           if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
+               return;
+
+           // Parse bytes, then drive the result to completion.
+       }
+   }
+   ```
+
+   `FuzzTarget` runs millions of times in one process. Any unhandled exception, native crash, or hang is a finding. So
+   **expected failures must not throw**: factories that return `null` for bad input are fine; wrapping the body in
+   `try/catch` to hide real bugs is not.
+
+2. Add a few small, valid seed files to `tests/SkiaSharp.Fuzzing/seeds/my-feature/`.
+3. Smoke test the seeds directly in .NET (fast, debuggable, no libFuzzer needed):
+
+   ```bash
+   dotnet run --project tests/SkiaSharp.Fuzzing -- my-feature tests/SkiaSharp.Fuzzing/seeds/my-feature
+   ```
+
+4. Fuzz it for a minute locally and fix anything it finds:
+
+   ```bash
+   dotnet cake --target=fuzzing --fuzzerTarget=my-feature --fuzzerMaxTime=60
+   ```
+
+5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry and its `seeds/<name>/` files appear in both
+   generated drops (see [validation](#validate-the-drop-locally)).
 
 ### One fuzzer per input format
 
@@ -284,46 +314,6 @@ Throughput is the whole game. A slow or flaky iteration costs coverage for every
   and mutates it more usefully.
 - **Dispose everything** with `using`. A leak per iteration becomes an OOM an hour in and hides the real findings.
 
-### Adding a new fuzzer
-
-1. Add a class implementing `IFuzzer` in `tests/SkiaSharp.Fuzzing/Fuzzers/` (use an existing fuzzer as the template).
-   Pick a kebab-case `Name`; it becomes the Cake `--fuzzerTarget`, the `seeds/<Name>/` folder, and the OneFuzz job target prefix.
-
-   ```csharp
-   namespace SkiaSharp.Fuzzing.Fuzzers;
-
-   public sealed class MyFeatureFuzzer : IFuzzer
-   {
-       private const int MaximumInputBytes = 1 * 1024 * 1024;
-
-       public static string Name => "my-feature";
-
-       public static void FuzzTarget(ReadOnlySpan<byte> bytes)
-       {
-           if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
-               return;
-
-           // Parse bytes, then drive the result to completion.
-       }
-   }
-   ```
-
-2. Add a few small, valid seed files to `tests/SkiaSharp.Fuzzing/seeds/my-feature/`.
-3. Smoke test the seeds directly in .NET (fast, debuggable, no libFuzzer needed):
-
-   ```bash
-   dotnet run --project tests/SkiaSharp.Fuzzing -- my-feature tests/SkiaSharp.Fuzzing/seeds/my-feature
-   ```
-
-4. Fuzz it for a minute locally and fix anything it finds:
-
-   ```bash
-   dotnet cake --target=fuzzing --fuzzerTarget=my-feature --fuzzerMaxTime=60
-   ```
-
-5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry and its `seeds/<name>/` files appear in both
-   generated drops (see [validation](#validate-the-drop-locally)).
-
 ---
 
 ## Cloud fuzzing with OneFuzz
@@ -342,6 +332,13 @@ uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker
 `{setup_dir}/seeds/<target>` to libFuzzer—so editing `assets/` or `seeds/` in git takes effect automatically on the next
 submission.
 
+### The OneFuzz CLI wrapper
+
+`scripts/infra/security/fuzzing/onefuzz.ps1` runs the internal OneFuzz CLI on any platform and forwards all arguments to
+it. The first run downloads the CLI into `externals/onefuzz-cli`. Delete that folder or use the CLI's own
+`onefuzz update` to refresh it. It requires PowerShell 7+, the .NET 10 runtime, and `az login` with access to the
+`fuzzfest/Onefuzz` Azure DevOps feed. Run `onefuzz.ps1 --help` or `<command> --help` for the full option list.
+
 ### Validate the drop locally
 
 `fuzzing-prepare` runs on any OS, so you can generate and check a drop before CI does:
@@ -356,13 +353,6 @@ dotnet cake --target=fuzzing-prepare
 
 Without `--drop-path` it only validates the schema against the service. With it, it also checks that every file in each
 entry's `JobDependencies` and `PreservePathsJobDependencies` exists inside the drop.
-
-### The OneFuzz CLI wrapper
-
-`scripts/infra/security/fuzzing/onefuzz.ps1` runs the internal OneFuzz CLI on any platform and forwards all arguments to
-it. The first run downloads the CLI into `externals/onefuzz-cli`. Delete that folder or use the CLI's own
-`onefuzz update` to refresh it. It requires PowerShell 7+, the .NET 10 runtime, and `az login` with access to the
-`fuzzfest/Onefuzz` Azure DevOps feed. Run `onefuzz.ps1 --help` or `<command> --help` for the full option list.
 
 ### Submit a drop from the CLI
 
