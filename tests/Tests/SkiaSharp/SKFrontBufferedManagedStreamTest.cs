@@ -242,14 +242,177 @@ namespace SkiaSharp.Tests
 		{
 			private bool fAtEnd;
 
+			public bool ReadCalledAfterEnd { get; private set; }
+
 			protected internal override bool OnIsAtEnd () => fAtEnd;
 
 			protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 			{
-				Assert.False (fAtEnd);
+				if (fAtEnd)
+					ReadCalledAfterEnd = true;
 				fAtEnd = true;
 				return (IntPtr)0;
 			}
+		}
+
+		[Fact]
+		public void FailingStreamDoesNotReadAfterEnd ()
+		{
+			using var failingStream = new FailingStream ();
+			using var bufferedStream = new SKFrontBufferedManagedStream (failingStream, 64);
+			using var codec = SKCodec.Create (bufferedStream);
+
+			Assert.Null (codec);
+			Assert.False (failingStream.ReadCalledAfterEnd);
+		}
+
+		private sealed class ShortReadingCustomSKStream : ManagedStream
+		{
+			private readonly byte[] data;
+			private readonly int maxPerRead;
+			private int pos;
+
+			public ShortReadingCustomSKStream (byte[] data, int maxPerRead)
+			{
+				this.data = data;
+				this.maxPerRead = maxPerRead;
+			}
+
+			protected internal override bool OnIsAtEnd () => pos >= data.Length;
+
+			protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
+			{
+				var remaining = data.Length - pos;
+				if (remaining <= 0 || (long)size <= 0)
+					return IntPtr.Zero;
+
+				var count = (int)Math.Min ((long)size, Math.Min (remaining, maxPerRead));
+				if (buffer != IntPtr.Zero)
+					Marshal.Copy (data, pos, buffer, count);
+				pos += count;
+				return (IntPtr)count;
+			}
+		}
+
+		[Theory]
+		[InlineData (1)]
+		[InlineData (5)]
+		[InlineData (17)]
+		public void ShortReadStreamBuffersAndRewindsCorrectly (int maxBytesPerRead)
+		{
+			using var inner = new ShortReadingCustomSKStream (gAbcs, maxBytesPerRead);
+			using var buffered = new SKFrontBufferedManagedStream (inner, 32, disposeUnderlyingStream: true);
+
+			test_read (buffered, gAbcs, 16);
+			test_rewind (buffered, true);
+			test_read (buffered, gAbcs, 32);
+			test_rewind (buffered, true);
+			test_read (buffered, gAbcs, 32);
+
+			var pos = 32;
+			while (pos < gAbcs.Length)
+			{
+				test_read (buffered, gAbcs.Skip (pos).ToArray (), maxBytesPerRead);
+				test_rewind (buffered, false);
+				pos += maxBytesPerRead;
+			}
+			Assert.True (buffered.IsAtEnd);
+		}
+
+		[Theory]
+		[InlineData (6)]
+		[InlineData (15)]
+		[InlineData (64)]
+		public void ReadBeyondBufferDoesNotInvalidateFrontBuffer (int bufferSize)
+		{
+			var exactData = gAbcs.Take (bufferSize).ToArray ();
+			using var inner = new ShortReadingCustomSKStream (exactData, maxPerRead: 5);
+			using var buffered = new SKFrontBufferedManagedStream (inner, bufferSize, disposeUnderlyingStream: true);
+
+			// Attempt to read one byte more than bufferSize (which is also the stream's total length)
+			test_read (buffered, exactData, bufferSize + 1);
+			Assert.True (buffered.IsAtEnd);
+
+			// Rewinding must still succeed because 0 bytes were read past the front buffer
+			test_rewind (buffered, true);
+			Assert.False (buffered.IsAtEnd);
+			test_read (buffered, exactData, bufferSize);
+		}
+
+		[Fact]
+		public void ShortReadingNativeSKStream_DoesNotDropFrontBufferPrematurely ()
+		{
+			using var inner = new ShortReadingCustomSKStream (gAbcs, maxPerRead: 2);
+			using var buffered = new SKFrontBufferedManagedStream (inner, 16, disposeUnderlyingStream: true);
+
+			test_read (buffered, gAbcs, 8);
+			test_read (buffered, gAbcs.Skip (8).ToArray (), 8);
+			test_rewind (buffered, true);
+			test_read (buffered, gAbcs, 16);
+		}
+
+		private sealed class VirtualLargeSkipSKStream : ManagedStream
+		{
+			private long remaining = (long)int.MaxValue + 1024;
+
+			protected internal override bool OnIsAtEnd () => remaining <= 0;
+
+			protected internal override unsafe IntPtr OnRead (IntPtr buffer, IntPtr size)
+			{
+				var req = (long)size;
+				if (req <= 0 || remaining <= 0)
+					return IntPtr.Zero;
+
+				var count = Math.Min (req, remaining);
+				if (buffer != IntPtr.Zero)
+					new Span<byte> ((void*)buffer, (int)Math.Min (count, 64)).Clear ();
+				remaining -= count;
+				return (IntPtr)count;
+			}
+		}
+
+		[Fact]
+		public void CumulativeSkipBeyond2GB_DoesNotWrapOffsetOrAllowInvalidRewind ()
+		{
+			using var inner = new VirtualLargeSkipSKStream ();
+			using var buffered = new SKFrontBufferedManagedStream (inner, 16, disposeUnderlyingStream: true);
+
+			Assert.Equal (int.MaxValue, buffered.Skip (int.MaxValue));
+			Assert.Equal (1, buffered.Skip (1));
+
+			// Offset is now 2,147,483,648 (> int.MaxValue); Rewind must return false, not wrap negative
+			Assert.False (buffered.Rewind ());
+		}
+
+		private sealed class LargeLengthSKStream : ManagedStream
+		{
+			private readonly long length;
+			private readonly long position;
+
+			public LargeLengthSKStream (long length, long position)
+			{
+				this.length = length;
+				this.position = position;
+			}
+
+			protected internal override bool OnHasLength () => true;
+			protected internal override bool OnHasPosition () => true;
+			protected internal override IntPtr OnGetLength () => (IntPtr)length;
+			protected internal override IntPtr OnGetPosition () => (IntPtr)position;
+		}
+
+		[Fact]
+		public unsafe void LargeStreamLengthBeyond2GB_IsPreservedWithoutSignExtension ()
+		{
+			if (IntPtr.Size < 8)
+				return;
+
+			var twoGiB = (long)int.MaxValue + 1;
+			using var inner = new LargeLengthSKStream (twoGiB + 100, 100);
+			using var buffered = new SKFrontBufferedManagedStream (inner, 16, disposeUnderlyingStream: true);
+
+			var nativeLen = (long)SkiaApi.sk_stream_get_length (buffered.Handle);
+			Assert.Equal (twoGiB, nativeLen);
 		}
 
 		[Fact]
