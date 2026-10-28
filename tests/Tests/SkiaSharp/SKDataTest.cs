@@ -439,19 +439,5 @@ namespace SkiaSharp.Tests
 				Assert.Throws<IOException>(() => SKData.Create(nonSeekable));
 			}
 		}
-
-		private sealed class ThrowingReadStream : Stream
-		{
-			public override bool CanRead => true;
-			public override bool CanSeek => true;
-			public override bool CanWrite => false;
-			public override long Length => 4096;
-			public override long Position { get; set; }
-			public override void Flush() { }
-			public override int Read(byte[] buffer, int offset, int count) => throw new IOException("Simulated read error.");
-			public override long Seek(long offset, SeekOrigin origin) => Position = offset;
-			public override void SetLength(long value) => throw new NotSupportedException();
-			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-		}
 	}
 }
