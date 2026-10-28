@@ -198,8 +198,9 @@ A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection,
    dotnet cake --target=fuzzing --fuzzerTarget=my-feature --fuzzerMaxTime=60
    ```
 
-5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry and its `seeds/<name>/` files appear in both
-   generated drops (see [validation](#validate-the-drop-locally)).
+5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry appears in both generated
+   `OneFuzzConfig.json` files (see [validation](#validate-the-drop-locally)).
+6. Create and populate the `skiasharp-my-feature-seeds` OneFuzz container (see [seed containers](#seed-containers)).
 
 ### One fuzzer per input format
 
@@ -327,10 +328,9 @@ with two jobs:
    directory with `onefuzz-task@0`.
 
 Each platform directory contains the un-instrumented managed assemblies and `.pdb`s, that platform's native libraries,
-`assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`. `PreservePathsJobDependencies`
-uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker, and each entry passes
-`{setup_dir}/seeds/<target>` to libFuzzer—so editing `assets/` or `seeds/` in git takes effect automatically on the next
-submission.
+`assets/` (uploaded via `PreservePathsJobDependencies`), and `OneFuzzConfig.json`, which has one entry per discovered
+`IFuzzer`. Each entry points at its `SeedCorpusContainer` (`skiasharp-<target>-seeds`), shared by the `windows` and
+`linux` submissions.
 
 ### The OneFuzz CLI wrapper
 
@@ -338,6 +338,17 @@ submission.
 it. The first run downloads the CLI into `externals/onefuzz-cli`. Delete that folder or use the CLI's own
 `onefuzz update` to refresh it. It requires PowerShell 7+, the .NET 10 runtime, and `az login` with access to the
 `fuzzfest/Onefuzz` Azure DevOps feed. Run `onefuzz.ps1 --help` or `<command> --help` for the full option list.
+
+### Seed containers
+
+OneFuzz requires seeds to live in `SeedCorpusContainer` (`skiasharp-<target>-seeds`) rather than `TargetOptions` (passing
+a directory in `TargetOptions` breaks OneFuzz's `empty-file.txt` preflight check, and OneFuzz's `dotnet_coverage` task
+only reads from `SeedCorpusContainer`):
+
+```bash
+./scripts/infra/security/fuzzing/onefuzz.ps1 containers create --name skiasharp-image-streams-seeds
+./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir skiasharp-image-streams-seeds tests/SkiaSharp.Fuzzing/seeds/image-streams
+```
 
 ### Validate the drop locally
 

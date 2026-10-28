@@ -131,7 +131,6 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 			File.Copy(Path.Combine(buildDirectory, nativeFile), Path.Combine(platformDirectory, nativeFile), overwrite: true);
 
 		CopyDirectory(Path.Combine(buildDirectory, "assets"), Path.Combine(platformDirectory, "assets"));
-		CopyDirectory(Path.Combine(buildDirectory, "seeds"), Path.Combine(platformDirectory, "seeds"));
 
 		var entries = new JsonArray();
 		foreach (var fuzzer in fuzzers)
@@ -161,11 +160,12 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 					{
 						["ProjectName"] = "SkiaSharp",
 						["TargetName"] = $"{fuzzer.Name}-{platform.Platform}-x64",
-						["TargetOptions"] = new JsonArray("-timeout=60", $"{{setup_dir}}/seeds/{fuzzer.Name}"),
-						["FuzzingTargetOptions"] = new JsonArray("-timeout=60", $"{{setup_dir}}/seeds/{fuzzer.Name}")
+						["SeedCorpusContainer"] = $"skiasharp-{fuzzer.Name}-seeds",
+						["TargetOptions"] = new JsonArray("-timeout=60"),
+						["FuzzingTargetOptions"] = new JsonArray("-timeout=60")
 					}),
 				["JobDependencies"] = new JsonArray(platform.DependencyPath),
-				["PreservePathsJobDependencies"] = new JsonArray("./assets/**/*", "./seeds/**/*"),
+				["PreservePathsJobDependencies"] = new JsonArray("./assets/**/*"),
 				["SdlWorkItemId"] = 3082348
 			});
 		}
