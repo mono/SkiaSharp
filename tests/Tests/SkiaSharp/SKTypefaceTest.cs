@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -425,26 +426,37 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public unsafe void ManagedStreamIsCollectedWhenCollected()
+		public async Task ManagedStreamIsCollectedWhenCollected()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 			var dotnet = new MemoryStream(bytes);
 
-			DoWork(out var handle, out var weakStream);
+			DoWork(dotnet, out var streamH, out var weakStream, out var typefaceH, out var weakTypeface);
 
-			CollectGarbage();
-
-			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
+			await SKHandleDictionaryTestHelpers.CollectGarbageAndAssertCollectedAsync(streamH, weakStream);
+			await SKHandleDictionaryTestHelpers.CollectGarbageAndAssertCollectedAsync(typefaceH, weakTypeface);
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
+			static void DoWork(Stream dotnetStream, out IntPtr streamHandle, out WeakReference streamRef, out IntPtr typefaceHandle, out WeakReference typefaceRef)
 			{
-				var stream = new SKManagedStream(dotnet, true);
+				var typeface = CreateTypeface(dotnetStream, out streamHandle, out streamRef);
+				SKHandleDictionaryTestHelpers.Track(typeface, out typefaceHandle, out typefaceRef);
+
+				CollectGarbage();
+
+				Assert.NotEmpty(typeface.GetTableTags());
+
+				GC.KeepAlive(typeface);
+			}
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static SKTypeface CreateTypeface(Stream dotnetStream, out IntPtr streamHandle, out WeakReference streamRef)
+			{
+				var stream = new SKManagedStream(dotnetStream, true);
 				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
-				var typeface = SKTypeface.FromStream(stream);
-				GC.KeepAlive(typeface);
+				return SKTypeface.FromStream(stream);
 			}
 		}
 

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -199,13 +200,11 @@ namespace SkiaSharp.Tests
 
 
 		[Fact]
-		public void StreamIsNotCollectedPrematurely()
+		public async Task StreamIsNotCollectedPrematurely()
 		{
 			DoWork(out var handle, out var weakStream);
 
-			CollectGarbage();
-
-			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
+			await SKHandleDictionaryTestHelpers.CollectGarbageAndAssertCollectedAsync(handle, weakStream);
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)

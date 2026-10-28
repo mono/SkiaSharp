@@ -84,13 +84,6 @@ namespace SkiaSharp.Tests
 		// 0x4000_0000 fits in Int32 and leaves room for many +0x1000 increments before overflow.
 		private static long handleSeed = IntPtr.Size == 4 ? 0x4000_0000L : 0x6000_0000_0000_0000L;
 
-		private static bool IsMono =>
-#if NET5_0_OR_GREATER
-			OperatingSystem.IsAndroid () || OperatingSystem.IsIOS () || OperatingSystem.IsMacCatalyst () || OperatingSystem.IsBrowser ();
-#else
-			false;
-#endif
-
 		// Hands out unique synthetic handles well away from any real native pointer range.
 		public static IntPtr NextHandle () =>
 			new IntPtr (Interlocked.Add (ref handleSeed, 0x1000));
@@ -243,31 +236,48 @@ namespace SkiaSharp.Tests
 			Assert.NotNull (instance);
 
 			var target = instance.Target;
-			if (target is not null) {
-				// On Mono (Android/iOS/MacCatalyst/WASM), conservative stack scanning of interpreter
-				// frames can retain a reference to an already-disposed local wrapper after its helper
-				// frame returns. On exact-GC runtimes (!IsMono), target must be strictly null.
-				Assert.True (
-					IsMono && target is SKObject disposed && disposed.IsDisposed && disposed.Handle == IntPtr.Zero,
-					$"Expected {target.GetType ().Name} (handle 0x{handle.ToString ("x")}) to be garbage-collected, but it is still reachable.");
-			}
+			Assert.True (
+				target is null,
+				$"Expected {target?.GetType ().Name} (handle 0x{handle.ToString ("x")}) to be garbage-collected, but it is still reachable.");
 
 			HandleDictionary.instancesLock.EnterReadLock ();
 			try {
-				if (HandleDictionary.instances.TryGetValue (handle, out var current)) {
-					if (IsMono && !current.IsAlive) {
-						// On single-threaded Browser WASM / Mono, GC.Collect() clears the short
-						// WeakReference (IsAlive == false), but GC.WaitForPendingFinalizers() does
-						// not guarantee ~SKNativeObject() has run to prune the dead entry yet.
-					} else {
-						Assert.False (
-							ReferenceEquals (current, instance) || (target is not null && ReferenceEquals (current.Target, target)),
-							$"Collected wrapper is still registered under handle 0x{handle.ToString ("x")}.");
-					}
-				}
+				if (HandleDictionary.instances.TryGetValue (handle, out var current))
+					Assert.False (
+						ReferenceEquals (current, instance) || (target is not null && ReferenceEquals (current.Target, target)),
+						$"Collected wrapper is still registered under handle 0x{handle.ToString ("x")}.");
 			} finally {
 				HandleDictionary.instancesLock.ExitReadLock ();
 			}
+		}
+
+		// Collects garbage and waits (via AssertEx.Eventually, yielding to the event loop when
+		// needed on single-threaded Browser WASM so queued finalizers can execute) before running
+		// the strict AssertCollected check.
+		public static async Task CollectGarbageAndAssertCollectedAsync (IntPtr handle, WeakReference instance)
+		{
+			Assert.NotEqual (IntPtr.Zero, handle);
+			Assert.NotNull (instance);
+
+			await AssertEx.Eventually (() => {
+				BaseTest.CollectGarbage ();
+
+				if (instance.Target is not null)
+					return false;
+
+				HandleDictionary.instancesLock.EnterReadLock ();
+				try {
+					if (HandleDictionary.instances.TryGetValue (handle, out var current) &&
+						ReferenceEquals (current, instance))
+						return false;
+				} finally {
+					HandleDictionary.instancesLock.ExitReadLock ();
+				}
+
+				return true;
+			});
+
+			AssertCollected (handle, instance);
 		}
 
 		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests and the
