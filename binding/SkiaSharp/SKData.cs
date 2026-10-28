@@ -174,7 +174,7 @@ namespace SkiaSharp
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <remarks>Reads all remaining bytes from the current position to the end of <paramref name="stream" />.</remarks>
 		public static SKData Create (Stream stream)
 		{
 			if (stream == null)
@@ -203,9 +203,9 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <param name="length">The amount of data to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <param name="length">The amount of data to read, in bytes.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
+		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (Stream stream, int length)
 		{
 			if (stream == null)
@@ -218,9 +218,9 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <param name="length">The amount of data to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <param name="length">The amount of data to read, in bytes.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
+		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (Stream stream, ulong length) =>
 			CreateFromStream (stream, length, failOnEarlyEof: true);
 
@@ -276,9 +276,9 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <param name="length">The amount of data to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <param name="length">The amount of data to read, in bytes.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
+		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (Stream stream, long length)
 		{
 			if (stream == null)
@@ -292,7 +292,7 @@ namespace SkiaSharp
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <remarks>Reads all remaining bytes from the current position to the end of <paramref name="stream" />.</remarks>
 		public static SKData Create (SKStream stream)
 		{
 			if (stream == null)
@@ -329,9 +329,9 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <param name="length">The amount of data to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <param name="length">The amount of data to read, in bytes.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
+		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (SKStream stream, int length)
 		{
 			if (stream == null)
@@ -344,9 +344,9 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <param name="length">The amount of data to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <param name="length">The amount of data to read, in bytes.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
+		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (SKStream stream, ulong length)
 		{
 			if (stream == null)
@@ -363,9 +363,9 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <param name="length">The amount of data to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
-		/// <remarks />
+		/// <param name="length">The amount of data to read, in bytes.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
+		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (SKStream stream, long length)
 		{
 			if (stream == null)
