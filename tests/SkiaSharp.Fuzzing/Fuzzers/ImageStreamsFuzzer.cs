@@ -39,7 +39,8 @@ public sealed class ImageStreamsFuzzer : IFuzzer
 	{
 		CopyStream(payload, seekable, maximumReadLength, earlyEndPosition);
 		DecodeCodec(payload, seekable, maximumReadLength, earlyEndPosition);
-		DecodeIncrementalAndScanlines(payload, seekable, maximumReadLength, earlyEndPosition);
+		DecodeIncremental(payload, seekable, maximumReadLength, earlyEndPosition);
+		DecodeScanlines(payload, seekable, maximumReadLength, earlyEndPosition);
 		DecodeImage(payload, seekable, maximumReadLength, earlyEndPosition);
 	}
 
@@ -99,42 +100,41 @@ public sealed class ImageStreamsFuzzer : IFuzzer
 		}
 	}
 
-	private static void DecodeIncrementalAndScanlines(byte[] payload, bool seekable, int maximumReadLength, int earlyEndPosition)
+	private static void DecodeIncremental(byte[] payload, bool seekable, int maximumReadLength, int earlyEndPosition)
 	{
-		using (var stream = new FuzzStream(payload, seekable, maximumReadLength, earlyEndPosition))
-		using (var codec = SKCodec.Create(stream))
+		using var stream = new FuzzStream(payload, seekable, maximumReadLength, earlyEndPosition);
+		using var codec = SKCodec.Create(stream);
+		if (codec is null || !IsBoundedImageInfo(codec.Info))
+			return;
+
+		using var bitmap = new SKBitmap();
+		if (!bitmap.TryAllocPixels(codec.Info))
+			return;
+
+		var startResult = codec.StartIncrementalDecode(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes);
+		if (startResult == SKCodecResult.Success)
+			_ = codec.IncrementalDecode(out _);
+	}
+
+	private static void DecodeScanlines(byte[] payload, bool seekable, int maximumReadLength, int earlyEndPosition)
+	{
+		using var stream = new FuzzStream(payload, seekable, maximumReadLength, earlyEndPosition);
+		using var codec = SKCodec.Create(stream);
+		if (codec is null || !IsBoundedImageInfo(codec.Info))
+			return;
+
+		using var bitmap = new SKBitmap();
+		if (!bitmap.TryAllocPixels(codec.Info))
+			return;
+
+		if (codec.StartScanlineDecode(bitmap.Info) == SKCodecResult.Success)
 		{
-			if (codec is null || !IsBoundedImageInfo(codec.Info))
-				return;
-
-			using var bitmap = new SKBitmap();
-			if (!bitmap.TryAllocPixels(codec.Info))
-				return;
-
-			var startResult = codec.StartIncrementalDecode(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes);
-			if (startResult == SKCodecResult.Success)
-				_ = codec.IncrementalDecode(out _);
-		}
-
-		using (var stream = new FuzzStream(payload, seekable, maximumReadLength, earlyEndPosition))
-		using (var codec = SKCodec.Create(stream))
-		{
-			if (codec is null || !IsBoundedImageInfo(codec.Info))
-				return;
-
-			using var bitmap = new SKBitmap();
-			if (!bitmap.TryAllocPixels(codec.Info))
-				return;
-
-			if (codec.StartScanlineDecode(bitmap.Info) == SKCodecResult.Success)
-			{
-				_ = codec.ScanlineOrder;
-				_ = codec.NextScanline;
-				_ = codec.GetOutputScanline(0);
-				if (bitmap.Height > 1)
-					_ = codec.SkipScanlines(1);
-				_ = codec.GetScanlines(bitmap.GetPixels(), Math.Min(bitmap.Height, 4), bitmap.RowBytes);
-			}
+			_ = codec.ScanlineOrder;
+			_ = codec.NextScanline;
+			_ = codec.GetOutputScanline(0);
+			if (bitmap.Height > 1)
+				_ = codec.SkipScanlines(1);
+			_ = codec.GetScanlines(bitmap.GetPixels(), Math.Min(bitmap.Height, 4), bitmap.RowBytes);
 		}
 	}
 
