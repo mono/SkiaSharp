@@ -184,7 +184,7 @@ namespace SkiaSharp
 				if (remaining <= 0)
 					return Empty;
 
-				return CreateFromStream (stream, (ulong)remaining, exactLength: false);
+				return CreateFromStream (stream, (ulong)remaining, failOnEarlyEof: false);
 			}
 
 			using var memory = new SKDynamicMemoryWStream ();
@@ -213,7 +213,7 @@ namespace SkiaSharp
 			if (length < 0)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			return CreateFromStream (stream, (ulong)length, exactLength: true);
+			return CreateFromStream (stream, (ulong)length, failOnEarlyEof: true);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -222,9 +222,9 @@ namespace SkiaSharp
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
 		/// <remarks />
 		public static SKData Create (Stream stream, ulong length) =>
-			CreateFromStream (stream, length, exactLength: true);
+			CreateFromStream (stream, length, failOnEarlyEof: true);
 
-		private static SKData CreateFromStream (Stream stream, ulong length, bool exactLength)
+		private static SKData CreateFromStream (Stream stream, ulong length, bool failOnEarlyEof)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
@@ -233,7 +233,7 @@ namespace SkiaSharp
 			if (length == 0)
 				return Empty;
 
-			if (exactLength && stream.CanSeek && stream.Length >= 0) {
+			if (failOnEarlyEof && stream.CanSeek && stream.Length >= 0) {
 				var remaining = stream.Length - stream.Position;
 				if (remaining < 0 || (ulong)remaining < length)
 					return null;
@@ -253,7 +253,7 @@ namespace SkiaSharp
 					if ((uint)len > (uint)toRead)
 						throw new IOException ("The stream returned an invalid byte count.");
 					if (len == 0) {
-						if (exactLength) {
+						if (failOnEarlyEof) {
 							data.Dispose ();
 							return null;
 						}
@@ -286,7 +286,7 @@ namespace SkiaSharp
 			if (length < 0)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			return CreateFromStream (stream, (ulong)length, exactLength: true);
+			return CreateFromStream (stream, (ulong)length, failOnEarlyEof: true);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
