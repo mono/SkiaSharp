@@ -14,25 +14,22 @@ public sealed class PictureStreamsFuzzer : IFuzzer
 			return;
 
 		var payload = bytes.ToArray();
-		var seekable = (payload[^1] & 1) == 0;
 
+		Fuzz(payload, seekable: true);
+		Fuzz(payload, seekable: false);
+	}
+
+	private static void Fuzz(byte[] payload, bool seekable)
+	{
 		using var stream = new FuzzStream(payload, seekable);
 		using var picture = SKPicture.Deserialize(stream);
 		if (picture is null)
 			return;
 
-		_ = picture.CullRect;
-		_ = picture.ApproximateOperationCount;
-		_ = picture.ApproximateBytesUsed;
-
 		using var bitmap = new SKBitmap(64, 64);
 		using var canvas = new SKCanvas(bitmap);
-		canvas.Clear(SKColors.Transparent);
-		if ((payload[^1] & 2) == 0)
-			canvas.DrawPicture(picture);
-		else
-			picture.Playback(canvas);
-		canvas.Flush();
+		canvas.DrawPicture(picture);
+		picture.Playback(canvas);
 
 		using var output = new FuzzWStream(seekable);
 		picture.Serialize(output);

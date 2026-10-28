@@ -12,24 +12,23 @@ public sealed class TypefaceStreamsFuzzer : IFuzzer
 			return;
 
 		var payload = bytes.ToArray();
-		var seekable = (payload[^1] & 1) == 0;
 
+		Fuzz(payload, seekable: true);
+		Fuzz(payload, seekable: false);
+	}
+
+	private static void Fuzz(byte[] payload, bool seekable)
+	{
 		using var stream = new FuzzStream(payload, seekable);
 		using var typeface = SKFontManager.Default.CreateTypeface(stream);
 		if (typeface is null)
 			return;
 
 		_ = typeface.FamilyName;
-		_ = typeface.FontWeight;
-		_ = typeface.FontWidth;
-		_ = typeface.FontSlant;
-		_ = typeface.IsFixedPitch;
 		_ = typeface.UnitsPerEm;
-		_ = typeface.GlyphCount;
 
 		var tags = typeface.GetTableTags();
-		var tableLimit = Math.Min(tags.Length, 8);
-		for (var i = 0; i < tableLimit; i++)
+		for (var i = 0; i < Math.Min(tags.Length, 8); i++)
 		{
 			if (typeface.TryGetTableData(tags[i], out var tableData))
 				_ = tableData.Length;
@@ -41,33 +40,29 @@ public sealed class TypefaceStreamsFuzzer : IFuzzer
 				_ = fontStream.Length;
 		}
 
-		Span<byte> sampleBytes = stackalloc byte[80];
-		"Hello SkiaSharp 123! "u8.CopyTo(sampleBytes);
-		var tailLength = Math.Min(payload.Length, sampleBytes.Length - 21);
-		payload.AsSpan(payload.Length - tailLength, tailLength).CopyTo(sampleBytes[21..]);
-		sampleBytes = sampleBytes[..(21 + tailLength)];
+		var glyphCount = Math.Min(typeface.GlyphCount, 16);
+		if (glyphCount <= 0)
+			return;
+
+		Span<ushort> glyphs = stackalloc ushort[glyphCount];
+		for (var i = 0; i < glyphCount; i++)
+			glyphs[i] = (ushort)i;
+
+		Span<float> widths = stackalloc float[glyphCount];
+		Span<SKPoint> positions = stackalloc SKPoint[glyphCount];
 
 		using var font = new SKFont(typeface, 16f);
-		var glyphCount = font.CountGlyphs(sampleBytes, SKTextEncoding.Utf8);
-		if (glyphCount > 0 && glyphCount <= 128)
-		{
-			Span<ushort> glyphs = stackalloc ushort[glyphCount];
-			Span<float> widths = stackalloc float[glyphCount];
-			Span<SKPoint> positions = stackalloc SKPoint[glyphCount];
+		font.GetGlyphWidths(glyphs, widths, Span<SKRect>.Empty);
+		font.GetGlyphPositions(glyphs, positions);
 
-			font.GetGlyphs(sampleBytes, SKTextEncoding.Utf8, glyphs);
-			font.GetGlyphWidths(glyphs, widths, Span<SKRect>.Empty);
-			font.GetGlyphPositions(glyphs, positions);
-			_ = font.MeasureText(glyphs);
-		}
+		using var glyphPath = font.GetGlyphPath(glyphs[0]);
+		_ = glyphPath?.Bounds;
 
-		using var path = font.GetTextPath(sampleBytes, SKTextEncoding.Utf8, SKPoint.Empty);
-		_ = path?.Bounds;
-
-		using var blob = SKTextBlob.Create(sampleBytes, SKTextEncoding.Utf8, font);
+		using var builder = new SKTextBlobBuilder();
+		builder.AddPositionedRun(glyphs, font, positions);
+		using var blob = builder.Build();
 		if (blob is not null)
 		{
-			_ = blob.Bounds;
 			using var bitmap = new SKBitmap(64, 32);
 			using var canvas = new SKCanvas(bitmap);
 			using var paint = new SKPaint();
