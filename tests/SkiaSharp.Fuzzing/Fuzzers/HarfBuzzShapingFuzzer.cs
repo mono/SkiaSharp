@@ -10,9 +10,11 @@ using HBFont = HarfBuzzSharp.Font;
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
 /// <summary>
-/// Fuzzes <see cref="HarfBuzzSharp.Buffer" /> text ingestion (UTF-8, UTF-16, UTF-32), <see cref="HarfBuzzSharp.Font.Shape(HarfBuzzSharp.Buffer, HarfBuzzSharp.Feature[])" />,
-/// glyph span accessors, and text/JSON glyph serialization and deserialization (<see cref="HarfBuzzSharp.Buffer.SerializeGlyphs(HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat, HarfBuzzSharp.SerializeFlag)" />
-/// and <see cref="HarfBuzzSharp.Buffer.DeserializeGlyphs(string, HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat)" />).
+/// Fuzzes <see cref="HarfBuzzSharp.Buffer" /> text ingestion (span and pooled-string UTF-8, UTF-16, and UTF-32 overloads),
+/// <see cref="HarfBuzzSharp.Face(GetTableDelegate, ReleaseDelegate)" /> table callback proxies, <see cref="HarfBuzzSharp.Font.Shape(HarfBuzzSharp.Buffer, HarfBuzzSharp.Feature[])" />,
+/// pooled glyph name marshaling (<see cref="HarfBuzzSharp.Font.TryGetGlyphName(uint, out string)" /> and <see cref="HarfBuzzSharp.Font.GlyphToString(uint)" />),
+/// and pooled <see cref="HarfBuzzSharp.Buffer.SerializeGlyphs(HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat, HarfBuzzSharp.SerializeFlag)" /> /
+/// <see cref="HarfBuzzSharp.Buffer.DeserializeGlyphs(string, HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat)" />.
 /// </summary>
 public sealed class HarfBuzzShapingFuzzer : IFuzzer
 {
@@ -28,12 +30,16 @@ public sealed class HarfBuzzShapingFuzzer : IFuzzer
 			return;
 
 		using var blob = CreateOwnedBlob(FontBytes.Value);
-		using var face = new HBFace(blob, 0);
+		using var baseFace = new HBFace(blob, 0);
+		_ = baseFace.Tables;
+
+		using var face = new HBFace((_, tag) => baseFace.ReferenceTable(tag));
 		using var font = new HBFont(face);
 
 		ShapeUtf8(font, bytes);
 		ShapeUtf16(font, bytes);
 		ShapeUtf32(font, bytes);
+		ShapeStrings(font, bytes);
 		DeserializeGlyphs(font, bytes);
 	}
 
@@ -66,13 +72,36 @@ public sealed class HarfBuzzShapingFuzzer : IFuzzer
 		ShapeAndSerialize(font, buffer);
 	}
 
+	private static void ShapeStrings(HBFont font, ReadOnlySpan<byte> bytes)
+	{
+		var text = Encoding.UTF8.GetString(bytes);
+
+		using (var utf8Buffer = new HBBuffer())
+		{
+			utf8Buffer.AddUtf8(text);
+			ShapeAndSerialize(font, utf8Buffer);
+		}
+
+		using (var utf32Buffer = new HBBuffer())
+		{
+			utf32Buffer.AddUtf32(text);
+			ShapeAndSerialize(font, utf32Buffer);
+		}
+	}
+
 	private static void ShapeAndSerialize(HBFont font, HBBuffer buffer)
 	{
 		buffer.GuessSegmentProperties();
 		font.Shape(buffer);
 
-		_ = buffer.GetGlyphInfoSpan().Length;
+		var infos = buffer.GetGlyphInfoSpan();
 		_ = buffer.GetGlyphPositionSpan().Length;
+
+		if (!infos.IsEmpty)
+		{
+			_ = font.TryGetGlyphName(infos[0].Codepoint, out _);
+			_ = font.GlyphToString(infos[0].Codepoint);
+		}
 
 		if (buffer.Length > 0 && buffer.ContentType == ContentType.Glyphs)
 		{

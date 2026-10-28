@@ -11,13 +11,17 @@ internal sealed class FuzzStream : Stream
 {
 	private readonly byte[] data;
 	private readonly bool seekable;
+	private readonly int maximumReadLength;
+	private readonly int earlyEndPosition;
 	private long position;
 	private bool disposed;
 
-	public FuzzStream(byte[] data, bool seekable)
+	public FuzzStream(byte[] data, bool seekable, int maximumReadLength = int.MaxValue, int earlyEndPosition = -1)
 	{
 		this.data = data;
 		this.seekable = seekable;
+		this.maximumReadLength = maximumReadLength;
+		this.earlyEndPosition = earlyEndPosition;
 	}
 
 	public override bool CanRead => !disposed;
@@ -63,9 +67,14 @@ internal sealed class FuzzStream : Stream
 	public override int Read(Span<byte> buffer)
 	{
 		ObjectDisposedException.ThrowIf(disposed, this);
+		if (HasReachedEarlyEnd())
+			return 0;
 
-		var remaining = data.Length - (int)Math.Min(position, data.Length);
-		var count = Math.Min(buffer.Length, remaining);
+		var logicalLength = earlyEndPosition >= 0
+			? Math.Min(data.Length, earlyEndPosition)
+			: data.Length;
+		var remaining = logicalLength - (int)Math.Min(position, logicalLength);
+		var count = Math.Min(Math.Min(buffer.Length, maximumReadLength), remaining);
 		if (count == 0)
 			return 0;
 
@@ -77,7 +86,7 @@ internal sealed class FuzzStream : Stream
 	public override int ReadByte()
 	{
 		ObjectDisposedException.ThrowIf(disposed, this);
-		if (position >= data.Length)
+		if (HasReachedEarlyEnd() || position >= data.Length)
 			return -1;
 
 		return data[(int)position++];
@@ -112,4 +121,7 @@ internal sealed class FuzzStream : Stream
 		disposed = true;
 		base.Dispose(disposing);
 	}
+
+	private bool HasReachedEarlyEnd() =>
+		earlyEndPosition >= 0 && position >= earlyEndPosition;
 }

@@ -114,8 +114,8 @@ and [`skia/fuzz/oss_fuzz`](https://github.com/google/skia/tree/main/fuzz/oss_fuz
 cover what SkiaSharp adds on top. Those C++ fuzzers hand an `SkMemoryStream`, `hb_blob_t`, or raw pointer straight to
 the native engine, so they never touch:
 
-- SkiaSharp's own **C# parsers**, such as `SKColor.TryParse`, `SKPath.ParseSvgPathData`, and the HarfBuzz `Tag`/`Feature`
-  parsers.
+- SkiaSharp's own **C# parsers and text utilities**, such as `SKColor.TryParse`, `SKFourByteTag.Parse`,
+  `HarfBuzzSharp.Tag.Parse`, and `StringUtilities`.
 - **Span and pointer marshaling**: pinning, lengths, and buffer ownership at the P/Invoke boundary.
 - **Object lifetime and GC rooting**: handles, finalizers, `owns:` flags, and anything the native side keeps alive.
 - **Managed ↔ native callback proxies**: `SKManagedStream`, `SKFrontBufferedManagedStream`, `SKManagedWStream`, and the

@@ -5,9 +5,10 @@ using HarfBuzzSharp;
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
 /// <summary>
-/// Fuzzes managed string and span parsers: <see cref="SKColor.TryParse(string, out SKColor)" />,
-/// <see cref="SKPath.ParseSvgPathData(string)" /> (plus <see cref="SKPath.ToSvgPathData()" />, path iteration, and rendering),
-/// <see cref="Tag.Parse(string)" />, and <see cref="Feature.TryParse(string, out Feature)" />.
+/// Fuzzes pure-managed C# parsers and text encoding utilities: <see cref="SKColor.TryParse(string, out SKColor)" />
+/// and <see cref="SKColor.TryParse(ReadOnlySpan{char}, out SKColor)" />, <see cref="SKFourByteTag.Parse(string)" />
+/// and <see cref="SKFourByteTag.Parse(ReadOnlySpan{char})" />, <see cref="Tag.Parse(string)" /> and
+/// <see cref="Tag.Parse(ReadOnlySpan{char})" />, and <see cref="StringUtilities" />.
 /// </summary>
 public sealed class ManagedParsersFuzzer : IFuzzer
 {
@@ -21,49 +22,51 @@ public sealed class ManagedParsersFuzzer : IFuzzer
 			return;
 
 		var text = Encoding.UTF8.GetString(bytes);
+		var chars = MemoryMarshal.Cast<byte, char>(bytes);
 
-		FuzzColorParser(text, bytes);
-		FuzzSvgPathParser(text);
-		FuzzHarfBuzzParsers(text);
+		FuzzColorParser(text, chars);
+		FuzzTagParsers(text, chars);
+		FuzzStringUtilities(text, bytes);
 	}
 
-	private static void FuzzColorParser(string text, ReadOnlySpan<byte> rawBytes)
+	private static void FuzzColorParser(string text, ReadOnlySpan<char> chars)
 	{
 		if (SKColor.TryParse(text, out var color))
 			_ = color.ToString();
 
-		var charSpan = MemoryMarshal.Cast<byte, char>(rawBytes);
-		if (!charSpan.IsEmpty)
-			_ = SKColor.TryParse(charSpan, out _);
+		if (!chars.IsEmpty && SKColor.TryParse(chars, out var spanColor))
+			_ = spanColor.ToString();
 	}
 
-	private static void FuzzSvgPathParser(string text)
+	private static void FuzzTagParsers(string text, ReadOnlySpan<char> chars)
 	{
-		using var path = SKPath.ParseSvgPathData(text);
-		if (path is null)
-			return;
-
-		_ = path.Bounds;
-		_ = path.TightBounds;
-		_ = path.ToSvgPathData();
-
-		using var iterator = path.CreateRawIterator();
-		var points = new SKPoint[4];
-		while (iterator.Next(points) != SKPathVerb.Done)
-		{
-		}
-
-		using var bitmap = new SKBitmap(64, 64);
-		using var canvas = new SKCanvas(bitmap);
-		using var paint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.StrokeAndFill };
-		canvas.DrawPath(path, paint);
-	}
-
-	private static void FuzzHarfBuzzParsers(string text)
-	{
+		_ = SKFourByteTag.Parse(text).ToString();
 		_ = Tag.Parse(text).ToString();
 
-		if (Feature.TryParse(text, out var feature))
-			_ = feature.ToString();
+		if (!chars.IsEmpty)
+		{
+			_ = SKFourByteTag.Parse(chars).ToString();
+			_ = Tag.Parse(chars).ToString();
+		}
+	}
+
+	private static void FuzzStringUtilities(string text, ReadOnlySpan<byte> rawBytes)
+	{
+		foreach (var encoding in (ReadOnlySpan<SKTextEncoding>)[SKTextEncoding.Utf8, SKTextEncoding.Utf16, SKTextEncoding.Utf32])
+		{
+			var encoded = StringUtilities.GetEncodedText(text, encoding);
+			_ = StringUtilities.GetString(encoded, encoding);
+			_ = StringUtilities.GetString(rawBytes, encoding);
+		}
+
+		if (text.Length == 1)
+		{
+			_ = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf8);
+			_ = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf16);
+		}
+		else if (text.Length == 2 && char.IsSurrogatePair(text, 0))
+		{
+			_ = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+		}
 	}
 }

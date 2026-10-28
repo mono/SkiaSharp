@@ -6,8 +6,9 @@ using SkiaSharp.Skottie;
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
 /// <summary>
-/// Fuzzes Lottie JSON animations (<see cref="AnimationBuilder" /> and <see cref="Animation" />), embedded data-URI
-/// resource loading (<see cref="DataUriResourceProvider" /> and <see cref="CachingResourceProvider" />),
+/// Fuzzes Lottie JSON animations (<see cref="AnimationBuilder.Build(Stream)" /> and <see cref="Animation" />) over
+/// seekable and non-seekable managed streams (<see cref="SKData.Create(Stream)" /> and preamble stripping), embedded
+/// data-URI resource loading (<see cref="DataUriResourceProvider" /> and <see cref="CachingResourceProvider" />),
 /// <see cref="InvalidationController" /> bounds tracking, and frame seeking/rendering.
 /// </summary>
 public sealed class SkottieJsonFuzzer : IFuzzer
@@ -23,25 +24,27 @@ public sealed class SkottieJsonFuzzer : IFuzzer
 
 		var payload = bytes.ToArray();
 
-		Fuzz(payload, preDecode: false);
-		Fuzz(payload, preDecode: true);
+		Fuzz(payload, seekable: true, preDecode: false);
+		Fuzz(payload, seekable: false, preDecode: true);
 	}
 
-	private static void Fuzz(byte[] payload, bool preDecode)
+	private static void Fuzz(byte[] payload, bool seekable, bool preDecode)
 	{
 		using var dataUriProvider = new DataUriResourceProvider(preDecode: preDecode);
 		using var cachingProvider = new CachingResourceProvider(dataUriProvider);
 
-		using var data = SKData.CreateCopy(payload);
+		using var stream = new FuzzStream(payload, seekable);
 		using var builder = Animation.CreateBuilder();
 		using var animation = builder
 			.SetResourceProvider(cachingProvider)
 			.SetFontManager(SKFontManager.Default)
-			.Build(data);
+			.Build(stream);
 		if (animation is null)
 			return;
 
-		_ = builder.Stats;
+		var stats = builder.Stats;
+		_ = stats.TotalLoadTime;
+		_ = stats.JsonSize;
 
 		using var bitmap = new SKBitmap(64, 64);
 		using var canvas = new SKCanvas(bitmap);

@@ -4,8 +4,8 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 
 /// <summary>
 /// Fuzzes <see cref="SKPicture.Deserialize(Stream)" />, raster canvas playback (<see cref="SKCanvas.DrawPicture(SKPicture)" />
-/// and <see cref="SKPicture.Playback(SKCanvas)" />), and <see cref="SKPicture.Serialize(Stream)" /> over seekable and
-/// non-seekable managed streams (<see cref="SKManagedStream" /> and <see cref="SKManagedWStream" />).
+/// and <see cref="SKPicture.Playback(SKCanvas)" />), and <see cref="SKPicture.Serialize(Stream)" /> over seekable,
+/// non-seekable, short-read, and early-EOF managed streams (<see cref="SKManagedStream" /> and <see cref="SKManagedWStream" />).
 /// </summary>
 public sealed class PictureStreamsFuzzer : IFuzzer
 {
@@ -20,7 +20,14 @@ public sealed class PictureStreamsFuzzer : IFuzzer
 
 		var payload = bytes.ToArray();
 
-		using var stream = new FuzzStream(payload, seekable: true);
+		Fuzz(payload, maximumReadLength: int.MaxValue, earlyEndPosition: -1);
+		Fuzz(payload, maximumReadLength: 8, earlyEndPosition: -1);
+		Fuzz(payload, maximumReadLength: int.MaxValue, earlyEndPosition: payload.Length / 2);
+	}
+
+	private static void Fuzz(byte[] payload, int maximumReadLength, int earlyEndPosition)
+	{
+		using var stream = new FuzzStream(payload, seekable: true, maximumReadLength, earlyEndPosition);
 		using var picture = SKPicture.Deserialize(stream);
 		if (picture is null)
 			return;
@@ -37,6 +44,10 @@ public sealed class PictureStreamsFuzzer : IFuzzer
 	private static void Serialize(SKPicture picture, bool seekable)
 	{
 		using var output = new FuzzWStream(seekable);
-		picture.Serialize(output);
+		using var wstream = new SKManagedWStream(output);
+		picture.Serialize(wstream);
+		wstream.Flush();
+		if (output.CanSeek)
+			_ = wstream.BytesWritten;
 	}
 }
