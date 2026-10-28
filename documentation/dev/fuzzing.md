@@ -24,10 +24,10 @@ On Windows and Linux x64, `fuzzing-download` downloads the prebuilt `libfuzzer-d
 
 ```bash
 # Fuzz a target for 60 seconds
-dotnet cake --target=fuzzing --fuzzerTarget=managed-streams --fuzzerMaxTime=60
+dotnet cake --target=fuzzing --fuzzerTarget=image-streams --fuzzerMaxTime=60
 
 # Replay a single crash input file
-dotnet cake --target=fuzzing --fuzzerTarget=managed-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
+dotnet cake --target=fuzzing --fuzzerTarget=image-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
 ```
 
 ### macOS / Docker
@@ -36,10 +36,10 @@ On macOS (or Linux arm64), use `run-local.sh` to run inside an Azure Linux conta
 
 ```bash
 # Fuzz a target for 60 seconds in Docker
-./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=managed-streams --fuzzerMaxTime=60
+./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=image-streams --fuzzerMaxTime=60
 
 # Replay a crash input in Docker
-./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=managed-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
+./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=image-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
 ```
 
 ### Cake Targets & Arguments
@@ -66,7 +66,7 @@ Local fuzzing outputs are written to `output/fuzzing/local/`:
 To debug a managed crash in Visual Studio / VS Code without `libfuzzer-dotnet`, pass the input file or folder directly to `SkiaSharp.Fuzzing`:
 
 ```bash
-dotnet run --project tests/SkiaSharp.Fuzzing -- managed-streams output/fuzzing/local/crashes/crash-123
+dotnet run --project tests/SkiaSharp.Fuzzing -- image-streams output/fuzzing/local/crashes/crash-123
 ```
 
 ---
@@ -105,8 +105,8 @@ Cloud jobs read their initial seeds from the `skiasharp-<target>-seeds` storage 
 
 ```bash
 # Create and upload a target's seed corpus container
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers create --name skiasharp-managed-streams-seeds
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir skiasharp-managed-streams-seeds tests/SkiaSharp.Fuzzing/seeds/managed-streams
+./scripts/infra/security/fuzzing/onefuzz.ps1 containers create --name skiasharp-image-streams-seeds
+./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir skiasharp-image-streams-seeds tests/SkiaSharp.Fuzzing/seeds/image-streams
 ```
 
 To inspect cloud submissions, jobs, or crash containers with the OneFuzz CLI (requires PowerShell 7+, .NET 10, and `az login` with access to `fuzzfest/Onefuzz`):

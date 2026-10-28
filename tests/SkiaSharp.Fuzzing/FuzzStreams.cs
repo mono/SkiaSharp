@@ -6,32 +6,40 @@ internal sealed class FuzzStream : Stream
 {
 	private readonly byte[] data;
 	private readonly bool seekable;
-	private readonly int maximumReadLength;
-	private readonly int earlyEndPosition;
 	private long position;
+	private bool disposed;
 
-	public FuzzStream(byte[] data, bool seekable, int maximumReadLength = int.MaxValue, int earlyEndPosition = -1)
+	public FuzzStream(byte[] data, bool seekable)
 	{
 		this.data = data;
 		this.seekable = seekable;
-		this.maximumReadLength = maximumReadLength;
-		this.earlyEndPosition = earlyEndPosition;
 	}
 
-	public override bool CanRead => true;
+	public override bool CanRead => !disposed;
 
-	public override bool CanSeek => seekable;
+	public override bool CanSeek => !disposed && seekable;
 
 	public override bool CanWrite => false;
 
-	public override long Length =>
-		seekable ? data.Length : throw new NotSupportedException();
+	public override long Length
+	{
+		get
+		{
+			ObjectDisposedException.ThrowIf(disposed, this);
+			return seekable ? data.Length : throw new NotSupportedException();
+		}
+	}
 
 	public override long Position
 	{
-		get => seekable ? position : throw new NotSupportedException();
+		get
+		{
+			ObjectDisposedException.ThrowIf(disposed, this);
+			return seekable ? position : throw new NotSupportedException();
+		}
 		set
 		{
+			ObjectDisposedException.ThrowIf(disposed, this);
 			if (!seekable)
 				throw new NotSupportedException();
 			if (value < 0 || value > int.MaxValue)
@@ -41,23 +49,18 @@ internal sealed class FuzzStream : Stream
 		}
 	}
 
-	public override void Flush()
-	{
-	}
+	public override void Flush() =>
+		ObjectDisposedException.ThrowIf(disposed, this);
 
 	public override int Read(byte[] buffer, int offset, int count) =>
 		Read(buffer.AsSpan(offset, count));
 
 	public override int Read(Span<byte> buffer)
 	{
-		if (HasReachedEarlyEnd())
-			return 0;
+		ObjectDisposedException.ThrowIf(disposed, this);
 
-		var logicalLength = earlyEndPosition >= 0
-			? Math.Min(data.Length, earlyEndPosition)
-			: data.Length;
-		var remaining = logicalLength - (int)Math.Min(position, logicalLength);
-		var count = Math.Min(Math.Min(buffer.Length, maximumReadLength), remaining);
+		var remaining = data.Length - (int)Math.Min(position, data.Length);
+		var count = Math.Min(buffer.Length, remaining);
 		if (count == 0)
 			return 0;
 
@@ -68,7 +71,8 @@ internal sealed class FuzzStream : Stream
 
 	public override int ReadByte()
 	{
-		if (HasReachedEarlyEnd() || position >= data.Length)
+		ObjectDisposedException.ThrowIf(disposed, this);
+		if (position >= data.Length)
 			return -1;
 
 		return data[(int)position++];
@@ -76,6 +80,7 @@ internal sealed class FuzzStream : Stream
 
 	public override long Seek(long offset, SeekOrigin origin)
 	{
+		ObjectDisposedException.ThrowIf(disposed, this);
 		if (!seekable)
 			throw new NotSupportedException();
 
@@ -97,8 +102,11 @@ internal sealed class FuzzStream : Stream
 	public override void Write(byte[] buffer, int offset, int count) =>
 		throw new NotSupportedException();
 
-	private bool HasReachedEarlyEnd() =>
-		earlyEndPosition >= 0 && position >= earlyEndPosition;
+	protected override void Dispose(bool disposing)
+	{
+		disposed = true;
+		base.Dispose(disposing);
+	}
 }
 
 internal sealed class FuzzWStream : Stream
@@ -106,6 +114,7 @@ internal sealed class FuzzWStream : Stream
 	private readonly bool seekable;
 	private long position;
 	private long length;
+	private bool disposed;
 
 	public FuzzWStream(bool seekable)
 	{
@@ -114,18 +123,29 @@ internal sealed class FuzzWStream : Stream
 
 	public override bool CanRead => false;
 
-	public override bool CanSeek => seekable;
+	public override bool CanSeek => !disposed && seekable;
 
-	public override bool CanWrite => true;
+	public override bool CanWrite => !disposed;
 
-	public override long Length =>
-		seekable ? length : throw new NotSupportedException();
+	public override long Length
+	{
+		get
+		{
+			ObjectDisposedException.ThrowIf(disposed, this);
+			return seekable ? length : throw new NotSupportedException();
+		}
+	}
 
 	public override long Position
 	{
-		get => seekable ? position : throw new NotSupportedException();
+		get
+		{
+			ObjectDisposedException.ThrowIf(disposed, this);
+			return seekable ? position : throw new NotSupportedException();
+		}
 		set
 		{
+			ObjectDisposedException.ThrowIf(disposed, this);
 			if (!seekable)
 				throw new NotSupportedException();
 			if (value < 0)
@@ -135,15 +155,15 @@ internal sealed class FuzzWStream : Stream
 		}
 	}
 
-	public override void Flush()
-	{
-	}
+	public override void Flush() =>
+		ObjectDisposedException.ThrowIf(disposed, this);
 
 	public override int Read(byte[] buffer, int offset, int count) =>
 		throw new NotSupportedException();
 
 	public override long Seek(long offset, SeekOrigin origin)
 	{
+		ObjectDisposedException.ThrowIf(disposed, this);
 		if (!seekable)
 			throw new NotSupportedException();
 
@@ -161,6 +181,7 @@ internal sealed class FuzzWStream : Stream
 
 	public override void SetLength(long value)
 	{
+		ObjectDisposedException.ThrowIf(disposed, this);
 		if (!seekable)
 			throw new NotSupportedException();
 		if (value < 0)
@@ -176,9 +197,16 @@ internal sealed class FuzzWStream : Stream
 
 	public override void Write(ReadOnlySpan<byte> buffer)
 	{
+		ObjectDisposedException.ThrowIf(disposed, this);
 		position += buffer.Length;
 		if (position > length)
 			length = position;
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		disposed = true;
+		base.Dispose(disposing);
 	}
 }
 

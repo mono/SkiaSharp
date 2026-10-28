@@ -5,7 +5,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../../.."));
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUZZING - prepare the drop shared by every fuzzing submission, or fuzz a target locally
 //   dotnet cake --target=fuzzing-prepare
-//   dotnet cake --target=fuzzing --fuzzerTarget=managed-streams [--fuzzerMaxTime=60] [--fuzzerRuns=1000] [--fuzzerTimeout=60] [--fuzzerInput=<path>]
+//   dotnet cake --target=fuzzing --fuzzerTarget=image-streams [--fuzzerMaxTime=60] [--fuzzerRuns=1000] [--fuzzerTimeout=60] [--fuzzerInput=<path>]
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const string LibFuzzerDotnetUrl = "https://github.com/Metalnem/libfuzzer-dotnet/releases/download/v2025.05.02.0904/";
