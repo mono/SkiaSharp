@@ -287,7 +287,7 @@ Throughput is the whole game. A slow or flaky iteration costs coverage for every
 ### Adding a new fuzzer
 
 1. Add a class implementing `IFuzzer` in `tests/SkiaSharp.Fuzzing/Fuzzers/` (use an existing fuzzer as the template).
-   Pick a kebab-case `Name`; it becomes the Cake `--fuzzerTarget`, the seed folder, and the cloud seed container name.
+   Pick a kebab-case `Name`; it becomes the Cake `--fuzzerTarget`, the `seeds/<Name>/` folder, and the OneFuzz job target prefix.
 
    ```csharp
    namespace SkiaSharp.Fuzzing.Fuzzers;
@@ -321,10 +321,8 @@ Throughput is the whole game. A slow or flaky iteration costs coverage for every
    dotnet cake --target=fuzzing --fuzzerTarget=my-feature --fuzzerMaxTime=60
    ```
 
-5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry appears in both generated
-   `OneFuzzConfig.json` files (see [validation](#validate-the-drop-locally)).
-6. Create and populate the `skiasharp-my-feature-seeds` OneFuzz container
-   (see [seed containers](#seed-containers)). The cloud job reads its seeds from there, not from the repo.
+5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry and its `seeds/<name>/` files appear in both
+   generated drops (see [validation](#validate-the-drop-locally)).
 
 ---
 
@@ -339,9 +337,10 @@ with two jobs:
    directory with `onefuzz-task@0`.
 
 Each platform directory contains the un-instrumented managed assemblies and `.pdb`s, that platform's native libraries,
-`assets/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`. OneFuzz instruments the target
-assemblies itself on its workers. Each entry points at its seed container, `skiasharp-<target>-seeds`, shared by the
-`windows` and `linux` submissions.
+`assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`. `PreservePathsJobDependencies`
+uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker, and each entry passes
+`{setup_dir}/seeds/<target>` to libFuzzer—so editing `assets/` or `seeds/` in git takes effect automatically on the next
+submission.
 
 ### Validate the drop locally
 
@@ -356,7 +355,7 @@ dotnet cake --target=fuzzing-prepare
 ```
 
 Without `--drop-path` it only validates the schema against the service. With it, it also checks that every file in each
-entry's `JobDependencies` exists inside the drop.
+entry's `JobDependencies` and `PreservePathsJobDependencies` exists inside the drop.
 
 ### The OneFuzz CLI wrapper
 
@@ -364,15 +363,6 @@ entry's `JobDependencies` exists inside the drop.
 it. The first run downloads the CLI into `externals/onefuzz-cli`. Delete that folder or use the CLI's own
 `onefuzz update` to refresh it. It requires PowerShell 7+, the .NET 10 runtime, and `az login` with access to the
 `fuzzfest/Onefuzz` Azure DevOps feed. Run `onefuzz.ps1 --help` or `<command> --help` for the full option list.
-
-### Seed containers
-
-Seeds are uploaded once per target and read by every submission. Re-upload after adding or changing seeds.
-
-```bash
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers create --name skiasharp-image-streams-seeds
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir skiasharp-image-streams-seeds tests/SkiaSharp.Fuzzing/seeds/image-streams
-```
 
 ### Submit a drop from the CLI
 
@@ -415,4 +405,4 @@ Once a crash is downloaded to `output/fuzzing/local/crashes/`, replay it with th
 - [Skia fuzzing documentation](https://skia.org/docs/dev/testing/fuzz/), [OSS-Fuzz Skia project](https://github.com/google/oss-fuzz/tree/master/projects/skia), and the upstream targets in [`skia/fuzz/oss_fuzz`](https://github.com/google/skia/tree/main/fuzz/oss_fuzz)
 - [HarfBuzz fuzzing suite](https://github.com/harfbuzz/harfbuzz/tree/main/test/fuzzing) and [OSS-Fuzz HarfBuzz project](https://github.com/google/oss-fuzz/tree/master/projects/harfbuzz)
 - [SharpFuzz](https://github.com/Metalnem/sharpfuzz) and
-  [libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer
+  [libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer-dotnet)
