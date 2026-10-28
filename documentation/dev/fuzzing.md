@@ -219,7 +219,7 @@ private static void Fuzz(byte[] payload, bool seekable)
 non-seekable. Reuse them for any new stream-based fuzzer.
 
 The same idea applies when a mode really is a different API shape rather than a flag in the data:
-`HarfBuzzShapingFuzzer` shapes the same slice as UTF-8, UTF-16, and UTF-32 by calling a helper per encoding.
+`HarfBuzzShapingFuzzer` shapes the same input as UTF-8, UTF-16, and UTF-32 by calling a helper per encoding.
 
 ### Drive deferred work to completion
 

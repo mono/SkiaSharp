@@ -16,7 +16,7 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// </summary>
 public sealed class HarfBuzzShapingFuzzer : IFuzzer
 {
-	private const int MaximumInputBytes = 64 * 1024;
+	private const int MaximumInputBytes = 4 * 1024;
 
 	private static readonly Lazy<byte[]> FontBytes = new(LoadFontBytes);
 
@@ -27,16 +27,14 @@ public sealed class HarfBuzzShapingFuzzer : IFuzzer
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;
 
-		var slice = bytes[..Math.Min(bytes.Length, 512)];
-
 		using var blob = CreateOwnedBlob(FontBytes.Value);
 		using var face = new HBFace(blob, 0);
 		using var font = new HBFont(face);
 
-		ShapeUtf8(font, slice);
-		ShapeUtf16(font, slice);
-		ShapeUtf32(font, slice);
-		DeserializeGlyphs(font, slice);
+		ShapeUtf8(font, bytes);
+		ShapeUtf16(font, bytes);
+		ShapeUtf32(font, bytes);
+		DeserializeGlyphs(font, bytes);
 	}
 
 	private static void ShapeUtf8(HBFont font, ReadOnlySpan<byte> bytes)

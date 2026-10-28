@@ -11,7 +11,7 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// </summary>
 public sealed class ManagedParsersFuzzer : IFuzzer
 {
-	private const int MaximumInputBytes = 64 * 1024;
+	private const int MaximumInputBytes = 4 * 1024;
 
 	public static string Name => "managed-parsers";
 
@@ -20,10 +20,9 @@ public sealed class ManagedParsersFuzzer : IFuzzer
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;
 
-		var slice = bytes[..Math.Min(bytes.Length, 4096)];
-		var text = Encoding.UTF8.GetString(slice);
+		var text = Encoding.UTF8.GetString(bytes);
 
-		FuzzColorParser(text, slice);
+		FuzzColorParser(text, bytes);
 		FuzzSvgPathParser(text);
 		FuzzHarfBuzzParsers(text);
 	}
@@ -32,9 +31,6 @@ public sealed class ManagedParsersFuzzer : IFuzzer
 	{
 		if (SKColor.TryParse(text, out var color))
 			_ = color.ToString();
-
-		if (text.Length > 9 && SKColor.TryParse(text.AsSpan(0, 9), out var shortColor))
-			_ = shortColor.ToString();
 
 		var charSpan = MemoryMarshal.Cast<byte, char>(rawBytes);
 		if (!charSpan.IsEmpty)
