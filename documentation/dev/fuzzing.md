@@ -363,7 +363,7 @@ de-duplication of identical submissions.
 ./scripts/infra/security/fuzzing/onefuzz.ps1 utils status
 ./scripts/infra/security/fuzzing/onefuzz.ps1 submissions --help
 ./scripts/infra/security/fuzzing/onefuzz.ps1 jobs get --job-id <guid>
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers files download-dir <crashes-container> output/fuzzing/local/crashes
+./scripts/infra/security/fuzzing/onefuzz.ps1 containers download --name <crashes-container> --output-dir output/fuzzing/local/crashes
 ```
 
 Once a crash is downloaded to `output/fuzzing/local/crashes/`, replay it with the
