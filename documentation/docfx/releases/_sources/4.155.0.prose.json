@@ -1,15 +1,15 @@
 {
-  "theme": "M155 engine and interoperability",
-  "highlights_headline": "SkiaSharp 4.155.0 advances to Skia m155 with servicing fixes and refreshed HarfBuzzSharp support.",
-  "highlights_body": "It also updates GLES interop for pointer-based platform calls and disables RAW and DNG decoding while retaining source and binary compatibility.",
+  "theme": "Skia m155 candidate",
+  "highlights_headline": "SkiaSharp 4.155.0 previews the Skia m155 engine update with current upstream servicing fixes.",
+  "highlights_body": "It also refreshes HarfBuzzSharp, uses pointer-based GLES interop signatures, and removes unsupported RAW and DNG image decoding.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone M155",
-          "detail": "Updates the bundled renderer to Chrome milestone M155 and incorporates later upstream fixes, including corrections for failed-flush cache entries and FontConfig family matching.",
+          "lead": "Skia updated to milestone m155",
+          "detail": "Updates the bundled renderer to Skia m155 and includes its current upstream servicing fixes.",
           "prs": [
             5081,
             5196,
@@ -19,32 +19,25 @@
       ]
     },
     {
-      "heading": "API Surface",
+      "heading": "Platform",
       "bullets": [
         {
-          "lead": "GLES platform interop uses explicit pointers",
-          "detail": "GLES and WinUI EGL interop now use blittable pointer-based calls, with existing platform callers pinned explicitly instead of relying on managed array and string marshalling.",
+          "lead": "Unsupported image formats disabled",
+          "detail": "RAW and DNG images are not decoded by this release; convert those assets to a supported encoded image format before loading them.",
           "prs": [
-            5155
-          ]
-        },
-        {
-          "lead": "HarfBuzzSharp 14.4 OpenType tags exposed",
-          "detail": "The HarfBuzzSharp update provides documented OpenType bit and number tag enums for usable native tag values without exposing raw native-shaped APIs.",
-          "prs": [
-            5135
+            5162
           ]
         }
       ]
     },
     {
-      "heading": "Bug Fixes",
+      "heading": "API Surface",
       "bullets": [
         {
-          "lead": "RAW and DNG decoding disabled",
-          "detail": "The bundled decoder no longer accepts RAW or DNG images. The SKEncodedImageFormat.Dng value remains available for source and binary compatibility, but it does not indicate codec support.",
+          "lead": "GLES interop uses pointer-based signatures",
+          "detail": "Updates GLES interop declarations to use native pointer-based signatures for accurate OpenGL ES integration.",
           "prs": [
-            5162
+            5155
           ]
         }
       ]
@@ -52,23 +45,9 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.155.0-rc.1.26512.8": "Release Candidate 1 incorporates the final M155 servicing fixes before the stable release.",
-    "v4.155.0-preview.2.26479.13": "Preview 2 updates HarfBuzzSharp, adopts pointer-based GLES interop, and disables RAW and DNG image decoding.",
-    "v4.155.0-preview.1.26471.14": "Preview 1 opens the 4.155 line with the Skia M155 renderer."
+    "v4.155.0-preview.1.26471.14": "Preview 1 opened the 4.155 line with the Skia m155 engine update.",
+    "v4.155.0-preview.2.26479.13": "Preview 2 added m155 servicing fixes, updated HarfBuzzSharp, and refreshed GLES interop.",
+    "v4.155.0-rc.1.26512.8": "Release Candidate 1 added the final m155 servicing refresh before stable release."
   },
-  "harfbuzz_summary": "HarfBuzzSharp now ships with HarfBuzz 14.4.0 and adds documented OpenType bit and number tag enums while keeping raw native fetch helpers internal.",
-  "release_summaries": {
-    "v4.155.0-preview.1.26471.14": {
-      "headline": "SkiaSharp 4.155.0 Preview 1 introduces the Skia M155 engine line.",
-      "body": null
-    },
-    "v4.155.0-preview.2.26479.13": {
-      "headline": "SkiaSharp 4.155.0 Preview 2 refreshes HarfBuzzSharp and GLES platform interop.",
-      "body": "It also disables RAW and DNG image decoding while retaining the existing managed API identity."
-    },
-    "v4.155.0-rc.1.26512.8": {
-      "headline": "SkiaSharp 4.155.0 Release Candidate 1 prepares the M155 line for release.",
-      "body": "It incorporates the latest M155 servicing fixes."
-    }
-  }
+  "harfbuzz_summary": "Updates the bundled HarfBuzz library and HarfBuzzSharp binding to version 14.4.0."
 }

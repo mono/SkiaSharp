@@ -1,7 +1,7 @@
 {
   "theme": "Skia m156 preview",
-  "highlights_headline": "SkiaSharp 4.156.0 previews the Skia m156 renderer with expanded native platform support.",
-  "highlights_body": "This preview restores Linux system-font discovery for NoDependencies deployments, adds native GTK4 GPU rendering, and refreshes build support for .NET 11, Windows, and Tizen.",
+  "highlights_headline": "SkiaSharp 4.156.0 previews the Skia m156 renderer with GTK4 GPU rendering and updated platform assets.",
+  "highlights_body": "It restores Linux system-font discovery for NoDependencies deployments and aligns native packages with current .NET, Windows, and Tizen toolchains.",
   "breaking": [],
   "categories": [
     {
@@ -9,28 +9,10 @@
       "bullets": [
         {
           "lead": "Skia updated to milestone m156",
-          "detail": "Aligns the bundled renderer with Chrome milestone 156 for consumers evaluating the next SkiaSharp release line.",
+          "detail": "Moves the bundled renderer to Skia m156 and integrates the remaining m155 core-fork cleanup.",
           "prs": [
+            5208,
             5247
-          ]
-        },
-        {
-          "lead": "Current Skia integration cleanup",
-          "detail": "Incorporates the m155 core-fork cleanup into the current release line to keep the bundled native engine integration current.",
-          "prs": [
-            5208
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Linux NoDependencies font discovery restored",
-          "detail": "NoDependencies deployments on Linux can again discover system fonts, restoring text rendering behavior that depended on the system font manager.",
-          "prs": [
-            5086
           ]
         }
       ]
@@ -39,40 +21,41 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Native GTK4 GPU rendering added",
-          "detail": "GTK4 applications gain native GPU rendering with pixel-scaling support for sharper, better-aligned output.",
+          "lead": "GTK4 gains native GPU rendering",
+          "detail": "Adds native GPU rendering and pixel scaling for GTK4 applications.",
           "prs": [
             5249
           ]
         },
         {
-          "lead": ".NET 11 native assets aligned",
-          "detail": "Updates preview SDK pins and WebAssembly native assets so package consumers can evaluate the 4.156 line with .NET 11 previews.",
+          "lead": "Linux system-font discovery restored",
+          "detail": "NoDependencies deployments on Linux can again discover installed system fonts.",
           "prs": [
-            5306
+            5086
           ]
         },
         {
-          "lead": "Tizen native builds refreshed",
-          "detail": "Packages and builds now target the Tizen 10 GCC 14.2 toolchain.",
+          "lead": "Native assets align with current platforms",
+          "detail": "Updates WebAssembly assets for .NET 11 previews, restores the WinUI Windows SDK default, and packages Tizen builds with GCC 14.2.",
           "prs": [
-            5235
+            5235,
+            5273,
+            5306
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Restored Linux system-font discovery for NoDependencies deployments"
+    "ramezgerges": "Restored Linux system-font discovery for NoDependencies deployments and contributed platform packaging improvements",
+    "VirgilMing": "Bound bundled HarfBuzz functions locally on Linux and stabilized Blazor sample test startup",
+    "akoeplinger": "Maintained dependency automation configuration",
+    "dalexsoto": "Addressed contextual policy findings in continuous integration",
+    "rolfbjarne": "Removed obsolete sample files",
+    "Saad-elnagar": "Removed an obsolete libmicrohttpd attribution notice"
   },
   "preview_summaries": {
-    "v4.156.0-preview.1.26512.10": "Preview 1 opens the 4.156 line with Skia m156, native GTK4 GPU rendering, restored Linux NoDependencies font discovery, and refreshed native platform support."
+    "v4.156.0-preview.1.26512.10": "Preview 1 introduces the Skia m156 engine, GTK4 GPU rendering, restored Linux system-font discovery, and refreshed native platform assets."
   },
-  "harfbuzz_summary": "Refreshes HarfBuzzSharp native build support for .NET 11 previews, current Windows toolchains, and Tizen 10 packaging.",
-  "release_summaries": {
-    "v4.156.0-preview.1.26512.10": {
-      "headline": "SkiaSharp 4.156.0 Preview 1 introduces the Skia m156 engine update and broader native platform support.",
-      "body": "It restores Linux system-font discovery for NoDependencies deployments, adds native GTK4 GPU rendering, and aligns package assets with current .NET 11, Windows, and Tizen toolchains."
-    }
-  }
+  "harfbuzz_summary": "Aligns HarfBuzzSharp native assets with the .NET 11 preview, current Windows toolchain, and Tizen GCC 14.2 builds."
 }

@@ -54,13 +54,13 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
 
 | Path | Version line | Latest release |
 |------|--------------|----------------|
+| Stable | 4.154.x | [4.154.0](4.154.0.md) |
 | Stable | 4.153.x | [4.153.2](4.153.2.md) |
 | Stable | 4.152.x | [4.152.4](4.152.4.md) |
 | Stable | 4.151.x | [4.151.5](4.151.5.md) |
-| Stable | 4.150.x | [4.150.5](4.150.5.md) |
+| Stable | 4.150.x | [4.150.6](4.150.6.md) |
 | Preview | 4.156.x | [4.156.0](4.156.0.md) |
 | Preview | 4.155.x | [4.155.0](4.155.0.md) |
-| Preview | 4.154.x | [4.154.0](4.154.0.md) |
 
 ## Supported versions
 
@@ -68,8 +68,9 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
   - [Version 4.156.0 (Unreleased)](4.156.0-unreleased.md)
   - [Version 4.156.0](4.156.0.md)
 - **Version 4.155.x** — Preview
+  - [Version 4.155.0 (Unreleased)](4.155.0-unreleased.md)
   - [Version 4.155.0](4.155.0.md)
-- **Version 4.154.x** — Preview
+- **Version 4.154.x** — Stable
   - [Version 4.154.1 (Unreleased)](4.154.1-unreleased.md)
   - [Version 4.154.0](4.154.0.md)
 - **Version 4.153.x** — Stable
@@ -93,7 +94,8 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
   - [Version 4.151.1](4.151.1.md)
   - [Version 4.151.0](4.151.0.md)
 - **Version 4.150.x** — Stable
-  - [Version 4.150.6 (Unreleased)](4.150.6-unreleased.md)
+  - [Version 4.150.7 (Unreleased)](4.150.7-unreleased.md)
+  - [Version 4.150.6](4.150.6.md)
   - [Version 4.150.5](4.150.5.md)
   - [Version 4.150.4](4.150.4.md)
   - [Version 4.150.3](4.150.3.md)
