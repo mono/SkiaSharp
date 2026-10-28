@@ -48,6 +48,33 @@ public package provenance, tags, GitHub Releases, and incoming milestone Skia
 sync work. Follow its next-action recommendation rather than cutting a new
 release while publication or Finish is outstanding.
 
+The text report combines shipping status in one table and keeps sync work separate:
+
+| Section | Meaning |
+| --- | --- |
+| Current release | Public NuGet version, cut awaiting publication, that cut's build/BAR, and the release action |
+| Branch readiness | The `.x` or `main` base for Prepare, additional merged commits, open line PRs, its own build/BAR, and readiness action |
+| Upstream / sync | Target base, upstream gap, incoming sync PR, its own sync-branch build, and sync action |
+
+The release table's next step is a release operation, not an instruction to
+sync Skia. Full release SHA/BAR evidence and actionable workflow inputs follow
+the table. Finish completes public packages' tags and GitHub Releases.
+
+The version checked into a source branch is neither a public package version
+nor proof a release has been prepared. A succeeded base build does not replace
+the prepared release branch's build or BAR. Queued commits are already merged
+into the base; open backport PRs are listed separately and not counted.
+Base readiness does not override current-shipment or sync gates. The sync
+build is the exact sync-source `skiasharp-package` build, not PR merge CI;
+missing/unavailable evidence is explicit. An up-to-date sync branch is
+not proof its PR has merged. Upstream work does not block publication or Finish
+of an already-cut release.
+
+The release table shows the latest exact public shipment plus any older
+unfinished or inconsistent shipments. Full history remains available in
+`-Json`. A partial package build with a BAR still requires review; even a
+succeeded release build requires the detailed publication checks below.
+
 | Recommendation | Next step |
 | --- | --- |
 | Merge incoming milestone sync | Complete the paired Skia sync PRs before a new cut |
