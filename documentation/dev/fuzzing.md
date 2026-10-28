@@ -172,6 +172,7 @@ A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection,
 
        public static void FuzzTarget(ReadOnlySpan<byte> bytes)
        {
+           FuzzSeeds.EnsureInitialized(Name);
            if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
                return;
 
@@ -197,9 +198,8 @@ A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection,
    dotnet cake --target=fuzzing --fuzzerTarget=my-feature --fuzzerMaxTime=60
    ```
 
-5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry appears in both generated
-   `OneFuzzConfig.json` files (see [validation](#validate-the-drop-locally)).
-6. Create and populate the `skiasharp-my-feature-seeds` OneFuzz container (see [seed containers](#seed-containers)).
+5. Run `dotnet cake --target=fuzzing-prepare` and check that the new entry and its `seeds/<name>/` files appear in both
+   generated drops (see [validation](#validate-the-drop-locally)).
 
 ### One fuzzer per input format
 
@@ -214,11 +214,12 @@ If the input is a standard format (PNG, SKP, TTF, Lottie JSON), hand `bytes` to 
 trailer bytes as mode flags or selectors; that corrupts the format and breaks every seed.
 
 To cover a small number of modes, such as seekable vs. non-seekable streams, run the same input through each mode
-deterministically. `PictureStreamsFuzzer` is the canonical shape:
+deterministically. `TypefaceStreamsFuzzer` and `ImageStreamsFuzzer` follow this shape:
 
 ```csharp
 public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 {
+    FuzzSeeds.EnsureInitialized(Name);
     if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
         return;
 
@@ -226,22 +227,6 @@ public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 
     Fuzz(payload, seekable: true);
     Fuzz(payload, seekable: false);
-}
-
-private static void Fuzz(byte[] payload, bool seekable)
-{
-    using var stream = new FuzzStream(payload, seekable);
-    using var picture = SKPicture.Deserialize(stream);
-    if (picture is null)
-        return;
-
-    using var bitmap = new SKBitmap(64, 64);
-    using var canvas = new SKCanvas(bitmap);
-    canvas.DrawPicture(picture);
-    picture.Playback(canvas);
-
-    using var output = new FuzzWStream(seekable);
-    picture.Serialize(output);
 }
 ```
 
@@ -327,9 +312,11 @@ with two jobs:
    directory with `onefuzz-task@0`.
 
 Each platform directory contains the un-instrumented managed assemblies and `.pdb`s, that platform's native libraries,
-`assets/` (uploaded via `PreservePathsJobDependencies`), and `OneFuzzConfig.json`, which has one entry per discovered
-`IFuzzer`. Each entry points at its `SeedCorpusContainer` (`skiasharp-<target>-seeds`), shared by the `windows` and
-`linux` submissions.
+`assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`.
+`PreservePathsJobDependencies` uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker, and
+`FuzzSeeds.EnsureInitialized(Name)` stages `{setup_dir}/seeds/<target>/` into the worker's `task_inputs_0` corpus
+directory on startup—so adding or editing files in `tests/SkiaSharp.Fuzzing/seeds/` in git takes effect automatically on
+the next CI run with no manual container uploads.
 
 ### The OneFuzz CLI wrapper
 
@@ -337,17 +324,6 @@ Each platform directory contains the un-instrumented managed assemblies and `.pd
 it. The first run downloads the CLI into `externals/onefuzz-cli`. Delete that folder or use the CLI's own
 `onefuzz update` to refresh it. It requires PowerShell 7+, the .NET 10 runtime, and `az login` with access to the
 `fuzzfest/Onefuzz` Azure DevOps feed. Run `onefuzz.ps1 --help` or `<command> --help` for the full option list.
-
-### Seed containers
-
-OneFuzz requires seeds to live in `SeedCorpusContainer` (`skiasharp-<target>-seeds`) rather than `TargetOptions` (passing
-a directory in `TargetOptions` breaks OneFuzz's `empty-file.txt` preflight check, and OneFuzz's `dotnet_coverage` task
-only reads from `SeedCorpusContainer`):
-
-```bash
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers create --name skiasharp-image-streams-seeds
-./scripts/infra/security/fuzzing/onefuzz.ps1 containers files upload-dir skiasharp-image-streams-seeds tests/SkiaSharp.Fuzzing/seeds/image-streams
-```
 
 ### Validate the drop locally
 

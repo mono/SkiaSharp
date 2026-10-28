@@ -1,6 +1,38 @@
 using System.IO;
+using System.Threading;
 
 namespace SkiaSharp.Fuzzing;
+
+internal static class FuzzSeeds
+{
+	private static int initialized;
+
+	public static void EnsureInitialized(string fuzzerName)
+	{
+		if (Interlocked.Exchange(ref initialized, 1) != 0)
+			return;
+
+		var inputsDirectory = Path.Combine(Environment.CurrentDirectory, "task_inputs_0");
+		if (!Directory.Exists(inputsDirectory))
+			return;
+
+		var seedsDirectory = Path.Combine(
+			Path.GetDirectoryName(typeof(IFuzzer).Assembly.Location)!,
+			"seeds",
+			fuzzerName);
+		if (!Directory.Exists(seedsDirectory))
+			return;
+
+		foreach (var seedFile in Directory.GetFiles(seedsDirectory))
+		{
+			var destinationFile = Path.Combine(inputsDirectory, Path.GetFileName(seedFile));
+			var tempFile = Path.Combine(Environment.CurrentDirectory, $".seed-{Guid.NewGuid():N}.tmp");
+			File.Copy(seedFile, tempFile, overwrite: true);
+			File.Delete(destinationFile);
+			File.Move(tempFile, destinationFile, overwrite: true);
+		}
+	}
+}
 
 internal sealed class FuzzStream : Stream
 {

@@ -15,18 +15,13 @@ public sealed class PictureStreamsFuzzer : IFuzzer
 
 	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 	{
+		FuzzSeeds.EnsureInitialized(Name);
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;
 
 		var payload = bytes.ToArray();
 
-		Fuzz(payload, seekable: true);
-		Fuzz(payload, seekable: false);
-	}
-
-	private static void Fuzz(byte[] payload, bool seekable)
-	{
-		using var stream = new FuzzStream(payload, seekable);
+		using var stream = new FuzzStream(payload, seekable: true);
 		using var picture = SKPicture.Deserialize(stream);
 		if (picture is null)
 			return;
@@ -36,6 +31,12 @@ public sealed class PictureStreamsFuzzer : IFuzzer
 		canvas.DrawPicture(picture);
 		picture.Playback(canvas);
 
+		Serialize(picture, seekable: true);
+		Serialize(picture, seekable: false);
+	}
+
+	private static void Serialize(SKPicture picture, bool seekable)
+	{
 		using var output = new FuzzWStream(seekable);
 		picture.Serialize(output);
 	}
