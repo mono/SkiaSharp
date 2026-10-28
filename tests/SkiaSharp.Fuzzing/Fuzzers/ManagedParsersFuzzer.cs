@@ -17,7 +17,6 @@ public sealed class ManagedParsersFuzzer : IFuzzer
 
 	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 	{
-		FuzzSeeds.EnsureInitialized(Name);
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;
 

@@ -172,7 +172,6 @@ A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection,
 
        public static void FuzzTarget(ReadOnlySpan<byte> bytes)
        {
-           FuzzSeeds.EnsureInitialized(Name);
            if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
                return;
 
@@ -219,7 +218,6 @@ deterministically. `TypefaceStreamsFuzzer` and `ImageStreamsFuzzer` follow this 
 ```csharp
 public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 {
-    FuzzSeeds.EnsureInitialized(Name);
     if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
         return;
 
@@ -230,7 +228,7 @@ public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 }
 ```
 
-`FuzzStream` and `FuzzWStream` (`FuzzStreams.cs`) are plain .NET `Stream`s over a byte array that can pretend to be
+`FuzzStream` and `FuzzWStream` are plain .NET `Stream`s over a byte array that can pretend to be
 non-seekable. Reuse them for any new stream-based fuzzer.
 
 The same idea applies when a mode really is a different API shape rather than a flag in the data:
@@ -314,9 +312,9 @@ with two jobs:
 Each platform directory contains the un-instrumented managed assemblies and `.pdb`s, that platform's native libraries,
 `assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`.
 `PreservePathsJobDependencies` uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker, and
-`FuzzSeeds.EnsureInitialized(Name)` stages `{setup_dir}/seeds/<target>/` into the worker's `task_inputs_0` corpus
-directory on startup—so adding or editing files in `tests/SkiaSharp.Fuzzing/seeds/` in git takes effect automatically on
-the next CI run with no manual container uploads.
+`Program.InitializeOneFuzzSeeds()` (`[ModuleInitializer]`) stages `{setup_dir}/seeds/<target>/` into the worker's
+`task_inputs_0` corpus directory when the assembly loads—so adding or editing files in
+`tests/SkiaSharp.Fuzzing/seeds/` in git takes effect automatically on the next CI run with no manual container uploads.
 
 ### The OneFuzz CLI wrapper
 

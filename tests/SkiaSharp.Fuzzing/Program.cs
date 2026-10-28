@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using SharpFuzz;
@@ -194,5 +195,42 @@ internal sealed record FuzzerDescriptor(string Name, Type Type, Action<ReadOnlyS
 		var name = (string)type.GetProperty(nameof(IFuzzer.Name), BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
 		var method = type.GetMethod(nameof(IFuzzer.FuzzTarget), BindingFlags.Public | BindingFlags.Static, [typeof(ReadOnlySpan<byte>)])!;
 		return new FuzzerDescriptor(name, type, method.CreateDelegate<Action<ReadOnlySpan<byte>>>());
+	}
+}
+
+internal partial class Program
+{
+	[ModuleInitializer]
+	internal static void InitializeOneFuzzSeeds()
+	{
+		var inputsDirectory = Path.Combine(Environment.CurrentDirectory, "task_inputs_0");
+		if (!Directory.Exists(inputsDirectory))
+			return;
+
+		var targetClass = Environment.GetEnvironmentVariable("LIBFUZZER_DOTNET_TARGET_CLASS")
+			?? Environment.GetEnvironmentVariable("LIBFUZZER_DOTNET_TARGET")?.Split(':').ElementAtOrDefault(1);
+		if (string.IsNullOrEmpty(targetClass))
+			return;
+
+		var type = typeof(IFuzzer).Assembly.GetType(targetClass);
+		if (type is null || !type.IsAssignableTo(typeof(IFuzzer)))
+			return;
+
+		var fuzzer = FuzzerDescriptor.Create(type);
+		var seedsDirectory = Path.Combine(
+			Path.GetDirectoryName(typeof(IFuzzer).Assembly.Location)!,
+			"seeds",
+			fuzzer.Name);
+		if (!Directory.Exists(seedsDirectory))
+			return;
+
+		foreach (var seedFile in Directory.GetFiles(seedsDirectory))
+		{
+			var destinationFile = Path.Combine(inputsDirectory, Path.GetFileName(seedFile));
+			var tempFile = Path.Combine(Environment.CurrentDirectory, $".seed-{Guid.NewGuid():N}.tmp");
+			File.Copy(seedFile, tempFile, overwrite: true);
+			File.Delete(destinationFile);
+			File.Move(tempFile, destinationFile, overwrite: true);
+		}
 	}
 }
