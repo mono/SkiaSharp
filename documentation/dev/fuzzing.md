@@ -172,6 +172,7 @@ A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection,
 
        public static void FuzzTarget(ReadOnlySpan<byte> bytes)
        {
+           FuzzSeeds.EnsureInitialized(Name);
            if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
                return;
 
@@ -218,6 +219,7 @@ deterministically. `TypefaceStreamsFuzzer` and `ImageStreamsFuzzer` follow this 
 ```csharp
 public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 {
+    FuzzSeeds.EnsureInitialized(Name);
     if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
         return;
 
@@ -313,9 +315,9 @@ with two jobs:
 Each platform directory contains the un-instrumented managed assemblies and `.pdb`s, that platform's native libraries,
 `assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`.
 `PreservePathsJobDependencies` uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker, and
-`FuzzerDescriptor<TFuzzer>.FuzzTarget` stages `{setup_dir}/seeds/<target>/` into the worker's `task_inputs_0` corpus
-directory on the first invocation before forwarding to `TFuzzer.FuzzTarget`—so adding or editing files in
-`tests/SkiaSharp.Fuzzing/seeds/` in git takes effect automatically on the next CI run with no manual container uploads.
+`FuzzSeeds.EnsureInitialized(Name)` stages `{setup_dir}/seeds/<target>/` into the worker's `task_inputs_0` corpus
+directory on startup—so adding or editing files in `tests/SkiaSharp.Fuzzing/seeds/` in git takes effect automatically on
+the next CI run with no manual container uploads.
 
 ### The OneFuzz CLI wrapper
 

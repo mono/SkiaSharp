@@ -61,12 +61,12 @@ static void Run(FuzzerDescriptor fuzzer, string? inputPath)
 			: [inputPath];
 
 		foreach (var file in files)
-			fuzzer.Fuzz(File.ReadAllBytes(file));
+			fuzzer.Target(File.ReadAllBytes(file));
 
 		return;
 	}
 
-	Fuzzer.LibFuzzer.Run(fuzzer.Fuzz);
+	Fuzzer.LibFuzzer.Run(bytes => fuzzer.Target(bytes));
 }
 
 static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instrument)
@@ -143,7 +143,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 				{
 					["$type"] = "libfuzzerDotNet",
 					["Dll"] = "SkiaSharp.Fuzzing.dll",
-					["Class"] = fuzzer.EntryPointClass,
+					["Class"] = fuzzer.Type.FullName,
 					["Method"] = nameof(IFuzzer.FuzzTarget),
 					["FuzzingTargetBinaries"] = binaries
 				},
