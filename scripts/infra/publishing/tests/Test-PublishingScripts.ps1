@@ -2080,13 +2080,35 @@ $draftDoesNotBlock.PackageBuilds = @{
         -Branch $draftSyncPullRequest.HeadBranch -Commit $draftSyncPullRequest.HeadSha `
         -State failed -Ready $false -BuildId 205 -BarId 0
 }
-$lineReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
-Assert-True ($lineReport -match '#9999 Backport release fix:' -and
-    $lineReport.Contains($linePr.Url) -and $lineReport -match 'review\s+open\s+PRs') `
-    'The branch-readiness view hid pending line PRs or treated them as merged commits.'
+$originalAuditOutputWidth = ${function:Get-ReleaseAuditOutputWidth}
+try {
+    foreach ($reportWidth in @(80, 120)) {
+        Set-Item Function:\Get-ReleaseAuditOutputWidth -Value { $reportWidth }
+        $lineReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+        Assert-True ($lineReport -match '#9999 Backport release fix:' -and
+            $lineReport.Contains($linePr.Url) -and
+            $lineReport -match '(?m)^Base readiness:\s+.*review open PRs') `
+            "The branch-readiness view hid pending line PRs at width $reportWidth."
+    }
+} finally {
+    Set-Item Function:\Get-ReleaseAuditOutputWidth -Value $originalAuditOutputWidth
+}
 Assert-True ($lineReport -match '#205 failed' -and
     $lineReport.Substring($lineReport.IndexOf('3. Upstream / sync')) -notmatch "#$($greenMaintenanceBuild.BuildId) succeeded") `
     'The upstream view borrowed maintenance CI instead of displaying the sync branch build.'
+$greenSyncBuild = New-AuditPackageBuild `
+    -Branch $draftSyncPullRequest.HeadBranch -Commit $draftSyncPullRequest.HeadSha `
+    -State green -Ready $true -BuildId 205 -BarId 330716
+$greenSyncBuild.NewerBuilds = @(
+    [pscustomobject] @{ BuildId = 206; State = 'failed' }
+    [pscustomobject] @{ BuildId = 207; State = 'canceled' }
+)
+$draftDoesNotBlock.PackageBuilds[$draftSyncPullRequest.HeadBranch] = $greenSyncBuild
+$syncRerunReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+$syncRerunSection = $syncRerunReport.Substring($syncRerunReport.IndexOf('3. Upstream / sync'))
+Assert-True ($syncRerunSection -match
+    '(?m)^Sync CI \(exact SHA\):\s+#205 succeeded / BAR 330716 \(newer #206 failed, #207 canceled\)$') `
+    'The upstream view hid newer failed or canceled attempts after a succeeded exact-sync build.'
 
 function Invoke-GitHubJsonWithRetry([string[]] $Arguments) {
     return @(

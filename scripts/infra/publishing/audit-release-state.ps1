@@ -1144,6 +1144,7 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
         Write-Output (Format-ReleaseAuditField `
             -Label 'Base CI (exact SHA)' `
             -Value (Format-ReleasePackageBuild $maintenanceBuild))
+        Write-Output (Format-ReleaseAuditField -Label 'Base readiness' -Value $baseSteps)
         if ($maintenanceBuild.Url) {
             Write-Output (Format-ReleaseAuditField -Label 'Base CI URL' -Value $maintenanceBuild.Url)
         }
@@ -1244,6 +1245,9 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     }
     if ($incoming.HeadBranch) {
         Write-Output "   Sync CI is skiasharp-package at $($incoming.HeadBranch)@$($incoming.HeadSha), not PR merge CI."
+        Write-Output (Format-ReleaseAuditField `
+            -Label 'Sync CI (exact SHA)' `
+            -Value (Format-ReleasePackageBuild $syncBuild))
         if ($syncBuild.Url) {
             Write-Output "   $($syncBuild.Url)"
         }
