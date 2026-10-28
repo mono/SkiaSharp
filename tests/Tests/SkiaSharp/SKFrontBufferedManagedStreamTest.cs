@@ -447,6 +447,58 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentOutOfRangeException> (() => new SKFrontBufferedManagedStream (skms, -1));
 		}
 
+		private sealed class ConstructorValidationStream : SKFrontBufferedManagedStream
+		{
+			public ConstructorValidationStream (SKStream stream, int bufferSize)
+				: base (stream, bufferSize)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (disposing)
+					throw new InvalidOperationException ("Disposal must not run during constructor validation.");
+				base.Dispose (disposing);
+			}
+		}
+
+		[Fact]
+		public void InvalidConstructorArgumentsDoNotInvokeVirtualDisposal ()
+		{
+			Assert.Throws<ArgumentNullException> (() => new ConstructorValidationStream (null, 16));
+			using var inner = new SKMemoryStream (gAbcs);
+			Assert.Throws<ArgumentOutOfRangeException> (() => new ConstructorValidationStream (inner, -1));
+		}
+
+		[Fact]
+		public void FailedConstructionDoesNotDisposeUnderlyingStream ()
+		{
+			using var inner = new SKMemoryStream (gAbcs);
+			Assert.Throws<ArgumentOutOfRangeException> (() => new SKFrontBufferedManagedStream (inner, -1, true));
+
+			Assert.False (inner.IsDisposed);
+			Assert.Equal (gAbcs[0], inner.ReadByte ());
+
+			using var managed = new MemoryStream (gAbcs);
+			Assert.Throws<ArgumentOutOfRangeException> (() => new SKFrontBufferedManagedStream (managed, -1, true));
+			Assert.Equal (gAbcs[0], managed.ReadByte ());
+		}
+
+		[Fact]
+		public void NativeSizeReadAndPeekRequestsPreserveUnsignedBits ()
+		{
+			var size = IntPtr.Size == 4 ? new IntPtr (int.MinValue) : new IntPtr ((long)int.MaxValue + 1);
+			using var inner = new VirtualLargeSkipSKStream ();
+			using var buffered = new SKFrontBufferedManagedStream (inner, 16);
+			using var storage = SKData.Create (16);
+
+			Assert.Equal (new IntPtr (16), buffered.OnPeek (storage.Data, size));
+			Assert.True (buffered.Rewind ());
+			Assert.Equal (size, buffered.OnRead (IntPtr.Zero, size));
+			Assert.True (buffered.IsAtEnd);
+			Assert.False (buffered.Rewind ());
+		}
+
 		[Fact]
 		public void StreamPeek ()
 		{
