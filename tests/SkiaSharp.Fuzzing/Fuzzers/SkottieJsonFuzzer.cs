@@ -11,13 +11,13 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// data-URI resource loading (<see cref="DataUriResourceProvider" /> and <see cref="CachingResourceProvider" />),
 /// <see cref="InvalidationController" /> bounds tracking, and frame seeking/rendering.
 /// </summary>
-public sealed class SkottieJsonFuzzer : IFuzzer
+public sealed class SkottieJsonFuzzer : Fuzzer<SkottieJsonFuzzer>
 {
 	private const int MaximumInputBytes = 1 * 1024 * 1024;
 
-	public static string Name => "skottie-json";
+	public override string Name => "skottie-json";
 
-	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+	protected override void OnFuzz(ReadOnlySpan<byte> bytes)
 	{
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;

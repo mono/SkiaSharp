@@ -16,15 +16,15 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// and pooled <see cref="HarfBuzzSharp.Buffer.SerializeGlyphs(HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat, HarfBuzzSharp.SerializeFlag)" /> /
 /// <see cref="HarfBuzzSharp.Buffer.DeserializeGlyphs(string, HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat)" />.
 /// </summary>
-public sealed class HarfBuzzShapingFuzzer : IFuzzer
+public sealed class HarfBuzzShapingFuzzer : Fuzzer<HarfBuzzShapingFuzzer>
 {
 	private const int MaximumInputBytes = 4 * 1024;
 
 	private static readonly Lazy<byte[]> FontBytes = new(LoadFontBytes);
 
-	public static string Name => "harfbuzz-shaping";
+	public override string Name => "harfbuzz-shaping";
 
-	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+	protected override void OnFuzz(ReadOnlySpan<byte> bytes)
 	{
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;
@@ -137,7 +137,7 @@ public sealed class HarfBuzzShapingFuzzer : IFuzzer
 
 	private static byte[] LoadFontBytes()
 	{
-		var fontPath = Path.Combine(Path.GetDirectoryName(typeof(IFuzzer).Assembly.Location)!, "assets", "font.ttf");
+		var fontPath = Path.Combine(Path.GetDirectoryName(typeof(Fuzzer).Assembly.Location)!, "assets", "font.ttf");
 		if (!File.Exists(fontPath))
 			throw new FileNotFoundException("The HarfBuzz fuzzing font asset is missing.", fontPath);
 

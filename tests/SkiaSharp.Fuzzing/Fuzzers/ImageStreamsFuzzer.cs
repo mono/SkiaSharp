@@ -9,15 +9,15 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// and early-EOF managed streams (<see cref="SKManagedStream" />, <see cref="SKFrontBufferedManagedStream" />,
 /// and <see cref="SKManagedWStream" />).
 /// </summary>
-public sealed class ImageStreamsFuzzer : IFuzzer
+public sealed class ImageStreamsFuzzer : Fuzzer<ImageStreamsFuzzer>
 {
 	private const long MaximumDecodedBytes = 4 * 1024 * 1024;
 	private const int MaximumDimension = 1024;
 	private const int MaximumInputBytes = 1 * 1024 * 1024;
 
-	public static string Name => "image-streams";
+	public override string Name => "image-streams";
 
-	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+	protected override void OnFuzz(ReadOnlySpan<byte> bytes)
 	{
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;

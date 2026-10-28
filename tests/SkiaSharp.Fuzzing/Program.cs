@@ -2,12 +2,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using SharpFuzz;
 using SkiaSharp.Fuzzing;
 
-var fuzzers = typeof(IFuzzer).Assembly.GetTypes()
-	.Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(IFuzzer)))
-	.Select(FuzzerDescriptor.Create)
+var fuzzers = typeof(Fuzzer).Assembly.GetTypes()
+	.Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(Fuzzer)))
+	.Select(t => (Fuzzer)Activator.CreateInstance(t)!)
 	.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase)
 	.ToArray();
 
@@ -38,7 +37,7 @@ switch (args)
 		return 1;
 }
 
-static void PrintUsage(FuzzerDescriptor[] fuzzers)
+static void PrintUsage(Fuzzer[] fuzzers)
 {
 	var names = string.Join(Environment.NewLine, fuzzers.Select(f => $"  {f.Name}"));
 	Console.Error.WriteLine(
@@ -52,7 +51,7 @@ static void PrintUsage(FuzzerDescriptor[] fuzzers)
 		""");
 }
 
-static void Run(FuzzerDescriptor fuzzer, string? inputPath)
+static void Run(Fuzzer fuzzer, string? inputPath)
 {
 	if (!string.IsNullOrEmpty(inputPath))
 	{
@@ -61,15 +60,15 @@ static void Run(FuzzerDescriptor fuzzer, string? inputPath)
 			: [inputPath];
 
 		foreach (var file in files)
-			fuzzer.Target(File.ReadAllBytes(file));
+			fuzzer.Fuzz(File.ReadAllBytes(file));
 
 		return;
 	}
 
-	Fuzzer.LibFuzzer.Run(bytes => fuzzer.Target(bytes));
+	SharpFuzz.Fuzzer.LibFuzzer.Run(fuzzer.Fuzz);
 }
 
-static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instrument)
+static void Prepare(Fuzzer[] fuzzers, string dropDirectory, bool instrument)
 {
 	string[] targetAssemblies =
 	[
@@ -86,7 +85,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 	{
 		CopyDirectory(buildDirectory, dropDirectory);
 		foreach (var assembly in targetAssemblies)
-			Fuzzer.Instrument(Path.Combine(dropDirectory, assembly), static _ => true, Options.Value);
+			SharpFuzz.Fuzzer.Instrument(Path.Combine(dropDirectory, assembly), static _ => true, SharpFuzz.Options.Value);
 		return;
 	}
 
@@ -143,8 +142,8 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 				{
 					["$type"] = "libfuzzerDotNet",
 					["Dll"] = "SkiaSharp.Fuzzing.dll",
-					["Class"] = $"{typeof(FuzzSeeds<>).FullName}[[{fuzzer.Type.FullName}]]",
-					["Method"] = nameof(IFuzzer.FuzzTarget),
+					["Class"] = $"{typeof(Fuzzer<>).FullName}[[{fuzzer.GetType().FullName}]]",
+					["Method"] = nameof(Fuzzer<>.FuzzTarget),
 					["FuzzingTargetBinaries"] = binaries
 				},
 				["FuzzerTimeoutInSeconds"] = 60,

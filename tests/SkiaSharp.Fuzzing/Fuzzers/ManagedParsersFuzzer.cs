@@ -10,13 +10,13 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// and <see cref="SKFourByteTag.Parse(ReadOnlySpan{char})" />, <see cref="Tag.Parse(string)" /> and
 /// <see cref="Tag.Parse(ReadOnlySpan{char})" />, and <see cref="StringUtilities" />.
 /// </summary>
-public sealed class ManagedParsersFuzzer : IFuzzer
+public sealed class ManagedParsersFuzzer : Fuzzer<ManagedParsersFuzzer>
 {
 	private const int MaximumInputBytes = 4 * 1024;
 
-	public static string Name => "managed-parsers";
+	public override string Name => "managed-parsers";
 
-	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+	protected override void OnFuzz(ReadOnlySpan<byte> bytes)
 	{
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;

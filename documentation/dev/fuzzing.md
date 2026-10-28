@@ -67,7 +67,7 @@ Run `dotnet run --project tests/SkiaSharp.Fuzzing` with no arguments to list all
 
 | Argument | Maps to | Description |
 |----------|---------|-------------|
-| `--fuzzerTarget=<name>` | `--target_arg=<name>` | **Required** for `fuzzing`. Which `IFuzzer` to run. |
+| `--fuzzerTarget=<name>` | `--target_arg=<name>` | **Required** for `fuzzing`. Which `Fuzzer` to run. |
 | `--fuzzer=<path>` | `FUZZER_EXE` | Use your own `libfuzzer-dotnet` binary instead of downloading one. |
 | `--fuzzerInput=<path>` | positional input | Run a crash file or directory once and exit instead of fuzzing. |
 | `--fuzzerMaxTime=<sec>` | `-max_total_time` | Stop after this many seconds. Default: run until stopped. |
@@ -156,21 +156,23 @@ patterns in upstream Skia's [`fuzz/oss_fuzz`](https://github.com/google/skia/tre
 
 ### Adding a new fuzzer
 
-A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection, so there is no registration step:
+A fuzzer is a class inheriting from `Fuzzer<TFuzzer>`. `Program.cs` finds it by reflection, so there is no registration
+step:
 
-1. Add a class implementing `IFuzzer` in `tests/SkiaSharp.Fuzzing/Fuzzers/` (use an existing fuzzer as the template).
-   Pick a kebab-case `Name`; it becomes the Cake `--fuzzerTarget`, the `seeds/<Name>/` folder, and the OneFuzz job target prefix.
+1. Add a class inheriting from `Fuzzer<TFuzzer>` in `tests/SkiaSharp.Fuzzing/Fuzzers/` (use an existing fuzzer as the
+   template). Pick a kebab-case `Name`; it becomes the Cake `--fuzzerTarget`, the `seeds/<Name>/` folder, and the
+   OneFuzz job target prefix.
 
    ```csharp
    namespace SkiaSharp.Fuzzing.Fuzzers;
 
-   public sealed class MyFeatureFuzzer : IFuzzer
+   public sealed class MyFeatureFuzzer : Fuzzer<MyFeatureFuzzer>
    {
        private const int MaximumInputBytes = 1 * 1024 * 1024;
 
-       public static string Name => "my-feature";
+       public override string Name => "my-feature";
 
-       public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+       protected override void OnFuzz(ReadOnlySpan<byte> bytes)
        {
            if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
                return;
@@ -180,7 +182,7 @@ A fuzzer is a class implementing `IFuzzer`. `Program.cs` finds it by reflection,
    }
    ```
 
-   `FuzzTarget` runs millions of times in one process. Any unhandled exception, native crash, or hang is a finding. So
+   `OnFuzz` runs millions of times in one process. Any unhandled exception, native crash, or hang is a finding. So
    **expected failures must not throw**: factories that return `null` for bad input are fine; wrapping the body in
    `try/catch` to hide real bugs is not.
 
@@ -216,15 +218,16 @@ To cover a small number of modes, such as seekable vs. non-seekable streams, run
 deterministically. `TypefaceStreamsFuzzer` and `ImageStreamsFuzzer` follow this shape:
 
 ```csharp
-public static void FuzzTarget(ReadOnlySpan<byte> bytes)
+protected override void OnFuzz(ReadOnlySpan<byte> bytes)
 {
     if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
         return;
 
     var payload = bytes.ToArray();
 
-    Fuzz(payload, seekable: true);
-    Fuzz(payload, seekable: false);
+    FuzzAllModes(payload, maximumReadLength: int.MaxValue, earlyEndPosition: -1);
+    FuzzAllModes(payload, maximumReadLength: 8, earlyEndPosition: -1);
+    FuzzAllModes(payload, maximumReadLength: int.MaxValue, earlyEndPosition: payload.Length / 2);
 }
 ```
 
@@ -310,12 +313,11 @@ with two jobs:
    directory with `onefuzz-task@0`.
 
 Each platform directory contains the un-instrumented managed assemblies and `.pdb`s, that platform's native libraries,
-`assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `IFuzzer`.
+`assets/`, `seeds/<target>/`, and `OneFuzzConfig.json`, which has one entry per discovered `Fuzzer`.
 `PreservePathsJobDependencies` uploads both `./assets/**/*` and `./seeds/**/*` into `{setup_dir}` on the worker, and
-`FuzzSeeds<TFuzzer>.FuzzTarget` stages `{setup_dir}/seeds/<target>/` into the worker's
-`task_inputs_0` corpus directory on the first invocation before forwarding to `TFuzzer.FuzzTarget`—so adding or editing
-files in `tests/SkiaSharp.Fuzzing/seeds/` in git takes effect automatically on the next CI run with no manual container
-uploads.
+`Fuzzer.Fuzz` stages `{setup_dir}/seeds/<target>/` into the worker's `task_inputs_0` corpus directory on the first
+invocation before calling `OnFuzz`—so adding or editing files in `tests/SkiaSharp.Fuzzing/seeds/` in git takes effect
+automatically on the next CI run with no manual container uploads.
 
 ### The OneFuzz CLI wrapper
 
