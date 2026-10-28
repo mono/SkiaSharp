@@ -55,6 +55,11 @@ namespace SkiaSharp
 		/// <remarks />
 		public SKFrontBufferedStream(Stream stream, long bufferSize, bool disposeUnderlyingStream)
 		{
+			if (stream == null)
+				throw new ArgumentNullException(nameof(stream));
+			if (bufferSize < 0 || bufferSize > int.MaxValue)
+				throw new ArgumentOutOfRangeException(nameof(bufferSize));
+
 			underlyingStream = stream;
 			totalBufferSize = bufferSize;
 			totalLength = stream.CanSeek && stream.Length >= 0
@@ -107,13 +112,20 @@ namespace SkiaSharp
 		/// <remarks />
 		public override int Read(byte[] buffer, int offset, int count)
 		{
+			if (buffer == null)
+				throw new ArgumentNullException(nameof(buffer));
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset));
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count));
-			if (buffer != null && count > buffer.Length - offset)
+			if (count > buffer.Length - offset)
 				throw new ArgumentOutOfRangeException(nameof(count));
 
+			return ReadInternal(buffer, offset, count);
+		}
+
+		private int ReadInternal(byte[] buffer, int offset, int count)
+		{
 			if (count == 0)
 				return 0;
 
@@ -147,12 +159,6 @@ namespace SkiaSharp
 				var direct = ReadDirectlyFromStream(buffer, offset, count);
 				count -= direct;
 				offset += direct;
-
-				if (direct > 0)
-				{
-					// if we are here, we are past the buffer and can't go back
-					internalBuffer = null;
-				}
 			}
 
 			return (int)(currentOffset - start);
@@ -204,7 +210,7 @@ namespace SkiaSharp
 				while (toMove > 0)
 				{
 					var step = (int)Math.Min(toMove, SKData.CopyBufferSize);
-					var moved = Read(null, 0, step);
+					var moved = ReadInternal(null, 0, step);
 					if (moved <= 0)
 						break;
 					toMove -= moved;
@@ -249,15 +255,23 @@ namespace SkiaSharp
 		private int BufferAndWriteTo(byte[] dst, int offset, int size)
 		{
 			var bytesToBuffer = Math.Min(size, (int)(totalBufferSize - bufferedSoFar));
-			var totalBuffered = ReadFromUnderlying(internalBuffer, (int)bufferedSoFar, bytesToBuffer);
+			var totalBuffered = 0;
 
-			if (dst != null && totalBuffered > 0)
+			while (totalBuffered < bytesToBuffer)
 			{
-				Buffer.BlockCopy(internalBuffer, (int)currentOffset, dst, offset, totalBuffered);
-			}
+				var read = underlyingStream.Read(internalBuffer, (int)bufferedSoFar, bytesToBuffer - totalBuffered);
+				if (read <= 0)
+					break;
 
-			bufferedSoFar += totalBuffered;
-			currentOffset = bufferedSoFar;
+				if (dst != null)
+				{
+					Buffer.BlockCopy(internalBuffer, (int)bufferedSoFar, dst, offset + totalBuffered, read);
+				}
+
+				bufferedSoFar += read;
+				currentOffset = bufferedSoFar;
+				totalBuffered += read;
+			}
 
 			return totalBuffered;
 		}
@@ -268,11 +282,14 @@ namespace SkiaSharp
 
 			if (dst == null)
 			{
-				if (underlyingStream.CanSeek && underlyingStream.Length >= 0)
+				if (underlyingStream.CanSeek && underlyingStream.Length >= 0 && !(underlyingStream is SKFrontBufferedStream))
 				{
 					var available = Math.Max(0, underlyingStream.Length - underlyingStream.Position);
 					totalRead = (int)Math.Min(size, available);
 					underlyingStream.Position += totalRead;
+					currentOffset += totalRead;
+					if (totalRead > 0)
+						internalBuffer = null;
 				}
 				else
 				{
@@ -280,35 +297,30 @@ namespace SkiaSharp
 					while (totalRead < size)
 					{
 						var toRead = Math.Min(size - totalRead, scratch.Length);
-						var read = ReadFromUnderlying(scratch.Array, 0, toRead);
+						var read = underlyingStream.Read(scratch.Array, 0, toRead);
 						if (read <= 0)
 							break;
 
+						internalBuffer = null;
+						currentOffset += read;
 						totalRead += read;
 					}
 				}
 			}
 			else
 			{
-				totalRead = ReadFromUnderlying(dst, offset, size);
+				while (totalRead < size)
+				{
+					var read = underlyingStream.Read(dst, offset + totalRead, size - totalRead);
+					if (read <= 0)
+						break;
+
+					internalBuffer = null;
+					currentOffset += read;
+					totalRead += read;
+				}
 			}
 
-			currentOffset += totalRead;
-
-			return totalRead;
-		}
-
-		private int ReadFromUnderlying(byte[] dst, int offset, int size)
-		{
-			var totalRead = 0;
-			while (totalRead < size)
-			{
-				var read = underlyingStream.Read(dst, offset + totalRead, size - totalRead);
-				if (read <= 0)
-					break;
-
-				totalRead += read;
-			}
 			return totalRead;
 		}
 

@@ -298,25 +298,39 @@ namespace SkiaSharp.Tests
 		[InlineData (1)]
 		[InlineData (5)]
 		[InlineData (17)]
-		public void ShortReadStreamBuffersAndRewindsCorrectly (int maxBytesPerRead)
+		public void ShortReadNonSeekableStreamBuffersAndRewindsCorrectly (int maxBytesPerRead)
 		{
-			using var inner = new ShortReadingCustomSKStream (gAbcs, maxBytesPerRead);
+			using var inner = new ConfigurableTestStream (gAbcs, canSeek: false, maxBytesPerRead: maxBytesPerRead);
 			using var buffered = new SKFrontBufferedManagedStream (inner, 32, disposeUnderlyingStream: true);
 
 			test_read (buffered, gAbcs, 16);
+			Assert.False (buffered.IsAtEnd);
 			test_rewind (buffered, true);
-			test_read (buffered, gAbcs, 32);
-			test_rewind (buffered, true);
-			test_read (buffered, gAbcs, 32);
 
-			var pos = 32;
-			while (pos < gAbcs.Length)
-			{
-				test_read (buffered, gAbcs.Skip (pos).ToArray (), maxBytesPerRead);
-				test_rewind (buffered, false);
-				pos += maxBytesPerRead;
-			}
+			test_read (buffered, gAbcs, 32);
+			Assert.False (buffered.IsAtEnd);
+			test_rewind (buffered, true);
+
+			// Read the entire stream (across and past the front buffer) in a single Read call
+			test_read (buffered, gAbcs, gAbcs.Length);
+			test_rewind (buffered, false);
+
+			// For a non-seekable stream, EOF is detected when a read past the last byte returns 0
+			Assert.Equal (0, buffered.Read (new byte[1], 1));
 			Assert.True (buffered.IsAtEnd);
+		}
+
+		[Fact]
+		public void ShortReadNonSeekableStream_CanDecodeImagePastFrontBuffer ()
+		{
+			var bytes = File.ReadAllBytes (Path.Combine (PathToImages, "color-wheel.png"));
+			using var inner = new ConfigurableTestStream (bytes, canSeek: false, maxBytesPerRead: 3);
+			using var buffered = new SKFrontBufferedManagedStream (inner, SKCodec.MinBufferedBytesNeeded, disposeUnderlyingStream: true);
+			using var codec = SKCodec.Create (buffered);
+
+			Assert.NotNull (codec);
+			Assert.Equal (SKCodecResult.Success, codec.GetPixels (out var pixels));
+			Assert.NotEmpty (pixels);
 		}
 
 		[Theory]
@@ -326,7 +340,7 @@ namespace SkiaSharp.Tests
 		public void ReadBeyondBufferDoesNotInvalidateFrontBuffer (int bufferSize)
 		{
 			var exactData = gAbcs.Take (bufferSize).ToArray ();
-			using var inner = new ShortReadingCustomSKStream (exactData, maxPerRead: 5);
+			using var inner = new ConfigurableTestStream (exactData, canSeek: false, maxBytesPerRead: 5);
 			using var buffered = new SKFrontBufferedManagedStream (inner, bufferSize, disposeUnderlyingStream: true);
 
 			// Attempt to read one byte more than bufferSize (which is also the stream's total length)
@@ -349,11 +363,14 @@ namespace SkiaSharp.Tests
 			test_read (buffered, gAbcs.Skip (8).ToArray (), 8);
 			test_rewind (buffered, true);
 			test_read (buffered, gAbcs, 16);
+			test_rewind (buffered, true);
+			test_read (buffered, gAbcs, gAbcs.Length);
+			Assert.True (buffered.IsAtEnd);
 		}
 
 		private sealed class VirtualLargeSkipSKStream : ManagedStream
 		{
-			private long remaining = (long)int.MaxValue + 1024;
+			private long remaining = (long)int.MaxValue + 1;
 
 			protected internal override bool OnIsAtEnd () => remaining <= 0;
 
@@ -378,9 +395,13 @@ namespace SkiaSharp.Tests
 			using var buffered = new SKFrontBufferedManagedStream (inner, 16, disposeUnderlyingStream: true);
 
 			Assert.Equal (int.MaxValue, buffered.Skip (int.MaxValue));
+			Assert.False (buffered.IsAtEnd);
 			Assert.Equal (1, buffered.Skip (1));
 
-			// Offset is now 2,147,483,648 (> int.MaxValue); Rewind must return false, not wrap negative
+			// Offset is now 2,147,483,648 (> int.MaxValue). If offset wrapped negative (< bufferedSoFar),
+			// IsAtEnd would falsely return false and Read would crash trying to read from frontBuffer.
+			Assert.True (buffered.IsAtEnd);
+			Assert.Equal (0, buffered.Read (new byte[1], 1));
 			Assert.False (buffered.Rewind ());
 		}
 
@@ -397,22 +418,33 @@ namespace SkiaSharp.Tests
 
 			protected internal override bool OnHasLength () => true;
 			protected internal override bool OnHasPosition () => true;
-			protected internal override IntPtr OnGetLength () => (IntPtr)length;
-			protected internal override IntPtr OnGetPosition () => (IntPtr)position;
+			protected internal override IntPtr OnGetLength () =>
+				IntPtr.Size == 4 ? (IntPtr)unchecked((int)(uint)length) : (IntPtr)length;
+			protected internal override IntPtr OnGetPosition () =>
+				IntPtr.Size == 4 ? (IntPtr)unchecked((int)(uint)position) : (IntPtr)position;
 		}
 
 		[Fact]
 		public unsafe void LargeStreamLengthBeyond2GB_IsPreservedWithoutSignExtension ()
 		{
-			if (IntPtr.Size < 8)
-				return;
-
 			var twoGiB = (long)int.MaxValue + 1;
 			using var inner = new LargeLengthSKStream (twoGiB + 100, 100);
 			using var buffered = new SKFrontBufferedManagedStream (inner, 16, disposeUnderlyingStream: true);
 
-			var nativeLen = (long)SkiaApi.sk_stream_get_length (buffered.Handle);
+			var rawLen = SkiaApi.sk_stream_get_length (buffered.Handle);
+			var nativeLen = IntPtr.Size == 4 ? (uint)(int)rawLen : (long)rawLen;
 			Assert.Equal (twoGiB, nativeLen);
+		}
+
+		[Fact]
+		public void InvalidConstructorArguments_ThrowExpectedExceptions ()
+		{
+			Assert.Throws<ArgumentNullException> (() => new SKFrontBufferedManagedStream ((Stream)null, 16));
+			Assert.Throws<ArgumentNullException> (() => new SKFrontBufferedManagedStream ((SKStream)null, 16));
+			using var ms = new MemoryStream (gAbcs);
+			Assert.Throws<ArgumentOutOfRangeException> (() => new SKFrontBufferedManagedStream (ms, -1));
+			using var skms = new SKMemoryStream (gAbcs);
+			Assert.Throws<ArgumentOutOfRangeException> (() => new SKFrontBufferedManagedStream (skms, -1));
 		}
 
 		[Fact]

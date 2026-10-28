@@ -36,8 +36,18 @@ namespace SkiaSharp
 		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
 		/// <remarks />
 		public SKFrontBufferedManagedStream (Stream managedStream, int bufferSize, bool disposeUnderlyingStream)
-			: this (new SKManagedStream (managedStream, disposeUnderlyingStream), bufferSize, true)
+			: this (CreateManagedStream (managedStream, bufferSize, disposeUnderlyingStream), bufferSize, true)
 		{
+		}
+
+		private static SKManagedStream CreateManagedStream (Stream managedStream, int bufferSize, bool disposeUnderlyingStream)
+		{
+			if (managedStream == null)
+				throw new ArgumentNullException (nameof (managedStream));
+			if (bufferSize < 0)
+				throw new ArgumentOutOfRangeException (nameof (bufferSize));
+
+			return new SKManagedStream (managedStream, disposeUnderlyingStream);
 		}
 
 		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
@@ -56,10 +66,23 @@ namespace SkiaSharp
 		/// <remarks />
 		public SKFrontBufferedManagedStream (SKStream nativeStream, int bufferSize, bool disposeUnderlyingStream)
 		{
+			if (nativeStream == null)
+			{
+				Dispose ();
+				throw new ArgumentNullException (nameof (nativeStream));
+			}
+			if (bufferSize < 0)
+			{
+				if (disposeUnderlyingStream)
+					nativeStream.Dispose ();
+				Dispose ();
+				throw new ArgumentOutOfRangeException (nameof (bufferSize));
+			}
+
 			var hasPos = nativeStream.HasPosition;
 			var hasLen = nativeStream.HasLength;
-			var length = hasLen ? (long)SkiaApi.sk_stream_get_length (nativeStream.Handle) : 0;
-			var position = hasPos ? (long)SkiaApi.sk_stream_get_position (nativeStream.Handle) : 0;
+			var length = hasLen ? GetNativeSize (SkiaApi.sk_stream_get_length (nativeStream.Handle)) : 0;
+			var position = hasPos ? GetNativeSize (SkiaApi.sk_stream_get_position (nativeStream.Handle)) : 0;
 			GC.KeepAlive (nativeStream);
 
 			disposeStream = disposeUnderlyingStream;
@@ -71,6 +94,9 @@ namespace SkiaSharp
 			bufferLength = bufferSize;
 			frontBuffer = new byte[bufferSize];
 		}
+
+		private static long GetNativeSize (IntPtr value) =>
+			IntPtr.Size == 4 ? (uint)(int)value : (long)value;
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
@@ -156,7 +182,7 @@ namespace SkiaSharp
 			}
 
 			// 3. read the rest directly once the front buffer is full
-			if (remaining > 0 && bufferedSoFar >= bufferLength && !isUnderlyingAtEnd)
+			while (remaining > 0 && bufferedSoFar >= bufferLength && !isUnderlyingAtEnd)
 			{
 				var bytesToRead = (int)Math.Min (remaining, int.MaxValue);
 				var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
@@ -167,15 +193,17 @@ namespace SkiaSharp
 					throw new IOException ("The stream returned an invalid byte count.");
 				var bytesRead = (int)read;
 
-				// past the buffer, so dispose it
-				if (bytesRead > 0)
-				{
-					frontBuffer = null;
-				}
-				else
+				if (bytesRead <= 0)
 				{
 					isUnderlyingAtEnd = true;
+					break;
 				}
+
+				// past the buffer, so dispose it
+				frontBuffer = null;
+
+				if (buffer != IntPtr.Zero)
+					buffer += bytesRead;
 
 				offset += bytesRead;
 				remaining -= bytesRead;
@@ -223,7 +251,13 @@ namespace SkiaSharp
 				return false;
 			}
 
-			return isUnderlyingAtEnd || stream.IsAtEnd;
+			if (isUnderlyingAtEnd)
+				return true;
+
+			if (!hasLength && stream is SKManagedStream)
+				return false;
+
+			return stream.IsAtEnd;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to rewind the current stream.</summary>
@@ -249,7 +283,8 @@ namespace SkiaSharp
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to return the total length of the stream.</summary>
 		/// <returns>Returns the total length of the stream.</returns>
 		/// <remarks />
-		protected internal override IntPtr OnGetLength () => (IntPtr)streamLength;
+		protected internal override IntPtr OnGetLength () =>
+			IntPtr.Size == 4 ? (IntPtr)unchecked((int)(uint)streamLength) : (IntPtr)streamLength;
 
 		// seeking is not supported
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its current position.</summary>
