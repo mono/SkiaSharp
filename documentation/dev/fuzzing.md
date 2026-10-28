@@ -112,7 +112,7 @@ A finding is anything libFuzzer reports: an unhandled managed exception, a nativ
 
 Google's [OSS-Fuzz](https://github.com/google/oss-fuzz) continuously fuzzes native
 [Skia](https://github.com/google/oss-fuzz/tree/master/projects/skia) (see [Skia fuzzing docs](https://skia.org/docs/dev/testing/fuzz/)
-and [`externals/skia/fuzz/oss_fuzz/`](../../externals/skia/fuzz/oss_fuzz)) and
+and [`skia/fuzz/oss_fuzz`](https://github.com/google/skia/tree/main/fuzz/oss_fuzz)) and
 [HarfBuzz](https://github.com/google/oss-fuzz/tree/master/projects/harfbuzz) (see
 [`harfbuzz/test/fuzzing`](https://github.com/harfbuzz/harfbuzz/tree/main/test/fuzzing)). That does not
 cover what SkiaSharp adds on top. Those C++ fuzzers hand an `SkMemoryStream`, `hb_blob_t`, or raw pointer straight to
@@ -153,7 +153,7 @@ These rules combine Google's
 [What makes a good fuzz target](https://github.com/google/fuzzing/blob/master/docs/good-fuzz-target.md) and
 [Splitting inputs](https://github.com/google/fuzzing/blob/master/docs/split-inputs.md), the conventions in
 [`dotnet/runtime` fuzzing](https://github.com/dotnet/runtime/blob/main/src/libraries/Fuzzing/README.md), and the
-patterns in upstream Skia's `externals/skia/fuzz/oss_fuzz/`. The snippets below are from the real fuzzers.
+patterns in upstream Skia's [`fuzz/oss_fuzz`](https://github.com/google/skia/tree/main/fuzz/oss_fuzz). The snippets below are from the real fuzzers.
 
 ### The contract
 
@@ -237,7 +237,8 @@ Ask of every new fuzzer: what happens after parse that a real caller would do, a
 
 When probing a parsed object, query what the fuzzed input actually provides rather than a hardcoded sample. A fixed
 string like `"Hello"` is useless against a mutated font whose `cmap` no longer maps those characters, so the fuzzer
-exercises nothing. `TypefaceStreamsFuzzer` follows Skia's `FuzzCOLRv1.cpp`, which walks glyph IDs directly:
+exercises nothing. `TypefaceStreamsFuzzer` follows Skia's
+[`FuzzCOLRv1.cpp`](https://github.com/google/skia/blob/main/fuzz/oss_fuzz/FuzzCOLRv1.cpp), which walks glyph IDs directly:
 
 ```csharp
 var glyphCount = Math.Min(typeface.GlyphCount, 16);
@@ -411,7 +412,7 @@ Once a crash is downloaded to `output/fuzzing/local/crashes/`, replay it with th
 - [Google Fuzzing: Splitting inputs](https://github.com/google/fuzzing/blob/master/docs/split-inputs.md)
 - [LLVM libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html)
 - [`dotnet/runtime` fuzzing documentation](https://github.com/dotnet/runtime/blob/main/src/libraries/Fuzzing/README.md)
-- [Skia fuzzing documentation](https://skia.org/docs/dev/testing/fuzz/), [OSS-Fuzz Skia project](https://github.com/google/oss-fuzz/tree/master/projects/skia), and the upstream targets in [`externals/skia/fuzz/oss_fuzz/`](../../externals/skia/fuzz/oss_fuzz)
+- [Skia fuzzing documentation](https://skia.org/docs/dev/testing/fuzz/), [OSS-Fuzz Skia project](https://github.com/google/oss-fuzz/tree/master/projects/skia), and the upstream targets in [`skia/fuzz/oss_fuzz`](https://github.com/google/skia/tree/main/fuzz/oss_fuzz)
 - [HarfBuzz fuzzing suite](https://github.com/harfbuzz/harfbuzz/tree/main/test/fuzzing) and [OSS-Fuzz HarfBuzz project](https://github.com/google/oss-fuzz/tree/master/projects/harfbuzz)
 - [SharpFuzz](https://github.com/Metalnem/sharpfuzz) and
-  [libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer-dotnet)
+  [libfuzzer-dotnet](https://github.com/Metalnem/libfuzzer
