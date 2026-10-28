@@ -13,14 +13,17 @@ internal ref struct PooledByteBuffer
 {
 	// An exact shared-pool bucket below the default LOH threshold; 80 KiB would rent 128 KiB.
 	internal const int DataBufferSize = 64 * 1024;
+
 	// Start with the shared pool's 16-entry bucket (~256 bytes of entries on 64-bit).
 	// Those entries describe 1 MiB of data beyond the inline buffer.
 	private const int InitialEntryBlockCapacity = 16;
+
 	// Geometric entry-block growth reaches managed array-size limits before this directory fills.
 	private const int MaxEntryBlocks = 32;
 
 	private readonly ArrayPool<byte> pool;
 	private BufferEntry firstEntry;
+
 	// entryBlocks[block][entry].Buffer holds data; WrittenCount identifies its valid bytes.
 	private BufferEntry[][] entryBlocks;
 	private int entryBlockCount;
@@ -47,14 +50,18 @@ internal ref struct PooledByteBuffer
 			firstEntry.Buffer = pool.Rent (DataBufferSize);
 			return new ArraySegment<byte> (firstEntry.Buffer, 0, DataBufferSize);
 		}
+
+		// Reuse an existing buffer's unwritten tail before renting another one.
 		if (entryBlockCount == 0 && firstEntry.WrittenCount < DataBufferSize)
 			return new ArraySegment<byte> (firstEntry.Buffer, firstEntry.WrittenCount, DataBufferSize - firstEntry.WrittenCount);
+
 		if (lastBlockEntryCount > 0) {
 			var last = entryBlocks[entryBlockCount - 1][lastBlockEntryCount - 1];
 			if (last.WrittenCount < DataBufferSize)
 				return new ArraySegment<byte> (last.Buffer, last.WrittenCount, DataBufferSize - last.WrittenCount);
 		}
 
+		// Reserve bookkeeping space first so a failed growth cannot orphan a data-buffer rental.
 		entryBlocks ??= ArrayPool<BufferEntry[]>.Shared.Rent (MaxEntryBlocks);
 		if (entryBlockCount == 0 || lastBlockEntryCount == entryBlocks[entryBlockCount - 1].Length) {
 			var previousCapacity = entryBlockCount == 0 ? 0 : entryBlocks[entryBlockCount - 1].Length;
@@ -70,6 +77,8 @@ internal ref struct PooledByteBuffer
 
 		var dataBuffer = pool.Rent (DataBufferSize);
 		entryBlocks[entryBlockCount - 1][lastBlockEntryCount++] = new BufferEntry { Buffer = dataBuffer };
+
+		// Ownership is recorded before writable storage is handed to the caller.
 		return new ArraySegment<byte> (dataBuffer, 0, DataBufferSize);
 	}
 
@@ -82,14 +91,17 @@ internal ref struct PooledByteBuffer
 		var used = entryBlockCount == 0
 			? firstEntry.WrittenCount
 			: entryBlocks[entryBlockCount - 1][lastBlockEntryCount - 1].WrittenCount;
+
 		if ((uint)count > (uint)(DataBufferSize - used))
 			throw new ArgumentOutOfRangeException (nameof (count));
 
+		// Check the total before changing either count, leaving state intact on overflow.
 		var length = checked (Length + (ulong)count);
 		if (entryBlockCount == 0)
 			firstEntry.WrittenCount += count;
 		else
 			entryBlocks[entryBlockCount - 1][lastBlockEntryCount - 1].WrittenCount += count;
+
 		Length = length;
 	}
 
@@ -100,6 +112,7 @@ internal ref struct PooledByteBuffer
 			buffer = new ArraySegment<byte> (firstEntry.Buffer, 0, firstEntry.WrittenCount);
 			return true;
 		}
+
 		buffer = default;
 		return false;
 	}
@@ -114,16 +127,23 @@ internal ref struct PooledByteBuffer
 		if (firstEntry.Buffer != null)
 			pool.Return (firstEntry.Buffer);
 		firstEntry = default;
+
 		if (entryBlocks != null) {
 			for (var i = 0; i < entryBlockCount; i++) {
 				var block = entryBlocks[i];
+
+				// Earlier blocks are full; the final block can have unused entry slots.
 				var count = i == entryBlockCount - 1 ? lastBlockEntryCount : block.Length;
 				for (var j = 0; j < count; j++)
 					pool.Return (block[j].Buffer);
+
+				// Pooled entry arrays must not keep returned data buffers alive.
 				ArrayPool<BufferEntry>.Shared.Return (block, clearArray: true);
 			}
+
 			ArrayPool<BufferEntry[]>.Shared.Return (entryBlocks, clearArray: true);
 		}
+
 		entryBlocks = null;
 		entryBlockCount = lastBlockEntryCount = 0;
 		Length = 0;
@@ -151,7 +171,8 @@ internal ref struct PooledByteBuffer
 			this.entryBlocks = entryBlocks;
 			this.entryBlockCount = entryBlockCount;
 			this.lastBlockEntryCount = lastBlockEntryCount;
-			entryBlockIndex = -1;
+
+			entryBlockIndex = -1; // Visit the inline entry before entry block 0.
 			entryIndex = 0;
 			Current = default;
 		}
@@ -168,17 +189,21 @@ internal ref struct PooledByteBuffer
 					return true;
 				}
 			}
+
 			while (entryBlockIndex < entryBlockCount) {
 				var block = entryBlocks[entryBlockIndex];
 				var count = entryBlockIndex == entryBlockCount - 1 ? lastBlockEntryCount : block.Length;
+
 				if (entryIndex < count) {
 					var entry = block[entryIndex++];
 					Current = new ArraySegment<byte> (entry.Buffer, 0, entry.WrittenCount);
 					return true;
 				}
+
 				entryBlockIndex++;
 				entryIndex = 0;
 			}
+
 			Current = default;
 			return false;
 		}
