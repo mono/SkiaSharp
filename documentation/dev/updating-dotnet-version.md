@@ -166,7 +166,7 @@ These use MSBuild properties from `SkiaSharp.Build.props`:
 - All projects using `$(BasicTargetFrameworks)` — NativeAssets.Linux, Win32, WebAssembly, etc.
 - All projects using `$(WindowsTargetFrameworks)` — NativeAssets.WinUI, NanoServer, Views.WinUI
 - All projects using `$(MauiTargetFrameworks)` — Views.Maui.Core, Views.Maui.Controls
-- All projects using `$(UnoTargetFrameworks)` — Views.Uno.WinUI, Skia, Wasm
+- All projects using `$(UnoTargetFrameworks)` — Views.Uno.WinUI (.NET 10 and later only, as Uno Platform 7 requires)
 - All projects using `$(TFMCurrent)` — Benchmarks, test console projects, Direct3D
 - `binding/NativeAssets.Build.targets` — Uses `$(TFMCurrent)`
 - `native/winui/.../SkiaSharp.Views.WinUI.Native.Projection.csproj` — Uses `$(WindowsTargetFrameworksPrevious)`
