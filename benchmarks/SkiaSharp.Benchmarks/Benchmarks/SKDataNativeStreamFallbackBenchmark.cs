@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace SkiaSharp.Benchmarks;
 
-// Exercise the SKStream fallback through a forward-only SKManagedStream, including legal short reads.
+// Compare the same buffering strategies through direct Stream reads or a forward-only SKManagedStream.
 // MemoryDiagnoser reports managed allocations only; the baseline also allocates native blocks/data.
 [MemoryDiagnoser]
 public unsafe class SKDataNativeStreamFallbackBenchmark
@@ -16,6 +16,9 @@ public unsafe class SKDataNativeStreamFallbackBenchmark
 	[Params(4096, int.MaxValue)]
 	public int MaxRead { get; set; }
 
+	[Params(false, true)]
+	public bool ThroughSKStream { get; set; }
+
 	private LimitedReadStream source;
 	private SKManagedStream nativeStream;
 
@@ -25,13 +28,13 @@ public unsafe class SKDataNativeStreamFallbackBenchmark
 		var bytes = new byte[Size];
 		new Random(42).NextBytes(bytes);
 		source = new LimitedReadStream(bytes, MaxRead);
-		nativeStream = new SKManagedStream(source);
-		if (nativeStream.HasLength || nativeStream.HasPosition)
+		nativeStream = ThroughSKStream ? new SKManagedStream(source) : null;
+		if (nativeStream != null && (nativeStream.HasLength || nativeStream.HasPosition))
 			throw new InvalidOperationException("The benchmark must exercise the unknown-length fallback.");
 
-		using var old = CreateNativeBlocks(nativeStream);
+		using var old = ThroughSKStream ? CreateNativeBlocks(nativeStream) : CreateNativeBlocks(source);
 		source.Position = 0;
-		using var candidate = CreatePooledCandidate(nativeStream);
+		using var candidate = ThroughSKStream ? CreatePooledCandidate(nativeStream) : SKData.Create(source);
 		if (!old.AsSpan().SequenceEqual(bytes) || !candidate.AsSpan().SequenceEqual(bytes))
 			throw new InvalidOperationException("The fallback implementations produced different data.");
 	}
@@ -39,7 +42,7 @@ public unsafe class SKDataNativeStreamFallbackBenchmark
 	[GlobalCleanup]
 	public void Cleanup()
 	{
-		nativeStream.Dispose();
+		nativeStream?.Dispose();
 		source.Dispose();
 	}
 
@@ -47,7 +50,7 @@ public unsafe class SKDataNativeStreamFallbackBenchmark
 	public long Old_NativeBlocks()
 	{
 		source.Position = 0;
-		using var data = CreateNativeBlocks(nativeStream);
+		using var data = ThroughSKStream ? CreateNativeBlocks(nativeStream) : CreateNativeBlocks(source);
 		return data.Size;
 	}
 
@@ -55,8 +58,19 @@ public unsafe class SKDataNativeStreamFallbackBenchmark
 	public long Candidate_PooledBuffers()
 	{
 		source.Position = 0;
-		using var data = CreatePooledCandidate(nativeStream);
+		using var data = ThroughSKStream ? CreatePooledCandidate(nativeStream) : SKData.Create(source);
 		return data.Size;
+	}
+
+	private static SKData CreateNativeBlocks(Stream stream)
+	{
+		// Original managed-stream implementation: the wrapper's CopyTo reads its underlying Stream directly.
+		using var memory = new SKDynamicMemoryWStream();
+		using (var managed = new SKManagedStream(stream))
+		{
+			managed.CopyTo(memory);
+		}
+		return memory.DetachAsData();
 	}
 
 	private static SKData CreateNativeBlocks(SKStream stream)
@@ -85,17 +99,24 @@ public unsafe class SKDataNativeStreamFallbackBenchmark
 		while (true)
 		{
 			var buffer = chunks.GetBuffer();
-			int read;
+			var filled = 0;
 			fixed (byte* ptr = buffer.Array)
 			{
-				read = stream.Read((IntPtr)(ptr + buffer.Offset), buffer.Count);
+				while (filled < buffer.Count)
+				{
+					var toRead = buffer.Count - filled;
+					var read = stream.Read((IntPtr)(ptr + buffer.Offset + filled), toRead);
+					if ((uint)read > (uint)toRead)
+						throw new IOException("The stream returned an invalid byte count.");
+					if (read == 0)
+						break;
+					filled += read;
+				}
 			}
-			if ((uint)read > (uint)buffer.Count)
-				throw new IOException("The stream returned an invalid byte count.");
-			chunks.Advance(read);
+			chunks.Advance(filled);
 			if (IntPtr.Size == 4 && chunks.Length > uint.MaxValue)
 				throw new ArgumentOutOfRangeException("length");
-			if (read == 0)
+			if (filled < buffer.Count)
 				break;
 		}
 
