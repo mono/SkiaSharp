@@ -7,13 +7,13 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// and <see cref="SKPicture.Playback(SKCanvas)" />), and <see cref="SKPicture.Serialize(Stream)" /> over seekable,
 /// non-seekable, short-read, and early-EOF managed streams (<see cref="SKManagedStream" /> and <see cref="SKManagedWStream" />).
 /// </summary>
-public sealed class PictureStreamsFuzzer : Fuzzer<PictureStreamsFuzzer>
+public sealed class PictureStreamsFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 1 * 1024 * 1024;
 
-	public override string Name => "picture-streams";
+	public static string Name => "picture-streams";
 
-	protected override void OnFuzz(ReadOnlySpan<byte> bytes)
+	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 	{
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;

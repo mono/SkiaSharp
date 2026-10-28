@@ -2,11 +2,12 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using SharpFuzz;
 using SkiaSharp.Fuzzing;
 
-var fuzzers = typeof(Fuzzer).Assembly.GetTypes()
-	.Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(Fuzzer)))
-	.Select(t => (Fuzzer)Activator.CreateInstance(t)!)
+var fuzzers = typeof(IFuzzer).Assembly.GetTypes()
+	.Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(IFuzzer)))
+	.Select(FuzzerDescriptor.Create)
 	.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase)
 	.ToArray();
 
@@ -37,7 +38,7 @@ switch (args)
 		return 1;
 }
 
-static void PrintUsage(Fuzzer[] fuzzers)
+static void PrintUsage(FuzzerDescriptor[] fuzzers)
 {
 	var names = string.Join(Environment.NewLine, fuzzers.Select(f => $"  {f.Name}"));
 	Console.Error.WriteLine(
@@ -51,7 +52,7 @@ static void PrintUsage(Fuzzer[] fuzzers)
 		""");
 }
 
-static void Run(Fuzzer fuzzer, string? inputPath)
+static void Run(FuzzerDescriptor fuzzer, string? inputPath)
 {
 	if (!string.IsNullOrEmpty(inputPath))
 	{
@@ -65,10 +66,10 @@ static void Run(Fuzzer fuzzer, string? inputPath)
 		return;
 	}
 
-	SharpFuzz.Fuzzer.LibFuzzer.Run(fuzzer.Fuzz);
+	Fuzzer.LibFuzzer.Run(fuzzer.Fuzz);
 }
 
-static void Prepare(Fuzzer[] fuzzers, string dropDirectory, bool instrument)
+static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instrument)
 {
 	string[] targetAssemblies =
 	[
@@ -85,7 +86,7 @@ static void Prepare(Fuzzer[] fuzzers, string dropDirectory, bool instrument)
 	{
 		CopyDirectory(buildDirectory, dropDirectory);
 		foreach (var assembly in targetAssemblies)
-			SharpFuzz.Fuzzer.Instrument(Path.Combine(dropDirectory, assembly), static _ => true, SharpFuzz.Options.Value);
+			Fuzzer.Instrument(Path.Combine(dropDirectory, assembly), static _ => true, Options.Value);
 		return;
 	}
 
@@ -142,8 +143,8 @@ static void Prepare(Fuzzer[] fuzzers, string dropDirectory, bool instrument)
 				{
 					["$type"] = "libfuzzerDotNet",
 					["Dll"] = "SkiaSharp.Fuzzing.dll",
-					["Class"] = $"{typeof(Fuzzer<>).FullName}[[{fuzzer.GetType().FullName}]]",
-					["Method"] = nameof(Fuzzer<>.FuzzTarget),
+					["Class"] = fuzzer.EntryPointClass,
+					["Method"] = nameof(IFuzzer.FuzzTarget),
 					["FuzzingTargetBinaries"] = binaries
 				},
 				["FuzzerTimeoutInSeconds"] = 60,

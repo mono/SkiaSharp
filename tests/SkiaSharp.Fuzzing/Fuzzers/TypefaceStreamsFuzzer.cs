@@ -6,13 +6,13 @@ namespace SkiaSharp.Fuzzing.Fuzzers;
 /// (<see cref="SKFont.GetGlyphPaths" /> and <see cref="SKFont.GetTextPathOnPath(ReadOnlySpan{ushort}, ReadOnlySpan{float}, ReadOnlySpan{SKPoint}, SKPath, SKTextAlign)" />),
 /// and <see cref="SKTextBlobBuilder" /> / <see cref="SKTextBlob.GetIntercepts(float, float, SKPaint)" />.
 /// </summary>
-public sealed class TypefaceStreamsFuzzer : Fuzzer<TypefaceStreamsFuzzer>
+public sealed class TypefaceStreamsFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 1 * 1024 * 1024;
 
-	public override string Name => "typeface-streams";
+	public static string Name => "typeface-streams";
 
-	protected override void OnFuzz(ReadOnlySpan<byte> bytes)
+	public static void FuzzTarget(ReadOnlySpan<byte> bytes)
 	{
 		if (bytes.IsEmpty || bytes.Length > MaximumInputBytes)
 			return;
