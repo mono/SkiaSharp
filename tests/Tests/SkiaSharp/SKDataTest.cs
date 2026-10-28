@@ -301,5 +301,157 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, actual.ToArray());
 			Assert.Equal(size, actual.Length);
 		}
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(true, 7)]
+		[InlineData(false, 1)]
+		[InlineData(false, 7)]
+		public void CreateFromStream_HandlesShortReads(bool canSeek, int maxBytesPerRead)
+		{
+			var bytes = new byte[256];
+			for (var i = 0; i < bytes.Length; i++)
+				bytes[i] = (byte)(i + 1);
+
+			using var stream = new ConfigurableTestStream(bytes, canSeek: canSeek, maxBytesPerRead: maxBytesPerRead);
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.Equal(bytes.Length, data.Size);
+			Assert.Equal(bytes, data.ToArray());
+		}
+
+		[Fact]
+		public void CreateFromSeekableStream_HandlesEarlyEndAndPositionPastLength()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80 };
+			using (var earlyStream = new ConfigurableTestStream(bytes, canSeek: true, maxBytesPerRead: 3, earlyEndPosition: 5))
+			{
+				using var data = SKData.Create(earlyStream);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 10, 20, 30, 40, 50 }, data.ToArray());
+			}
+
+			using (var pastEndStream = new MemoryStream(bytes))
+			{
+				pastEndStream.Position = 20;
+				using var data = SKData.Create(pastEndStream);
+				Assert.NotNull(data);
+				Assert.Equal(0, data.Size);
+			}
+
+			using (var offsetEarlyStream = new ConfigurableTestStream(bytes, canSeek: true, maxBytesPerRead: 2, earlyEndPosition: 6))
+			{
+				offsetEarlyStream.Position = 2;
+				using var data = SKData.Create(offsetEarlyStream);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 30, 40, 50, 60 }, data.ToArray());
+			}
+		}
+
+		[Fact]
+		public void CreateRejectsNegativeSizesAndLengths()
+		{
+			using var ms = new MemoryStream(OddData);
+			using var skStream = new SKMemoryStream(OddData);
+
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(-1));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(-1L));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(ms, -1));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(ms, -1L));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(skStream, -1));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(skStream, -1L));
+		}
+
+		[Fact]
+		public void CreateFromSKStream_HandlesPartiallyConsumedAndNonSeekableStreams()
+		{
+			using (var ms = new MemoryStream(OddData))
+			using (var skStream = new SKManagedStream(ms))
+			{
+				Assert.Equal(1, skStream.ReadByte());
+				Assert.Equal(3, skStream.ReadByte());
+
+				using var data = SKData.Create((SKStream)skStream);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 5, 7, 9 }, data.ToArray());
+			}
+
+			using (var inner = new ConfigurableTestStream(OddData, canSeek: false))
+			using (var skStream = new SKManagedStream(inner))
+			{
+				using var data = SKData.Create((SKStream)skStream);
+				Assert.NotNull(data);
+				Assert.Equal(OddData, data.ToArray());
+			}
+		}
+
+		[Fact]
+		public void CreateFromSKStream_EarlyEndingAndFrontBufferedSKStreams_DoNotLoseConsumedBytes()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80 };
+
+			using (var inner = new ConfigurableTestStream(bytes, canSeek: true, earlyEndPosition: 5))
+			using (var skStream = new SKManagedStream(inner))
+			{
+				using var data = SKData.Create((SKStream)skStream);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 10, 20, 30, 40, 50 }, data.ToArray());
+			}
+
+			using (var ms = new MemoryStream(bytes))
+			using (var fb = new SKFrontBufferedManagedStream(ms, 4, disposeUnderlyingStream: false))
+			{
+				Assert.Equal(10, fb.ReadByte());
+				Assert.Equal(20, fb.ReadByte());
+
+				using var data = SKData.Create((SKStream)fb);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 30, 40, 50, 60, 70, 80 }, data.ToArray());
+			}
+		}
+
+		[Fact]
+		public void CreateFromStream_WhenReadThrows_DisposesAllocatedDataImmediately()
+		{
+			using var throwingStream = new ThrowingReadStream();
+			Assert.Throws<IOException>(() => SKData.Create(throwingStream, 1024));
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(int.MaxValue)]
+		public void CreateFromStream_WhenStreamReturnsInvalidByteCount_ThrowsIOException(int invalidReturn)
+		{
+			using (var hostile = new HostileReadReturnStream(invalidReturn))
+			{
+				Assert.Throws<IOException>(() => SKData.Create(hostile));
+			}
+
+			using (var hostile = new HostileReadReturnStream(invalidReturn))
+			{
+				Assert.Throws<IOException>(() => SKData.Create(hostile, 32));
+			}
+
+			using (var hostile = new HostileReadReturnStream(invalidReturn))
+			using (var nonSeekable = new NonSeekableReadOnlyStream(hostile))
+			{
+				Assert.Throws<IOException>(() => SKData.Create(nonSeekable));
+			}
+		}
+
+		private sealed class ThrowingReadStream : Stream
+		{
+			public override bool CanRead => true;
+			public override bool CanSeek => true;
+			public override bool CanWrite => false;
+			public override long Length => 4096;
+			public override long Position { get; set; }
+			public override void Flush() { }
+			public override int Read(byte[] buffer, int offset, int count) => throw new IOException("Simulated read error.");
+			public override long Seek(long offset, SeekOrigin origin) => Position = offset;
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+		}
 	}
 }

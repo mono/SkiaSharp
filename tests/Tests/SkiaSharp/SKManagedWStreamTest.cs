@@ -153,5 +153,136 @@ namespace SkiaSharp.Tests
 				return SKDocument.CreatePdf(stream);
 			}
 		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(1)]
+		[InlineData(81919)]
+		[InlineData(81920)]
+		[InlineData(81921)]
+		[InlineData(200000)]
+		public void ManagedWStreamWritesAcrossChunkBoundariesCorrectly(int size)
+		{
+			var data = new byte[size];
+			for (var i = 0; i < data.Length; i++)
+				data[i] = (byte)((i * 31 + 7) & 0xFF);
+
+			using var dotnet = new MemoryStream();
+			using var stream = new SKManagedWStream(dotnet);
+
+			Assert.True(stream.Write(data, data.Length));
+			Assert.Equal(size, dotnet.Position);
+			Assert.Equal(size, stream.BytesWritten);
+			Assert.Equal(data, dotnet.ToArray());
+		}
+
+		[Fact]
+		public void NonSeekableAndOffsetStreams_TrackBytesWrittenCorrectly()
+		{
+			using var nonSeekable = new NonSeekableWriteOnlyStream();
+			using (var wstream = new SKManagedWStream(nonSeekable))
+			{
+				Assert.Equal(0, wstream.BytesWritten);
+				Assert.True(wstream.Write(new byte[] { 1, 2, 3, 4, 5 }, 5));
+				Assert.Equal(5, wstream.BytesWritten);
+				Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, nonSeekable.ToArray());
+			}
+
+			using var offsetStream = new MemoryStream();
+			offsetStream.Write(new byte[40], 0, 40);
+			using (var wstream = new SKManagedWStream(offsetStream))
+			{
+				Assert.Equal(0, wstream.BytesWritten);
+				Assert.True(wstream.Write(new byte[] { 10, 20, 30 }, 3));
+				Assert.Equal(3, wstream.BytesWritten);
+			}
+		}
+
+		[Fact]
+		public void FailingWriteStream_ReturnsFalseWithoutAbortingProcess()
+		{
+			using var failing = new FailingWriteStream();
+			using var wstream = new SKManagedWStream(failing);
+
+			Assert.False(wstream.Write(new byte[] { 1, 2, 3 }, 3));
+			Assert.False(wstream.Write8(42));
+			Assert.Equal(0, wstream.BytesWritten);
+		}
+
+		[Fact]
+		public void NullStreamConstructor_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(() => new SKManagedWStream(null));
+			Assert.Throws<ArgumentNullException>(() => new SKManagedWStream(null, true));
+		}
+
+		[Fact]
+		public void FlushFailure_LatchesFaultAndRejectsSubsequentWrites()
+		{
+			using var failingFlush = new FailingFlushStream();
+			using var wstream = new SKManagedWStream(failingFlush);
+
+			Assert.True(wstream.Write(new byte[] { 1, 2, 3 }, 3));
+			Assert.Equal(3, wstream.BytesWritten);
+
+			wstream.Flush();
+
+			Assert.False(wstream.Write(new byte[] { 4, 5 }, 2));
+			Assert.Equal(3, wstream.BytesWritten);
+		}
+
+		[Fact]
+		public void OnWrite_WithZeroPointer_WritesZeroBytesAndUpdatesBytesWritten()
+		{
+			using var ms = new MemoryStream();
+			ms.WriteByte(0xFF);
+			ms.Position = 0;
+
+			using var wstream = new SKManagedWStream(ms);
+			Assert.True(wstream.OnWrite(IntPtr.Zero, (IntPtr)16));
+			Assert.Equal(16, wstream.BytesWritten);
+			Assert.Equal(new byte[16], ms.ToArray());
+		}
+
+		private sealed class FailingFlushStream : MemoryStream
+		{
+			public override void Flush() => throw new IOException("Simulated flush error.");
+		}
+
+		private sealed class FailingWriteStream : Stream
+		{
+			public override bool CanRead => false;
+			public override bool CanSeek => false;
+			public override bool CanWrite => true;
+			public override long Length => throw new NotSupportedException();
+			public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+			public override void Flush() => throw new IOException("Simulated flush error.");
+			public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new IOException("Simulated write error.");
+		}
+
+		private sealed class NonSeekableWriteOnlyStream : Stream
+		{
+			private readonly MemoryStream inner = new MemoryStream();
+
+			public byte[] ToArray() => inner.ToArray();
+
+			public override bool CanRead => false;
+			public override bool CanSeek => false;
+			public override bool CanWrite => true;
+			public override long Length => throw new NotSupportedException();
+			public override long Position
+			{
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
+			}
+			public override void Flush() => inner.Flush();
+			public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
+		}
 	}
 }
