@@ -1,39 +1,42 @@
 {
-  "theme": "Runtime and platform refinements",
-  "highlights_headline": "The upcoming 4.156 release improves managed and HarfBuzz performance while refining native platform support.",
-  "highlights_body": "It reduces allocation during pixel copying and text shaping, packages WebGPU support with the native library, and improves Android rendering synchronization.",
-  "breaking": [],
+  "theme": "Platform and performance updates",
+  "highlights_headline": "The upcoming SkiaSharp 4.156 release improves platform support, rendering synchronization, and managed image and text performance.",
+  "highlights_body": "It adds Uno Platform 7 support, raises Apple deployment minimums, and corrects native string and stream lifetime handling.",
+  "breaking": [
+    {
+      "title": "Apple deployment minimums raised",
+      "body": "Apple applications must target the newer deployment minimums required by this release before upgrading.",
+      "prs": [5383]
+    }
+  ],
   "categories": [
     {
-      "heading": "Bug Fixes",
+      "heading": "Engine",
       "bullets": [
         {
-          "lead": "Android texture rendering synchronized",
-          "detail": "Coordinates Android texture rendering with the display refresh cycle for smoother presentation.",
-          "prs": [
-            5345
-          ]
-        },
-        {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained front-buffered stream data correctly to reduce avoidable memory use.",
-          "prs": [
-            5327
-          ]
+          "lead": "Latest m156 fixes incorporated",
+          "detail": "Updates the bundled m156 renderer with the latest upstream bug fixes and toolchain refresh.",
+          "prs": [5420, 5489]
         }
       ]
     },
     {
-      "heading": "Lifecycle & Internals",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Managed image and shaping allocations reduced",
-          "detail": "Optimizes image pixel copies, feature-string decoding, and HarfBuzz UTF-32 encoding to reduce allocation pressure in common managed workloads.",
-          "prs": [
-            5052,
-            5060,
-            5230
-          ]
+          "lead": "Native string creation no longer reads beyond its input buffer",
+          "detail": "SKData string creation writes directly to managed data storage, correcting native buffer handling.",
+          "prs": [5429]
+        },
+        {
+          "lead": "Front-buffered streams no longer retain stale data",
+          "detail": "Corrects front-buffered stream retention to release data when it is no longer needed.",
+          "prs": [5327]
+        },
+        {
+          "lead": "Android texture rendering follows the display refresh",
+          "detail": "Synchronizes Android texture rendering with display refresh timing for smoother presentation.",
+          "prs": [5345]
         }
       ]
     },
@@ -41,34 +44,35 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebGPU support packaged with the native library",
-          "detail": "Includes emdawnwebgpu's WebGPU implementation in libSkiaSharp.a so consumers receive the required native support with the library.",
-          "prs": [
-            5316
-          ]
+          "lead": "Uno Platform 7 is supported",
+          "detail": "Builds SkiaSharp.Views.Uno.WinUI against Uno Platform 7.",
+          "prs": [5377]
         },
         {
-          "lead": "Apple deployment baseline updated",
-          "detail": "Updates the minimum supported Apple deployment targets for the upcoming release.",
-          "prs": [
-            5383
-          ]
-        },
+          "lead": "WebGPU native code is included in SkiaSharp",
+          "detail": "Packages emdawnwebgpu's webgpu.cpp within libSkiaSharp.a for WebGPU consumers.",
+          "prs": [5316]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
         {
-          "lead": "Linux native artifact loading hardened",
-          "detail": "Binds bundled HarfBuzz functions locally so Linux native artifacts use the packaged implementation consistently.",
-          "prs": [
-            5352,
-            5366
-          ]
+          "lead": "Image and text processing allocate less",
+          "detail": "Optimizes managed pixel copies, pools HarfBuzz UTF-32 encoding buffers, and avoids native feature-string allocations.",
+          "prs": [5052, 5060, 5230]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "VirgilMing": "Bundled HarfBuzz function binding on Linux and Blazor CPU sample-test stabilization",
-    "dalexsoto": "Contextual PoliCheck findings cleanup",
-    "ramezgerges": "WebGPU implementation packaging in the native SkiaSharp library"
+    "ramezgerges": "Added WebGPU native integration and Uno Platform 7 support",
+    "VirgilMing": "Bound bundled HarfBuzz functions locally on Linux and improved browser sample coverage",
+    "akoeplinger": "Maintained dependency update automation",
+    "dalexsoto": "Updated CI policy checks",
+    "rolfbjarne": "Cleaned up unused sample files",
+    "Saad-elnagar": "Removed an obsolete native dependency notice"
   },
   "preview_summaries": {},
   "harfbuzz_summary": null

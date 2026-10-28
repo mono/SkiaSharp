@@ -1,17 +1,22 @@
 {
-  "theme": "M154 and documentation refresh",
-  "highlights_headline": "SkiaSharp 4.154.0 previews the Skia M154 renderer and ships compiler XML documentation with the packages.",
-  "highlights_body": "The release also updates HarfBuzzSharp generation and disables RAW and DNG image decoding. Review the HarfBuzz compatibility changes before upgrading.",
+  "theme": "Skia m154 release",
+  "highlights_headline": "SkiaSharp 4.154.0 updates the bundled renderer to Skia m154 and ships compiler XML documentation with packages.",
+  "highlights_body": "The release refreshes HarfBuzzSharp bindings from the bundled native source and includes upstream rendering fixes. Review the breaking changes before upgrading.",
   "breaking": [
     {
-      "title": "HarfBuzz combining-class enum name corrected",
-      "body": "UnicodeCombiningClass.CCC133 was renamed to CCC132 to match upstream HarfBuzz; update source code that referenced the misspelled member.",
+      "title": "HarfBuzz combining-class enum member renamed",
+      "body": "UnicodeCombiningClass.CCC133 is now named CCC132 to match upstream HarfBuzz; update source code using the old member name.",
       "prs": [5057]
     },
     {
-      "title": "GlyphFlags.Defined is no longer available",
-      "body": "The aggregate Defined mask is no longer exposed. Combine the concrete glyph flags required by your application instead.",
+      "title": "HarfBuzz aggregate glyph flag removed",
+      "body": "GlyphFlags.Defined is no longer exposed because it is an aggregate mask. Combine the concrete flags needed by your application instead.",
       "prs": [5057]
+    },
+    {
+      "title": "RAW and DNG image decoding disabled",
+      "body": "RAW and DNG images are no longer decoded by the bundled engine. Use another decoder or convert those images before loading them with SkiaSharp.",
+      "prs": [5190]
     }
   ],
   "categories": [
@@ -19,8 +24,8 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone M154",
-          "detail": "Updates the bundled renderer with the M154 engine and its subsequent upstream fixes, including GPU buffer-upload and failed-flush cache corrections.",
+          "lead": "Skia updated to milestone m154",
+          "detail": "Moves the bundled renderer to Skia m154 and incorporates upstream bug, buffer-upload, and failed-flush cache fixes.",
           "prs": [4945, 5054, 5114, 5253]
         }
       ]
@@ -29,44 +34,38 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Package XML documentation added",
-          "detail": "Managed packages now carry compiler-generated XML documentation sidecars, improving API documentation in IDEs and package consumers.",
-          "prs": [5053, 5064, 5066, 5078, 5091]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "RAW and DNG decoding disabled",
-          "detail": "Prevents the bundled decoder from accepting RAW and DNG images in this release line.",
-          "prs": [5190]
+          "lead": "Package XML documentation now ships with the managed assemblies",
+          "detail": "API documentation is authored in C# XML comments and included alongside NuGet assemblies, improving IntelliSense and offline API reference availability.",
+          "prs": [5053, 5064, 5066, 5078, 5080, 5091]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "azchohfi": "Improved the HarfBuzz native build warning suppression"
+    "azchohfi": "Improved native HarfBuzzSharp build warning handling"
   },
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opened the 4.154 line with the Skia M154 renderer.",
-    "v4.154.0-preview.2.26471.11": "Preview 2 adds upstream rendering fixes, package XML documentation, and regenerated HarfBuzzSharp bindings.",
-    "v4.154.0-rc.1.26479.14": "Release Candidate 1 finalizes the preview line and disables RAW and DNG image decoding."
+    "v4.154.0-preview.1.26454.9": "Preview 1 opened the 4.154 line with the Skia m154 engine update.",
+    "v4.154.0-preview.2.26471.11": "Preview 2 added upstream renderer fixes, packaged compiler XML documentation, and refreshed HarfBuzzSharp bindings.",
+    "v4.154.0-rc.1.26479.14": "Release Candidate 1 disabled RAW and DNG decoding ahead of the stable release."
   },
-  "harfbuzz_summary": "HarfBuzzSharp now generates bindings from the HarfBuzz source pinned by Skia and updates the bundled library to 14.2.1. The corrected combining-class enum name and removed aggregate glyph-flag mask require the source changes described above.",
+  "harfbuzz_summary": "HarfBuzzSharp bindings now follow the HarfBuzz source pinned for the bundled native library, keeping ordinary managed types and enum values synchronized.",
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 introduces the Skia M154 engine line.",
+      "headline": "SkiaSharp 4.154.0 Preview 1 introduces the Skia m154 renderer update.",
       "body": null
     },
     "v4.154.0-preview.2.26471.11": {
-      "headline": "SkiaSharp 4.154.0 Preview 2 updates the rendering engine and package documentation.",
-      "body": "It includes upstream M154 fixes and refreshed HarfBuzzSharp bindings."
+      "headline": "SkiaSharp 4.154.0 Preview 2 adds renderer fixes and package XML documentation.",
+      "body": "It also refreshes HarfBuzzSharp bindings from the bundled native source."
     },
     "v4.154.0-rc.1.26479.14": {
-      "headline": "SkiaSharp 4.154.0 Release Candidate 1 prepares the M154 line for release.",
-      "body": "RAW and DNG image decoding are disabled in this release candidate."
+      "headline": "SkiaSharp 4.154.0 Release Candidate 1 prepares the stable release with updated image decoding behavior.",
+      "body": "RAW and DNG decoding are disabled in this release line."
+    },
+    "v4.154.0": {
+      "headline": "SkiaSharp 4.154.0 delivers the Skia m154 renderer update and packaged compiler XML documentation.",
+      "body": "It includes upstream rendering fixes and refreshed HarfBuzzSharp bindings."
     }
   }
 }
