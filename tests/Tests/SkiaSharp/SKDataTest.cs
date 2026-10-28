@@ -322,6 +322,25 @@ namespace SkiaSharp.Tests
 		}
 
 		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void CreateFromStreamWithLengthHandlesChunkBoundariesAndEarlyEnd(bool canSeek)
+		{
+			var bytes = new byte[SKData.CopyBufferSize * 2 + 17];
+			new Random(42).NextBytes(bytes);
+			using var stream = new ConfigurableTestStream(bytes, canSeek: canSeek, maxBytesPerRead: 997);
+			using var data = SKData.Create(stream, bytes.Length);
+
+			Assert.NotNull(data);
+			Assert.Equal(bytes, data.ToArray());
+			Assert.InRange(stream.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+
+			using var early = new ConfigurableTestStream(bytes, canSeek: canSeek,
+				maxBytesPerRead: 997, earlyEndPosition: SKData.CopyBufferSize + 3);
+			Assert.Null(SKData.Create(early, bytes.Length));
+		}
+
+		[Theory]
 		[InlineData(0)]
 		[InlineData(1)]
 		[InlineData(65535)]
@@ -419,7 +438,7 @@ namespace SkiaSharp.Tests
 			using var buffer = Utils.RentArray<byte>(SKData.CopyBufferSize);
 			while (true)
 			{
-				var readLen = stream.Read(buffer.Span);
+				var readLen = stream.Read(buffer.Array, 0, buffer.Length);
 				if ((uint)readLen > (uint)buffer.Length)
 					throw new IOException("The stream returned an invalid byte count.");
 				if (readLen == 0)

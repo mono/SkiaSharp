@@ -315,10 +315,17 @@ namespace SkiaSharp
 			try {
 				var dst = (byte*)data.Data;
 				ulong totalRead = 0;
+#if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP2_1_OR_GREATER
+				using var scratch = Utils.RentArray<byte> ((int)Math.Min (length, (ulong)CopyBufferSize));
+#endif
 
 				while (totalRead < length) {
 					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
 					var len = stream.Read (new Span<byte> (dst + totalRead, toRead));
+#else
+					var len = stream.Read (scratch.Array, 0, toRead);
+#endif
 					if ((uint)len > (uint)toRead)
 						throw new IOException ("The stream returned an invalid byte count.");
 					if (len == 0) {
@@ -333,6 +340,9 @@ namespace SkiaSharp
 						}
 					}
 
+#if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP2_1_OR_GREATER
+					scratch.Span.Slice (0, len).CopyTo (new Span<byte> (dst + totalRead, len));
+#endif
 					totalRead += (ulong)len;
 				}
 
@@ -581,9 +591,18 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (target));
 
 			var src = (byte*)Data;
-			for (var left = Size; left > 0;) {
+			var total = Size;
+#if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP2_1_OR_GREATER
+			using var scratch = Utils.RentArray<byte> ((int)Math.Min (total, CopyBufferSize));
+#endif
+			for (var left = total; left > 0;) {
 				var copyCount = (int)Math.Min (CopyBufferSize, left);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
 				target.Write (new ReadOnlySpan<byte> (src, copyCount));
+#else
+				new ReadOnlySpan<byte> (src, copyCount).CopyTo (scratch.Span);
+				target.Write (scratch.Array, 0, copyCount);
+#endif
 				left -= copyCount;
 				src += copyCount;
 			}
