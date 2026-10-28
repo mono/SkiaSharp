@@ -1,7 +1,6 @@
 #nullable disable
 
 using System;
-using System.Runtime.InteropServices;
 using System.IO;
 
 namespace SkiaSharp
@@ -35,6 +34,8 @@ namespace SkiaSharp
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
 		/// <remarks />
+		/// <exception cref="ArgumentNullException"><paramref name="managedStream" /> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferSize" /> is negative.</exception>
 		public SKFrontBufferedManagedStream (Stream managedStream, int bufferSize, bool disposeUnderlyingStream)
 			: this (CreateManagedStream (managedStream, bufferSize, disposeUnderlyingStream), bufferSize, true)
 		{
@@ -64,21 +65,25 @@ namespace SkiaSharp
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
 		/// <remarks />
+		/// <exception cref="ArgumentNullException"><paramref name="nativeStream" /> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferSize" /> is negative.</exception>
 		public SKFrontBufferedManagedStream (SKStream nativeStream, int bufferSize, bool disposeUnderlyingStream)
+			: this (ValidateStream (nativeStream, bufferSize), new byte[bufferSize], disposeUnderlyingStream)
+		{
+		}
+
+		private static SKStream ValidateStream (SKStream nativeStream, int bufferSize)
 		{
 			if (nativeStream == null)
-			{
-				Dispose ();
 				throw new ArgumentNullException (nameof (nativeStream));
-			}
 			if (bufferSize < 0)
-			{
-				if (disposeUnderlyingStream)
-					nativeStream.Dispose ();
-				Dispose ();
 				throw new ArgumentOutOfRangeException (nameof (bufferSize));
-			}
 
+			return nativeStream;
+		}
+
+		private SKFrontBufferedManagedStream (SKStream nativeStream, byte[] frontBuffer, bool disposeUnderlyingStream)
+		{
 			var hasPos = nativeStream.HasPosition;
 			var hasLen = nativeStream.HasLength;
 			var length = hasLen ? GetNativeSize (SkiaApi.sk_stream_get_length (nativeStream.Handle)) : 0;
@@ -91,12 +96,15 @@ namespace SkiaSharp
 			streamLength = length >= position ? length - position : 0;
 			offset = 0;
 			bufferedSoFar = 0;
-			bufferLength = bufferSize;
-			frontBuffer = new byte[bufferSize];
+			bufferLength = frontBuffer.Length;
+			this.frontBuffer = frontBuffer;
 		}
 
 		private static long GetNativeSize (IntPtr value) =>
 			IntPtr.Size == 4 ? (uint)(int)value : (long)value;
+
+		private static IntPtr ToNativeSize (long value) =>
+			IntPtr.Size == 4 ? (IntPtr)unchecked((int)value) : (IntPtr)value;
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
@@ -123,7 +131,7 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
-			var remaining = (long)size;
+			var remaining = GetNativeSize (size);
 			if (remaining <= 0)
 				return IntPtr.Zero;
 
@@ -209,7 +217,7 @@ namespace SkiaSharp
 				remaining -= bytesRead;
 			}
 
-			return (IntPtr)(offset - start);
+			return ToNativeSize (offset - start);
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
@@ -219,7 +227,8 @@ namespace SkiaSharp
 		/// <remarks>The stream's cursor must be returned to the position before this method was called.</remarks>
 		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			if ((long)size <= 0 || frontBuffer == null || offset >= bufferLength)
+			var count = GetNativeSize (size);
+			if (count <= 0 || frontBuffer == null || offset >= bufferLength)
 			{
 				// this stream is not able to buffer.
 				return (IntPtr)0;
@@ -229,7 +238,7 @@ namespace SkiaSharp
 			var start = offset;
 			try
 			{
-				var bytesToCopy = (int)Math.Min ((long)size, bufferLength - offset);
+				var bytesToCopy = (int)Math.Min (count, bufferLength - offset);
 				return OnRead (buffer, (IntPtr)bytesToCopy);
 			}
 			finally
@@ -254,6 +263,8 @@ namespace SkiaSharp
 			if (isUnderlyingAtEnd)
 				return true;
 
+			// Until #5464 lands, SKManagedStream reports EOF after any non-seekable read.
+			// For that adapter, only a zero-byte read can establish EOF reliably.
 			if (!hasLength && stream is SKManagedStream)
 				return false;
 
@@ -283,8 +294,7 @@ namespace SkiaSharp
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to return the total length of the stream.</summary>
 		/// <returns>Returns the total length of the stream.</returns>
 		/// <remarks />
-		protected internal override IntPtr OnGetLength () =>
-			IntPtr.Size == 4 ? (IntPtr)unchecked((int)(uint)streamLength) : (IntPtr)streamLength;
+		protected internal override IntPtr OnGetLength () => ToNativeSize (streamLength);
 
 		// seeking is not supported
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its current position.</summary>

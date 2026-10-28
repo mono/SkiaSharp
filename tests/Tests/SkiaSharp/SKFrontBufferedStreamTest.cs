@@ -241,12 +241,14 @@ namespace SkiaSharp.Tests
 		private sealed class TransientFailureStream : Stream
 		{
 			private readonly byte[] data;
+			private readonly int failAtRead;
 			private int pos;
 			private int callCount;
 
-			public TransientFailureStream(byte[] data)
+			public TransientFailureStream(byte[] data, int failAtRead = 2)
 			{
 				this.data = data;
+				this.failAtRead = failAtRead;
 			}
 
 			public override bool CanRead => true;
@@ -263,7 +265,7 @@ namespace SkiaSharp.Tests
 			public override int Read(byte[] buffer, int offset, int count)
 			{
 				callCount++;
-				if (callCount == 2)
+				if (callCount == failAtRead)
 					throw new IOException("Simulated transient read failure.");
 
 				var toCopy = Math.Min(Math.Min(count, 2), data.Length - pos);
@@ -293,6 +295,130 @@ namespace SkiaSharp.Tests
 			buffered.Position = 0;
 			Assert.Equal(4, buffered.Read(buf, 0, 4));
 			Assert.Equal(new byte[] { 1, 2, 3, 4 }, buf);
+		}
+
+		[Theory]
+		[InlineData(0, 4)]
+		[InlineData(1, 3)]
+		public void DirectReadExceptionPreservesProgressAndPreventsRewind(int bufferSize, int consumed)
+		{
+			using var inner = new TransientFailureStream(TwentyBytes, failAtRead: 3);
+			using var buffered = new SKFrontBufferedStream(inner, bufferSize);
+			var buffer = new byte[8];
+
+			Assert.Throws<IOException>(() => buffered.Read(buffer, 0, buffer.Length));
+			Assert.Equal(consumed, buffered.Position);
+			Assert.Throws<InvalidOperationException>(() => buffered.Seek(0, SeekOrigin.Begin));
+
+			Assert.Equal(2, buffered.Read(buffer, 0, 2));
+			Assert.Equal(TwentyBytes[consumed], buffer[0]);
+			Assert.Equal(TwentyBytes[consumed + 1], buffer[1]);
+		}
+
+		private sealed class ForwardingStream : Stream
+		{
+			private readonly Stream inner;
+
+			public ForwardingStream(Stream inner) => this.inner = inner;
+
+			public override bool CanRead => inner.CanRead;
+			public override bool CanSeek => inner.CanSeek;
+			public override bool CanWrite => inner.CanWrite;
+			public override long Length => inner.Length;
+			public override long Position
+			{
+				get => inner.Position;
+				set => inner.Position = value;
+			}
+
+			public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+			public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
+			public override void Flush() => inner.Flush();
+			public override void SetLength(long value) => inner.SetLength(value);
+			public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(5)]
+		public void SeekPastDecoratedFrontBufferReadsCorrectRemainingBytes(int innerBufferSize)
+		{
+			using var source = new MemoryStream(TwentyBytes);
+			using var inner = new SKFrontBufferedStream(source, innerBufferSize);
+			using var decorator = new ForwardingStream(inner);
+			using var outer = new SKFrontBufferedStream(decorator, 10);
+
+			Assert.Equal(14, outer.Seek(14, SeekOrigin.Begin));
+			var tail = new byte[6];
+			Assert.Equal(6, outer.Read(tail, 0, tail.Length));
+			Assert.Equal(new byte[] { 15, 16, 17, 18, 19, 20 }, tail);
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void ForwardSeekAfterBufferIsExhaustedDoesNotPermitBackwardSeek(bool canSeek)
+		{
+			using var source = new ConfigurableTestStream(TwentyBytes, canSeek, maxBytesPerRead: 3);
+			using var buffered = new SKFrontBufferedStream(source, 5);
+			var buffer = new byte[7];
+			Assert.Equal(7, buffered.Read(buffer, 0, buffer.Length));
+
+			Assert.Equal(10, buffered.Seek(3, SeekOrigin.Current));
+			Assert.Equal(10, buffered.Seek(0, SeekOrigin.Current));
+			Assert.Equal(14, buffered.Seek(14, SeekOrigin.Begin));
+			Assert.Throws<InvalidOperationException>(() => buffered.Seek(13, SeekOrigin.Begin));
+
+			var tail = new byte[6];
+			Assert.Equal(6, buffered.Read(tail, 0, tail.Length));
+			Assert.Equal(new byte[] { 15, 16, 17, 18, 19, 20 }, tail);
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(10)]
+		public void NativeAdapterDoesNotReportEofWhenReadingPastFrontBuffer(int bufferSize)
+		{
+			using var source = new MemoryStream(TwentyBytes);
+			using var buffered = new SKFrontBufferedStream(source, bufferSize);
+			using var native = new SKManagedStream(buffered);
+			Assert.True(buffered.CanSeek);
+			var buffer = new byte[bufferSize + 1];
+
+			Assert.Equal(buffer.Length, native.Read(buffer, buffer.Length));
+			Assert.False(native.IsAtEnd);
+			Assert.True(buffered.CanSeek);
+			Assert.Throws<InvalidOperationException>(() => buffered.Seek(0, SeekOrigin.Begin));
+
+			var remaining = new byte[TwentyBytes.Length - buffer.Length];
+			Assert.Equal(remaining.Length, native.Read(remaining, remaining.Length));
+			Assert.True(native.IsAtEnd);
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(10)]
+		public void SeekPastEndStopsAtActualEnd(int bufferSize)
+		{
+			using var inner = new ConfigurableTestStream(TwentyBytes, canSeek: false, maxBytesPerRead: 3);
+			using var buffered = new SKFrontBufferedStream(inner, bufferSize);
+
+			Assert.Equal(TwentyBytes.Length, buffered.Seek(long.MaxValue, SeekOrigin.Begin));
+			Assert.Equal(TwentyBytes.Length, buffered.Position);
+			Assert.Equal(0, buffered.Read(new byte[1], 0, 1));
+		}
+
+		[Fact]
+		public void SeekCurrentAndEndPreserveInitialStreamOffset()
+		{
+			using var source = new MemoryStream(TwentyBytes);
+			source.Position = 5;
+			using var buffered = new SKFrontBufferedStream(source, 10);
+
+			Assert.Equal(3, buffered.Seek(3, SeekOrigin.Current));
+			Assert.Equal(2, buffered.Seek(-1, SeekOrigin.Current));
+			Assert.Equal(9, buffered.Seek(-6, SeekOrigin.End));
+			Assert.Equal(15, buffered.ReadByte());
 		}
 	}
 }
