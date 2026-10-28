@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+<Project Sdk="Uno.Sdk/7.0.0-dev.79">
   <PropertyGroup>
     <!-- WASM-only: SkiaFiddle compiles user C# in the browser via Roslyn. -->
     <TargetFrameworks>net10.0-browserwasm</TargetFrameworks>
@@ -15,12 +15,13 @@
     <ApplicationPublisher>O=SkiaSharp</ApplicationPublisher>
     <Description>SkiaFiddle — live SkiaSharp playground that compiles C# snippets in the browser with Roslyn.</Description>
     <UnoFeatures>
-      SkiaRenderer;
+      Skia;
     </UnoFeatures>
   </PropertyGroup>
   <PropertyGroup>
     <UnoDefaultFont>None</UnoDefaultFont>
-    <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
+    <SkiaSharpVersion>4.156.0-preview.1.26512.10</SkiaSharpVersion>
+    <HarfBuzzSharpVersion>14.2.1.400-preview.1.26512.10</HarfBuzzSharpVersion>
     <UnoXamlResourcesTrimming>true</UnoXamlResourcesTrimming>
   </PropertyGroup>
   <PropertyGroup>
@@ -34,10 +35,16 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Snippets compile against the loaded managed SkiaSharp and HarfBuzzSharp. Listed here so a generated copy
+         pins them to the product version; Uno.Sdk only versions the native assets. -->
+    <PackageReference Include="SkiaSharp" Version="4.156.0-preview.1.26512.10" />
+    <PackageReference Include="HarfBuzzSharp" Version="14.2.1.400-preview.1.26512.10" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- In-browser C# compilation -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
     <!-- Code editor -->
-    <PackageReference Include="Uno.Monaco.Editor" Version="6.4.0-dev.41.gfc42320b13" />
+    <PackageReference Include="Uno.Monaco.Editor" Version="7.0.0-dev.3" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MonacoFocusGuard.js" />

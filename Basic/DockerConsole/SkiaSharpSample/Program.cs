@@ -52,8 +52,9 @@ foreach (var (x, y, r, color) in circles)
 }
 
 // Centered text
+using var typeface = SKTypeface.FromFile(Path.Combine(AppContext.BaseDirectory, "NotoSans-Regular.ttf"));
 using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-using var font = new SKFont { Size = width * 0.10f };
+using var font = new SKFont(typeface, width * 0.10f);
 canvas.DrawText(text, center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 
 // Save

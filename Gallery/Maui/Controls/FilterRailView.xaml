@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:items="clr-namespace:SkiaSharpSample.Controls"
+             x:Class="SkiaSharpSample.Controls.FilterRailView"
+             x:DataType="items:FilterRailView">
+    <Grid x:Name="RailRoot" RowDefinitions="Auto,*,Auto" Padding="18,10,12,12">
+        <Grid.Triggers>
+            <DataTrigger TargetType="Grid" Binding="{Binding IsPopup}" Value="True">
+                <Setter Property="Padding" Value="4,2,4,4" />
+            </DataTrigger>
+        </Grid.Triggers>
+        <Grid ColumnDefinitions="*,Auto">
+            <Label Text="{Binding ResultCountText}" Style="{StaticResource PrimaryLabel}"
+                   FontSize="16" FontAttributes="Bold" VerticalOptions="Center"
+                   AutomationId="{Binding CountAutomationId}" />
+            <ImageButton Grid.Column="1" x:Name="CloseButton"
+                         IsVisible="{Binding IsPopup}"
+                         AutomationId="gallery-filter-close"
+                         SemanticProperties.Description="Close filters"
+                         Clicked="CloseClicked" BackgroundColor="Transparent"
+                         MinimumWidthRequest="40" MinimumHeightRequest="40" Padding="10">
+                <ImageButton.Source>
+                    <FontImageSource Glyph="&#xf659;" FontFamily="BootstrapIcons" Size="16"
+                                     Color="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}" />
+                </ImageButton.Source>
+            </ImageButton>
+        </Grid>
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Default">
+            <VerticalStackLayout Spacing="9" Padding="0,10,0,10">
+                <items:GallerySearchView x:Name="SearchField" SearchPlaceholder="Search samples and APIs" />
+                <Label Text="CATEGORIES" FontSize="11" FontAttributes="Bold" CharacterSpacing="1.2"
+                       Style="{StaticResource SecondaryLabel}" />
+                <VerticalStackLayout Spacing="2" BindableLayout.ItemsSource="{Binding Categories}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="items:CategoryFacet">
+                            <items:CategoryFacetView />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Label Text="API TAGS" FontSize="11" FontAttributes="Bold" CharacterSpacing="1.2"
+                       Style="{StaticResource SecondaryLabel}" />
+                <Button Text="Types" Style="{StaticResource GalleryPill}"
+                        AutomationId="gallery-types-toggle" HorizontalOptions="Fill"
+                        SemanticProperties.Description="{Binding TypesDescription}" Clicked="TypesClicked">
+                    <Button.ImageSource>
+                        <FontImageSource Glyph="&#xf282;" FontFamily="BootstrapIcons" Size="12"
+                                         Color="{StaticResource BrandAccent}" />
+                    </Button.ImageSource>
+                </Button>
+                <FlexLayout Wrap="Wrap" AlignItems="Start" IsVisible="{Binding TypesOpen}"
+                            BindableLayout.ItemsSource="{Binding Types}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="items:TagFacet">
+                            <items:TagFacetView />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+                <Button Text="Methods" Style="{StaticResource GalleryPill}"
+                        AutomationId="gallery-methods-toggle" HorizontalOptions="Fill"
+                        SemanticProperties.Description="{Binding MethodsDescription}" Clicked="MethodsClicked">
+                    <Button.ImageSource>
+                        <FontImageSource Glyph="&#xf282;" FontFamily="BootstrapIcons" Size="12"
+                                         Color="{StaticResource BrandAccent}" />
+                    </Button.ImageSource>
+                </Button>
+                <FlexLayout Wrap="Wrap" AlignItems="Start" IsVisible="{Binding MethodsOpen}"
+                            BindableLayout.ItemsSource="{Binding Methods}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="items:TagFacet">
+                            <items:TagFacetView />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Padding="0,8,0,0">
+            <Button Text="Reset all" Style="{StaticResource GalleryPill}"
+                    AutomationId="gallery-filter-reset" HorizontalOptions="Start" Clicked="ResetClicked" />
+            <Button Text="Done" Grid.Column="1" IsVisible="{Binding IsPopup}"
+                    BackgroundColor="{StaticResource BrandNavy}" TextColor="White"
+                    CornerRadius="10" Padding="12,8" MinimumHeightRequest="44"
+                    AutomationId="gallery-filter-done" Clicked="CloseClicked" />
+        </Grid>
+    </Grid>
+</ContentView>
