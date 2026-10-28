@@ -97,6 +97,12 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 
 > **⚠️ WASM is NOT dynamic loading.** Unlike all other platforms, WebAssembly uses static linking at compile time. The `.a` files are passed to the Emscripten linker which embeds them into the final `dotnet.wasm` binary. `DllImport("libSkiaSharp")` still works — the .NET WASM runtime resolves it to statically linked symbols.
 
+For .NET 11, use a package containing the Emscripten 6.0.2 assets and matching framework selection.
+SkiaSharp.Views.Blazor 4.153.1 selects older native assets and can fail to link with undefined
+`saveSetjmp` and `testSetjmp` symbols. Upgrade the SkiaSharp packages together, then delete the
+application's `bin` and `obj` directories before rebuilding to remove cached native WASM outputs.
+Do not suppress undefined-symbol errors.
+
 > **Unity WebGL:** Unity WebGL also uses Emscripten. While not officially supported, the same static linking principle applies. Unity-specific integration may require manual configuration beyond the standard NativeFileReference approach.
 
 ### Auto-Included NativeAssets
