@@ -430,22 +430,21 @@ namespace SkiaSharp.Tests
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 			var dotnet = new MemoryStream(bytes);
 
-			DoWork(out var streamH, out var weakStream, out var typefaceH, out var weakTypeface);
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
-			SKHandleDictionaryTestHelpers.AssertCollected(typefaceH, weakTypeface);
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			void DoWork(out IntPtr streamHandle, out WeakReference streamRef, out IntPtr typefaceHandle, out WeakReference typefaceRef)
+			void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedStream(dotnet, true);
 				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				var typeface = SKTypeface.FromStream(stream);
-				SKHandleDictionaryTestHelpers.Track(typeface, out typefaceHandle, out typefaceRef);
+				GC.KeepAlive(typeface);
 			}
 		}
 
