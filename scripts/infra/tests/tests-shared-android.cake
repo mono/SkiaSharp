@@ -36,25 +36,20 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
     ownedSerial = $"emulator-{port}";
     var logs = ROOT_OUTPUT_PATH.Combine($"logs/testlogs/android/{ownedAvd}");
 
-    try {
-        RunAndroidCli(logs.CombineWithFilePath("android-create.log"), "avd", "create",
-            "--name", ownedAvd,
-            "--sdk", $"system-images;{TEST_ANDROID_IMAGE};{abi}",
-            "--device", TEST_ANDROID_MODEL,
-            "--force");
-        RunAndroidCli(logs.CombineWithFilePath("android-start.log"), "avd", "start",
-            "--name", ownedAvd,
-            "--port", port.ToString(),
-            "--gpu", IsRunningOnLinux() ? "swiftshader_indirect" : "guest",
-            "--no-window", "--no-snapshot", "--no-audio", "--no-boot-anim", "--no-animations",
-            "--wait", "--timeout", "300",
-            "--cpu-threshold", "3", "--response-threshold", "5",
-            "--partition-size", "4096",
-            "--camera-back", "none", "--camera-front", "none");
-    } catch (Exception error) when (BuildSystem.IsLocalBuild) {
-        TeardownAndroidEmulator(ref ownedAvd, ref ownedSerial, error);
-        throw;
-    }
+    RunAndroidCli(logs.CombineWithFilePath("android-create.log"), "avd", "create",
+        "--name", ownedAvd,
+        "--sdk", $"system-images;{TEST_ANDROID_IMAGE};{abi}",
+        "--device", TEST_ANDROID_MODEL,
+        "--force");
+    RunAndroidCli(logs.CombineWithFilePath("android-start.log"), "avd", "start",
+        "--name", ownedAvd,
+        "--port", port.ToString(),
+        "--gpu", IsRunningOnLinux() ? "swiftshader_indirect" : "guest",
+        "--no-window", "--no-snapshot", "--no-audio", "--no-boot-anim", "--no-animations",
+        "--wait", "--timeout", "300",
+        "--cpu-threshold", "3", "--response-threshold", "5",
+        "--partition-size", "4096",
+        "--camera-back", "none", "--camera-front", "none");
 }
 
 void RunAndroidCli(FilePath logFile, params string[] arguments)
@@ -115,23 +110,10 @@ int AndroidEmulatorPort()
 void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Exception originalError)
 {
     try {
-        if (!BuildSystem.IsLocalBuild) {
-            try {
-                if (ownedAvd != null && ownedSerial != null) {
-                    Information("Android cleanup: AVD {0}, serial {1}.", ownedAvd, ownedSerial);
-                    var logFile = ROOT_OUTPUT_PATH.Combine($"logs/testlogs/android-cleanup/{ownedAvd}")
-                        .CombineWithFilePath("android-cleanup.log");
-                    RunAndroidCli(logFile, "device", "info", "--id", "^" + ownedSerial + "$", "--format", "json");
-                }
-            } finally {
-                StopCIAndroidEmulators();
-            }
-        }
+        StopAndroidEmulator(ownedAvd, ownedSerial);
         if (ownedAvd == null)
             return;
 
-        if (BuildSystem.IsLocalBuild && ownedSerial != null)
-            StopLocalAndroidEmulator(ownedSerial);
         var deleteLog = ROOT_OUTPUT_PATH.Combine($"logs/testlogs/android/{ownedAvd}").CombineWithFilePath("android-delete.log");
         RunAndroidCli(deleteLog, "avd", "delete", "--name", ownedAvd);
         ownedAvd = null;
@@ -143,11 +125,23 @@ void TeardownAndroidEmulator(ref string ownedAvd, ref string ownedSerial, Except
     }
 }
 
-// Replace with dotnet android avd stop when available in a released tool.
-void StopLocalAndroidEmulator(string serial)
+void StopAndroidEmulator(string ownedAvd, string serial)
 {
-    DirectoryPath sdk = EnvironmentVariable("ANDROID_HOME");
-    var adb = sdk.Combine("platform-tools").CombineWithFilePath(IsRunningOnWindows() ? "adb.exe" : "adb");
-    Information("Stopping owned Android emulator {0}.", serial);
-    RunProcess(adb, $"-s {serial} emu kill");
+    try {
+        if (ownedAvd == null || serial == null)
+            return;
+
+        Information("Android cleanup: AVD {0}, serial {1}.", ownedAvd, serial);
+        var logFile = ROOT_OUTPUT_PATH.Combine($"logs/testlogs/android-cleanup/{ownedAvd}")
+            .CombineWithFilePath("android-cleanup.log");
+        RunAndroidCli(logFile, "device", "info", "--id", "^" + serial + "$", "--format", "json");
+
+        // Replace with dotnet android avd stop when available in a released tool.
+        DirectoryPath sdk = EnvironmentVariable("ANDROID_HOME");
+        var adb = sdk.Combine("platform-tools").CombineWithFilePath(IsRunningOnWindows() ? "adb.exe" : "adb");
+        Information("Stopping owned Android emulator {0}.", serial);
+        RunProcess(adb, $"-s {serial} emu kill");
+    } finally {
+        StopCIAndroidEmulators();
+    }
 }
