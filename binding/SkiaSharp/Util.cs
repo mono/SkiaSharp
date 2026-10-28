@@ -3,7 +3,9 @@
 using System;
 using System.Buffers;
 using System.ComponentModel;
+using System.IO;
 using System.Text;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -126,6 +128,34 @@ namespace SkiaSharp
 			public static implicit operator ReadOnlySpan<T> (RentedArray<T> scope) =>
 				scope.Span;
 		}
+
+		internal static ulong FromNativeSize (IntPtr value) =>
+			PlatformConfiguration.Is64Bit ? (ulong)value.ToInt64 () : (uint)value.ToInt32 ();
+
+		internal static IntPtr ToNativeSize (ulong value) =>
+			PlatformConfiguration.Is64Bit ? (IntPtr)(long)value : (IntPtr)(int)(uint)value;
+
+#if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP2_1_OR_GREATER
+		internal static int Read (this Stream stream, Span<byte> buffer)
+		{
+			using var rented = RentArray<byte> (buffer.Length);
+			var len = stream.Read (rented.Array, 0, buffer.Length);
+			if ((uint)len > (uint)buffer.Length)
+				throw new IOException ("The stream returned an invalid byte count.");
+			if (len == 0)
+				return 0;
+
+			rented.Span.Slice (0, len).CopyTo (buffer);
+			return len;
+		}
+
+		internal static void Write (this Stream stream, ReadOnlySpan<byte> buffer)
+		{
+			using var rented = RentArray<byte> (buffer.Length);
+			buffer.CopyTo (rented.Span);
+			stream.Write (rented.Array, 0, buffer.Length);
+		}
+#endif
 	}
 
 	/// <summary>Various utility methods for when working with strings and text.</summary>

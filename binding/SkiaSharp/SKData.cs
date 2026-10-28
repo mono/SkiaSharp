@@ -124,15 +124,25 @@ namespace SkiaSharp
 		/// <param name="size">The size of the data buffer to create.</param>
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
 		/// <remarks />
-		public static SKData Create (int size) =>
-			GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
+		public static SKData Create (int size)
+		{
+			if (size < 0)
+				throw new ArgumentOutOfRangeException (nameof (size), "The size cannot be negative.");
+
+			return Create ((ulong)size);
+		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with uninitialized data.</summary>
 		/// <param name="size">The size of the data buffer to create.</param>
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
 		/// <remarks />
-		public static SKData Create (long size) =>
-			GetObject (SkiaApi.sk_data_new_uninitialized ((IntPtr)size));
+		public static SKData Create (long size)
+		{
+			if (size < 0)
+				throw new ArgumentOutOfRangeException (nameof (size), "The size cannot be negative.");
+
+			return Create ((ulong)size);
+		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with uninitialized data.</summary>
 		/// <param name="size">The size of the data buffer to create.</param>
@@ -169,15 +179,26 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
-			if (stream.CanSeek) {
-				return Create (stream, stream.Length - stream.Position);
-			} else {
-				using var memory = new SKDynamicMemoryWStream ();
-				using (var managed = new SKManagedStream (stream)) {
-					managed.CopyTo (memory);
-				}
-				return memory.DetachAsData ();
+			if (stream.CanSeek && stream.Length >= 0) {
+				var remaining = stream.Length - stream.Position;
+				if (remaining <= 0)
+					return Empty;
+
+				return CreateFromStream (stream, (ulong)remaining, exactLength: false);
 			}
+
+			using var memory = new SKDynamicMemoryWStream ();
+			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
+			while (true) {
+				var readLen = stream.Read (buffer.Span);
+				if ((uint)readLen > (uint)buffer.Length)
+					throw new IOException ("The stream returned an invalid byte count.");
+				if (readLen == 0)
+					break;
+				if (!memory.Write (buffer.Array, readLen))
+					return null;
+			}
+			return memory.DetachAsData ();
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -189,9 +210,10 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			using (var managed = new SKManagedStream (stream))
-				return Create (managed, length);
+			return CreateFromStream (stream, (ulong)length, exactLength: true);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -199,13 +221,57 @@ namespace SkiaSharp
 		/// <param name="length">The amount of data to read.</param>
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
 		/// <remarks />
-		public static SKData Create (Stream stream, ulong length)
+		public static SKData Create (Stream stream, ulong length) =>
+			CreateFromStream (stream, length, exactLength: true);
+
+		private static SKData CreateFromStream (Stream stream, ulong length, bool exactLength)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
+			if (length == 0)
+				return Empty;
 
-			using (var managed = new SKManagedStream (stream))
-				return Create (managed, length);
+			if (exactLength && stream.CanSeek && stream.Length >= 0) {
+				var remaining = stream.Length - stream.Position;
+				if (remaining < 0 || (ulong)remaining < length)
+					return null;
+			}
+
+			var data = Create (length);
+			if (data == null)
+				return null;
+
+			try {
+				var dst = (byte*)data.Data;
+				ulong totalRead = 0;
+
+				while (totalRead < length) {
+					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
+					var len = stream.Read (new Span<byte> (dst + totalRead, toRead));
+					if ((uint)len > (uint)toRead)
+						throw new IOException ("The stream returned an invalid byte count.");
+					if (len == 0) {
+						if (exactLength) {
+							data.Dispose ();
+							return null;
+						}
+						using (data) {
+							return totalRead == 0
+								? Empty
+								: GetObject (SkiaApi.sk_data_new_with_copy (dst, (IntPtr)totalRead));
+						}
+					}
+
+					totalRead += (ulong)len;
+				}
+
+				return data;
+			} catch {
+				data.Dispose ();
+				throw;
+			}
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -217,9 +283,10 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			using (var managed = new SKManagedStream (stream))
-				return Create (managed, length);
+			return CreateFromStream (stream, (ulong)length, exactLength: true);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -231,7 +298,33 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return Create (stream, stream.Length);
+			if (stream.HasLength && stream.HasPosition) {
+				var len = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (stream.Handle));
+				var pos = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (stream.Handle));
+				GC.KeepAlive (stream);
+
+				if (pos >= len)
+					return Empty;
+
+				var data = Create (stream, len - pos);
+				if (data != null)
+					return data;
+
+				if (!SkiaApi.sk_stream_seek (stream.Handle, Utils.ToNativeSize (pos))) {
+					GC.KeepAlive (stream);
+					return null;
+				}
+				GC.KeepAlive (stream);
+			}
+
+			using var memory = new SKDynamicMemoryWStream ();
+			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
+			int readLen;
+			while ((readLen = stream.Read (buffer.Array, buffer.Length)) > 0) {
+				if (!memory.Write (buffer.Array, readLen))
+					return null;
+			}
+			return memory.DetachAsData ();
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -243,12 +336,10 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			try {
-				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
-			} finally {
-				GC.KeepAlive(stream);
-			}
+			return Create (stream, (ulong)length);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -260,6 +351,8 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 
 			try {
 				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
@@ -277,12 +370,10 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			try {
-				return GetObject (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr)length));
-			} finally {
-				GC.KeepAlive(stream);
-			}
+			return Create (stream, (ulong)length);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</summary>
@@ -435,30 +526,13 @@ namespace SkiaSharp
 			if (target == null)
 				throw new ArgumentNullException (nameof (target));
 
-			var ptr = Data;
-			var total = Size;
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-			// Write native memory straight to the stream: no intermediate managed buffer and no
-			// Marshal.Copy, so the pixel/encoded bytes are copied once instead of twice.
-			var src = (byte*)ptr;
-			for (var left = total; left > 0;) {
+			var src = (byte*)Data;
+			for (var left = Size; left > 0;) {
 				var copyCount = (int)Math.Min (CopyBufferSize, left);
 				target.Write (new ReadOnlySpan<byte> (src, copyCount));
 				left -= copyCount;
 				src += copyCount;
 			}
-#else
-			// Stream.Write(ReadOnlySpan<byte>) is unavailable on netstandard2.0 / .NET Framework, so
-			// fall back to copying through a pooled buffer.
-			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
-			for (var left = total; left > 0;) {
-				var copyCount = (int)Math.Min (CopyBufferSize, left);
-				Marshal.Copy (ptr, (byte[])buffer, 0, copyCount);
-				left -= copyCount;
-				ptr += copyCount;
-				target.Write ((byte[])buffer, 0, copyCount);
-			}
-#endif
 			GC.KeepAlive (this);
 		}
 

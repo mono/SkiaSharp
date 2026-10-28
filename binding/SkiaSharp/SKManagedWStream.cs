@@ -13,6 +13,8 @@ namespace SkiaSharp
 	{
 		private Stream stream;
 		private readonly bool disposeStream;
+		private ulong bytesWritten;
+		private bool hasFaulted;
 
 		/// <summary>Creates a new writeable stream from a <see cref="T:System.IO.Stream" />.</summary>
 		/// <param name="managedStream">The managed stream.</param>
@@ -34,6 +36,11 @@ namespace SkiaSharp
 		private SKManagedWStream (Stream managedStream, bool disposeManagedStream, bool owns)
 			: base (owns)
 		{
+			if (managedStream == null) {
+				Dispose ();
+				throw new ArgumentNullException (nameof (managedStream));
+			}
+
 			stream = managedStream;
 			disposeStream = disposeManagedStream;
 		}
@@ -61,22 +68,54 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes to copy from the buffer.</param>
 		/// <returns>Returns <see langword="true" /> on success, otherwise <see langword="false" />.</returns>
 		/// <remarks />
-		protected internal override bool OnWrite (IntPtr buffer, IntPtr size)
+		protected internal override unsafe bool OnWrite (IntPtr buffer, IntPtr size)
 		{
-			var count = (int)size;
-			using var managedBuffer = Utils.RentArray<byte> (count);
-			if (buffer != IntPtr.Zero) {
-				Marshal.Copy (buffer, (byte[])managedBuffer, 0, count);
+			if (hasFaulted || stream == null)
+				return false;
+
+			var count = Utils.FromNativeSize (size);
+			if (count == 0)
+				return true;
+
+			try {
+				if (buffer != IntPtr.Zero) {
+					var src = (byte*)buffer;
+					for (var left = count; left > 0;) {
+						var toWrite = (int)Math.Min (left, (ulong)SKData.CopyBufferSize);
+						stream.Write (new ReadOnlySpan<byte> (src, toWrite));
+						bytesWritten += (ulong)toWrite;
+						left -= (ulong)toWrite;
+						src += toWrite;
+					}
+				} else {
+					using var zeroes = Utils.RentArray<byte> ((int)Math.Min (count, (ulong)SKData.CopyBufferSize));
+					zeroes.Span.Clear ();
+					for (var left = count; left > 0;) {
+						var toWrite = (int)Math.Min (left, (ulong)zeroes.Length);
+						stream.Write (zeroes.Array, 0, toWrite);
+						bytesWritten += (ulong)toWrite;
+						left -= (ulong)toWrite;
+					}
+				}
+				return true;
+			} catch {
+				hasFaulted = true;
+				return false;
 			}
-			stream.Write ((byte[])managedBuffer, 0, count);
-			return true;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedWStream" /> types to flush the bytes to the underlying stream.</summary>
 		/// <remarks />
 		protected internal override void OnFlush ()
 		{
-			stream.Flush ();
+			if (hasFaulted || stream == null)
+				return;
+
+			try {
+				stream.Flush ();
+			} catch {
+				hasFaulted = true;
+			}
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedWStream" /> types to specify the number of bytes currently written to the stream.</summary>
@@ -84,7 +123,7 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override IntPtr OnBytesWritten ()
 		{
-			return (IntPtr)stream.Position;
+			return Utils.ToNativeSize (bytesWritten);
 		}
 	}
 }
