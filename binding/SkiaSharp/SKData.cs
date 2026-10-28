@@ -14,10 +14,12 @@ namespace SkiaSharp
 	/// <remarks><para>Not only is the data immutable, but the actual pointer that is returned by the <see cref="P:SkiaSharp.SKData.Data" /> property is guaranteed to always be the same for the life of this instance.</para><para>The <see cref="M:SkiaSharp.SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this <see cref="T:SkiaSharp.SKData" /> and allows for .NET APIs to scan the contents of the <see cref="T:SkiaSharp.SKData" /> as a stream.</para></remarks>
 	public unsafe class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
-		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
-		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
-		// improvement in Copy performance.
-		internal const int CopyBufferSize = 81920;
+		// Match Stream.CopyTo's 80 KiB transfer window. This bounds each read/write, not the size of a pooled array.
+		internal const int CopyBufferSize = 80 * 1024;
+
+		// Retained chunks use a 64 KiB shared-pool bucket, below the default large object heap threshold.
+		// An 80 KiB request rounds up to 128 KiB, wasting capacity in each chunk held until EOF.
+		internal const int UnknownLengthStreamChunkSize = 64 * 1024;
 
 		private static SKData empty;
 		private static bool emptyInitialized;
@@ -234,7 +236,6 @@ namespace SkiaSharp
 			// Keep the bytes in pooled chunks until their total length is known, then copy once into SKData.
 			var chunks = Utils.RentArray<(byte[] Array, int Length)> (8);
 			var chunkCount = 0;
-			const int chunkSize = 64 * 1024;
 			ulong totalLength = 0;
 			try {
 				while (true) {
@@ -246,11 +247,11 @@ namespace SkiaSharp
 						chunks = expanded;
 					}
 
-					var buffer = ArrayPool<byte>.Shared.Rent (chunkSize);
+					var buffer = ArrayPool<byte>.Shared.Rent (UnknownLengthStreamChunkSize);
 					chunks[chunkCount++] = (buffer, 0);
 					var filled = 0;
-					while (filled < chunkSize) {
-						var toRead = chunkSize - filled;
+					while (filled < UnknownLengthStreamChunkSize) {
+						var toRead = UnknownLengthStreamChunkSize - filled;
 						var readLen = stream.Read (buffer, filled, toRead);
 						if ((uint)readLen > (uint)toRead)
 							throw new IOException ("The stream returned an invalid byte count.");
@@ -263,7 +264,7 @@ namespace SkiaSharp
 					totalLength = checked (totalLength + (ulong)filled);
 					if (!PlatformConfiguration.Is64Bit && totalLength > UInt32.MaxValue)
 						throw new ArgumentOutOfRangeException ("length", "The length exceeds the size of pointers.");
-					if (filled < chunkSize)
+					if (filled < UnknownLengthStreamChunkSize)
 						break;
 				}
 

@@ -343,10 +343,10 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData(0)]
 		[InlineData(1)]
-		[InlineData(65535)]
-		[InlineData(65536)]
-		[InlineData(65537)]
-		[InlineData(196608)]
+		[InlineData(SKData.UnknownLengthStreamChunkSize - 1)]
+		[InlineData(SKData.UnknownLengthStreamChunkSize)]
+		[InlineData(SKData.UnknownLengthStreamChunkSize + 1)]
+		[InlineData(SKData.UnknownLengthStreamChunkSize * 3)]
 		[InlineData(2097152)]
 		[InlineData(3145728)]
 		[InlineData(10485760)]
@@ -421,14 +421,14 @@ namespace SkiaSharp.Tests
 		[InlineData(int.MaxValue)]
 		public void CreateFromUnknownLengthStreamRejectsInvalidCountsAfterFullChunks(int invalidReturn)
 		{
-			using var stream = new FailingAfterReadStream(196608, invalidReturn);
+			using var stream = new FailingAfterReadStream(SKData.UnknownLengthStreamChunkSize * 3, invalidReturn);
 			Assert.Throws<IOException>(() => SKData.Create(stream));
 		}
 
 		[Fact]
 		public void CreateFromUnknownLengthStreamPropagatesExceptionAfterFullChunks()
 		{
-			using var stream = new FailingAfterReadStream(196608);
+			using var stream = new FailingAfterReadStream(SKData.UnknownLengthStreamChunkSize * 3);
 			Assert.Throws<IOException>(() => SKData.Create(stream));
 		}
 
