@@ -243,6 +243,12 @@ jobs:
             displayName: Display all the .NET information
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
+      # Restore before Android provisioning and pre-build hooks.
+      - ${{ if or(and(eq(parameters.docker, ''), ne(parameters.skipSteps, 'true')), and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true'), eq(parameters.installAndroidSdk, 'true'))) }}:
+        - pwsh: dotnet tool restore
+          displayName: Restore the .NET tools
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if and(eq(parameters.installNode, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
@@ -266,20 +272,8 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the correct version of the Android SDK
-          - pwsh: .\scripts\infra\managed\install-android-sdk.ps1
-            displayName: Install Android SDK
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools"
-            displayName: Install Android platform tools
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;35.0.0"
-            displayName: Install Android 35 build tools
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;36.0.0"
-            displayName: Install Android 36 build tools
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools", "build-tools;35.0.0", "build-tools;36.0.0"
+            displayName: Install Android SDK, platform tools and build tools
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
@@ -343,9 +337,6 @@ jobs:
         - ${{ if eq(parameters.docker, '') }}:
           - pwsh: dotnet --info
             displayName: Display all the .NET information
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - pwsh: dotnet tool restore
-            displayName: Restore the .NET tools
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
