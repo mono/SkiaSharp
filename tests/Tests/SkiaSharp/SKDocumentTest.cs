@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -206,6 +207,7 @@ namespace SkiaSharp.Tests
 
 			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				using (var document = CreateDocument(out streamHandle, out streamRef))
@@ -225,11 +227,11 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(streamHandle, out _));
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKDynamicMemoryWStream();
-				streamHandle = stream.Handle;
-				streamRef = new WeakReference(stream);
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
 			}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -55,12 +56,12 @@ namespace SkiaSharp.Tests
 
 			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var dotnet = new MemoryStream();
 				var stream = new SKManagedWStream(dotnet, true);
-				streamHandle = stream.Handle;
-				streamRef = new WeakReference(stream);
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 			}
 		}
 
@@ -120,11 +121,11 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
 			SKHandleDictionaryTestHelpers.AssertCollected(docH, weakDoc);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			static void DoWork(out IntPtr documentHandle, out WeakReference documentRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var document = CreateDocument(out streamHandle, out streamRef);
-				documentHandle = document.Handle;
-				documentRef = new WeakReference(document);
+				SKHandleDictionaryTestHelpers.Track(document, out documentHandle, out documentRef);
 
 				CollectGarbage();
 
@@ -139,11 +140,11 @@ namespace SkiaSharp.Tests
 				GC.KeepAlive(document);
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedWStream(new MemoryStream(), true);
-				streamHandle = stream.Handle;
-				streamRef = new WeakReference(stream);
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);

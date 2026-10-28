@@ -184,27 +184,71 @@ namespace SkiaSharp.Tests
 		public static void AssertDeregistered<TSkiaObject> (IntPtr handle, TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
-			if (HandleDictionary.GetInstance<SKObject> (handle, out var found))
-				Assert.False (
-					ReferenceEquals (found, instance),
-					$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
+			Assert.NotEqual (IntPtr.Zero, handle);
+			Assert.NotNull (instance);
+			Assert.True (
+				instance.IsDisposed,
+				$"Expected {typeof (TSkiaObject).Name} (handle 0x{handle.ToString ("x")}) to be disposed.");
+			Assert.Equal (IntPtr.Zero, instance.Handle);
+
+			HandleDictionary.instancesLock.EnterReadLock ();
+			try {
+				if (HandleDictionary.instances.TryGetValue (handle, out var current))
+					Assert.False (
+						ReferenceEquals (current.Target, instance),
+						$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
+			} finally {
+				HandleDictionary.instancesLock.ExitReadLock ();
+			}
 		}
 
-		// Asserts that an unrooted wrapper has been garbage-collected (finalized/disposed) and
-		// deregistered from HandleDictionary, without failing if a concurrent test reuses the
-		// freed native pointer for a new wrapper.
+		// Captures a wrapper's native handle and its HandleDictionary WeakReference entry (when
+		// registered, or a fresh WeakReference for ISKSkipObjectRegistration types) while the
+		// wrapper is alive inside a helper scope, so AssertCollected can verify both managed GC
+		// collection and raw dictionary deregistration after the scope exits.
+		public static void Track (SKObject instance, out IntPtr handle, out WeakReference weak)
+		{
+			Assert.NotNull (instance);
+			handle = instance.Handle;
+			Assert.NotEqual (IntPtr.Zero, handle);
+
+			HandleDictionary.instancesLock.EnterReadLock ();
+			try {
+				if (HandleDictionary.instances.TryGetValue (handle, out var existing) &&
+					ReferenceEquals (existing.Target, instance)) {
+					weak = existing;
+					return;
+				}
+			} finally {
+				HandleDictionary.instancesLock.ExitReadLock ();
+			}
+
+			weak = new WeakReference (instance);
+		}
+
+		// Asserts that an unrooted wrapper has been garbage-collected (no longer reachable) and
+		// its registration entry has been removed from HandleDictionary.instances by its finalizer/
+		// disposal, without failing if a concurrent test reuses the freed native pointer for a new
+		// wrapper (which creates a distinct WeakReference entry in HandleDictionary.instances).
 		public static void AssertCollected (IntPtr handle, WeakReference instance)
 		{
-			var target = instance.Target as SKObject;
-			if (target != null)
-				Assert.True (
-					target.IsDisposed,
-					$"Expected {target.GetType ().Name} (handle 0x{handle.ToString ("x")}) to be collected and disposed, but it is still alive.");
+			Assert.NotEqual (IntPtr.Zero, handle);
+			Assert.NotNull (instance);
 
-			if (HandleDictionary.GetInstance<SKObject> (handle, out var found))
-				Assert.False (
-					ReferenceEquals (found, target),
-					$"Collected wrapper is still registered under handle 0x{handle.ToString ("x")}.");
+			var target = instance.Target;
+			Assert.True (
+				target is null,
+				$"Expected {target?.GetType ().Name} (handle 0x{handle.ToString ("x")}) to be garbage-collected, but it is still reachable.");
+
+			HandleDictionary.instancesLock.EnterReadLock ();
+			try {
+				if (HandleDictionary.instances.TryGetValue (handle, out var current))
+					Assert.False (
+						ReferenceEquals (current, instance) || (target is not null && ReferenceEquals (current.Target, target)),
+						$"Collected wrapper is still registered under handle 0x{handle.ToString ("x")}.");
+			} finally {
+				HandleDictionary.instancesLock.ExitReadLock ();
+			}
 		}
 
 		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests and the

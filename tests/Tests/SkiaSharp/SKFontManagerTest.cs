@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -134,6 +135,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			SKFont CreateFont(out IntPtr handle, out WeakReference typefaceRef)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
@@ -141,8 +143,7 @@ namespace SkiaSharp.Tests
 				var stream = new SKManagedStream(dotnet, true);
 
 				var typeface = SKFontManager.Default.CreateTypeface(stream);
-				handle = typeface.Handle;
-				typefaceRef = new WeakReference(typeface);
+				SKHandleDictionaryTestHelpers.Track(typeface, out handle, out typefaceRef);
 
 				return new SKFont
 				{
@@ -288,6 +289,7 @@ namespace SkiaSharp.Tests
 
 			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakTypeface);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			static void DoWork(out IntPtr typefaceHandle, out WeakReference typefaceRef)
 			{
 				var fonts = SKFontManager.Default;
@@ -312,8 +314,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(IntPtr.Zero, tf3.Handle);
 				Assert.True(tf3.IsDisposed);
 
-				typefaceHandle = tf1.Handle;
-				typefaceRef = new WeakReference(tf1);
+				SKHandleDictionaryTestHelpers.Track(tf1, out typefaceHandle, out typefaceRef);
 			}
 		}
 

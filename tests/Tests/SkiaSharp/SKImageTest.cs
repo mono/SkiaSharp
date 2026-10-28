@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -689,14 +690,14 @@ namespace SkiaSharp.Tests
 
 			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakData);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void DoEncode(out IntPtr dataHandle, out WeakReference dataRef)
 			{
 				var result = image.Encode();
 				Assert.NotNull(result);
 				Assert.Equal(1, result.GetReferenceCount());
 
-				dataHandle = result.Handle;
-				dataRef = new WeakReference(result);
+				SKHandleDictionaryTestHelpers.Track(result, out dataHandle, out dataRef);
 			}
 		}
 

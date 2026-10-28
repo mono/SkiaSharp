@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Xunit;
 using System.Collections.Generic;
 using System.Threading;
@@ -86,12 +87,12 @@ namespace SkiaSharp.Tests
 
 			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var dotnet = CreateTestStream();
 				var stream = new SKManagedStream(dotnet, true);
-				streamHandle = stream.Handle;
-				streamRef = new WeakReference(stream);
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 			}
 		}
 
@@ -384,11 +385,11 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
 			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var codec = CreateCodec(out streamHandle, out streamRef);
-				codecHandle = codec.Handle;
-				codecRef = new WeakReference(codec);
+				SKHandleDictionaryTestHelpers.Track(codec, out codecHandle, out codecRef);
 
 				CollectGarbage();
 
@@ -402,11 +403,11 @@ namespace SkiaSharp.Tests
 				GC.KeepAlive(codec);
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedStream(new MemoryStream(bytes), true);
-				streamHandle = stream.Handle;
-				streamRef = new WeakReference(stream);
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
@@ -575,6 +576,7 @@ namespace SkiaSharp.Tests
 
 			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakDupe);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void DoWork(out IntPtr dupeHandle, out WeakReference dupeRef)
 			{
 				var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -592,8 +594,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, dupe2.ReadByte());
 				Assert.Equal(2, dupe2.ReadByte());
 
-				dupeHandle = dupe2.Handle;
-				dupeRef = new WeakReference(dupe2);
+				SKHandleDictionaryTestHelpers.Track(dupe2, out dupeHandle, out dupeRef);
 			}
 		}
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -161,11 +162,11 @@ namespace SkiaSharp.Tests
 			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
 			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var codec = CreateCodec(out streamHandle, out streamRef);
-				codecHandle = codec.Handle;
-				codecRef = new WeakReference(codec);
+				SKHandleDictionaryTestHelpers.Track(codec, out codecHandle, out codecRef);
 
 				CollectGarbage();
 
@@ -179,11 +180,11 @@ namespace SkiaSharp.Tests
 				GC.KeepAlive(codec);
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKMemoryStream(bytes);
-				streamHandle = stream.Handle;
-				streamRef = new WeakReference(stream);
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
