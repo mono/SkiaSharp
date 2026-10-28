@@ -73,7 +73,7 @@ public class SKDataUnknownLengthStreamBenchmark
 	private static SKData CreateBufferedFilledChunks(Stream source)
 	{
 		using var memory = new SKDynamicMemoryWStream();
-		using var buffer = Utils.RentArray<byte>(64 * 1024);
+		using var buffer = Utils.RentArray<byte>(SKData.UnknownLengthStreamChunkSize);
 		while (true)
 		{
 			var filled = 0;
