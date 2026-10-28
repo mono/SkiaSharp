@@ -5,6 +5,11 @@ using SkiaSharp.Skottie;
 
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
+/// <summary>
+/// Fuzzes Lottie JSON animations (<see cref="AnimationBuilder" /> and <see cref="Animation" />), embedded data-URI
+/// resource loading (<see cref="DataUriResourceProvider" /> and <see cref="CachingResourceProvider" />),
+/// <see cref="InvalidationController" /> bounds tracking, and frame seeking/rendering.
+/// </summary>
 public sealed class SkottieJsonFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 1 * 1024 * 1024;

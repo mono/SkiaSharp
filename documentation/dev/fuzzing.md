@@ -56,21 +56,8 @@ dotnet cake --target=fuzzing --fuzzerTarget=image-streams --fuzzerInput=output/f
 ./scripts/infra/security/fuzzing/docker/run-local.sh --fuzzerTarget=image-streams --fuzzerInput=output/fuzzing/local/crashes/crash-123
 ```
 
-### Built-in fuzzers
-
-Each fuzzer lives in `tests/SkiaSharp.Fuzzing/Fuzzers/` and has its starting corpus in
-`tests/SkiaSharp.Fuzzing/seeds/<name>/`.
-
-| Name (`--fuzzerTarget`) | Class | What it exercises | Seeds |
-|-------------------------|-------|-------------------|-------|
-| `image-streams` | `ImageStreamsFuzzer` | `SKCodec`, `SKImage.FromEncodedData`, frame decoding, PNG re-encode over managed streams | `seeds/image-streams/` |
-| `picture-streams` | `PictureStreamsFuzzer` | `SKPicture.Deserialize`, playback, re-serialize over managed streams | `seeds/picture-streams/` |
-| `typeface-streams` | `TypefaceStreamsFuzzer` | `SKFontManager.CreateTypeface(Stream)`, tables, glyph metrics/paths, text blobs | `seeds/typeface-streams/` |
-| `skottie-json` | `SkottieJsonFuzzer` | Skottie `Animation` builder, resource providers, seek and render | `seeds/skottie-json/` |
-| `harfbuzz-shaping` | `HarfBuzzShapingFuzzer` | HarfBuzzSharp shaping (UTF-8/16/32 buffers) and glyph (de)serialization against a fixed font | `seeds/harfbuzz-shaping/` |
-| `managed-parsers` | `ManagedParsersFuzzer` | `SKColor.TryParse`, `SKPath.ParseSvgPathData`, HarfBuzz `Tag`/`Feature` parsers | `seeds/managed-parsers/` |
-
-Run `dotnet run --project tests/SkiaSharp.Fuzzing` with no arguments to list the fuzzers it discovers.
+Each fuzzer lives in `tests/SkiaSharp.Fuzzing/Fuzzers/` with its starting corpus in `tests/SkiaSharp.Fuzzing/seeds/<name>/`.
+Run `dotnet run --project tests/SkiaSharp.Fuzzing` with no arguments to list all discovered fuzzers.
 
 ### Cake targets and arguments
 

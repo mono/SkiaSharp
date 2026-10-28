@@ -4,6 +4,11 @@ using HarfBuzzSharp;
 
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
+/// <summary>
+/// Fuzzes managed string and span parsers: <see cref="SKColor.TryParse(string, out SKColor)" />,
+/// <see cref="SKPath.ParseSvgPathData(string)" /> (plus <see cref="SKPath.ToSvgPathData()" />, path iteration, and rendering),
+/// <see cref="Tag.Parse(string)" />, and <see cref="Feature.TryParse(string, out Feature)" />.
+/// </summary>
 public sealed class ManagedParsersFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 64 * 1024;

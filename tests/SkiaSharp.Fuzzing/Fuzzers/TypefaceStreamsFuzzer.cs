@@ -1,5 +1,9 @@
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
+/// <summary>
+/// Fuzzes <see cref="SKFontManager.CreateTypeface(Stream)" /> over seekable and non-seekable managed streams,
+/// font table accessors, glyph metrics and paths (<see cref="SKFont" />), and <see cref="SKTextBlobBuilder" /> rendering.
+/// </summary>
 public sealed class TypefaceStreamsFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 1 * 1024 * 1024;

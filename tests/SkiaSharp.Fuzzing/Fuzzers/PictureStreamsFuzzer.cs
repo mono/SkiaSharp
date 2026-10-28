@@ -2,6 +2,11 @@ using System.IO;
 
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
+/// <summary>
+/// Fuzzes <see cref="SKPicture.Deserialize(Stream)" />, raster canvas playback (<see cref="SKCanvas.DrawPicture(SKPicture)" />
+/// and <see cref="SKPicture.Playback(SKCanvas)" />), and <see cref="SKPicture.Serialize(Stream)" /> over seekable and
+/// non-seekable managed streams (<see cref="SKManagedStream" /> and <see cref="SKManagedWStream" />).
+/// </summary>
 public sealed class PictureStreamsFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 1 * 1024 * 1024;

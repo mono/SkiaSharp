@@ -2,6 +2,11 @@ using System.IO;
 
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
+/// <summary>
+/// Fuzzes <see cref="SKCodec" />, <see cref="SKImage.FromEncodedData(Stream)" />, multi-frame image decoding,
+/// and <see cref="SKBitmap.Encode(SKWStream, SKEncodedImageFormat, int)" /> over seekable and non-seekable
+/// managed streams (<see cref="SKManagedStream" />, <see cref="SKFrontBufferedManagedStream" />, and <see cref="SKManagedWStream" />).
+/// </summary>
 public sealed class ImageStreamsFuzzer : IFuzzer
 {
 	private const long MaximumDecodedBytes = 4 * 1024 * 1024;

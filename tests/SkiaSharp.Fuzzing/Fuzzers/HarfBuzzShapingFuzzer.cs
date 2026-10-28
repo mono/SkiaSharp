@@ -9,6 +9,11 @@ using HBFont = HarfBuzzSharp.Font;
 
 namespace SkiaSharp.Fuzzing.Fuzzers;
 
+/// <summary>
+/// Fuzzes <see cref="HarfBuzzSharp.Buffer" /> text ingestion (UTF-8, UTF-16, UTF-32), <see cref="HarfBuzzSharp.Font.Shape(HarfBuzzSharp.Buffer, HarfBuzzSharp.Feature[])" />,
+/// glyph span accessors, and text/JSON glyph serialization and deserialization (<see cref="HarfBuzzSharp.Buffer.SerializeGlyphs(HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat, HarfBuzzSharp.SerializeFlag)" />
+/// and <see cref="HarfBuzzSharp.Buffer.DeserializeGlyphs(string, HarfBuzzSharp.Font, HarfBuzzSharp.SerializeFormat)" />).
+/// </summary>
 public sealed class HarfBuzzShapingFuzzer : IFuzzer
 {
 	private const int MaximumInputBytes = 64 * 1024;
