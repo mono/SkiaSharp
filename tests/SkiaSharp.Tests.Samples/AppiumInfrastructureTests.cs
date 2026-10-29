@@ -297,7 +297,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			File.WriteAllText(Path.Combine(Path.GetDirectoryName(first)!, "Second-Signed.apk"), "fixture-apk");
 		}
 		await using var fixture = Fixture(AppiumMode.Run, apps);
-		await Assert.ThrowsAsync<FileNotFoundException>(() =>
+		await Assert.ThrowsAsync<FileNotFoundException>(async () =>
 		{
 			var workspace = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project,
 				_ => throw new InvalidOperationException("Run must not build."));
