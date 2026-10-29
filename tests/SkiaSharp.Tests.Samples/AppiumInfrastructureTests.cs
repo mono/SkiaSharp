@@ -196,25 +196,24 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public async Task BuildWithoutAnAppCannotReuseStaleOutputOrMarkTheBuildComplete()
+	public async Task SuccessfulBuildIsNotRepeatedWhenItsAppOutputIsMissing()
 	{
 		var apps = Path.Combine(root, "sample-apps");
 		var directory = Path.Combine(apps, Target, Folder);
 		var stale = CreateApp(directory);
 		await using var fixture = Fixture(AppiumMode.All, apps);
-		await Assert.ThrowsAsync<FileNotFoundException>(() =>
-			fixture.PrepareWorkspace(Target, Folder, Project, workspace =>
-			{
-				FindApp(workspace);
-				return Task.CompletedTask;
-			}));
-		Assert.False(Directory.Exists(stale));
-		var prepared = await fixture.PrepareWorkspace(Target, Folder, Project, workspace =>
+		var builds = 0;
+		var prepared = await fixture.PrepareWorkspace(Target, Folder, Project, _ =>
 		{
-			CreateApp(workspace.Root);
+			builds++;
 			return Task.CompletedTask;
 		});
-		Assert.True(Directory.Exists(FindApp(prepared)));
+		Assert.False(Directory.Exists(stale));
+		Assert.Throws<FileNotFoundException>(() => FindApp(prepared));
+		var reused = await fixture.PrepareWorkspace(Target, Folder, Project,
+			_ => throw new InvalidOperationException("A successful build must not be repeated."));
+		Assert.Throws<FileNotFoundException>(() => FindApp(reused));
+		Assert.Equal(1, builds);
 	}
 
 	[Theory]
