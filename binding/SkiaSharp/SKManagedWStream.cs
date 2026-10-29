@@ -27,18 +27,13 @@ namespace SkiaSharp
 		/// <param name="disposeManagedStream">If this is set to <see langword="true" />, the provided <see langword="managedStream" /> will be disposed when this instance is disposed.</param>
 		/// <remarks />
 		public SKManagedWStream (Stream managedStream, bool disposeManagedStream)
-			: this (managedStream, disposeManagedStream, true)
+			: this (managedStream ?? throw new ArgumentNullException (nameof (managedStream)), disposeManagedStream, true)
 		{
 		}
 
 		private SKManagedWStream (Stream managedStream, bool disposeManagedStream, bool owns)
 			: base (owns)
 		{
-			if (managedStream == null) {
-				Dispose ();
-				throw new ArgumentNullException (nameof (managedStream));
-			}
-
 			stream = managedStream;
 			disposeStream = disposeManagedStream;
 		}
