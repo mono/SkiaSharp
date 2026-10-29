@@ -6,7 +6,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/msbuild.cake"
 #load "tests-shared.cake"
 #load "tests-shared-apple.cake"
-#load "tests-shared-android.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
@@ -25,14 +24,6 @@ if (APPIUM_MODE != "all" && !APPIUM_RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Select an Appium run group ({string.Join(", ", APPIUM_RUN_GROUPS)}) with an explicit phase.");
 
 string OWNED_IOS_SIMULATOR = null;
-string OWNED_ANDROID_AVD = null;
-string OWNED_ANDROID_SERIAL = null;
-
-Setup(context =>
-{
-    if (TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase) && RUN_GROUP == "Android")
-        StopCIAndroidEmulators();
-});
 
 void SetupSampleDevices()
 {
@@ -47,9 +38,6 @@ void SetupSampleDevices()
 
 Teardown(context =>
 {
-    if (TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase) && RUN_GROUP == "Android" && !IsCakeListingCommand())
-        TeardownAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, context.ThrownException);
-
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
         TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
     }
@@ -84,23 +72,17 @@ Task ("samples")
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     if (mobile || string.IsNullOrEmpty(RUN_GROUP)) {
         if (APPIUM_MODE != "run") {
-            // Finish every selected app build/export before any owned device is booted.
+            // Finish every selected app build before any owned device is booted.
             foreach (var group in mobile ? new[] { RUN_GROUP } : APPIUM_RUN_GROUPS) {
                 Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", "build");
                 RunDotNetTest(project, results.Combine($"build-{group}"), noBuild: SKIP_BUILD, hangTimeout: null,
                     properties: SampleTestProperties(group),
                     runnerArguments: new[] { "--filter-trait", $"RunGroup={group}" });
-                ExportAppiumRunner(group);
             }
         }
         if (APPIUM_MODE == "build")
             return;
         Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", "run");
-        if (mobile) {
-            // Acquire/extract the exact host runner before boot, never evaluate or compile a sample project.
-            RunPreparedAppiumTests(RUN_GROUP, results.Combine($"run-{RUN_GROUP}"));
-            return;
-        }
         SetupSampleDevices();
     }
     RunDotNetTest(project, results.Combine("tests"), noBuild: SKIP_BUILD, hangTimeout: null,
@@ -117,77 +99,6 @@ Dictionary<string, string> SampleTestProperties(string group) => new Dictionary<
     ["TargetFramework"] = "net10.0",
     ["TargetFrameworks"] = "net10.0",
 };
-
-DirectoryPath AppiumRunnerDirectory(string group)
-{
-    var architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-    if (architecture != "arm64" && architecture != "x64")
-        throw new Exception("Appium runners require an arm64 or x64 host.");
-    return ROOT_OUTPUT_PATH.Combine($"appium-runner/{(group == "Ios" ? "ios" : "android")}/{architecture}");
-}
-
-string AppiumRunnerHost() =>
-    IsRunningOnWindows() ? "windows" : IsRunningOnMacOs() ? "macos" : IsRunningOnLinux() ? "linux" :
-        throw new Exception("Unsupported Appium runner host OS.");
-
-void AppiumTar(params string[] arguments)
-{
-    var args = new ProcessArgumentBuilder();
-    foreach (var argument in arguments)
-        args.AppendQuoted(argument);
-    if (StartProcess("tar", new ProcessSettings { Arguments = args, WorkingDirectory = ROOT_PATH }) != 0)
-        throw new Exception("Could not archive/extract the prepared Appium test runner.");
-}
-
-string AppiumRunnerHash(string archive)
-{
-    using var stream = System.IO.File.OpenRead(archive);
-    return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(stream));
-}
-
-void ExportAppiumRunner(string group)
-{
-    var source = ROOT_PATH.Combine($"tests/SkiaSharp.Tests.Samples/bin/{CONFIGURATION}/net10.0");
-    if (!System.IO.File.Exists(source.CombineWithFilePath("SkiaSharp.Tests.Samples.dll").FullPath))
-        throw new Exception($"The source-backed sample test runner is missing: {source}");
-    var directory = AppiumRunnerDirectory(group);
-    EnsureDirectoryExists(directory);
-    var archive = directory.CombineWithFilePath("runner.tar").FullPath;
-    AppiumTar("-cf", archive, "-C", source.FullPath, ".");
-    System.IO.File.WriteAllText(directory.CombineWithFilePath("runner.sha256").FullPath, AppiumRunnerHash(archive));
-    System.IO.File.WriteAllText(directory.CombineWithFilePath("runner.host").FullPath, AppiumRunnerHost());
-}
-
-void RunPreparedAppiumTests(string group, DirectoryPath results)
-{
-    var directory = AppiumRunnerDirectory(group);
-    var archive = directory.CombineWithFilePath("runner.tar").FullPath;
-    var checksum = directory.CombineWithFilePath("runner.sha256").FullPath;
-    var host = directory.CombineWithFilePath("runner.host").FullPath;
-    if (!System.IO.File.Exists(archive) || !System.IO.File.Exists(checksum) ||
-        !System.IO.File.Exists(host) || System.IO.File.ReadAllText(host) != AppiumRunnerHost() ||
-        System.IO.File.ReadAllText(checksum) != AppiumRunnerHash(archive))
-        throw new Exception($"Acquire the exact platform/host-architecture Appium runner from its build job: {directory}");
-    var runtime = ROOT_OUTPUT_PATH.Combine($"appium-runner-workspaces/{Guid.NewGuid():N}");
-    EnsureDirectoryExists(runtime);
-    EnsureDirectoryExists(results);
-    try {
-        AppiumTar("-xf", archive, "-C", runtime.FullPath);
-        var assembly = runtime.CombineWithFilePath("SkiaSharp.Tests.Samples.dll");
-        if (!System.IO.File.Exists(assembly.FullPath))
-            throw new Exception($"The acquired source-backed runner assembly is missing: {assembly}");
-        SetupSampleDevices();
-        var args = new ProcessArgumentBuilder().Append("exec").AppendQuoted(assembly.FullPath)
-            .Append("--show-live-output on --no-ansi --results-directory").AppendQuoted(results.FullPath)
-            .Append("--report-trx --report-trx-filename TestResults.trx")
-            .Append("--parallel none")
-            .Append("--filter-trait").AppendQuoted($"RunGroup={group}");
-        if (StartProcess("dotnet", new ProcessSettings { Arguments = args, WorkingDirectory = ROOT_PATH }) != 0)
-            throw new Exception($"Prepared Appium {group} tests failed.");
-    } finally {
-        DeleteDirectory(runtime, new DeleteDirectorySettings { Recursive = true, Force = true });
-    }
-}
 
 string GetSamplePackageVersion(string package, string versionSuffix)
 {

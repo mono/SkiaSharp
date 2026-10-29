@@ -7,10 +7,9 @@ public abstract class DotNetSampleTestBase : IDisposable
 {
     private SampleWorkspace? workspace;
     private string? preparedFolder;
-    private readonly string samplesDir;
+    private readonly string? samplesDir;
 
     protected DotNetSampleTestBase()
-        : this(Repo.SamplesDir)
     {
     }
 
@@ -25,7 +24,7 @@ public abstract class DotNetSampleTestBase : IDisposable
             throw new InvalidOperationException("A test case may only prepare one sample workspace.");
 
         preparedFolder = folder;
-        workspace ??= new SampleWorkspace(folder, samplesDir, Repo.PackagesDir, Repo.WorkspacesDir, Repo.ArtifactsDir);
+        workspace ??= new SampleWorkspace(folder, samplesDir ?? Repo.SamplesDir, Repo.PackagesDir, Repo.WorkspacesDir, Repo.ArtifactsDir);
         return workspace;
     }
 
@@ -33,7 +32,14 @@ public abstract class DotNetSampleTestBase : IDisposable
     {
         options ??= new();
         options.Validate();
-        var prepared = PrepareSample(folder);
+        return await BuildSample(PrepareSample(folder), folder, solution, options);
+    }
+
+    private protected static async Task<SampleWorkspace> BuildSample(
+        SampleWorkspace prepared, string folder, string solution, DotNetOptions? options = null)
+    {
+        options ??= new();
+        options.Validate();
 
         var project = Path.Combine(prepared.Root, "samples", folder, solution);
         if (!File.Exists(project))

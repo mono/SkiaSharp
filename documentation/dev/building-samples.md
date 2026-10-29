@@ -75,13 +75,25 @@ and unfiltered runs. Filtered runs do not replace the full suite.
 The `Ios` group runs the Basic MAUI/native and Gallery MAUI applications
 against staged packages.
 
-- `--appiumMode=build` prepares apps and the compiled runner without a device.
-- `--appiumMode=run` runs those prepared artifacts without building.
-- `--appiumMode=all` (default) builds before creating the simulator.
+- `--appiumMode=build` cleans and builds apps without a device, then retains
+  their output.
+- `--appiumMode=run` requires the existing apps, executes without rebuilding
+  them, and cleans the selected app workspaces after all scenarios.
+- `--appiumMode=all` (default) cleans, builds, runs, and cleans afterward.
 
-Prepared apps and runners are under `output/appium-apps/` and
-`output/appium-runner/`. Keep them with the exact producing `output/nugets`
-packages and use a matching host platform and architecture.
+App workspaces use predictable paths under
+`output/sample-apps/{platform}/{architecture}/{sample-folder}/`; their normal
+`samples/.../bin/Debug/` directories contain the built apps. Both phases use
+`dotnet test` to build and execute the host-side tests; only build/all mode
+invokes sample-app builds.
+Use a matching host platform and architecture and one producing package set.
+Run mode never falls back to a sample-app build.
+
+Build and run separately on the same machine by passing `--appiumMode=build`
+and then `--appiumMode=run` to the same Cake command below. No archive or
+artifact transfer is needed locally. Apps shared by multiple scenarios remain
+available until the Appium test collection finishes. Diagnostics are retained
+separately under `output/logs/testlogs/samples/`, including after failures.
 
 ### iOS simulators
 
@@ -101,8 +113,14 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
 
 CI runs both the declared iOS 18.6 profile and `latest` (the selected Xcode's
 installed runtime). Cake creates and deletes only its own simulator. Build
-jobs publish prepared apps and a checksummed runner; runtime jobs download
-those artifacts and execute without rebuilding the test project.
+jobs archive the app workspaces into `.tar.gz` files in YAML, preserving
+executable permissions and symlinks. Build-only
+`cache` and `obj` directories are excluded from the app archive. Runtime jobs
+download the apps from that build job, extract the folders to the same layout,
+and use `dotnet test` to build the host-side test project and run the scenarios.
+Runtime jobs need the native/package inputs for the host tests, but no mobile
+workloads or sample-app builds. There are no app export manifests or custom
+checksum sidecars; CI acquires apps from the build job in the same pipeline run.
 `latest` is not guaranteed to pass: references exist for 18.6.0, 26.2.0,
 26.3.1 and versionless Gallery cases, but not 26.5. Missing references fail
 strictly; capture and review them rather than accepting an unmatched image.
