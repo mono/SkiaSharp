@@ -271,7 +271,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		{
 			builds++;
 			CreateAndroidApp(workspace.Root);
-			FindAndroidApp(workspace);
 			return Task.CompletedTask;
 		});
 		Assert.Equal(phase == "build" ? 1 : 0, builds);
@@ -306,23 +305,24 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public async Task AndroidMissingBuildIsNotCached()
+	public async Task AndroidSuccessfulBuildIsNotRepeatedWhenApkOutputIsMissing()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		await using var fixture = Fixture(AppiumMode.Build, apps);
-		await Assert.ThrowsAsync<FileNotFoundException>(() =>
-			fixture.PrepareWorkspace(AndroidTarget, Folder, Project, workspace =>
-			{
-				FindAndroidApp(workspace);
-				return Task.CompletedTask;
-			}));
-		var prepared = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project, workspace =>
+		var directory = Path.Combine(apps, AndroidTarget, Folder);
+		var stale = CreateAndroidApp(directory);
+		await using var fixture = Fixture(AppiumMode.All, apps);
+		var builds = 0;
+		var prepared = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project, _ =>
 		{
-			CreateAndroidApp(workspace.Root);
-			FindAndroidApp(workspace);
+			builds++;
 			return Task.CompletedTask;
 		});
-		Assert.True(File.Exists(FindAndroidApp(prepared)));
+		Assert.False(File.Exists(stale));
+		Assert.Throws<FileNotFoundException>(() => FindAndroidApp(prepared));
+		var reused = await fixture.PrepareWorkspace(AndroidTarget, Folder, Project,
+			_ => throw new InvalidOperationException("A successful build must not be repeated."));
+		Assert.Throws<FileNotFoundException>(() => FindAndroidApp(reused));
+		Assert.Equal(1, builds);
 	}
 
 	[Fact]
