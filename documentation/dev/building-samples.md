@@ -126,9 +126,9 @@ and use `dotnet test` to build the host-side test project and run the scenarios.
 Runtime jobs need the native/package inputs for the host tests, but no mobile
 workloads or sample-app builds. CI acquires apps from the build job in the same
 pipeline run.
-`latest` is not guaranteed to pass: references exist for 18.6.0, 26.2.0,
-26.3.1 and versionless Gallery cases, but not 26.5. Missing references fail
-strictly; capture and review them rather than accepting an unmatched image.
+Reviewed references cover 18.6.0, 26.2.0, 26.3.1, 26.5.0 and versionless Gallery
+cases. `latest` may select a newer, unreviewed runtime; missing references still
+fail strictly. Capture and review them rather than accepting an unmatched image.
 
 ## Test groups and diagnostics
 

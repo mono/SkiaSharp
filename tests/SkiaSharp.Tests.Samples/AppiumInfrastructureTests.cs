@@ -343,6 +343,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("18.6")]
 	[InlineData("26.2")]
 	[InlineData("26.3.1")]
+	[InlineData("26.5")]
 	public void IosGoldenProfileUsesTheSelectedRuntime(string version)
 	{
 		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", version);
@@ -484,6 +485,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			"iPhone 16 Pro", "26.3.1", new(1206, 2622)));
 		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.3.2", new(1206, 2622)));
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
+			"iPhone 16 Pro", "26.5", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
 			"iPhone 16", "26.2", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
@@ -498,6 +501,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("26.2", false)]
 	[InlineData("26.3.1", true)]
 	[InlineData("26.3.1", false)]
+	[InlineData("26.5", true)]
+	[InlineData("26.5", false)]
 	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(
 		string version, bool horizontal, string profile = "iphone-16-pro", string architecture = "arm64")
 	{
