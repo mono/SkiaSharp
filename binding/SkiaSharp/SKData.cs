@@ -178,15 +178,15 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
-			if (stream.CanSeek && stream.Length >= 0) {
-				var remaining = stream.Length - stream.Position;
-				if (remaining <= 0)
-					return Empty;
 
-				return CreateFromStream (stream, (ulong)remaining, failOnEarlyEof: false);
-			}
+			if (!stream.CanSeek || stream.Length < 0)
+				return CreateFromUnknownLengthStream (stream);
 
-			return CreateFromUnknownLengthStream (stream);
+			var remaining = stream.Length - stream.Position;
+			if (remaining <= 0)
+				return Empty;
+
+			return CreateFromStream (stream, (ulong)remaining, failOnEarlyEof: false);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -231,12 +231,13 @@ namespace SkiaSharp
 		{
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
-			ulong totalRead = 0;
 
+			ulong totalRead = 0;
 			while (true) {
 				var readLen = stream.Read (buffer.Array, 0, buffer.Length);
 				if ((uint)readLen > (uint)buffer.Length)
 					throw new IOException ("The stream returned an invalid byte count.");
+
 				if (readLen == 0)
 					break;
 
@@ -257,14 +258,12 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
+
 			if (length == 0)
 				return Empty;
 
-			if (failOnEarlyEof && stream.CanSeek && stream.Length >= 0) {
-				var remaining = stream.Length - stream.Position;
-				if (remaining < 0 || (ulong)remaining < length)
-					return null;
-			}
+			if (failOnEarlyEof && stream.CanSeek && stream.Length >= 0 && (ulong)Math.Max (0, stream.Length - stream.Position) < length)
+				return null;
 
 			var data = Create (length);
 			if (data == null)
