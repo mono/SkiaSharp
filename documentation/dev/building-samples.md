@@ -112,7 +112,11 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
 ```
 
 CI runs both the declared iOS 18.6 profile and `latest` (the selected Xcode's
-installed runtime). Cake creates and deletes only its own simulator. Build
+installed runtime). Cake creates its simulator in `Setup` for run/all mode and
+deletes only that simulator in `Teardown`, including after a failure.
+Build-only, sample-generation, and listing/dry-run commands do not start a
+device. CI builds apps in a separate job; local all-mode runs may keep the
+simulator booted while apps build. Build
 jobs archive the app workspaces into `.tar.gz` files in YAML, preserving
 executable permissions and symlinks. Build-only
 `cache` and `obj` directories are excluded from the app archive. Runtime jobs
