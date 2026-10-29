@@ -36,6 +36,26 @@ Golden.Verify(GoldenInput.Path(actualPath), GoldenInput.Path(expectedPath));
 `GoldenInput.Bytes(...)` accepts any format Skia can decode. Diagnostics,
 attachments and generated differences are normalized to PNG.
 
+For an explicitly approved non-rendering edge region, transform both images
+for comparison without rewriting either input:
+
+```csharp
+await golden.VerifyAsync(
+    GoldenInput.Capture(CaptureScreenshot),
+    new(comparisonTransform: image =>
+        image.Subset(new SKRectI(0, 0, image.Width, image.Height - 39))
+            ?? throw new InvalidOperationException("Could not crop the comparison image.")),
+    cancellationToken: cancellationToken);
+```
+
+Callers own the platform policy deciding when to transform. The callback
+borrows its input: return it unchanged or return a new image, but do not
+dispose it. The verifier disposes transformed images after comparison, even
+on failure. Original dimensions must still match, and `expectedSize` describes
+the original image. Transformed dimensions must also match. Actual/reference
+attachments and proposal markers retain the complete original images;
+difference images contain only the compared region.
+
 ## References
 
 References use:

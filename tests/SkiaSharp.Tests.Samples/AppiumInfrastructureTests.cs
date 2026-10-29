@@ -440,6 +440,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
 		Assert.Same(operations, app.Operations);
 		Assert.Equal(app.Reference("fixture"), operations.Reference("fixture"));
+		Assert.Equal(app.ComparisonInsets(new(1206, 2622)), operations.ComparisonInsets(new(1206, 2622)));
 		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
@@ -453,6 +454,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("Appium operations have not been attached to an app.", failure.Message);
 		Assert.Throws<InvalidOperationException>(() => operations.Reference("fixture"));
+		Assert.Throws<InvalidOperationException>(() => operations.ComparisonInsets(new(4, 5)));
 		Assert.Throws<ArgumentNullException>(() => operations.Attach(null!));
 	}
 
@@ -472,39 +474,21 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public void IosCapturePolicyRemovesOnlyTheKnownSystemBottomBand()
+	public void IosComparisonPolicyExcludesOnlyTheKnownSystemBottomBand()
 	{
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "18.6", new(1206, 2622)));
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.2", new(1206, 2622)));
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.3.1", new(1206, 2622)));
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ScreenshotInsets(
+		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.3.2", new(1206, 2622)));
-		Assert.Equal(SKRectI.Empty, IosRunningApp.ScreenshotInsets(
+		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
 			"iPhone 16", "26.2", new(1206, 2622)));
-		Assert.Equal(SKRectI.Empty, IosRunningApp.ScreenshotInsets(
+		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.2", new(1032, 2592)));
 
-		using var source = new SKBitmap(4, 5);
-		source.Erase(SKColors.Red);
-		source.SetPixel(1, 1, SKColors.Blue);
-		source.SetPixel(2, 2, SKColors.Green);
-		using var image = SKImage.FromBitmap(source);
-		using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-
-		var croppedBytes = AppiumRunningApp.Crop(data.ToArray(), new(1, 1, 1, 2));
-		using var cropped = SKBitmap.Decode(croppedBytes);
-		Assert.NotNull(cropped);
-		Assert.Equal(2, cropped.Width);
-		Assert.Equal(2, cropped.Height);
-		Assert.Equal(SKColors.Blue, cropped.GetPixel(0, 0));
-		Assert.Equal(SKColors.Green, cropped.GetPixel(1, 1));
-		Assert.Throws<ArgumentOutOfRangeException>(() =>
-			AppiumRunningApp.Crop(data.ToArray(), new(-1, 0, 0, 0)));
-		Assert.Throws<ArgumentOutOfRangeException>(() =>
-			AppiumRunningApp.Crop(data.ToArray(), new(2, 0, 2, 0)));
 	}
 
 	[Theory]
@@ -519,21 +503,25 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		var drawn = Reference(profile, version, "maui-basic-drawing-two-lines", architecture);
 		var blank = Reference(profile, version, "maui-basic-drawing", architecture);
-		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(drawn, drawn);
-		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(blank, blank);
-
 		using var workspace = Workspace();
 		using var drawnBitmap = SKBitmap.Decode(drawn);
 		using var blankBitmap = SKBitmap.Decode(blank);
 		Assert.NotNull(drawnBitmap);
 		Assert.NotNull(blankBitmap);
+		var insets = IosRunningApp.ComparisonInsets("iPhone 16 Pro", version, drawnBitmap.Info.Size);
+		var drawnBytes = File.ReadAllBytes(drawn);
+		var blankBytes = File.ReadAllBytes(blank);
+		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(drawn, drawnBytes, _ => insets);
+		AppiumSampleRunTestBase.AssertDrawingStrokeRegions(blank, blankBytes, _ => insets);
+		var width = drawnBitmap.Width - insets.Left - insets.Right;
+		var height = drawnBitmap.Height - insets.Top - insets.Bottom;
 		using var missingStroke = drawnBitmap.Copy();
 		using var incompleteClear = blankBitmap.Copy();
 		var region = horizontal
-			? SKRectI.Round(new SKRect(drawnBitmap.Width * 0.35f, drawnBitmap.Height * 0.43f,
-				drawnBitmap.Width * 0.45f, drawnBitmap.Height * 0.47f))
-			: SKRectI.Round(new SKRect(drawnBitmap.Width * 0.48f, drawnBitmap.Height * 0.35f,
-				drawnBitmap.Width * 0.52f, drawnBitmap.Height * 0.40f));
+			? SKRectI.Round(new SKRect(insets.Left + width * 0.35f, insets.Top + height * 0.43f,
+				insets.Left + width * 0.45f, insets.Top + height * 0.47f))
+			: SKRectI.Round(new SKRect(insets.Left + width * 0.48f, insets.Top + height * 0.35f,
+				insets.Left + width * 0.52f, insets.Top + height * 0.40f));
 		for (var y = region.Top; y < region.Bottom; y++)
 			for (var x = region.Left; x < region.Right; x++)
 			{
@@ -546,8 +534,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			File.WriteAllBytes(missing, data.ToArray());
 		using (var data = incompleteClear.Encode(SKEncodedImageFormat.Png, 100))
 			File.WriteAllBytes(residual, data.ToArray());
-		Assert.ThrowsAny<Exception>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(missing, drawn));
-		Assert.ThrowsAny<Exception>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(residual, blank));
+		Assert.ThrowsAny<Exception>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(missing, drawnBytes, _ => insets));
+		Assert.ThrowsAny<Exception>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(residual, blankBytes, _ => insets));
 	}
 
 	[Theory]

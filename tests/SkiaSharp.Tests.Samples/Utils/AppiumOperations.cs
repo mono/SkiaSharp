@@ -22,6 +22,10 @@ internal abstract class AppiumOperations
 
 	internal GoldenCase Reference(string caseName) => App.Reference(caseName);
 
+	internal SKRectI ComparisonInsets(SKSizeI size) => App.ComparisonInsets(size);
+
+	internal SKImage TransformComparison(SKImage image) => App.TransformComparison(image);
+
 	internal void Attach(AppiumRunningApp owner)
 	{
 		ArgumentNullException.ThrowIfNull(owner);
@@ -354,26 +358,7 @@ internal abstract class AppiumOperations
 	internal string Capture(string id, string name)
 	{
 		var png = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
-		var path = SaveCapture(App.TransformScreenshot(png) ?? png, name);
-		File.WriteAllBytes(RawCapture(path), png);
-		return path;
-	}
-
-	internal static string RawCapture(string path) => Path.ChangeExtension(path, ".raw.png");
-
-	internal string TransformReference(string path)
-	{
-		// Let strict validation retain the actual capture and report a missing reference.
-		if (!File.Exists(path))
-			return path;
-		var transformed = App.TransformScreenshot(File.ReadAllBytes(path));
-		if (transformed is null)
-			return path;
-
-		var output = Path.Combine(App.Workspace.DiagnosticsRoot, "references", Path.GetFileName(path));
-		Directory.CreateDirectory(Path.GetDirectoryName(output)!);
-		File.WriteAllBytes(output, transformed);
-		return output;
+		return SaveCapture(png, name);
 	}
 
 	internal string SaveCapture(byte[] png, string name)
