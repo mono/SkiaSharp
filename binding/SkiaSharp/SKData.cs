@@ -262,8 +262,11 @@ namespace SkiaSharp
 			if (length == 0)
 				return Empty;
 
-			if (failOnEarlyEof && stream.CanSeek && stream.Length >= 0 && (ulong)Math.Max (0, stream.Length - stream.Position) < length)
-				return null;
+			if (failOnEarlyEof && stream.CanSeek && stream.Length >= 0) {
+				var remaining = stream.Length - stream.Position;
+				if (remaining < 0 || (ulong)remaining < length)
+					return null;
+			}
 
 			var data = Create (length);
 			if (data == null)
