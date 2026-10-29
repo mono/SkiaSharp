@@ -78,7 +78,6 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 					["WindowsAppSDKSelfContained"] = "true"
 				}
 			});
-			FindApp(prepared);
 		});
 		return new WindowsRunningApp(workspace, FindApp(workspace),
 			folder == "Gallery" ? "SkiaSharp Gallery" : "SkiaSharp Sample");
