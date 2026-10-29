@@ -8,9 +8,11 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
+internal enum AppiumMode { All, Build, Run }
+
 public sealed class AppiumFixture : IAsyncDisposable
 {
-	private readonly Dictionary<string, AppiumAppSpec> built = new(StringComparer.Ordinal);
+	private readonly Dictionary<string, string> built = new(StringComparer.Ordinal);
 	private readonly HashSet<string> workspaces = new(StringComparer.Ordinal);
 	private readonly AppiumMode? mode;
 	private readonly string packagesDirectory;
@@ -27,40 +29,46 @@ public sealed class AppiumFixture : IAsyncDisposable
 		this.samplesDirectory = samplesDirectory;
 	}
 
-	internal AppiumMode Mode => mode ?? AppiumPreparedApp.ParseMode(Environment.GetEnvironmentVariable("TEST_APPIUM_MODE"));
+	internal AppiumMode Mode => mode ?? ParseMode(Environment.GetEnvironmentVariable("TEST_APPIUM_MODE"));
 
-	internal async Task<AppiumPreparedApp> Prepare(
-		AppiumAppSpec spec, Func<SampleWorkspace, Task> build,
-		Func<SampleWorkspace, string, AppiumRunningApp> sessionFactory)
+	internal static AppiumMode ParseMode(string? value) => value switch
+	{
+		null or "all" => AppiumMode.All,
+		"build" => AppiumMode.Build,
+		"run" => AppiumMode.Run,
+		_ => throw new ArgumentException($"Invalid TEST_APPIUM_MODE '{value}'; expected all, build or run.")
+	};
+
+	internal async Task<SampleWorkspace> PrepareWorkspace(
+		string target, string folder, string project, Func<SampleWorkspace, Task> build)
 	{
 		ArgumentNullException.ThrowIfNull(build);
-		ArgumentNullException.ThrowIfNull(sessionFactory);
-		var directory = spec.DirectoryFor(appsDirectory);
-		if (built.TryGetValue(spec.Key, out var previous) && previous != spec)
-			throw new InvalidOperationException($"Conflicting Appium app key: {spec.Key}");
+		ValidateRelativePath(target);
+		ValidateRelativePath(folder);
+		ValidateRelativePath(project);
+		var directory = Path.Combine(Path.GetFullPath(appsDirectory), target, folder);
+		if (built.TryGetValue(directory, out var previous) && previous != project)
+			throw new InvalidOperationException($"A different sample project already uses {directory}: {previous}");
 		workspaces.Add(directory);
-		if (Mode != AppiumMode.Run && !built.ContainsKey(spec.Key))
+		if (Mode != AppiumMode.Run && !built.ContainsKey(directory))
 		{
 			if (Directory.Exists(directory))
 				SampleWorkspace.DeleteDirectory(directory);
-			var workspace = new SampleWorkspace(spec.Folder, samplesDirectory ?? Repo.SamplesDir,
+			var workspace = new SampleWorkspace(folder, samplesDirectory ?? Repo.SamplesDir,
 				packagesDirectory, Repo.WorkspacesDir, Repo.ArtifactsDir, directory);
 			await build(workspace);
 		}
 		var prepared = SampleWorkspace.ForAppiumRun(directory);
-		var artifact = spec.FindApp(prepared);
-		built[spec.Key] = spec;
-		return new(prepared, artifact, sessionFactory);
+		built[directory] = project;
+		return prepared;
 	}
 
-	internal async Task Run(AppiumPreparedApp app, Func<AppiumRunningApp, Task> scenario)
+	private static void ValidateRelativePath(string value)
 	{
-		if (Mode == AppiumMode.Build)
-		{
-			TestContext.Current.TestOutputHelper?.WriteLine($"Built {app.Artifact}; build phase does not invoke the scenario.");
-			return;
-		}
-		await Run(app.CreateRunningApp(), scenario);
+		if (string.IsNullOrWhiteSpace(value) || value.Contains('\\') || value.Contains(':') ||
+			Path.IsPathRooted(value) ||
+			value.Split('/').Any(part => part is "" or "." or ".." || part.Any(char.IsControl)))
+			throw new ArgumentException($"Expected a safe sample-relative path: {value}");
 	}
 
 	public async ValueTask DisposeAsync()
@@ -80,6 +88,12 @@ public sealed class AppiumFixture : IAsyncDisposable
 
 	internal async Task Run(AppiumRunningApp app, Func<AppiumRunningApp, Task> scenario)
 	{
+		if (Mode == AppiumMode.Build)
+		{
+			TestContext.Current.TestOutputHelper?.WriteLine($"Built {app.Artifact}; build phase does not invoke the scenario.");
+			return;
+		}
+
 		Process? server = null;
 		Task<string>? stdout = null;
 		Task<string>? stderr = null;
