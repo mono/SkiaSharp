@@ -25,8 +25,13 @@ if (APPIUM_MODE != "all" && !APPIUM_RUN_GROUPS.Contains(RUN_GROUP))
 
 string OWNED_IOS_SIMULATOR = null;
 
-void SetupSampleDevices()
+Setup(context =>
 {
+    if ((!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) &&
+         !TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase)) ||
+        APPIUM_MODE == "build" || IsCakeListingCommand())
+        return;
+
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
         SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
 
@@ -34,7 +39,7 @@ void SetupSampleDevices()
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
     }
-}
+});
 
 Teardown(context =>
 {
@@ -72,7 +77,7 @@ Task ("samples")
     // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
     if (mobile || string.IsNullOrEmpty(RUN_GROUP)) {
         if (APPIUM_MODE != "run") {
-            // Finish every selected app build before any owned device is booted.
+            // Prepare each selected app before running its scenarios.
             foreach (var group in mobile ? new[] { RUN_GROUP } : APPIUM_RUN_GROUPS) {
                 Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", "build");
                 RunDotNetTest(project, results.Combine($"build-{group}"), noBuild: SKIP_BUILD, hangTimeout: null,
@@ -83,7 +88,6 @@ Task ("samples")
         if (APPIUM_MODE == "build")
             return;
         Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", "run");
-        SetupSampleDevices();
     }
     RunDotNetTest(project, results.Combine("tests"), noBuild: SKIP_BUILD, hangTimeout: null,
         properties: SampleTestProperties(RUN_GROUP),
