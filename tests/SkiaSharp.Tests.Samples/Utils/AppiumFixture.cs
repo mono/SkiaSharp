@@ -8,54 +8,74 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Samples.Utils;
 
-public sealed class AppiumFixture
+public sealed class AppiumFixture : IAsyncDisposable
 {
 	private readonly Dictionary<string, AppiumAppSpec> built = new(StringComparer.Ordinal);
+	private readonly HashSet<string> workspaces = new(StringComparer.Ordinal);
 	private readonly AppiumMode? mode;
 	private readonly string packagesDirectory;
 	private readonly string appsDirectory;
-	private AppiumPackage[]? packages;
+	private readonly string? samplesDirectory;
 
-	public AppiumFixture() : this(null, Repo.PackagesDir, Repo.AppiumAppsDir) { }
+	public AppiumFixture() : this(null, Repo.PackagesDir, Repo.SampleAppsDir) { }
 
-	internal AppiumFixture(AppiumMode? mode, string packagesDirectory, string appsDirectory)
+	internal AppiumFixture(AppiumMode? mode, string packagesDirectory, string appsDirectory, string? samplesDirectory = null)
 	{
 		this.mode = mode;
 		this.packagesDirectory = packagesDirectory;
 		this.appsDirectory = appsDirectory;
+		this.samplesDirectory = samplesDirectory;
 	}
 
-	internal AppiumMode Mode => mode ?? AppiumAppArtifact.ParseMode(Environment.GetEnvironmentVariable("TEST_APPIUM_MODE"));
+	internal AppiumMode Mode => mode ?? AppiumPreparedApp.ParseMode(Environment.GetEnvironmentVariable("TEST_APPIUM_MODE"));
 
 	internal async Task<AppiumPreparedApp> Prepare(
-		AppiumAppSpec spec, Func<Task<(string Artifact, string ApplicationId)>> build,
+		AppiumAppSpec spec, Func<SampleWorkspace, Task> build,
 		Func<SampleWorkspace, string, AppiumRunningApp> sessionFactory)
 	{
+		ArgumentNullException.ThrowIfNull(build);
 		ArgumentNullException.ThrowIfNull(sessionFactory);
-		var mode = Mode;
-		spec.Validate();
-		packages ??= AppiumAppArtifact.ReadPackages(packagesDirectory);
-		var directory = AppiumAppArtifact.DirectoryFor(appsDirectory, spec);
+		var directory = spec.DirectoryFor(appsDirectory);
 		if (built.TryGetValue(spec.Key, out var previous) && previous != spec)
 			throw new InvalidOperationException($"Conflicting Appium app key: {spec.Key}");
-		if (mode != AppiumMode.Run && !built.ContainsKey(spec.Key))
+		workspaces.Add(directory);
+		if (Mode != AppiumMode.Run && !built.ContainsKey(spec.Key))
 		{
-			var (artifact, applicationId) = await build();
-			AppiumAppArtifact.Export(directory, spec, artifact, applicationId, packages);
-			built.Add(spec.Key, spec);
+			if (Directory.Exists(directory))
+				SampleWorkspace.DeleteDirectory(directory);
+			var workspace = new SampleWorkspace(spec.Folder, samplesDirectory ?? Repo.SamplesDir,
+				packagesDirectory, Repo.WorkspacesDir, Repo.ArtifactsDir, directory);
+			await build(workspace);
 		}
-		return new(mode, directory, AppiumAppArtifact.Load(directory, spec, packages), sessionFactory);
+		var prepared = SampleWorkspace.ForAppiumRun(directory);
+		var artifact = spec.FindApp(prepared);
+		built[spec.Key] = spec;
+		return new(prepared, artifact, sessionFactory);
 	}
 
 	internal async Task Run(AppiumPreparedApp app, Func<AppiumRunningApp, Task> scenario)
 	{
-		if (app.Mode == AppiumMode.Build)
+		if (Mode == AppiumMode.Build)
 		{
-			TestContext.Current.TestOutputHelper?.WriteLine($"Built/exported {app.Manifest.App.Key}; build phase does not invoke the scenario.");
+			TestContext.Current.TestOutputHelper?.WriteLine($"Built {app.Artifact}; build phase does not invoke the scenario.");
 			return;
 		}
-		using var workspace = SampleWorkspace.ForAppiumRun();
-		await Run(app.CreateRunningApp(workspace), scenario);
+		await Run(app.CreateRunningApp(), scenario);
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (Mode == AppiumMode.Build)
+			return;
+		List<Exception> failures = [];
+		foreach (var directory in workspaces)
+			if (Directory.Exists(directory))
+				await FailureHandling.Attempt(failures, () =>
+				{
+					SampleWorkspace.DeleteDirectory(directory);
+					return Task.CompletedTask;
+				});
+		FailureHandling.ThrowFailures(failures);
 	}
 
 	internal async Task Run(AppiumRunningApp app, Func<AppiumRunningApp, Task> scenario)
