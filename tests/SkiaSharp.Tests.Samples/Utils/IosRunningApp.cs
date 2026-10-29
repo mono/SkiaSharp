@@ -27,8 +27,6 @@ internal sealed class IosRunningApp : AppiumRunningApp
 
 	internal override string DeviceProfile => ReferenceProfile(model, version);
 
-	internal override string Platform => "iOS";
-
 	internal override GoldenCase Reference(string caseName) =>
 		new(
 			DeviceProfile,

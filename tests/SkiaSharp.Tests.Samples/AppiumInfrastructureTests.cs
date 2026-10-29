@@ -394,7 +394,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	{
 		internal Exception StartFailure { get; } = new NotSupportedException("Session construction failed.");
 		internal override string DeviceProfile => "unit-fixture";
-		internal override string Platform => "iOS";
 		internal override Task<string> ReadApplicationId() => Task.FromResult("unit.fixture");
 		protected override Task Start(Uri address)
 		{
@@ -418,8 +417,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		AppiumRunningApp running = app;
 		var operations = Assert.IsType<IosAppiumOperations>(running.Operations);
 		Assert.Same(operations, app.Operations);
-		Assert.Equal(app.DeviceProfile, operations.DeviceProfile);
-		Assert.Equal("iOS", operations.Platform);
+		Assert.Equal(app.Reference("fixture"), operations.Reference("fixture"));
 		Assert.Throws<InvalidOperationException>(() => operations.Attach(app));
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
@@ -432,8 +430,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		var operations = new IosAppiumOperations();
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("Appium operations have not been attached to an app.", failure.Message);
-		Assert.Throws<InvalidOperationException>(() => operations.DeviceProfile);
-		Assert.Throws<InvalidOperationException>(() => operations.Platform);
+		Assert.Throws<InvalidOperationException>(() => operations.Reference("fixture"));
 		Assert.Throws<ArgumentNullException>(() => operations.Attach(null!));
 	}
 

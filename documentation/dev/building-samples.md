@@ -116,15 +116,16 @@ installed runtime). Cake creates its simulator in `Setup` for run/all mode and
 deletes only that simulator in `Teardown`, including after a failure.
 Build-only, sample-generation, and listing/dry-run commands do not start a
 device. CI builds apps in a separate job; local all-mode runs may keep the
-simulator booted while apps build. Build
-jobs archive the app workspaces into `.tar.gz` files in YAML, preserving
-executable permissions and symlinks. Build-only
-`cache` and `obj` directories are excluded from the app archive. Runtime jobs
+simulator booted while apps build.
+
+CI archives the app workspaces into `.tar.gz` files, preserving executable
+permissions and symlinks. Build-only `cache` and `obj` directories are excluded
+from the app archive. Runtime jobs
 download the apps from that build job, extract the folders to the same layout,
 and use `dotnet test` to build the host-side test project and run the scenarios.
 Runtime jobs need the native/package inputs for the host tests, but no mobile
-workloads or sample-app builds. There are no app export manifests or custom
-checksum sidecars; CI acquires apps from the build job in the same pipeline run.
+workloads or sample-app builds. CI acquires apps from the build job in the same
+pipeline run.
 `latest` is not guaranteed to pass: references exist for 18.6.0, 26.2.0,
 26.3.1 and versionless Gallery cases, but not 26.5. Missing references fail
 strictly; capture and review them rather than accepting an unmatched image.

@@ -20,13 +20,7 @@ internal abstract class AppiumOperations
 
 	protected AppiumDriver Driver => App.Driver;
 
-	internal string DeviceProfile => App.DeviceProfile;
-
-	internal string Platform => App.Platform;
-
 	internal GoldenCase Reference(string caseName) => App.Reference(caseName);
-
-	protected string ApplicationId => App.ApplicationId;
 
 	internal void Attach(AppiumRunningApp owner)
 	{

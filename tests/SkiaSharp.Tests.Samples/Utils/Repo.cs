@@ -6,8 +6,7 @@ namespace SkiaSharp.Tests.Samples.Utils;
 internal static class Repo
 {
     public static string RootDir =>
-        (Environment.GetEnvironmentVariable("TEST_SAMPLE_REPOSITORY") ??
-            AppContext.GetData("SampleTest.RepositoryDirectory") as string) is { Length: > 0 } root
+        AppContext.GetData("SampleTest.RepositoryDirectory") as string is { Length: > 0 } root
             ? Path.GetFullPath(root)
             : throw new InvalidOperationException("SampleTest.RepositoryDirectory runtime configuration is missing");
 

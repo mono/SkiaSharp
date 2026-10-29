@@ -27,9 +27,9 @@ string OWNED_IOS_SIMULATOR = null;
 
 Setup(context =>
 {
-    if ((!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) &&
-         !TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase)) ||
-        APPIUM_MODE == "build" || IsCakeListingCommand())
+    if ((!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) && !TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase)) ||
+        APPIUM_MODE == "build" ||
+        IsCakeListingCommand())
         return;
 
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
@@ -66,43 +66,26 @@ Task ("samples-generate")
 
 Task ("samples")
     .IsDependentOn ("samples-generate")
-    .Description ("Build generated samples and test their Docker applications.")
+    .Description ("Build and validate generated sample applications.")
     .Does (() =>
 {
     var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{DATE_TIME_STR}");
-    Environment.SetEnvironmentVariable("TEST_SAMPLE_REPOSITORY", ROOT_PATH.FullPath);
-    var mobile = APPIUM_RUN_GROUPS.Contains(RUN_GROUP);
+    Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", APPIUM_MODE);
     var project = ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj");
 
-    // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
-    if (mobile || string.IsNullOrEmpty(RUN_GROUP)) {
-        if (APPIUM_MODE != "run") {
-            // Prepare each selected app before running its scenarios.
-            foreach (var group in mobile ? new[] { RUN_GROUP } : APPIUM_RUN_GROUPS) {
-                Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", "build");
-                RunDotNetTest(project, results.Combine($"build-{group}"), noBuild: SKIP_BUILD, hangTimeout: null,
-                    properties: SampleTestProperties(group),
-                    runnerArguments: new[] { "--filter-trait", $"RunGroup={group}" });
-            }
-        }
-        if (APPIUM_MODE == "build")
-            return;
-        Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", "run");
-    }
-    RunDotNetTest(project, results.Combine("tests"), noBuild: SKIP_BUILD, hangTimeout: null,
-        properties: SampleTestProperties(RUN_GROUP),
+    // Long-running sample builds have their own process timeouts; disable the test host's hang timer.
+    RunDotNetTest(project, results, noBuild: SKIP_BUILD, hangTimeout: null,
+        properties: new Dictionary<string, string> {
+            ["SampleRunGroup"] = RUN_GROUP,
+            ["TargetFramework"] = "net10.0",
+            ["TargetFrameworks"] = "net10.0",
+        },
         runnerArguments: string.IsNullOrEmpty(RUN_GROUP) ? null : new[] { "--filter-trait", $"RunGroup={RUN_GROUP}" });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Dictionary<string, string> SampleTestProperties(string group) => new Dictionary<string, string> {
-    ["SampleRunGroup"] = group,
-    ["TargetFramework"] = "net10.0",
-    ["TargetFrameworks"] = "net10.0",
-};
 
 string GetSamplePackageVersion(string package, string versionSuffix)
 {
