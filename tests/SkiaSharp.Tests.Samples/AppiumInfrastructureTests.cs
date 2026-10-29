@@ -14,27 +14,28 @@ public sealed class AppiumInfrastructureTests : IDisposable
 {
 	private readonly string root = Path.Combine(Repo.ArtifactsDir, SampleWorkspace.CreateIdentity("appium-infrastructure"));
 
-	private static AppiumAppSpec IosSpec => new(
-		"ios", "arm64", "Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj", "net10.0-ios", "iossimulator-arm64");
+	private const string Target = "ios/arm64";
+	private const string Folder = "Basic/Maui";
+	private const string Project = "SkiaSharpSample/SkiaSharpSample.csproj";
 
-	private static AppiumRunningApp ArtifactSession(SampleWorkspace workspace, string artifact) =>
-		new DiagnosticApp(workspace, artifact, []);
+	private static string AppOutput(string directory, string folder = Folder) =>
+		Path.Combine(directory, "samples", folder, "SkiaSharpSample", "bin", "Debug", "net10.0-ios", "iossimulator-arm64");
+
+	private static string FindApp(SampleWorkspace workspace) => IosRunningApp.FindApp(AppOutput(workspace.Root));
 
 	private AppiumFixture Fixture(AppiumMode mode, string apps)
 	{
 		var inputs = Path.Combine(root, "inputs");
 		var packages = Path.Combine(root, "packages");
-		Directory.CreateDirectory(Path.Combine(inputs, IosSpec.Folder));
+		Directory.CreateDirectory(Path.Combine(inputs, Folder));
 		Directory.CreateDirectory(packages);
 		File.WriteAllText(Path.Combine(packages, "fixture.nupkg"), "Workspace package sentinel.");
 		return new(mode, packages, apps, inputs);
 	}
 
-	private static string CreateApp(string directory, AppiumAppSpec? spec = null)
+	private static string CreateApp(string directory, string folder = Folder)
 	{
-		spec ??= IosSpec;
-		var output = Path.Combine(directory, "samples", spec.Folder, Path.GetDirectoryName(spec.Project)!,
-			"bin", "Debug", spec.Framework, spec.RuntimeIdentifier);
+		var output = AppOutput(directory, folder);
 		Directory.CreateDirectory(output);
 		var app = Path.Combine(output, "Fixture.app");
 		Directory.CreateDirectory(app);
@@ -48,20 +49,20 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("build", "Build")]
 	[InlineData("run", "Run")]
 	public void AppiumPhasesAreExplicit(string? value, string expected) =>
-		Assert.Equal(expected, AppiumPreparedApp.ParseMode(value).ToString());
+		Assert.Equal(expected, AppiumFixture.ParseMode(value).ToString());
 
 	[Theory]
 	[InlineData("")]
 	[InlineData("BUILD")]
 	[InlineData("run-only")]
 	public void AppiumRejectsInvalidPhases(string value) =>
-		Assert.Throws<ArgumentException>(() => AppiumPreparedApp.ParseMode(value));
+		Assert.Throws<ArgumentException>(() => AppiumFixture.ParseMode(value));
 
 	[Fact]
 	public async Task BuildPhaseCleansOnceBuildsOnceAndRetainsOutputAfterDisposal()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = IosSpec.DirectoryFor(apps);
+		var directory = Path.Combine(apps, Target, Folder);
 		Directory.CreateDirectory(directory);
 		var stale = Path.Combine(directory, "stale.txt");
 		File.WriteAllText(stale, "stale");
@@ -75,19 +76,20 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			return Task.CompletedTask;
 		}
 		var fixture = Fixture(AppiumMode.Build, apps);
-		var first = await fixture.Prepare(IosSpec, Build, ArtifactSession);
-		await fixture.Run(first, _ => throw new InvalidOperationException("Build phase must never invoke the scenario."));
-		var second = await fixture.Prepare(IosSpec, Build, ArtifactSession);
+		var first = await fixture.PrepareWorkspace(Target, Folder, Project, Build);
+		await fixture.Run(new DiagnosticApp(first, FindApp(first), []),
+			_ => throw new InvalidOperationException("Build phase must never invoke the scenario."));
+		var second = await fixture.PrepareWorkspace(Target, Folder, Project, Build);
 		Assert.Equal(1, builds);
-		Assert.Equal(first.Artifact, second.Artifact);
-		Assert.True(Directory.Exists(second.Artifact));
+		Assert.Equal(FindApp(first), FindApp(second));
+		Assert.True(Directory.Exists(FindApp(second)));
 		await Assert.ThrowsAsync<InvalidOperationException>(() =>
-			fixture.Prepare(IosSpec with { Project = "other.csproj" }, Build, ArtifactSession));
+			fixture.PrepareWorkspace(Target, Folder, "other.csproj", Build));
 		await fixture.DisposeAsync();
-		Assert.True(Directory.Exists(first.Artifact));
+		Assert.True(Directory.Exists(FindApp(first)));
 		File.WriteAllText(stale, "stale");
 		await using var next = Fixture(AppiumMode.Build, apps);
-		await next.Prepare(IosSpec, Build, ArtifactSession);
+		await next.PrepareWorkspace(Target, Folder, Project, Build);
 		Assert.Equal(2, builds);
 	}
 
@@ -95,21 +97,21 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task RunPhaseUsesExistingOutputWithoutBuildingAndCleansOnlyAfterAllScenarios()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = IosSpec.DirectoryFor(apps);
+		var directory = Path.Combine(apps, Target, Folder);
 		var artifact = CreateApp(directory);
 		var fixture = new AppiumFixture(AppiumMode.Run, "missing-packages", apps, "missing-sources");
 		Task ForbiddenBuild(SampleWorkspace _) => throw new InvalidOperationException("Run must not build.");
-		var first = await fixture.Prepare(IosSpec, ForbiddenBuild, ArtifactSession);
-		Assert.Equal(artifact, first.Artifact);
+		var first = await fixture.PrepareWorkspace(Target, Folder, Project, ForbiddenBuild);
+		Assert.Equal(artifact, FindApp(first));
 		Assert.False(File.Exists(Path.Combine(directory, "NuGet.Config")));
-		var running = Assert.IsType<DiagnosticApp>(first.CreateRunningApp());
+		var running = new DiagnosticApp(first, FindApp(first), []);
 		await Assert.ThrowsAsync<NotSupportedException>(() => running.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask,
 			() => Task.CompletedTask, () => Task.CompletedTask));
 		Assert.True(Directory.Exists(artifact));
-		var second = await fixture.Prepare(IosSpec, ForbiddenBuild, ArtifactSession);
-		Assert.Equal(artifact, second.Artifact);
-		Assert.NotEqual(first.Workspace.DiagnosticsRoot, second.Workspace.DiagnosticsRoot);
+		var second = await fixture.PrepareWorkspace(Target, Folder, Project, ForbiddenBuild);
+		Assert.Equal(artifact, FindApp(second));
+		Assert.NotEqual(first.DiagnosticsRoot, second.DiagnosticsRoot);
 		await fixture.DisposeAsync();
 		Assert.False(Directory.Exists(directory));
 		Assert.True(File.Exists(Path.Combine(running.Diagnostics, "failure.log")));
@@ -119,10 +121,11 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("missing-workspace")]
 	[InlineData("missing-app")]
 	[InlineData("ambiguous-app")]
+	[InlineData("incomplete-bundle")]
 	public async Task RunPhaseRejectsMissingOrAmbiguousAppsWithoutBuilding(string problem)
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = IosSpec.DirectoryFor(apps);
+		var directory = Path.Combine(apps, Target, Folder);
 		if (problem == "missing-app")
 			Directory.CreateDirectory(directory);
 		if (problem == "ambiguous-app")
@@ -130,9 +133,15 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			var app = CreateApp(directory);
 			Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(app)!, "Second.app"));
 		}
+		if (problem == "incomplete-bundle")
+			File.Delete(Path.Combine(CreateApp(directory), "Info.plist"));
 		var fixture = Fixture(AppiumMode.Run, apps);
-		await Assert.ThrowsAnyAsync<IOException>(() => fixture.Prepare(IosSpec,
-			_ => throw new InvalidOperationException("Run must not build."), ArtifactSession));
+		await Assert.ThrowsAnyAsync<IOException>(async () =>
+		{
+			var workspace = await fixture.PrepareWorkspace(Target, Folder, Project,
+				_ => throw new InvalidOperationException("Run must not build."));
+			FindApp(workspace);
+		});
 		await fixture.DisposeAsync();
 		Assert.False(Directory.Exists(directory));
 	}
@@ -153,15 +162,15 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		if (mode == "run")
 		{
 			await using var build = Fixture(AppiumMode.Build, apps);
-			await build.Prepare(IosSpec, Build, ArtifactSession);
+			await build.PrepareWorkspace(Target, Folder, Project, Build);
 		}
-		var fixture = Fixture(AppiumPreparedApp.ParseMode(mode), apps);
-		var prepared = await fixture.Prepare(IosSpec, Build, ArtifactSession);
+		var fixture = Fixture(AppiumFixture.ParseMode(mode), apps);
+		var prepared = await fixture.PrepareWorkspace(Target, Folder, Project, Build);
 		Assert.Equal(1, builds);
-		Assert.True(Directory.Exists(prepared.Artifact));
+		Assert.True(Directory.Exists(FindApp(prepared)));
 		Assert.Empty(Directory.GetFiles(apps, "manifest.json", SearchOption.AllDirectories));
 		await fixture.DisposeAsync();
-		Assert.False(Directory.Exists(prepared.Workspace.Root));
+		Assert.False(Directory.Exists(prepared.Root));
 	}
 
 	[Theory]
@@ -170,38 +179,42 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task FailedBuildIsNotReusedAndRunModesStillClean(string mode)
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var fixture = Fixture(AppiumPreparedApp.ParseMode(mode), apps);
-		await Assert.ThrowsAsync<IOException>(() => fixture.Prepare(IosSpec, workspace =>
+		var fixture = Fixture(AppiumFixture.ParseMode(mode), apps);
+		await Assert.ThrowsAsync<IOException>(() => fixture.PrepareWorkspace(Target, Folder, Project, workspace =>
 		{
 			File.WriteAllText(Path.Combine(workspace.Root, "partial.txt"), "partial");
 			throw new IOException("Build failed.");
-		}, ArtifactSession));
-		var prepared = await fixture.Prepare(IosSpec, workspace =>
+		}));
+		var prepared = await fixture.PrepareWorkspace(Target, Folder, Project, workspace =>
 		{
 			Assert.False(File.Exists(Path.Combine(workspace.Root, "partial.txt")));
 			CreateApp(workspace.Root);
 			return Task.CompletedTask;
-		}, ArtifactSession);
+		});
 		await fixture.DisposeAsync();
-		Assert.Equal(mode == "build", Directory.Exists(prepared.Workspace.Root));
+		Assert.Equal(mode == "build", Directory.Exists(prepared.Root));
 	}
 
 	[Fact]
 	public async Task BuildWithoutAnAppCannotReuseStaleOutputOrMarkTheBuildComplete()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = IosSpec.DirectoryFor(apps);
+		var directory = Path.Combine(apps, Target, Folder);
 		var stale = CreateApp(directory);
 		await using var fixture = Fixture(AppiumMode.All, apps);
 		await Assert.ThrowsAsync<FileNotFoundException>(() =>
-			fixture.Prepare(IosSpec, _ => Task.CompletedTask, ArtifactSession));
+			fixture.PrepareWorkspace(Target, Folder, Project, workspace =>
+			{
+				FindApp(workspace);
+				return Task.CompletedTask;
+			}));
 		Assert.False(Directory.Exists(stale));
-		var prepared = await fixture.Prepare(IosSpec, workspace =>
+		var prepared = await fixture.PrepareWorkspace(Target, Folder, Project, workspace =>
 		{
 			CreateApp(workspace.Root);
 			return Task.CompletedTask;
-		}, ArtifactSession);
-		Assert.True(Directory.Exists(prepared.Artifact));
+		});
+		Assert.True(Directory.Exists(FindApp(prepared)));
 	}
 
 	[Theory]
@@ -210,22 +223,31 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("folder\\project")]
 	[InlineData("folder//project")]
 	[InlineData("folder/./project")]
-	public void PreparedPathsCannotEscapeTheSelectedApp(string path) =>
-		Assert.Throws<ArgumentException>(() => (IosSpec with { Folder = path }).DirectoryFor(root));
+	public async Task PreparedPathsCannotEscapeTheSelectedApp(string path)
+	{
+		await using var fixture = Fixture(AppiumMode.Run, Path.Combine(root, "sample-apps"));
+		await Assert.ThrowsAsync<ArgumentException>(() =>
+			fixture.PrepareWorkspace(Target, path, Project, _ => Task.CompletedTask));
+	}
 
 	[Theory]
-	[InlineData("x86")]
-	[InlineData("unknown")]
-	public void PreparedTargetsRequireSupportedArchitecture(string architecture) =>
-		Assert.Throws<InvalidOperationException>(() => (IosSpec with { Architecture = architecture }).DirectoryFor(root));
+	[InlineData("../foreign", Project)]
+	[InlineData("/absolute", Project)]
+	[InlineData(Target, "../foreign.csproj")]
+	[InlineData(Target, "/absolute.csproj")]
+	public async Task PreparedTargetsAndProjectsCannotEscapeTheWorkspace(string target, string project)
+	{
+		await using var fixture = Fixture(AppiumMode.Run, Path.Combine(root, "sample-apps"));
+		await Assert.ThrowsAsync<ArgumentException>(() =>
+			fixture.PrepareWorkspace(target, Folder, project, _ => Task.CompletedTask));
+	}
 
 	[Fact]
 	public async Task RunPhaseUsesIosBundleInPlaceWithoutCopyingLinksOrPermissions()
 	{
-		var spec = new AppiumAppSpec("ios", "arm64", "Basic/iOS", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"net10.0-ios", "iossimulator-arm64");
 		var apps = Path.Combine(root, "sample-apps");
-		var source = CreateApp(spec.DirectoryFor(apps), spec);
+		const string folder = "Basic/iOS";
+		var source = CreateApp(Path.Combine(apps, Target, folder), folder);
 		var executable = Path.Combine(source, "Fixture");
 		File.WriteAllText(executable, "unit-fixture-executable");
 		var mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
@@ -238,8 +260,9 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			Directory.CreateSymbolicLink(Path.Combine(source, "Versions", "Current"), "A");
 		}
 		await using var fixture = Fixture(AppiumMode.Run, apps);
-		var prepared = await fixture.Prepare(spec, _ => throw new InvalidOperationException("Run must not build."), ArtifactSession);
-		var bundle = prepared.Artifact;
+		var prepared = await fixture.PrepareWorkspace(Target, folder, Project,
+			_ => throw new InvalidOperationException("Run must not build."));
+		var bundle = IosRunningApp.FindApp(AppOutput(prepared.Root, folder));
 		Assert.Equal(source, bundle);
 		Assert.Equal("unit-fixture-executable", File.ReadAllText(Path.Combine(bundle, "Fixture")));
 		if (!OperatingSystem.IsWindows())

@@ -25,6 +25,14 @@ internal sealed class IosRunningApp : AppiumRunningApp
 	{
 	}
 
+	internal static string FindApp(string output)
+	{
+		var apps = Directory.Exists(output) ? Directory.GetDirectories(output, "*.app") : [];
+		if (apps.Length != 1 || !File.Exists(Path.Combine(apps[0], "Info.plist")))
+			throw new FileNotFoundException($"Expected one built iOS app in {output}. Run build mode first.");
+		return apps[0];
+	}
+
 	internal override string DeviceProfile => ReferenceProfile(model, version);
 
 	internal override GoldenCase Reference(string caseName) =>
