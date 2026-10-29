@@ -97,26 +97,6 @@ internal static class SampleImage
         }
     }
 
-    internal static int CountPixels(string screenshot, SKRectI region, Func<SKColor, bool> matches)
-    {
-        using var bitmap = SKBitmap.Decode(screenshot);
-        Assert.NotNull(bitmap);
-        Assert.InRange(region.Left, 0, bitmap.Width - 1);
-        Assert.InRange(region.Top, 0, bitmap.Height - 1);
-        Assert.InRange(region.Right, region.Left + 1, bitmap.Width);
-        Assert.InRange(region.Bottom, region.Top + 1, bitmap.Height);
-
-        var count = 0;
-        for (var y = region.Top; y < region.Bottom; y++)
-            for (var x = region.Left; x < region.Right; x++)
-                if (matches(bitmap.GetPixel(x, y)))
-                    count++;
-
-        TestContext.Current.TestOutputHelper?.WriteLine(
-            $"Measured {count} matching pixels in {region} from {screenshot}.");
-        return count;
-    }
-
     private static string MaterializeReference(Golden golden, string actual)
     {
         if (golden.ReferenceLocation is { } location && File.Exists(location))
