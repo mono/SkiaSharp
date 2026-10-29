@@ -62,9 +62,6 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 		const string framework = "net10.0-android";
 		var architecture = HostArchitecture();
 		var rid = "android-" + architecture;
-		string FindApp(SampleWorkspace workspace) => AndroidRunningApp.FindApp(Path.Combine(
-			workspace.Root, "samples", folder, Path.GetDirectoryName(project)!, "bin", "Debug", framework, rid));
-
 		var workspace = await appium.PrepareWorkspace($"android/{architecture}", folder, project, async prepared =>
 		{
 			await BuildSample(prepared, folder, project, new DotNetOptions
@@ -78,9 +75,10 @@ public sealed class AppiumAndroidSampleRunTests(AppiumFixture appium) : AppiumSa
 					["EmbedAssembliesIntoApk"] = "true"
 				}
 			});
-			FindApp(prepared);
 		});
-		var artifact = FindApp(workspace);
+		var output = Path.Combine(workspace.Root, "samples", folder, Path.GetDirectoryName(project)!,
+			"bin", "Debug", framework, rid);
+		var artifact = AndroidRunningApp.FindApp(output);
 		if (appium.Mode == AppiumMode.Build)
 			return;
 		await appium.Run(new AndroidRunningApp(workspace, artifact,
