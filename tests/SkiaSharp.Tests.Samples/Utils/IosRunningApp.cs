@@ -42,10 +42,10 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			ParseReferenceVersion(actualVersion ?? version),
 			RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 
-	protected override SKRectI ScreenshotInsets(SKSizeI size) =>
-		ScreenshotInsets(model, version, size);
+	internal override SKRectI ComparisonInsets(SKSizeI size) =>
+		ComparisonInsets(model, version, size);
 
-	internal static SKRectI ScreenshotInsets(string model, string version, SKSizeI size) =>
+	internal static SKRectI ComparisonInsets(string model, string version, SKSizeI size) =>
 		model == "iPhone 16 Pro" &&
 		Version.TryParse(version, out var runtime) &&
 		(runtime.Major == 26 || runtime.Major == 18 && runtime.Minor == 6) &&

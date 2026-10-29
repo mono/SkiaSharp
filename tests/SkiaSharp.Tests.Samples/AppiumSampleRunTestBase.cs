@@ -70,32 +70,35 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			async () =>
 			{
 				var drawn = await Compare(app, canvasId, "basic-drawing-two-lines", "Maui");
-				AssertDrawingStrokeRegions(drawn.Actual, drawn.Expected);
+				AssertDrawingStrokeRegions(drawn.Actual, drawn.Expected.ReadBytes(), app.ComparisonInsets);
 			},
 			async () =>
 			{
 				app.Click("basic-drawing-clear");
 				var cleared = await Compare(app, canvasId, "basic-drawing-page", "Maui");
-				AssertDrawingStrokeRegions(cleared.Actual, cleared.Expected);
+				AssertDrawingStrokeRegions(cleared.Actual, cleared.Expected.ReadBytes(), app.ComparisonInsets);
 			});
 	}
 
-	internal static void AssertDrawingStrokeRegions(string actual, string expected)
+	internal static void AssertDrawingStrokeRegions(
+		string actual, byte[] expected, Func<SKSizeI, SKRectI> comparisonInsets)
 	{
-		Assert.True(File.Exists(expected), $"Missing reviewed sample golden: {expected}.");
 		using var actualImage = SKImage.FromEncodedData(actual);
 		using var expectedImage = SKImage.FromEncodedData(expected);
 		Assert.NotNull(actualImage);
 		Assert.NotNull(expectedImage);
 		Assert.Equal(expectedImage.Width, actualImage.Width);
 		Assert.Equal(expectedImage.Height, actualImage.Height);
+		var insets = comparisonInsets(actualImage.Info.Size);
+		var width = actualImage.Width - insets.Left - insets.Right;
+		var height = actualImage.Height - insets.Top - insets.Bottom;
 		// Check each stroke away from the intersection: either one fits inside the full-canvas error budget.
 		foreach (var region in new[]
 		{
-			SKRectI.Round(new SKRect(actualImage.Width * 0.35f, actualImage.Height * 0.44f,
-				actualImage.Width * 0.45f, actualImage.Height * 0.46f)),
-			SKRectI.Round(new SKRect(actualImage.Width * 0.49f, actualImage.Height * 0.35f,
-				actualImage.Width * 0.51f, actualImage.Height * 0.40f))
+			SKRectI.Round(new SKRect(insets.Left + width * 0.35f, insets.Top + height * 0.44f,
+				insets.Left + width * 0.45f, insets.Top + height * 0.46f)),
+			SKRectI.Round(new SKRect(insets.Left + width * 0.49f, insets.Top + height * 0.35f,
+				insets.Left + width * 0.51f, insets.Top + height * 0.40f))
 		})
 		{
 			using var actualStroke = actualImage.Subset(region);
@@ -104,7 +107,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 			Assert.NotNull(expectedStroke);
 			var result = SKPixelComparer.Compare(expectedStroke, actualStroke, 0);
 			Assert.True(result.ErrorPixelCount <= result.TotalPixels * GoldenOptions.DefaultMaxErrorPixelFraction,
-				$"Drawing stroke region {region} differs: {result.ErrorPixelCount}/{result.TotalPixels} pixels; actual {actual}; expected {expected}.");
+				$"Drawing stroke region {region} differs: {result.ErrorPixelCount}/{result.TotalPixels} pixels; actual {actual}.");
 		}
 	}
 
@@ -156,12 +159,16 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		app.Find("gallery-search", "gallery-filter-search");
 	}
 
-	private static Task<SampleImage.Comparison> Compare(
-		AppiumOperations app, string canvasId, string name, string family) =>
-		SampleImage.Compare(
-			() => Task.FromResult(app.Capture(canvasId, name)),
-			app.Reference(CaseName(name, family)), transformReference: app.TransformReference,
-			rawActual: AppiumOperations.RawCapture);
+	private static async Task<(string Actual, Golden Expected)> Compare(
+		AppiumOperations app, string canvasId, string name, string family)
+	{
+		var golden = SampleImage.Store.Resolve(app.Reference(CaseName(name, family)));
+		var actual = await golden.VerifyAsync(
+			GoldenInput.Capture(() => Task.FromResult(app.Capture(canvasId, name))),
+			new(comparisonTransform: app.TransformComparison), timeout: TimeSpan.FromSeconds(2),
+			cancellationToken: TestContext.Current.CancellationToken);
+		return (actual, golden);
+	}
 
 	internal static string CaseName(string name, string family) =>
 		name.StartsWith("basic-", StringComparison.Ordinal)

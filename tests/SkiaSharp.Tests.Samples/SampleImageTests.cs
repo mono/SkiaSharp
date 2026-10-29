@@ -164,6 +164,243 @@ public class SampleImageTests : IDisposable
     }
 
     [Fact]
+    public void ComparisonTransformCropsOnlyComparedPixelsAndRetainsOriginalFiles()
+    {
+        using var bitmap = new SKBitmap(6, 7);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "crop.expected.png");
+        for (var y = 0; y < bitmap.Height; y++)
+            for (var x = 0; x < bitmap.Width; x++)
+                if (x < 1 || x >= 4 || y < 1 || y >= 5)
+                    bitmap.SetPixel(x, y, SKColors.White);
+        var actual = SavePng(bitmap, "crop.actual.png");
+        var originalActual = File.ReadAllBytes(actual);
+        var originalExpected = File.ReadAllBytes(expected);
+        Assert.Throws<Xunit.Sdk.FailException>(() =>
+            Golden.Verify(GoldenInput.Path(actual), GoldenInput.Path(expected), new(maxErrorPixelFraction: 0)));
+
+        var options = new GoldenOptions(comparisonTransform: image =>
+            image.Subset(new(1, 1, image.Width - 2, image.Height - 2))
+                ?? throw new InvalidOperationException("Could not crop the test image."),
+            maxErrorPixelFraction: 0);
+        Golden.Verify(GoldenInput.Path(actual), GoldenInput.Path(expected), options);
+        Golden.Verify(GoldenInput.Bytes(originalActual), GoldenInput.Bytes(originalExpected), options);
+        Assert.Equal(originalActual, File.ReadAllBytes(actual));
+        Assert.Equal(originalExpected, File.ReadAllBytes(expected));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ComparisonTransformStillRejectsInteriorChangesAndKeepsRawDiagnostics(bool resolved)
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "references/fixture/crop.png");
+        bitmap.SetPixel(1, 1, SKColors.Red);
+        var actual = SavePng(bitmap, "crop-failure.actual.png");
+        var actualBytes = File.ReadAllBytes(actual);
+        var expectedBytes = File.ReadAllBytes(expected);
+        var options = new GoldenOptions(comparisonTransform: CropForComparison, maxErrorPixelFraction: 0);
+        var golden = new GoldenStore(new[] { Path.Combine(root, "references") }).Resolve(new("fixture", "crop"));
+        var failure = Assert.Throws<Xunit.Sdk.FailException>(() =>
+        {
+            if (resolved)
+                golden.Verify(GoldenInput.Path(actual), options);
+            else
+                Golden.Verify(GoldenInput.Path(actual), GoldenInput.Path(expected), options);
+        });
+
+        Assert.Contains("1/16 pixels differ", failure.Message);
+        using var difference = SKBitmap.Decode(Path.ChangeExtension(actual, ".diff.png"));
+        Assert.Equal(new SKSizeI(4, 4), difference.Info.Size);
+        Assert.Equal(actualBytes, File.ReadAllBytes(actual));
+        Assert.Equal(expectedBytes, File.ReadAllBytes(expected));
+        Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
+        Assert.Contains("expected-crop.png", TestContext.Current.Attachments.Keys);
+    }
+
+    [Fact]
+    public void ComparisonTransformCanReturnBorrowedImagesUnchanged()
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        var png = EncodePng(bitmap);
+        var images = new List<SKImage>();
+        Golden.Verify(GoldenInput.Bytes(png), GoldenInput.Bytes(png), new(comparisonTransform: image =>
+        {
+            Assert.All(images, input => Assert.NotEqual(IntPtr.Zero, input.Handle));
+            images.Add(image);
+            return image;
+        }));
+        Assert.Equal(2, images.Count);
+        Assert.All(images, image => Assert.Equal(IntPtr.Zero, image.Handle));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ComparisonTransformDisposesOwnedImagesAfterSuccessOrMismatch(bool mismatch)
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        bitmap.Erase(SKColors.Black);
+        var expected = GoldenInput.Bytes(EncodePng(bitmap));
+        if (mismatch)
+            bitmap.Erase(SKColors.Red);
+        var actual = GoldenInput.Bytes(EncodePng(bitmap));
+        var transformed = new List<SKImage>();
+        var options = new GoldenOptions(comparisonTransform: image =>
+        {
+            var cropped = CropForComparison(image);
+            transformed.Add(cropped);
+            return cropped;
+        });
+        if (mismatch)
+            Assert.Throws<Xunit.Sdk.FailException>(() => Golden.Verify(actual, expected, options));
+        else
+            Golden.Verify(actual, expected, options);
+        Assert.Equal(2, transformed.Count);
+        Assert.All(transformed, image => Assert.Equal(IntPtr.Zero, image.Handle));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ComparisonTransformCleansEarlierResultsWhenALaterTransformFails(bool returnsNull)
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        var input = GoldenInput.Bytes(EncodePng(bitmap));
+        SKImage? transformed = null;
+        var failure = new NotSupportedException("Transform failed.");
+        var options = new GoldenOptions(comparisonTransform: image =>
+        {
+            if (transformed is null)
+                return transformed = CropForComparison(image);
+            if (returnsNull)
+                return null!;
+            throw failure;
+        });
+        if (returnsNull)
+            Assert.Contains("returned no image", Assert.Throws<InvalidOperationException>(() =>
+                Golden.Verify(input, input, options)).Message);
+        else
+            Assert.Same(failure, Assert.Throws<NotSupportedException>(() => Golden.Verify(input, input, options)));
+        Assert.NotNull(transformed);
+        Assert.Equal(IntPtr.Zero, transformed.Handle);
+    }
+
+    [Fact]
+    public void ComparisonTransformRejectsDisposedResultsBeforeReadingPixels()
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        var input = GoldenInput.Bytes(EncodePng(bitmap));
+        var failure = Assert.Throws<InvalidOperationException>(() => Golden.Verify(input, input,
+            new(comparisonTransform: image =>
+            {
+                var cropped = CropForComparison(image);
+                cropped.Dispose();
+                return cropped;
+            })));
+        Assert.Contains("returned a disposed image", failure.Message);
+    }
+
+    [Fact]
+    public void ComparisonTransformCanShareOneOwnedResultAcrossBothInputs()
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        var input = GoldenInput.Bytes(EncodePng(bitmap));
+        var transformed = SKImage.FromBitmap(bitmap);
+        try
+        {
+            Golden.Verify(input, input, new(comparisonTransform: _ => transformed));
+            Assert.Equal(IntPtr.Zero, transformed.Handle);
+        }
+        finally
+        {
+            if (transformed.Handle != IntPtr.Zero)
+                transformed.Dispose();
+        }
+    }
+
+    [Fact]
+    public void ComparisonTransformsMustProduceMatchingDimensions()
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        var input = GoldenInput.Bytes(EncodePng(bitmap));
+        var count = 0;
+        var failure = Assert.Throws<InvalidOperationException>(() => Golden.Verify(input, input,
+            new(comparisonTransform: image =>
+                image.Subset(new(0, 0, image.Width, image.Height - ++count))
+                    ?? throw new InvalidOperationException("Could not crop the test image."))));
+        Assert.Contains("Unable to compare images of different sizes: 4x3 vs 4x4", failure.Message);
+    }
+
+    [Fact]
+    public void ComparisonTransformDoesNotRelaxOriginalImageDimensions()
+    {
+        using var expected = new SKBitmap(4, 5);
+        expected.Erase(SKColors.Black);
+        var reference = GoldenInput.Bytes(EncodePng(expected));
+        var options = new GoldenOptions(comparisonTransform: CropForComparison, expectedSize: new(4, 5));
+        Golden.Verify(reference, reference, options);
+        var sizeFailure = Assert.Throws<Xunit.Sdk.FailException>(() =>
+            Golden.Verify(reference, reference, new(comparisonTransform: CropForComparison, expectedSize: new(4, 4))));
+        Assert.Contains("Image is 4x5, expected 4x4", sizeFailure.Message);
+
+        using var actual = new SKBitmap(4, 4);
+        actual.Erase(SKColors.Black);
+        var failure = Assert.Throws<Xunit.Sdk.FailException>(() =>
+            Golden.Verify(GoldenInput.Bytes(EncodePng(actual)), reference, options));
+        Assert.Contains("Image dimensions differ: actual 4x4, expected 4x5", failure.Message);
+    }
+
+    [Fact]
+    public async Task ResolvedComparisonTransformUsesSharedRetriesAndRawCaptures()
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        bitmap.Erase(SKColors.Black);
+        var expected = SavePng(bitmap, "references/fixture/crop-retry.png");
+        var golden = new GoldenStore(new[] { Path.Combine(root, "references") }).Resolve(new("fixture", "crop-retry"));
+        var attempts = 0;
+        var actual = await golden.VerifyAsync(GoldenInput.Capture(() =>
+        {
+            bitmap.Erase(++attempts == 1 ? SKColors.Red : SKColors.Black);
+            for (var x = 0; x < bitmap.Width; x++)
+                bitmap.SetPixel(x, 4, SKColors.Blue);
+            return Task.FromResult(SavePng(bitmap, $"crop-retry-{attempts}.actual.png"));
+        }), new(comparisonTransform: CropForComparison, maxErrorPixelFraction: 0),
+            timeout: TimeSpan.FromSeconds(2), cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, attempts);
+        using var capture = SKBitmap.Decode(actual);
+        Assert.Equal(new SKSizeI(4, 5), capture.Info.Size);
+        Assert.Equal(SKColors.Blue, capture.GetPixel(0, 4));
+        Assert.Equal(File.ReadAllBytes(expected), golden.ReadBytes());
+    }
+
+    [Fact]
+    public async Task MissingGoldenStillFailsWithoutTransformingTheRawActual()
+    {
+        using var bitmap = new SKBitmap(4, 5);
+        bitmap.Erase(SKColors.Blue);
+        var actual = SavePng(bitmap, "crop-missing.actual.png");
+        var original = File.ReadAllBytes(actual);
+        var golden = new GoldenStore(new[] { Path.Combine(root, "missing") }).Resolve(new("fixture", "missing"));
+        var failure = await Assert.ThrowsAsync<Xunit.Sdk.FailException>(() =>
+            golden.VerifyAsync(GoldenInput.Capture(() => Task.FromResult(actual)),
+                new(comparisonTransform: _ => throw new InvalidOperationException("Missing references must fail before comparison.")),
+                timeout: TimeSpan.FromSeconds(2),
+                cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Contains("Missing reviewed golden", failure.Message);
+        Assert.Equal(original, File.ReadAllBytes(actual));
+        Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
+        Assert.False(Directory.Exists(Path.Combine(root, "missing")));
+    }
+
+    private static SKImage CropForComparison(SKImage image) =>
+        image.Subset(new(0, 0, image.Width, image.Height - 1))
+            ?? throw new InvalidOperationException("Could not crop the test image.");
+
+    [Fact]
     public async Task ScreenshotComparisonRetriesUntilItMatches()
     {
         using var bitmap = new SKBitmap(4, 4);
@@ -536,10 +773,7 @@ public class SampleImageTests : IDisposable
 
     private string SavePng(SKBitmap bitmap, string name)
     {
-        Directory.CreateDirectory(root);
-        var path = Path.Combine(root, name);
-        File.WriteAllBytes(path, EncodePng(bitmap));
-        return path;
+        return WriteFile(Path.Combine(root, name), EncodePng(bitmap));
     }
 
     private static byte[] EncodePng(SKBitmap bitmap)

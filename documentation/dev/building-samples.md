@@ -162,7 +162,9 @@ iOS profiles use optional max-version directories:
 - `iphone-16-pro/18.6.0/maui-basic-cpu.png`
 
 Architecture-specific files override the unsuffixed reference. iOS references
-retain raw captures; comparison removes only the declared system-owned inset.
+and captures stay unmodified. The shared Golden verifier excludes only the
+platform's declared system-owned inset during comparison; diagnostics and
+reference proposals retain the complete raw images.
 Initial, drawn and cleared states use separate case names where needed.
 
 Use the sample helpers to select the profile:
