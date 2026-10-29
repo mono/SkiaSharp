@@ -79,5 +79,70 @@ namespace SkiaSharp.Tests
 			Assert.Empty (StringUtilities.GetEncodedText (null, encoding, true));
 			Assert.Empty (StringUtilities.GetEncodedText ("", encoding, true));
 		}
+
+		[Theory]
+		[InlineData ("A", SKTextEncoding.Utf8, 'A')]
+		[InlineData ("A", SKTextEncoding.Utf16, 'A')]
+		[InlineData ("A", SKTextEncoding.Utf32, 'A')]
+		[InlineData ("ä", SKTextEncoding.Utf16, 'ä')]
+		[InlineData ("ä", SKTextEncoding.Utf32, 'ä')]
+		[InlineData ("年", SKTextEncoding.Utf16, '年')]
+		[InlineData ("年", SKTextEncoding.Utf32, '年')]
+		[InlineData ("🚀", SKTextEncoding.Utf32, 0x1F680)]
+		public void GetUnicodeCharacterCodeReturnsExpectedCodePoint (string character, SKTextEncoding encoding, int expected)
+		{
+			var actual = StringUtilities.GetUnicodeCharacterCode (character, encoding);
+			Assert.Equal (expected, actual);
+		}
+
+		[Theory]
+		[InlineData (SKTextEncoding.Utf8)]
+		[InlineData (SKTextEncoding.Utf16)]
+		[InlineData (SKTextEncoding.Utf32)]
+		public void GetUnicodeCharacterCodeThrowsOnNull (SKTextEncoding encoding)
+		{
+			var ex = Assert.Throws<System.ArgumentNullException> (() => StringUtilities.GetUnicodeCharacterCode (null, encoding));
+			Assert.Equal ("character", ex.ParamName);
+		}
+
+		[Theory]
+		[InlineData ("", SKTextEncoding.Utf8)]
+		[InlineData ("", SKTextEncoding.Utf16)]
+		[InlineData ("", SKTextEncoding.Utf32)]
+		[InlineData ("AB", SKTextEncoding.Utf8)]
+		[InlineData ("AB", SKTextEncoding.Utf16)]
+		[InlineData ("AB", SKTextEncoding.Utf32)]
+		[InlineData ("ä", SKTextEncoding.Utf8)]
+		[InlineData ("年", SKTextEncoding.Utf8)]
+		[InlineData ("🚀", SKTextEncoding.Utf8)]
+		[InlineData ("🚀", SKTextEncoding.Utf16)]
+		[InlineData ("🚀A", SKTextEncoding.Utf32)]
+		public void GetUnicodeCharacterCodeThrowsOnMultipleOrWideCharacters (string character, SKTextEncoding encoding)
+		{
+			var ex = Assert.Throws<System.ArgumentException> (() => StringUtilities.GetUnicodeCharacterCode (character, encoding));
+			Assert.Equal ("character", ex.ParamName);
+		}
+
+		[Theory]
+		[InlineData (SKTextEncoding.GlyphId)]
+		[InlineData ((SKTextEncoding)999)]
+		public void GetUnicodeCharacterCodeThrowsOnUnsupportedEncoding (SKTextEncoding encoding)
+		{
+			var ex = Assert.Throws<System.ArgumentOutOfRangeException> (() => StringUtilities.GetUnicodeCharacterCode ("A", encoding));
+			Assert.Equal ("encoding", ex.ParamName);
+		}
+
+		[Theory]
+		[InlineData (SKTextEncoding.Utf8)]
+		[InlineData (SKTextEncoding.Utf16)]
+		[InlineData (SKTextEncoding.Utf32)]
+		public void GetStringThrowsOnNullByteArray (SKTextEncoding encoding)
+		{
+			var ex1 = Assert.Throws<System.ArgumentNullException> (() => StringUtilities.GetString ((byte[])null, encoding));
+			Assert.Equal ("data", ex1.ParamName);
+
+			var ex2 = Assert.Throws<System.ArgumentNullException> (() => StringUtilities.GetString ((byte[])null, 0, 0, encoding));
+			Assert.Equal ("data", ex2.ParamName);
+		}
 	}
 }
