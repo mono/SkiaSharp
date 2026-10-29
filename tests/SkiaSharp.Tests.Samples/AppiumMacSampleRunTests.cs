@@ -90,7 +90,6 @@ public sealed class AppiumMacSampleRunTests(AppiumFixture appium) : AppiumSample
 				Framework = framework,
 				Properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = rid }
 			});
-			FindApp(prepared);
 		});
 		return new MacRunningApp(workspace, FindApp(workspace), platform == "maccatalyst");
 	}
