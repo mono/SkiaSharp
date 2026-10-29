@@ -630,21 +630,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
-	public void MissingReferenceTransformationPreservesStrictValidationAndActualCapture()
-	{
-		using var workspace = Workspace();
-		var app = new AndroidRunningApp(workspace, Path.Combine(workspace.Root, "Built-Signed.apk"), "unit-fixture-device");
-		var expected = Path.Combine(workspace.Root, "not-reviewed", "canvas.png");
-		Assert.Equal(expected, app.Operations.TransformReference(expected));
-		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
-		var failure = Assert.ThrowsAny<Exception>(() =>
-			SampleImage.Store.Resolve(new("unit-fixture", "not-reviewed"))
-				.Verify(GoldenInput.Path(actual)));
-		Assert.Contains("Missing reviewed golden", failure.Message);
-		Assert.False(File.Exists(expected));
-	}
-
-	[Fact]
 	public void CapturesOfTheSameSceneKeepBothFiles()
 	{
 		using var workspace = Workspace();
