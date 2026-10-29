@@ -33,8 +33,6 @@ internal abstract class AppiumRunningApp
 
 	internal abstract string DeviceProfile { get; }
 
-	internal abstract string Platform { get; }
-
 	internal virtual GoldenCase Reference(string caseName) =>
 		throw new NotSupportedException("This app has no registered capture profile.");
 
