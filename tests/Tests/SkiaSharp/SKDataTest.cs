@@ -521,6 +521,24 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Theory]
+		[InlineData(int.MaxValue)]
+		[InlineData(997)]
+		public void CreateFromSKStreamBoundsNativeReadRequests(int maxBytesPerRead)
+		{
+			var bytes = new byte[SKData.CopyBufferSize * 2 + 17];
+			new Random(42).NextBytes(bytes);
+			using var inner = new ConfigurableTestStream(bytes, maxBytesPerRead: maxBytesPerRead);
+			inner.Position = 7;
+			using var stream = new SKManagedStream(inner);
+			using var data = SKData.Create((SKStream)stream);
+
+			Assert.NotNull(data);
+			Assert.True(data.AsSpan().SequenceEqual(bytes.AsSpan(7)));
+			Assert.Equal(bytes.Length, inner.Position);
+			Assert.InRange(inner.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+		}
+
 		[Fact]
 		public void CreateFromSKStream_EarlyEndingAndFrontBufferedSKStreams_DoNotLoseConsumedBytes()
 		{
