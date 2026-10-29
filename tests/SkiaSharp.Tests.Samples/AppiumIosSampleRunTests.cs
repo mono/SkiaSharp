@@ -85,7 +85,6 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 				Framework = framework,
 				Properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = rid }
 			});
-			FindApp(prepared);
 		});
 		return new IosRunningApp(workspace, FindApp(workspace));
 	}
