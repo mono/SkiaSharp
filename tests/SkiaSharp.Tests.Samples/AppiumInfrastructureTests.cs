@@ -336,6 +336,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		const string folder = "Basic/WinUI";
 		const string project = "SkiaSharpSample/SkiaSharpSample.csproj";
 		var apps = Path.Combine(root, "sample-apps");
+		Directory.CreateDirectory(Path.Combine(apps, "windows", "x64", folder));
 		await using var fixture = Fixture(AppiumMode.Run, apps);
 		Task ForbiddenBuild(SampleWorkspace _) => throw new InvalidOperationException("Run must not build.");
 		var prepared = await fixture.PrepareWorkspace("windows/x64", folder, project, ForbiddenBuild);
