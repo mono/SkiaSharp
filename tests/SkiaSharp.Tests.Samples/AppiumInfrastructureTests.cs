@@ -19,7 +19,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	private const string Project = "SkiaSharpSample/SkiaSharpSample.csproj";
 
 	private static string AppOutput(string directory, string folder = Folder) =>
-		Path.Combine(directory, "samples", folder, "SkiaSharpSample", "bin", "Debug", "net10.0-ios", "iossimulator-arm64");
+		Path.GetFullPath(Path.Combine(directory, "samples", folder, "SkiaSharpSample", "bin", "Debug", "net10.0-ios", "iossimulator-arm64"));
 
 	private static string FindApp(SampleWorkspace workspace) => IosRunningApp.FindApp(AppOutput(workspace.Root));
 
@@ -62,7 +62,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task BuildPhaseCleansOnceBuildsOnceAndRetainsOutputAfterDisposal()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, Target, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, Target, Folder));
 		Directory.CreateDirectory(directory);
 		var stale = Path.Combine(directory, "stale.txt");
 		File.WriteAllText(stale, "stale");
@@ -97,7 +97,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task RunPhaseUsesExistingOutputWithoutBuildingAndCleansOnlyAfterAllScenarios()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, Target, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, Target, Folder));
 		var artifact = CreateApp(directory);
 		var fixture = new AppiumFixture(AppiumMode.Run, "missing-packages", apps, "missing-sources");
 		Task ForbiddenBuild(SampleWorkspace _) => throw new InvalidOperationException("Run must not build.");
@@ -125,7 +125,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task RunPhaseRejectsMissingOrAmbiguousAppsWithoutBuilding(string problem)
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, Target, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, Target, Folder));
 		if (problem == "missing-app")
 			Directory.CreateDirectory(directory);
 		if (problem == "ambiguous-app")
@@ -199,7 +199,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task SuccessfulBuildIsNotRepeatedWhenItsAppOutputIsMissing()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, Target, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, Target, Folder));
 		var stale = CreateApp(directory);
 		await using var fixture = Fixture(AppiumMode.All, apps);
 		var builds = 0;
