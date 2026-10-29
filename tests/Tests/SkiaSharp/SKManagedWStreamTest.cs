@@ -212,8 +212,36 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void NullStreamConstructor_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => new SKManagedWStream(null));
-			Assert.Throws<ArgumentNullException>(() => new SKManagedWStream(null, true));
+			Assert.Throws<ArgumentNullException>("managedStream", () => new SKManagedWStream(null));
+			Assert.Throws<ArgumentNullException>("managedStream", () => new SKManagedWStream(null, false));
+			Assert.Throws<ArgumentNullException>("managedStream", () => new SKManagedWStream(null, true));
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void NullStreamConstructorDoesNotDisposePartiallyConstructedSubclass(bool disposeManagedStream)
+		{
+			Assert.Throws<ArgumentNullException>("managedStream",
+				() => new ConstructionGuardedWStream(null, disposeManagedStream));
+		}
+
+		private sealed class ConstructionGuardedWStream : SKManagedWStream
+		{
+			private readonly bool initialized;
+
+			public ConstructionGuardedWStream(Stream stream, bool disposeManagedStream)
+				: base(stream, disposeManagedStream)
+			{
+				initialized = true;
+			}
+
+			protected override void Dispose(bool disposing)
+			{
+				base.Dispose(disposing);
+				if (disposing && !initialized)
+					throw new InvalidOperationException("Disposed before construction completed.");
+			}
 		}
 
 		[Fact]
