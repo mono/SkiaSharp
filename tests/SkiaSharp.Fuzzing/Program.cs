@@ -159,7 +159,14 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 					}),
 				["JobDependencies"] = new JsonArray(platform.DependencyPath),
 				["PreservePathsJobDependencies"] = new JsonArray("./assets/**/*", "./seeds/**/*"),
-				["SdlWorkItemId"] = 3082348
+				["SdlWorkItemId"] = 3082348,
+				["AdoTemplate"] = new JsonObject
+				{
+					["Org"] = "devdiv",
+					["Project"] = "DevDiv",
+					["AreaPath"] = @"DevDiv\.NET MAUI\SkiaSharp",
+					["IterationPath"] = "DevDiv",
+				}
 			});
 		}
 
