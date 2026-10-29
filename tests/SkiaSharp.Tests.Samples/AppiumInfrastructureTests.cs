@@ -25,7 +25,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	private static string FindApp(SampleWorkspace workspace) => IosRunningApp.FindApp(AppOutput(workspace.Root));
 
 	private static string AndroidOutput(string directory) =>
-		Path.Combine(directory, "samples", Folder, "SkiaSharpSample", "bin", "Debug", "net10.0-android", "android-arm64");
+		Path.GetFullPath(Path.Combine(directory, "samples", Folder, "SkiaSharpSample", "bin", "Debug", "net10.0-android", "android-arm64"));
 
 	private static string FindAndroidApp(SampleWorkspace workspace) => AndroidRunningApp.FindApp(AndroidOutput(workspace.Root));
 
@@ -262,7 +262,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task AndroidPreparedApkIsFoundInOwnedWorkspaceAndCleanedOnlyAfterRun(string phase)
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, AndroidTarget, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, AndroidTarget, Folder));
 		if (phase == "run")
 			CreateAndroidApp(directory);
 		var builds = 0;
@@ -288,7 +288,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task AndroidRunRejectsMissingOrAmbiguousApksWithoutBuilding(string problem)
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, AndroidTarget, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, AndroidTarget, Folder));
 		Directory.CreateDirectory(directory);
 		if (problem == "ambiguous")
 		{
@@ -308,7 +308,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	public async Task AndroidSuccessfulBuildIsNotRepeatedWhenApkOutputIsMissing()
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, AndroidTarget, Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, AndroidTarget, Folder));
 		var stale = CreateAndroidApp(directory);
 		await using var fixture = Fixture(AppiumMode.All, apps);
 		var builds = 0;
