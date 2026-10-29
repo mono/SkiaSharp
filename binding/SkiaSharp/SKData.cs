@@ -330,7 +330,7 @@ namespace SkiaSharp
 				if (pos >= len)
 					return Empty;
 
-				var data = Create (stream, len - pos);
+				var data = CreateFromStream (stream, len - pos);
 				if (data != null)
 					return data;
 
@@ -349,6 +349,38 @@ namespace SkiaSharp
 					return null;
 			}
 			return memory.DetachAsData ();
+		}
+
+		private static SKData CreateFromStream (SKStream stream, ulong length)
+		{
+			var data = Create (length);
+			if (data == null)
+				return null;
+
+			try {
+				var dst = (byte*)data.Data;
+				ulong totalRead = 0;
+				while (totalRead < length) {
+					// Managed stream callbacks accept int-sized requests, even when the total length is larger.
+					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
+					var read = Utils.FromNativeSize (SkiaApi.sk_stream_read (stream.Handle, dst + totalRead, (IntPtr)toRead));
+					if (read > (ulong)toRead)
+						throw new IOException ("The stream returned an invalid byte count.");
+					if (read == 0) {
+						data.Dispose ();
+						return null;
+					}
+
+					totalRead += read;
+				}
+
+				return data;
+			} catch {
+				data.Dispose ();
+				throw;
+			} finally {
+				GC.KeepAlive (stream);
+			}
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
