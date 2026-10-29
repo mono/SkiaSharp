@@ -16,9 +16,6 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 	private protected static bool HasFps(string text) =>
 		text.Contains("FPS:", StringComparison.Ordinal) && !text.Contains("--", StringComparison.Ordinal);
 
-	private protected static string Output(SampleWorkspace workspace, string folder, string project, string framework) =>
-		Path.Combine(workspace.Root, "samples", folder, Path.GetDirectoryName(project)!, "bin", "Debug", framework);
-
 	private protected static string HostArchitecture() => RuntimeInformation.ProcessArchitecture switch
 	{
 		Architecture.Arm64 => "arm64",

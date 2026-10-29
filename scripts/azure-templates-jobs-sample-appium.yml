@@ -23,34 +23,45 @@ jobs:
         - sdkVersion: $(DOTNET_VERSION)
           ${{ if eq(parameters.phase, 'build') }}:
             workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-            workloads: [android, ios, maccatalyst, maui]
+            workloads: [ios, maui]
       installAndroidSdk: false
       installAndroidNdk: false
       retryCount: 0
       shouldPublish: false
       requiredArtifacts:
-        - ${{ if eq(parameters.phase, 'build') }}:
-          - name: native
+        - name: native
         - name: nuget
           dir: nugets
         - ${{ if eq(parameters.phase, 'run') }}:
           - name: samples_appium_build_${{ parameters.platform }}_apps
-            dir: appium-apps/${{ parameters.platform }}
-            currentRun: true
-          - name: samples_appium_build_${{ parameters.platform }}_runner
-            dir: appium-runner/${{ parameters.platform }}
+            dir: sample-archives/${{ parameters.platform }}
             currentRun: true
       publishArtifacts:
         - ${{ if eq(parameters.phase, 'build') }}:
           - name: ${{ parameters.name }}_apps
-            path: output/appium-apps/${{ parameters.platform }}
-          - name: ${{ parameters.name }}_runner
-            path: output/appium-runner/${{ parameters.platform }}
+            path: output/sample-archives/${{ parameters.platform }}
         - name: ${{ parameters.name }}_logs
           always: true
           path: output/logs
-      preBuildSteps: ${{ parameters.preBuildSteps }}
+      preBuildSteps:
+        - ${{ if eq(parameters.phase, 'run') }}:
+          - pwsh: |
+              $ErrorActionPreference = 'Stop'
+              $PSNativeCommandUseErrorActionPreference = $true
+              $archives = 'output/sample-archives/${{ parameters.platform }}'
+              New-Item output/sample-apps -ItemType Directory -Force | Out-Null
+              tar -xzf "$archives/sample-apps.tar.gz" -C output/sample-apps
+            displayName: Extract prepared sample apps
+        - ${{ parameters.preBuildSteps }}
       postBuildSteps:
+        - ${{ if eq(parameters.phase, 'build') }}:
+          - pwsh: |
+              $ErrorActionPreference = 'Stop'
+              $PSNativeCommandUseErrorActionPreference = $true
+              $archives = 'output/sample-archives/${{ parameters.platform }}'
+              New-Item $archives -ItemType Directory -Force | Out-Null
+              tar -czf "$archives/sample-apps.tar.gz" --exclude=cache --exclude=obj -C output/sample-apps '${{ parameters.platform }}'
+            displayName: Archive prepared sample apps
         - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs/samples --images-out output/logs/testlogs/samples/golden-images
           displayName: Extract device reference diagnostics
           condition: always()

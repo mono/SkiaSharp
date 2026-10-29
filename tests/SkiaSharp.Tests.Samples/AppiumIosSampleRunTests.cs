@@ -74,21 +74,14 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 		const string framework = "net10.0-ios";
 		var rid = "iossimulator-" + HostArchitecture();
 
-		return appium.Prepare(new("ios", HostArchitecture(), folder, project, framework, rid), async () =>
+		return appium.Prepare(new("ios", HostArchitecture(), folder, project, framework, rid), async workspace =>
 		{
-			var workspace = await BuildSample(folder, project, new DotNetOptions
+			await BuildSample(workspace, folder, project, new DotNetOptions
 			{
 				Configuration = "Debug",
 				Framework = framework,
 				Properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = rid }
 			});
-			var artifact = Assert.Single(Directory.EnumerateDirectories(
-				Path.Combine(Output(workspace, folder, project, framework), rid), "*.app"));
-			var result = await ProcessRunner.Run("plutil",
-				["-extract", "CFBundleIdentifier", "raw", "-o", "-", Path.Combine(artifact, "Info.plist")],
-				workspace.Root, TimeSpan.FromSeconds(30));
-			Assert.True(result.ExitCode == 0, $"Cannot read built app identity: {result.Error}");
-			return (artifact, result.Output.Trim());
 		}, static (workspace, artifact) => new IosRunningApp(workspace, artifact));
 	}
 

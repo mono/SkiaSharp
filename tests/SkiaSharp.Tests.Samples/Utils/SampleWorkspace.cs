@@ -13,24 +13,26 @@ public sealed class SampleWorkspace : IDisposable
     {
     }
 
-    private SampleWorkspace()
+    private SampleWorkspace(string directory, string diagnosticsRoot)
     {
         var id = CreateIdentity("appium-run");
-        Root = Path.Combine(Repo.WorkspacesDir, id);
-        DiagnosticsRoot = Path.Combine(Repo.ArtifactsDir, id);
-        Directory.CreateDirectory(Root);
+        Root = Path.GetFullPath(directory);
+        DiagnosticsRoot = Path.Combine(diagnosticsRoot, id);
+        if (!Directory.Exists(Root))
+            throw new DirectoryNotFoundException($"Build the sample before running it: {Root}");
     }
 
-    internal static SampleWorkspace ForAppiumRun() => new();
+    internal static SampleWorkspace ForAppiumRun(string directory) => new(directory, Repo.ArtifactsDir);
 
-    internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir)
+    internal SampleWorkspace(string folder, string samplesDir, string packagesDir, string workspacesDir, string artifactsDir,
+        string? directory = null)
     {
         packagesDir = Path.GetFullPath(packagesDir);
         if (!Directory.Exists(packagesDir) || !Directory.EnumerateFiles(packagesDir, "*.nupkg", SearchOption.AllDirectories).Any())
             throw new InvalidOperationException($"Input NuGet packages are missing: {packagesDir}");
 
         var id = CreateIdentity(folder);
-        Root = Path.Combine(Path.GetFullPath(workspacesDir), id);
+        Root = directory is null ? Path.Combine(Path.GetFullPath(workspacesDir), id) : Path.GetFullPath(directory);
         DiagnosticsRoot = Path.Combine(Path.GetFullPath(artifactsDir), id);
 
         Directory.CreateDirectory(Root);

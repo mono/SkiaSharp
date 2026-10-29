@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.IO.Compression;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using OpenQA.Selenium;
 using SkiaSharp.Tests.Samples.Utils;
 using SkiaSharp.Tests.Shared;
@@ -16,26 +14,32 @@ public sealed class AppiumInfrastructureTests : IDisposable
 {
 	private readonly string root = Path.Combine(Repo.ArtifactsDir, SampleWorkspace.CreateIdentity("appium-infrastructure"));
 
-	private static AppiumAppSpec AndroidSpec => new(
-		"android", "arm64", "Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj", "net10.0-android", "android-arm64");
+	private static AppiumAppSpec IosSpec => new(
+		"ios", "arm64", "Basic/Maui", "SkiaSharpSample/SkiaSharpSample.csproj", "net10.0-ios", "iossimulator-arm64");
 
 	private static AppiumRunningApp ArtifactSession(SampleWorkspace workspace, string artifact) =>
 		new DiagnosticApp(workspace, artifact, []);
 
-	private string ArtifactPackages()
+	private AppiumFixture Fixture(AppiumMode mode, string apps)
 	{
-		var directory = Path.Combine(root, "artifact-package-fixtures");
-		Directory.CreateDirectory(directory);
-		foreach (var id in new[] { "SkiaSharp", "HarfBuzzSharp" })
-		{
-			var path = Path.Combine(directory, $"{id}.1.0.0-unit-fixture.nupkg");
-			if (File.Exists(path))
-				continue;
-			using var archive = ZipFile.Open(path, ZipArchiveMode.Create);
-			using var writer = new StreamWriter(archive.CreateEntry(id + ".nuspec").Open());
-			writer.Write($"<package><metadata><id>{id}</id><version>1.0.0-unit-fixture</version></metadata></package>");
-		}
-		return directory;
+		var inputs = Path.Combine(root, "inputs");
+		var packages = Path.Combine(root, "packages");
+		Directory.CreateDirectory(Path.Combine(inputs, IosSpec.Folder));
+		Directory.CreateDirectory(packages);
+		File.WriteAllText(Path.Combine(packages, "fixture.nupkg"), "Workspace package sentinel.");
+		return new(mode, packages, apps, inputs);
+	}
+
+	private static string CreateApp(string directory, AppiumAppSpec? spec = null)
+	{
+		spec ??= IosSpec;
+		var output = Path.Combine(directory, "samples", spec.Folder, Path.GetDirectoryName(spec.Project)!,
+			"bin", "Debug", spec.Framework, spec.RuntimeIdentifier);
+		Directory.CreateDirectory(output);
+		var app = Path.Combine(output, "Fixture.app");
+		Directory.CreateDirectory(app);
+		File.WriteAllText(Path.Combine(app, "Info.plist"), "fixture-plist");
+		return app;
 	}
 
 	[Theory]
@@ -44,121 +48,184 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("build", "Build")]
 	[InlineData("run", "Run")]
 	public void AppiumPhasesAreExplicit(string? value, string expected) =>
-		Assert.Equal(expected, AppiumAppArtifact.ParseMode(value).ToString());
+		Assert.Equal(expected, AppiumPreparedApp.ParseMode(value).ToString());
 
 	[Theory]
 	[InlineData("")]
 	[InlineData("BUILD")]
 	[InlineData("run-only")]
 	public void AppiumRejectsInvalidPhases(string value) =>
-		Assert.Throws<ArgumentException>(() => AppiumAppArtifact.ParseMode(value));
+		Assert.Throws<ArgumentException>(() => AppiumPreparedApp.ParseMode(value));
 
 	[Fact]
-	public async Task BuildPhaseExportsOnceWithoutDeviceOrCallbackAndDoesNotCacheAcrossInvocations()
+	public async Task BuildPhaseCleansOnceBuildsOnceAndRetainsOutputAfterDisposal()
 	{
-		var apps = Path.Combine(root, "staged-apps");
-		var packages = ArtifactPackages();
-		var apk = Path.Combine(root, "Fixture-Signed.apk");
-		File.WriteAllText(apk, "unit-fixture-apk");
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = IosSpec.DirectoryFor(apps);
+		Directory.CreateDirectory(directory);
+		var stale = Path.Combine(directory, "stale.txt");
+		File.WriteAllText(stale, "stale");
 		var builds = 0;
-		Task<(string, string)> Build()
+		Task Build(SampleWorkspace workspace)
 		{
+			Assert.Equal(directory, workspace.Root);
+			Assert.False(File.Exists(stale));
 			builds++;
-			return Task.FromResult((apk, "com.skiasharp.fixture"));
+			CreateApp(workspace.Root);
+			return Task.CompletedTask;
 		}
-		var fixture = new AppiumFixture(AppiumMode.Build, packages, apps);
-		var first = await fixture.Prepare(AndroidSpec, Build, ArtifactSession);
+		var fixture = Fixture(AppiumMode.Build, apps);
+		var first = await fixture.Prepare(IosSpec, Build, ArtifactSession);
 		await fixture.Run(first, _ => throw new InvalidOperationException("Build phase must never invoke the scenario."));
-		var second = await fixture.Prepare(AndroidSpec, Build, ArtifactSession);
+		var second = await fixture.Prepare(IosSpec, Build, ArtifactSession);
 		Assert.Equal(1, builds);
-		Assert.Equal(first.Manifest.Sha256, second.Manifest.Sha256);
-		Assert.True(File.Exists(Path.Combine(second.Directory, "app.apk")));
+		Assert.Equal(first.Artifact, second.Artifact);
+		Assert.True(Directory.Exists(second.Artifact));
 		await Assert.ThrowsAsync<InvalidOperationException>(() =>
-			fixture.Prepare(AndroidSpec with { Project = "other.csproj" }, Build, ArtifactSession));
-		await new AppiumFixture(AppiumMode.All, packages, apps).Prepare(AndroidSpec, Build, ArtifactSession);
+			fixture.Prepare(IosSpec with { Project = "other.csproj" }, Build, ArtifactSession));
+		await fixture.DisposeAsync();
+		Assert.True(Directory.Exists(first.Artifact));
+		File.WriteAllText(stale, "stale");
+		await using var next = Fixture(AppiumMode.Build, apps);
+		await next.Prepare(IosSpec, Build, ArtifactSession);
 		Assert.Equal(2, builds);
 	}
 
 	[Fact]
-	public async Task RunPhaseConsumesOnlyAnExactAcquiredAppAndNeverCallsBuild()
+	public async Task RunPhaseUsesExistingOutputWithoutBuildingAndCleansOnlyAfterAllScenarios()
 	{
-		var apps = Path.Combine(root, "staged-apps");
-		var packages = ArtifactPackages();
-		var fixture = new AppiumFixture(AppiumMode.Run, packages, apps);
-		Task<(string, string)> ForbiddenBuild() => throw new InvalidOperationException("Run must not build.");
-		await Assert.ThrowsAsync<FileNotFoundException>(() => fixture.Prepare(AndroidSpec, ForbiddenBuild, ArtifactSession));
-		var apk = Path.Combine(root, "Fixture-Signed.apk");
-		File.WriteAllText(apk, "unit-fixture-apk");
-		var directory = AppiumAppArtifact.DirectoryFor(apps, AndroidSpec);
-		AppiumAppArtifact.Export(directory, AndroidSpec, apk, "com.skiasharp.fixture", AppiumAppArtifact.ReadPackages(packages));
-		var prepared = await fixture.Prepare(AndroidSpec, ForbiddenBuild, ArtifactSession);
-		using var workspace = Workspace();
-		var materialized = AppiumAppArtifact.Materialize(prepared.Directory, prepared.Manifest, workspace.Root);
-		Assert.Equal("unit-fixture-apk", File.ReadAllText(materialized));
-		File.Delete(Path.Combine(directory, "app.apk"));
-		await Assert.ThrowsAsync<InvalidDataException>(() => fixture.Prepare(AndroidSpec, ForbiddenBuild, ArtifactSession));
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = IosSpec.DirectoryFor(apps);
+		var artifact = CreateApp(directory);
+		var fixture = new AppiumFixture(AppiumMode.Run, "missing-packages", apps, "missing-sources");
+		Task ForbiddenBuild(SampleWorkspace _) => throw new InvalidOperationException("Run must not build.");
+		var first = await fixture.Prepare(IosSpec, ForbiddenBuild, ArtifactSession);
+		Assert.Equal(artifact, first.Artifact);
+		Assert.False(File.Exists(Path.Combine(directory, "NuGet.Config")));
+		var running = Assert.IsType<DiagnosticApp>(first.CreateRunningApp());
+		await Assert.ThrowsAsync<NotSupportedException>(() => running.Run(
+			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask,
+			() => Task.CompletedTask, () => Task.CompletedTask));
+		Assert.True(Directory.Exists(artifact));
+		var second = await fixture.Prepare(IosSpec, ForbiddenBuild, ArtifactSession);
+		Assert.Equal(artifact, second.Artifact);
+		Assert.NotEqual(first.Workspace.DiagnosticsRoot, second.Workspace.DiagnosticsRoot);
+		await fixture.DisposeAsync();
+		Assert.False(Directory.Exists(directory));
+		Assert.True(File.Exists(Path.Combine(running.Diagnostics, "failure.log")));
 	}
 
-	[Fact]
-	public void RunWorkspaceHasNoCopiedSampleOrPrivateBuildEnvironment()
+	[Theory]
+	[InlineData("missing-workspace")]
+	[InlineData("missing-app")]
+	[InlineData("ambiguous-app")]
+	public async Task RunPhaseRejectsMissingOrAmbiguousAppsWithoutBuilding(string problem)
 	{
-		string directory;
-		using (var workspace = SampleWorkspace.ForAppiumRun())
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = IosSpec.DirectoryFor(apps);
+		if (problem == "missing-app")
+			Directory.CreateDirectory(directory);
+		if (problem == "ambiguous-app")
 		{
-			directory = workspace.Root;
-			Assert.Empty(Directory.EnumerateFileSystemEntries(directory));
-			Assert.False(Directory.Exists(Path.Combine(directory, "samples")));
-			Assert.False(Directory.Exists(Path.Combine(directory, "cache")));
+			var app = CreateApp(directory);
+			Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(app)!, "Second.app"));
 		}
+		var fixture = Fixture(AppiumMode.Run, apps);
+		await Assert.ThrowsAnyAsync<IOException>(() => fixture.Prepare(IosSpec,
+			_ => throw new InvalidOperationException("Run must not build."), ArtifactSession));
+		await fixture.DisposeAsync();
 		Assert.False(Directory.Exists(directory));
 	}
 
 	[Theory]
-	[InlineData("cohort")]
-	[InlineData("target")]
-	[InlineData("schema")]
-	[InlineData("traversal")]
-	[InlineData("absolute")]
-	[InlineData("corrupt")]
-	public void RunPhaseRejectsIncompatibleOrUnsafeManifests(string mutation)
+	[InlineData("all")]
+	[InlineData("run")]
+	public async Task SeparateLocalBuildAndRunNeedNoArchiveOrManifest(string mode)
 	{
-		var packages = AppiumAppArtifact.ReadPackages(ArtifactPackages());
-		var directory = AppiumAppArtifact.DirectoryFor(Path.Combine(root, "staged-apps"), AndroidSpec);
-		var apk = Path.Combine(root, "Fixture-Signed.apk");
-		File.WriteAllText(apk, "unit-fixture-apk");
-		var manifest = AppiumAppArtifact.Export(directory, AndroidSpec, apk, "com.skiasharp.fixture", packages);
-		manifest = mutation switch
+		var apps = Path.Combine(root, "sample-apps");
+		var builds = 0;
+		Task Build(SampleWorkspace workspace)
 		{
-			"cohort" => manifest with { Packages = [packages[0] with { Sha256 = "foreign" }, .. packages.Skip(1)] },
-			"target" => manifest with { App = AndroidSpec with { Architecture = "x64", RuntimeIdentifier = "android-x64" } },
-			"schema" => manifest with { Schema = 99 },
-			"traversal" => manifest with { ArtifactRelativePath = "../foreign.apk" },
-			"absolute" => manifest with { ArtifactRelativePath = Path.GetFullPath(apk) },
-			_ => manifest with { Sha256 = "corrupt" }
-		};
-		File.WriteAllText(Path.Combine(directory, "manifest.json"), JsonSerializer.Serialize(manifest));
-		Assert.Throws<InvalidDataException>(() => AppiumAppArtifact.Load(directory, AndroidSpec, packages));
+			builds++;
+			CreateApp(workspace.Root);
+			return Task.CompletedTask;
+		}
+		if (mode == "run")
+		{
+			await using var build = Fixture(AppiumMode.Build, apps);
+			await build.Prepare(IosSpec, Build, ArtifactSession);
+		}
+		var fixture = Fixture(AppiumPreparedApp.ParseMode(mode), apps);
+		var prepared = await fixture.Prepare(IosSpec, Build, ArtifactSession);
+		Assert.Equal(1, builds);
+		Assert.True(Directory.Exists(prepared.Artifact));
+		Assert.Empty(Directory.GetFiles(apps, "manifest.json", SearchOption.AllDirectories));
+		await fixture.DisposeAsync();
+		Assert.False(Directory.Exists(prepared.Workspace.Root));
+	}
+
+	[Theory]
+	[InlineData("all")]
+	[InlineData("build")]
+	public async Task FailedBuildIsNotReusedAndRunModesStillClean(string mode)
+	{
+		var apps = Path.Combine(root, "sample-apps");
+		var fixture = Fixture(AppiumPreparedApp.ParseMode(mode), apps);
+		await Assert.ThrowsAsync<IOException>(() => fixture.Prepare(IosSpec, workspace =>
+		{
+			File.WriteAllText(Path.Combine(workspace.Root, "partial.txt"), "partial");
+			throw new IOException("Build failed.");
+		}, ArtifactSession));
+		var prepared = await fixture.Prepare(IosSpec, workspace =>
+		{
+			Assert.False(File.Exists(Path.Combine(workspace.Root, "partial.txt")));
+			CreateApp(workspace.Root);
+			return Task.CompletedTask;
+		}, ArtifactSession);
+		await fixture.DisposeAsync();
+		Assert.Equal(mode == "build", Directory.Exists(prepared.Workspace.Root));
 	}
 
 	[Fact]
-	public void PackageCohortComesFromActualPackageMetadataAndBytes()
+	public async Task BuildWithoutAnAppCannotReuseStaleOutputOrMarkTheBuildComplete()
 	{
-		var directory = ArtifactPackages();
-		var original = AppiumAppArtifact.ReadPackages(directory);
-		Assert.Equal(new[] { "HarfBuzzSharp", "SkiaSharp" }, original.Select(package => package.Id));
-		Assert.All(original, package => Assert.Equal("1.0.0-unit-fixture", package.Version));
-		using (var archive = ZipFile.Open(Path.Combine(directory, "SkiaSharp.1.0.0-unit-fixture.nupkg"), ZipArchiveMode.Update))
-		using (var writer = new StreamWriter(archive.CreateEntry("changed-fixture.txt").Open()))
-			writer.Write("changed bytes with the same package version");
-		Assert.NotEqual(original[1].Sha256, AppiumAppArtifact.ReadPackages(directory)[1].Sha256);
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = IosSpec.DirectoryFor(apps);
+		var stale = CreateApp(directory);
+		await using var fixture = Fixture(AppiumMode.All, apps);
+		await Assert.ThrowsAsync<FileNotFoundException>(() =>
+			fixture.Prepare(IosSpec, _ => Task.CompletedTask, ArtifactSession));
+		Assert.False(Directory.Exists(stale));
+		var prepared = await fixture.Prepare(IosSpec, workspace =>
+		{
+			CreateApp(workspace.Root);
+			return Task.CompletedTask;
+		}, ArtifactSession);
+		Assert.True(Directory.Exists(prepared.Artifact));
 	}
 
+	[Theory]
+	[InlineData("../foreign")]
+	[InlineData("/absolute")]
+	[InlineData("folder\\project")]
+	[InlineData("folder//project")]
+	[InlineData("folder/./project")]
+	public void PreparedPathsCannotEscapeTheSelectedApp(string path) =>
+		Assert.Throws<ArgumentException>(() => (IosSpec with { Folder = path }).DirectoryFor(root));
+
+	[Theory]
+	[InlineData("x86")]
+	[InlineData("unknown")]
+	public void PreparedTargetsRequireSupportedArchitecture(string architecture) =>
+		Assert.Throws<InvalidOperationException>(() => (IosSpec with { Architecture = architecture }).DirectoryFor(root));
+
 	[Fact]
-	public void SimulatorArchiveRoundTripsExecutableBitsAndSymbolicLinks()
+	public async Task RunPhaseUsesIosBundleInPlaceWithoutCopyingLinksOrPermissions()
 	{
-		var source = Path.Combine(root, "Fixture.app");
-		Directory.CreateDirectory(source);
-		File.WriteAllText(Path.Combine(source, "Info.plist"), "unit-fixture-plist");
+		var spec = new AppiumAppSpec("ios", "arm64", "Basic/iOS", "SkiaSharpSample/SkiaSharpSample.csproj",
+			"net10.0-ios", "iossimulator-arm64");
+		var apps = Path.Combine(root, "sample-apps");
+		var source = CreateApp(spec.DirectoryFor(apps), spec);
 		var executable = Path.Combine(source, "Fixture");
 		File.WriteAllText(executable, "unit-fixture-executable");
 		var mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
@@ -170,15 +237,10 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			Directory.CreateDirectory(Path.Combine(source, "Versions", "A"));
 			Directory.CreateSymbolicLink(Path.Combine(source, "Versions", "Current"), "A");
 		}
-		var spec = new AppiumAppSpec("ios", "arm64", "Basic/iOS", "SkiaSharpSample/SkiaSharpSample.csproj",
-			"net10.0-ios", "iossimulator-arm64");
-		var directory = AppiumAppArtifact.DirectoryFor(Path.Combine(root, "staged-apps"), spec);
-		var packages = AppiumAppArtifact.ReadPackages(ArtifactPackages());
-		AppiumAppArtifact.Export(directory, spec, source, "com.skiasharp.fixture", packages);
-		var manifest = AppiumAppArtifact.Load(directory, spec, packages);
-		SampleWorkspace.DeleteDirectory(source);
-		using var workspace = Workspace();
-		var bundle = AppiumAppArtifact.Materialize(directory, manifest, workspace.Root);
+		await using var fixture = Fixture(AppiumMode.Run, apps);
+		var prepared = await fixture.Prepare(spec, _ => throw new InvalidOperationException("Run must not build."), ArtifactSession);
+		var bundle = prepared.Artifact;
+		Assert.Equal(source, bundle);
 		Assert.Equal("unit-fixture-executable", File.ReadAllText(Path.Combine(bundle, "Fixture")));
 		if (!OperatingSystem.IsWindows())
 		{
@@ -187,20 +249,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			Assert.Equal("A", new DirectoryInfo(Path.Combine(bundle, "Versions", "Current")).LinkTarget);
 			Assert.Equal("unit-fixture-executable", File.ReadAllText(Path.Combine(bundle, "FixtureLink")));
 		}
-	}
-
-	[Fact]
-	public async Task ManifestIdentityMismatchFailsBeforeServerOrScenario()
-	{
-		using var workspace = Workspace();
-		var artifact = Path.Combine(workspace.Root, "Sample.app");
-		Directory.CreateDirectory(artifact);
-		var order = new List<string>();
-		var app = new DiagnosticApp(workspace, artifact, order) { ExpectedApplicationId = "com.foreign.fixture" };
-		await Assert.ThrowsAsync<InvalidDataException>(() => app.Run(
-			new Uri("http://127.0.0.1:1"), _ => throw new InvalidOperationException("Scenario must not run."),
-			() => throw new InvalidOperationException("Server must not start."), () => Task.CompletedTask));
-		Assert.Equal(new[] { "diagnostics" }, order);
 	}
 
 	private static string Reference(string profile, string version, string name, string architecture = "arm64")
