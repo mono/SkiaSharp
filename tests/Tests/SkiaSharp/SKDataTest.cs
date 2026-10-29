@@ -539,6 +539,60 @@ namespace SkiaSharp.Tests
 			Assert.InRange(inner.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
 		}
 
+		[Theory]
+		[InlineData(true, false)]
+		[InlineData(true, true)]
+		[InlineData(false, false)]
+		public void CreateFromManagedSKStreamPropagatesReadAndSeekFailures(bool canSeek, bool failOnSeek)
+		{
+			using var inner = new FailingAfterShortReadStream(canSeek, failOnSeek);
+			using var stream = new SKManagedStream(inner, disposeManagedStream: true);
+
+			var exception = Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
+
+			Assert.Same(inner.Failure, exception);
+			Assert.Equal(1, inner.Position);
+			Assert.True(inner.CanRead);
+		}
+
+		private sealed class FailingAfterShortReadStream : MemoryStream
+		{
+			private readonly bool canSeek;
+			private readonly bool failOnSeek;
+			private int reads;
+
+			public FailingAfterShortReadStream(bool canSeek, bool failOnSeek)
+				: base(new byte[] { 10, 20 }, writable: false)
+			{
+				this.canSeek = canSeek;
+				this.failOnSeek = failOnSeek;
+			}
+
+			public IOException Failure { get; } = new IOException("Read or seek failed after a short read.");
+
+			public override bool CanSeek => canSeek;
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				if (++reads == 1)
+					return base.Read(buffer, offset, Math.Min(count, 1));
+				if (failOnSeek)
+					return 0;
+				throw Failure;
+			}
+
+			public override long Position
+			{
+				get => base.Position;
+				set
+				{
+					if (failOnSeek && reads > 0)
+						throw Failure;
+					base.Position = value;
+				}
+			}
+		}
+
 		[Fact]
 		public void CreateFromSKStream_EarlyEndingAndFrontBufferedSKStreams_DoNotLoseConsumedBytes()
 		{

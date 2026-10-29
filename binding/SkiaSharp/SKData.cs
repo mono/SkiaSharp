@@ -322,9 +322,11 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (stream.HasLength && stream.HasPosition) {
-				var len = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (stream.Handle));
-				var pos = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (stream.Handle));
+			// Keep managed overrides on the managed stack so their exceptions never cross reverse P/Invoke here.
+			var managed = stream as SKAbstractManagedStream;
+			if ((managed?.OnHasLength () ?? stream.HasLength) && (managed?.OnHasPosition () ?? stream.HasPosition)) {
+				var len = Utils.FromNativeSize (managed?.OnGetLength () ?? SkiaApi.sk_stream_get_length (stream.Handle));
+				var pos = Utils.FromNativeSize (managed?.OnGetPosition () ?? SkiaApi.sk_stream_get_position (stream.Handle));
 				GC.KeepAlive (stream);
 
 				if (pos >= len)
@@ -334,7 +336,8 @@ namespace SkiaSharp
 				if (data != null)
 					return data;
 
-				if (!SkiaApi.sk_stream_seek (stream.Handle, Utils.ToNativeSize (pos))) {
+				var position = Utils.ToNativeSize (pos);
+				if (!(managed?.OnSeek (position) ?? SkiaApi.sk_stream_seek (stream.Handle, position))) {
 					GC.KeepAlive (stream);
 					return null;
 				}
@@ -343,12 +346,31 @@ namespace SkiaSharp
 
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
-			int readLen;
-			while ((readLen = stream.Read (buffer.Array, buffer.Length)) > 0) {
-				if (!memory.Write (buffer.Array, readLen))
-					return null;
+			fixed (byte* ptr = buffer.Array) {
+				while (true) {
+					var read = ReadStream (stream, ptr, buffer.Length);
+					if (read == 0)
+						break;
+					if (!memory.Write (buffer.Array, (int)read))
+						return null;
+				}
 			}
 			return memory.DetachAsData ();
+		}
+
+		private static ulong ReadStream (SKStream stream, void* buffer, int length)
+		{
+			try {
+				var size = (IntPtr)length;
+				var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
+					? managed.OnRead ((IntPtr)buffer, size)
+					: SkiaApi.sk_stream_read (stream.Handle, buffer, size));
+				if (read > (ulong)length)
+					throw new IOException ("The stream returned an invalid byte count.");
+				return read;
+			} finally {
+				GC.KeepAlive (stream);
+			}
 		}
 
 		private static SKData CreateFromStream (SKStream stream, ulong length)
@@ -363,9 +385,7 @@ namespace SkiaSharp
 				while (totalRead < length) {
 					// Managed stream callbacks accept int-sized requests, even when the total length is larger.
 					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
-					var read = Utils.FromNativeSize (SkiaApi.sk_stream_read (stream.Handle, dst + totalRead, (IntPtr)toRead));
-					if (read > (ulong)toRead)
-						throw new IOException ("The stream returned an invalid byte count.");
+					var read = ReadStream (stream, dst + totalRead, toRead);
 					if (read == 0) {
 						data.Dispose ();
 						return null;
