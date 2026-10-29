@@ -74,9 +74,6 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 		const string framework = "net10.0-ios";
 		var architecture = HostArchitecture();
 		var rid = "iossimulator-" + architecture;
-		string FindApp(SampleWorkspace workspace) => IosRunningApp.FindApp(Path.Combine(
-			workspace.Root, "samples", folder, Path.GetDirectoryName(project)!, "bin", "Debug", framework, rid));
-
 		var workspace = await appium.PrepareWorkspace($"ios/{architecture}", folder, project, async prepared =>
 		{
 			await BuildSample(prepared, folder, project, new DotNetOptions
@@ -86,7 +83,9 @@ public sealed class AppiumIosSampleRunTests(AppiumFixture appium) : AppiumSample
 				Properties = new Dictionary<string, string> { ["RuntimeIdentifier"] = rid }
 			});
 		});
-		return new IosRunningApp(workspace, FindApp(workspace));
+		var output = Path.Combine(workspace.Root, "samples", folder, Path.GetDirectoryName(project)!,
+			"bin", "Debug", framework, rid);
+		return new IosRunningApp(workspace, IosRunningApp.FindApp(output));
 	}
 
 	private static void NavigateMauiIos(AppiumOperations app, string title)
