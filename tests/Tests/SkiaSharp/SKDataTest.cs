@@ -253,7 +253,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Reference implementation: the previous (buffered) SaveTo path — copy native memory into a
-		// pooled managed buffer with Marshal.Copy, then write that buffer to the stream. Used as the
+		// managed buffer with Marshal.Copy, then write that buffer to the stream. Used as the
 		// oracle to prove the current (span-based) SaveTo is byte-for-byte identical.
 		private static unsafe void SaveToBuffered(SKData data, Stream target)
 		{
@@ -343,14 +343,14 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData(0)]
 		[InlineData(1)]
-		[InlineData(SKData.UnknownLengthStreamChunkSize - 1)]
-		[InlineData(SKData.UnknownLengthStreamChunkSize)]
-		[InlineData(SKData.UnknownLengthStreamChunkSize + 1)]
-		[InlineData(SKData.UnknownLengthStreamChunkSize * 3)]
+		[InlineData(SKData.CopyBufferSize - 1)]
+		[InlineData(SKData.CopyBufferSize)]
+		[InlineData(SKData.CopyBufferSize + 1)]
+		[InlineData(SKData.CopyBufferSize * 3)]
 		[InlineData(2097152)]
 		[InlineData(3145728)]
 		[InlineData(10485760)]
-		public void CreateFromUnknownLengthStreamMatchesBufferedReference(int size)
+		public void CreateFromUnknownLengthStreamReadsToEndAcrossChunkBoundaries(int size)
 		{
 			var bytes = new byte[size];
 			for (var i = 0; i < bytes.Length; i++)
@@ -359,16 +359,14 @@ namespace SkiaSharp.Tests
 			foreach (var maxRead in new[] { int.MaxValue, 997 })
 			{
 				using var actualStream = new ConfigurableTestStream(bytes, canSeek: false, maxBytesPerRead: maxRead);
-				using var expectedStream = new ConfigurableTestStream(bytes, canSeek: false, maxBytesPerRead: maxRead);
 				using var actual = SKData.Create(actualStream);
-				using var expected = CreateFromUnknownLengthBuffered(expectedStream);
 
 				Assert.NotNull(actual);
-				Assert.Equal(expected.Size, actual.Size);
-				Assert.Equal(expected.ToArray(), actual.ToArray());
+				Assert.Equal(bytes.Length, actual.Size);
 				Assert.Equal(bytes, actual.ToArray());
 				Assert.True(actualStream.CanRead);
 				Assert.Equal(1, actualStream.ZeroReadCount);
+				Assert.InRange(actualStream.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
 			}
 		}
 
@@ -388,7 +386,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void CreateFromUnknownLengthStreamDoesNotRetainPooledBuffers()
+		public void CreateFromUnknownLengthStreamOwnsDataIndependently()
 		{
 			var bytes = new byte[2 * 1024 * 1024];
 			bytes.AsSpan().Fill(123);
@@ -421,32 +419,15 @@ namespace SkiaSharp.Tests
 		[InlineData(int.MaxValue)]
 		public void CreateFromUnknownLengthStreamRejectsInvalidCountsAfterFullChunks(int invalidReturn)
 		{
-			using var stream = new FailingAfterReadStream(SKData.UnknownLengthStreamChunkSize * 3, invalidReturn);
+			using var stream = new FailingAfterReadStream(SKData.CopyBufferSize * 3, invalidReturn);
 			Assert.Throws<IOException>(() => SKData.Create(stream));
 		}
 
 		[Fact]
 		public void CreateFromUnknownLengthStreamPropagatesExceptionAfterFullChunks()
 		{
-			using var stream = new FailingAfterReadStream(SKData.UnknownLengthStreamChunkSize * 3);
+			using var stream = new FailingAfterReadStream(SKData.CopyBufferSize * 3);
 			Assert.Throws<IOException>(() => SKData.Create(stream));
-		}
-
-		private static SKData CreateFromUnknownLengthBuffered(Stream stream)
-		{
-			using var memory = new SKDynamicMemoryWStream();
-			using var buffer = Utils.RentArray<byte>(SKData.CopyBufferSize);
-			while (true)
-			{
-				var readLen = stream.Read(buffer.Array, 0, buffer.Length);
-				if ((uint)readLen > (uint)buffer.Length)
-					throw new IOException("The stream returned an invalid byte count.");
-				if (readLen == 0)
-					break;
-				if (!memory.Write(buffer.Array, readLen))
-					return null;
-			}
-			return memory.DetachAsData();
 		}
 
 		private sealed class FailingAfterReadStream : MemoryStream
