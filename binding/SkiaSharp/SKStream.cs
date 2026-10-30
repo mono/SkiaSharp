@@ -193,7 +193,7 @@ namespace SkiaSharp
 		/// <returns>Returns the number of bytes actually read.</returns>
 		/// <remarks>Uses the read and exception behavior of <see cref="Read(IntPtr, int)" />. A <see langword="null" /> buffer skips bytes.</remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative or exceeds the length of a non-null <paramref name="buffer" />.</exception>
-		/// <exception cref="IOException">The stream returns an invalid byte count, or the underlying managed stream reports an I/O error.</exception>
+		/// <exception cref="IOException">The native stream returns an invalid byte count.</exception>
 		public int Read (byte[] buffer, int size)
 		{
 			if (size < 0 || (buffer != null && size > buffer.Length))
@@ -208,18 +208,16 @@ namespace SkiaSharp
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
-		/// <remarks>Invokes <see cref="SKAbstractManagedStream" /> read overrides directly and propagates their exceptions to the caller. Other streams use the native read operation. This method does not retry short reads. A zero buffer pointer skips bytes.</remarks>
+		/// <remarks>Uses the native stream read operation and does not retry short reads. A zero buffer pointer skips bytes.</remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative.</exception>
-		/// <exception cref="IOException">The stream returns an invalid byte count, or the underlying managed stream reports an I/O error.</exception>
+		/// <exception cref="IOException">The native stream returns an invalid byte count.</exception>
 		public int Read (IntPtr buffer, int size)
 		{
 			if (size < 0)
 				throw new ArgumentOutOfRangeException (nameof (size));
 
 			var nativeSize = (IntPtr)size;
-			var result = Utils.FromNativeSize (this is SKAbstractManagedStream managed
-				? managed.OnRead (buffer, nativeSize)
-				: SkiaApi.sk_stream_read (Handle, (void*)buffer, nativeSize));
+			var result = Utils.FromNativeSize (SkiaApi.sk_stream_read (Handle, (void*)buffer, nativeSize));
 			GC.KeepAlive (this);
 			if (result > (ulong)size)
 				throw new IOException ("The stream returned an invalid byte count.");
@@ -364,14 +362,12 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets the current position in the stream as a 64-bit integer. If this is not supported, the position will be reported as 0.</summary>
 		/// <value>The current position in bytes, or 0 if not supported.</value>
-		/// <remarks>Setting this property calls <see cref="Seek(long)" />. Native positions are unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented. Managed metadata overrides are called directly so their exceptions remain on the managed stack.</remarks>
-		/// <exception cref="OverflowException">The position exceeds the native unsigned pointer-sized range, or the native position is greater than <see cref="Int64.MaxValue" />.</exception>
+		/// <remarks>Setting this property calls <see cref="Seek(long)" />. Queries the native stream position, which is unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented.</remarks>
+		/// <exception cref="OverflowException">The native position is greater than <see cref="Int64.MaxValue" />.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The assigned position is negative, or exceeds <see cref="UInt32.MaxValue" /> in a 32-bit process.</exception>
 		public long Position64 {
 			get {
-				var result = Utils.FromNativeSize (this is SKAbstractManagedStream managed
-					? managed.OnGetPosition ()
-					: SkiaApi.sk_stream_get_position (Handle));
+				var result = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (Handle));
 				GC.KeepAlive (this);
 				return checked ((long)result);
 			}
@@ -397,13 +393,11 @@ namespace SkiaSharp
 
 		/// <summary>Gets the total length of the stream as a 64-bit integer. If this is not supported, the length will be reported as 0.</summary>
 		/// <value>The total length of the stream in bytes, or 0 if not supported.</value>
-		/// <remarks>Native lengths are unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented. Managed metadata overrides are called directly so their exceptions remain on the managed stack.</remarks>
-		/// <exception cref="OverflowException">The length exceeds the native unsigned pointer-sized range, or the native length is greater than <see cref="Int64.MaxValue" />.</exception>
+		/// <remarks>Queries the native stream length, which is unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented.</remarks>
+		/// <exception cref="OverflowException">The native length is greater than <see cref="Int64.MaxValue" />.</exception>
 		public long Length64 {
 			get {
-				var result = Utils.FromNativeSize (this is SKAbstractManagedStream managed
-					? managed.OnGetLength ()
-					: SkiaApi.sk_stream_get_length (Handle));
+				var result = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (Handle));
 				GC.KeepAlive (this);
 				return checked ((long)result);
 			}
