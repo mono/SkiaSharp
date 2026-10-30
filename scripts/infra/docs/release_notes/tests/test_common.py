@@ -320,6 +320,43 @@ class DataFormatSyncTests(unittest.TestCase):
         self.assertEqual(module._DATA_JSON_FORMAT_VERSION, common.DATA_FORMAT)
 
 
+class CommitBodyFactsTests(unittest.TestCase):
+    def setUp(self):
+        self.module = _load_release_notes_data_module()
+
+    def test_commit_body_survives_collection_and_json_emission(self):
+        import json
+
+        body = (
+            "The native minimum rises to 14.0; the managed minimum remains 15.0.\n\n"
+            'Migration: keep the higher deployment target, not "14.0".\n'
+            "    <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>\n\n"
+            "Only the affected platform changes; other targets are unchanged."
+        )
+        commit = "a" * 40
+        log = "{}\nmaintainer@example.com\nMaintainer\nRaise deployment minimum (#123)\n{}{}".format(
+            commit, body, "---COMMIT-END-7f3b---"
+        )
+        with mock.patch.object(self.module, "run", return_value=log) as run, \
+                mock.patch.object(self.module, "_files_by_commit", return_value={commit: {"binding/SkiaSharp/SKData.cs"}}):
+            prs = self.module.get_prs_from_diff("base", "head")
+
+        self.assertIn("--format=%H%n%ae%n%an%n%s%n%b---COMMIT-END-7f3b---", run.call_args.args[0])
+        self.assertEqual(prs[0]["body"], body)
+        data = self.module.build_data_json(prs, {"version": "4.156.0", "status": "unreleased"})
+        entry = json.loads(json.dumps(data))["prs"]["123"]
+        self.assertEqual(entry["title"], "Raise deployment minimum")
+        self.assertEqual(entry["body"], body)
+
+    def test_subject_only_commit_has_an_empty_body(self):
+        data = self.module.build_data_json(
+            [{"number": 123, "title": "A subject-only change"}],
+            {"version": "4.156.0", "status": "unreleased"},
+        )
+
+        self.assertEqual(data["prs"]["123"]["body"], "")
+
+
 class ApiDiffScopedRefreshTests(unittest.TestCase):
     def test_scoped_refresh_clears_only_the_current_package_folder(self):
         source = (_DOCS_DIR / "api-diff.cake").read_text(encoding="utf-8")
@@ -691,6 +728,34 @@ class WritePageShipmentOnlyChangeRegressionTests(unittest.TestCase):
             # Prose discarded -- this page needs fresh prose.
             self.assertFalse(prose_path.exists())
             self.assertEqual(result, "polish")
+
+    def test_added_or_edited_commit_body_discards_title_only_prose(self):
+        import json
+        import tempfile
+
+        new_data = self.module.build_data_json(
+            [{"number": 123, "title": "Same title", "body": "Raise the deployment target to 14.0."}],
+            {"version": "4.156.0", "status": "unreleased"},
+        )
+        for old_body in (None, "The deployment target remains unchanged."):
+            with self.subTest(old_body=old_body), tempfile.TemporaryDirectory() as tmp_dir:
+                old_data = json.loads(json.dumps(new_data))
+                if old_body is None:
+                    old_data["format"] -= 1
+                    del old_data["prs"]["123"]["body"]
+                else:
+                    old_data["prs"]["123"]["body"] = old_body
+                data_path = Path(tmp_dir) / "4.156.0.data.json"
+                prose_path = Path(tmp_dir) / "4.156.0.prose.json"
+                data_path.write_text(json.dumps(old_data))
+                prose_path.write_text(json.dumps({"theme": "Title-only prose"}))
+
+                result = self._simulate_write_page(data_path, prose_path, new_data)
+
+                self.assertEqual(result, "polish")
+                self.assertFalse(prose_path.exists())
+                self.assertEqual(json.loads(data_path.read_text()), new_data)
+                self.assertTrue(self.module._data_json_unchanged(data_path, new_data))
 
     def test_truly_unchanged_page_is_skipped_without_force(self):
         import json as _json

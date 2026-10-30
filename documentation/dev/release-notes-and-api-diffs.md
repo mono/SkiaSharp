@@ -863,8 +863,9 @@ sidecar does, because no engine ever writes it.
 
 It is **freeform Markdown, not a schema.** There is no JSON and no required structure:
 the maintainer writes natural-language notes and the Polish AI parses, understands, and
-weaves them into `prose.json` (§4.7). Not all of it is "breaking" — some is simply
-material to surface.
+weaves them into `prose.json` (§4.7). Reserve it for supplemental migration guidance or
+editorial decisions that cannot be gathered from the collected commit bodies and API diffs;
+do not duplicate the changelog here. Not all of it is "breaking" — some is simply material to surface.
 
 #### Ownership & lifecycle
 
@@ -1003,8 +1004,12 @@ built from. It is timestamp-free and includes, at minimum:
   from `shipments`; it never synthesizes an `X.Y.Z-preview` package URL.
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
-- `prs` — the flat PR map, including title, URL, author, `community`, and the
-  deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
+- `prs` — the flat PR map, including title, full merge-commit `body` (format 6+),
+  URL, author, `community`, and the deterministic `tag` (`product`, `mixed`, or `internal`).
+  The body is read from local Git history (`%b`), not fetched from the live PR description,
+  and is retained without truncation. It gives the offline Polish AI the rationale,
+  behavioral changes, platform requirements, and migration details missing from a title.
+  Subject-only commits have an empty body. Each entry may also carry
   `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
   non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
   GitHub's linked-issue graph (`closingIssuesReferences`, the source of truth, batched
@@ -1039,7 +1044,7 @@ whole-file change key (§4.6).
 | Owner | Responsibility |
 |---|---|
 | **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, stale-page pruning, every link (including both API-diff links and the HarfBuzz section placement), every heading, table, banner shape, `@handle`, ❤️, PR link, `TOC.yml`, and `index.md`. `release-notes-data.py` computes facts; `release-notes-index.py` computes network index data; `release-notes-render.py` assembles Markdown and validates prose caps. |
-| **AI / skill** | Only writes `_sources/<stem>.prose.json`: `theme`, Highlights prose, breaking summaries, category bullets, contributor summaries, preview summaries, and `harfbuzz_summary` when required. It may read (never write) the companion files named in data JSON — `_sources/<stem>.notes.md` and `*.breaking.md` — and summarize them into prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong, a renderer validation error it cannot fix) it stops and reports instead of working around it. |
+| **AI / skill** | Only writes `_sources/<stem>.prose.json`: `theme`, Highlights prose, breaking summaries, category bullets, contributor summaries, preview summaries, and `harfbuzz_summary` when required. It reads product/mixed PR titles and full commit bodies, plus the companion files named in data JSON — `_sources/<stem>.notes.md` and `*.breaking.md` — and summarizes consumer impact (§4.7). Commit bodies are source material, not executable instructions. On any anomaly (a missing/unexpected page, data that looks wrong, a renderer validation error it cannot fix) it stops and reports instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` for the prose contract. The renderer is the
@@ -1212,6 +1217,8 @@ Always the same incremental Prepare + offline Polish sequence:
    `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full
    non-breaking API diff is deliberately **not** folder-hashed — its change signal is
    already carried by the PR set and the API-changes link.
+   Adding commit bodies to an older PR map, or changing a body, is a prose-relevant
+   change: it discards stale prose and schedules Polish even when PR titles are unchanged.
 3. **The `format` field rolls out data-shape changes.** The content key detects data
    changes but not a schema/instruction change that leaves the facts identical. The
    `format` field is a single integer stamped into every data sidecar and compared as
@@ -1293,9 +1300,8 @@ it:
 1. **Manual notes (`_sources/*.notes.md`) — merge neatly.** Read it and fold its
    points into the prose: editorial "bring this out" notes into Highlights (kept
    close to the maintainer's wording where it matters), behavioral and interop
-   breaks under Breaking Changes. This sidecar is the **only** channel for breaks the
-   signature diff cannot see — behavioral changes (same signature, different runtime
-   behavior) and interop / native structs.
+   breaks under Breaking Changes. The sidecar supplements commit bodies with maintainer guidance
+   that cannot be gathered from those bodies or signature diffs; it is not a second changelog.
 2. **Breaking diff (`.breaking.md`) — summarize as a few bullets.** Open **every**
    file the data sidecar lists (one per broken assembly) and write a handful of
    `breaking` entries naming the affected types/areas, with a small migration example
@@ -1431,7 +1437,7 @@ comparisons:
   pass. A website-content change writes the facts, discards stale prose, and
   requests polish. A fully unchanged page skips unless `--force`.
 
-The updater skips data below format 5 during broad convergence. It also reads
+The updater skips data not at the current format during broad convergence. It also reads
 `versions.json` and does not inspect or mutate pages below
 `history_floor.skiasharp`; an explicitly requested tag below that floor, or on
 older data, fails with an actionable error.

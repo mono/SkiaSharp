@@ -13,6 +13,10 @@ heavy one.
 
 Each example is three files:
 
+These historical format-3 snapshots predate full commit `body` fields in format 6.
+Current Prepare output includes those bodies; read them as directed by `../SKILL.md`
+rather than treating the title-only snapshots as the current input contract.
+
 | File | Stage | Who writes it |
 |---|---|---|
 | `<v>.data.json` | facts | `release-notes-data.py` — PRs (each tagged + community flag), the contributor roster, preview buckets, breaking-change *sources*, banner + link facts. Machine-owned; the agent never edits it. |
