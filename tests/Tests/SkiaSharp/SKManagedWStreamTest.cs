@@ -155,6 +155,68 @@ namespace SkiaSharp.Tests
 		}
 
 		[Theory]
+		[InlineData(false, -1)]
+		[InlineData(false, int.MinValue)]
+		[InlineData(false, 2)]
+		[InlineData(false, int.MaxValue)]
+		[InlineData(true, -1)]
+		public void InvalidArrayWriteSizeIsRejectedBeforeNativeCallback(bool nullBuffer, int size)
+		{
+			using var stream = new RejectingManagedWStream();
+			var buffer = nullBuffer ? null : new byte[1];
+
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Write(buffer, size));
+			Assert.Equal(0, stream.WriteCalls);
+		}
+
+		private sealed class RejectingManagedWStream : SKAbstractManagedWStream
+		{
+			public int WriteCalls { get; private set; }
+
+			protected internal override bool OnWrite(IntPtr buffer, IntPtr size)
+			{
+				// Reject without touching the pointer so invalid-size regression checks stay safe.
+				WriteCalls++;
+				return false;
+			}
+
+			protected internal override void OnFlush() { }
+
+			protected internal override IntPtr OnBytesWritten() => IntPtr.Zero;
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(int.MinValue)]
+		[InlineData(2)]
+		[InlineData(int.MaxValue)]
+		public void InvalidArrayWriteSizeDoesNotWriteOrFaultManagedDestination(int size)
+		{
+			using var destination = new MemoryStream();
+			using SKWStream stream = new SKManagedWStream(destination);
+			var buffer = new byte[] { 42 };
+
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Write(buffer, size));
+			Assert.Empty(destination.ToArray());
+			Assert.Equal(0, stream.BytesWritten);
+
+			Assert.True(stream.Write(buffer, buffer.Length));
+			Assert.Equal(buffer, destination.ToArray());
+			Assert.Equal(1, stream.BytesWritten);
+		}
+
+		[Fact]
+		public void NullArrayWriteStillZeroFillsManagedDestination()
+		{
+			using var destination = new MemoryStream();
+			using SKWStream stream = new SKManagedWStream(destination);
+
+			Assert.True(stream.Write(null, 3));
+			Assert.Equal(new byte[3], destination.ToArray());
+			Assert.Equal(3, stream.BytesWritten);
+		}
+
+		[Theory]
 		[InlineData(0)]
 		[InlineData(1)]
 		[InlineData(81919)]
