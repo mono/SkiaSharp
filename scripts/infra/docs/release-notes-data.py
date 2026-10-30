@@ -2136,7 +2136,8 @@ def _release_date_display(version):
 # release_notes/tests/test_common.py asserts the two stay equal).
 # 4 -> 5: added an exact-shipment human/automation/AI attribution roster. Human
 # first-time status comes from the committed earliest-PR-per-login cache.
-_DATA_JSON_FORMAT_VERSION = 5
+# 5 -> 6: retain each PR's full merge-commit body for consumer-facing prose.
+_DATA_JSON_FORMAT_VERSION = 6
 
 
 def _pr_is_community(pr):
@@ -2246,6 +2247,7 @@ def build_data_json(prs, metadata):
         entry = {
             "url": pr.get("url", ""),
             "title": pr.get("title", ""),
+            "body": pr.get("body", ""),
             "author": (pr.get("author") or {}).get("login"),
             "community": _pr_is_community(pr),
             "tag": pr.get("category", "product"),
