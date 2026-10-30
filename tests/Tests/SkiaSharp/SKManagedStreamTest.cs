@@ -1511,6 +1511,25 @@ namespace SkiaSharp.Tests
 			var initialRead = new byte[10];
 			Assert.Equal(10, managed.Read(initialRead, 10));
 
+			if (earlyEnd >= 0)
+			{
+				var zeroReads = inner.ZeroReadCount;
+				using var incompleteDuplicate = managed.Duplicate();
+				Assert.Null(incompleteDuplicate);
+				Assert.Null(managed.snapshotData);
+				Assert.Equal(10, inner.Position);
+				Assert.Equal(zeroReads + 1, inner.ZeroReadCount);
+				Assert.False(managed.IsAtEnd);
+
+				using var incompleteFork = managed.Fork();
+				Assert.Null(incompleteFork);
+				Assert.Null(managed.snapshotData);
+				Assert.Equal(10, inner.Position);
+				Assert.Equal(zeroReads + 2, inner.ZeroReadCount);
+				Assert.False(managed.IsAtEnd);
+				return;
+			}
+
 			using var dupe = managed.Duplicate();
 			Assert.NotNull(dupe);
 			Assert.Equal(0, dupe.Position);
@@ -1527,13 +1546,32 @@ namespace SkiaSharp.Tests
 			var forkBytes = new byte[100];
 			Assert.Equal(expectedLength - 10, forked.Read(forkBytes, 100));
 			Assert.Equal(data.Skip(10).Take(expectedLength - 10), forkBytes.Take(expectedLength - 10));
+		}
 
-			if (earlyEnd >= 0 && earlyEnd < data.Length)
-			{
-				// Seeking past the early-ending snapshot length makes Fork return null rather than a mispositioned stream
-				Assert.True(managed.Seek(data.Length - 5));
-				Assert.Null(managed.Fork());
-			}
+		[Fact]
+		public void UnknownLengthSnapshotReadsToEofAndPreservesSourcePosition()
+		{
+			var data = CreateSequentialBytes(100);
+			using var inner = new ConfigurableTestStream(data, maxBytesPerRead: 7, earlyEndPosition: 45, reportedLength: -1);
+			inner.Position = 10;
+			using var managed = new SKManagedStream(inner);
+
+			using var duplicate = managed.Duplicate();
+			Assert.NotNull(duplicate);
+			Assert.Equal(45, duplicate.Length);
+			var actual = new byte[45];
+			Assert.Equal(actual.Length, duplicate.Read(actual, actual.Length));
+			Assert.Equal(data.Take(45), actual);
+			Assert.Equal(10, inner.Position);
+
+			using var fork = managed.Fork();
+			Assert.NotNull(fork);
+			Assert.Equal(10, fork.Position);
+			Assert.Equal(10, inner.Position);
+
+			inner.Position = 95;
+			Assert.Null(managed.Fork());
+			Assert.Equal(95, inner.Position);
 		}
 
 		[Theory]
