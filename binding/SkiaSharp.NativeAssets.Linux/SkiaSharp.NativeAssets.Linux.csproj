@@ -1,28 +1,37 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Linux</Title>
+    <PackageDescription>Meta-package that pulls in every Linux runtime identifier SkiaSharp ships (glibc, musl, bionic; x64, x86, arm, arm64, riscv64, loongarch64). Backward-compatible with the previous single-nupkg layout — anyone referencing this keeps getting the same union of Linux natives. Callers that only need one RID can reference the specific SkiaSharp.NativeAssets.linux-* leaf directly and skip the rest (see mono/SkiaSharp#3210 for the motivation).</PackageDescription>
   </PropertyGroup>
-  <ItemGroup>
+  <!--
+    The 14 per-RID leaves were split out of this bundle in the #3210 restructure.
+    ProjectReferences are pack-time dependencies — the packed .nupkg comes out
+    as a "reference these packages" meta with no bundled natives. Consumers see
+    identical behavior to the old flat bundle: restore pulls all 14 leaves
+    transitively, every RID's binary lands in `runtimes/<rid>/native/`.
+  -->
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <!-- glibc -->
-    <PackageFile Include="..\..\output\native\linux\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linux\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-loongarch64\native\%(Filename)%(Extension)" />
-    <!-- Musl -->
-    <PackageFile Include="..\..\output\native\alpine\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpine\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
-    <!-- Bionic -->
-    <PackageFile Include="..\..\output\native\bionic\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\bionic\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-x64\SkiaSharp.NativeAssets.linux-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-x86\SkiaSharp.NativeAssets.linux-x86.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-arm64\SkiaSharp.NativeAssets.linux-arm64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-arm\SkiaSharp.NativeAssets.linux-arm.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-riscv64\SkiaSharp.NativeAssets.linux-riscv64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-loongarch64\SkiaSharp.NativeAssets.linux-loongarch64.csproj" />
+    <!-- musl -->
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-musl-x64\SkiaSharp.NativeAssets.linux-musl-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-musl-x86\SkiaSharp.NativeAssets.linux-musl-x86.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-musl-arm64\SkiaSharp.NativeAssets.linux-musl-arm64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-musl-arm\SkiaSharp.NativeAssets.linux-musl-arm.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-musl-riscv64\SkiaSharp.NativeAssets.linux-musl-riscv64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-musl-loongarch64\SkiaSharp.NativeAssets.linux-musl-loongarch64.csproj" />
+    <!-- bionic -->
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-bionic-x64\SkiaSharp.NativeAssets.linux-bionic-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.linux-bionic-arm64\SkiaSharp.NativeAssets.linux-bionic-arm64.csproj" />
   </ItemGroup>
+  <!-- Retain the net4-only SkiaSharp.targets shipping for .NET Framework consumers. -->
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
       <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
