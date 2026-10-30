@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.150.5",
   "family": "skiasharp",
   "status": "stable",
@@ -71,6 +71,7 @@
     "5184": {
       "url": "https://github.com/mono/SkiaSharp/pull/5184",
       "title": "[release/4.150.x] Disable RAW and DNG image decoding",
+      "body": "[release/4.150.x] Disable RAW and DNG image decoding (#5184)\n\nContext: https://github.com/mono/SkiaSharp/pull/5162\nRequires: https://github.com/mono/skia/pull/376\nChanges: https://github.com/mono/skia/compare/c1b1143575de5610719d8c9d43e18aaa8f058508...579fa81eeed6906732e27b7d95149538584dd20b\n\nBackport retirement of the bundled RAW/DNG decoder to the M150 release line.\nThe previously enabled RAW path preferred a usable PIEX embedded JPEG preview;\notherwise it tried DNG development. A preview can have lower resolution and\nbaked-in processing. Retire the entire path without introducing a replacement\nreader.\n\n~~ Retire RAW decoding without changing the public ABI ~~\n\nSet skia_use_dng_sdk=false and skia_use_piex=false in shared GN generation.\nRemove conflicting platform flags and the DNG-only Alpine __WORDSIZE\nworkaround. Keep SKEncodedImageFormat.Dng = 10 for source and binary\ncompatibility; the enum value no longer implies that decoding is supported.\n\nRemove the unsupported Gallery choice and move its original DNG fixture\nbyte-for-byte into test content. A non-skipped regression asserts null results\nfor codec, bitmap, and image factories, with Unimplemented reported by the\nfile and managed-stream codec paths. Update related user and build docs.\n\n~~ Stop downloading unused RAW sources ~~\n\nThe paired mono/skia#376 DEPS backport comments out dng_sdk and piex so\nsynchronization no longer fetches them. Remove their Component Governance\nregistrations and repin both the submodule and manifest to the actual native\nrelease merge 579fa81eeed6906732e27b7d95149538584dd20b. Its tree matches\nthe reviewed native head. No C API, milestone, or unrelated upstream changes\nare introduced.\n\nThe macOS ARM64 source build passed with both source directories absent before\nand after synchronization. GN args and Ninja dependencies exclude the RAW\ncodec and both retired libraries. The unfiltered release console solution\npassed: 5,750 passed, 20 existing skips, and no failures. Gallery shared built\nwithout warnings or errors. Other native platforms and upstream Bazel were\nnot tested locally.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -78,6 +79,7 @@
     "5148": {
       "url": "https://github.com/mono/SkiaSharp/pull/5148",
       "title": "Bump to the next version (4.150.5) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

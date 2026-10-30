@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.153.2",
   "family": "skiasharp",
   "status": "stable",
@@ -71,6 +71,7 @@
     "5265": {
       "url": "https://github.com/mono/SkiaSharp/pull/5265",
       "title": "[skia-sync] Incorporate the m153 Ganesh failed-flush cache fix",
+      "body": "[skia-sync] Incorporate the m153 Ganesh failed-flush cache fix (#5265)\n\nRequires: https://github.com/mono/skia/pull/392\nContext: https://github.com/mono/SkiaSharp/pull/5289\nChanges: https://github.com/mono/skia/compare/45afab4f1f0921f3feb97f58cf89b136fffa85e6...99b6e44ce97cbd7f53f3d6e89c9e8cfa3ccad01d\n\nAdvance the release/4.153.x Skia pin to the landed m153 fix. A failed\nGanesh flush could leave cache entries pointing to textures that were\nnever initialized; a later draw could reuse one as though it were valid.\nThe upstream change drops uniquely held GrThreadSafeCache entries after\na failed flush, and updates the cache tests to distinguish view entries\nfrom vertex entries.\n\nPin both externals/skia and its Component Governance registration to\n99b6e44ce97cbd7f53f3d6e89c9e8cfa3ccad01d. That two-parent native\nmerge contains the reviewed commit d27bc0bf6d7e0ae42d6fc1ad2e7800cfa5e2066c\nand has an identical tree. Record upstream chrome/m153 commit\n37c5ad6a22943a966c60500fbe9b9b261d12247a without changing the\nrelease milestone or managed API. Parent PR build 1623959 succeeded.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -78,6 +79,7 @@
     "5205": {
       "url": "https://github.com/mono/SkiaSharp/pull/5205",
       "title": "Bump to the next version (4.153.2) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

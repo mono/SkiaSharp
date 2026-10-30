@@ -1,15 +1,15 @@
 {
-  "theme": "M153 cache fix",
-  "highlights_headline": "SkiaSharp 4.153.2 incorporates the m153 Ganesh failed-flush cache correction.",
+  "theme": "Failed flush cache cleanup",
+  "highlights_headline": "SkiaSharp 4.153.2 clears uniquely held Ganesh cache entries after failed flushes.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Failed-flush cache state corrected",
-          "detail": "Updates the bundled m153 renderer with the upstream correction for stale Ganesh cache entries after a failed flush.",
+          "lead": "Failed flushes no longer leave reusable uninitialized cache textures",
+          "detail": "Drops uniquely held thread-safe-cache entries after unsuccessful GPU work so later draws cannot reuse those entries. Entries still held elsewhere are not removed.",
           "prs": [
             5265
           ]
@@ -22,7 +22,7 @@
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.153.2": {
-      "headline": "SkiaSharp 4.153.2 updates the bundled m153 renderer with a failed-flush cache correction.",
+      "headline": "SkiaSharp 4.153.2 clears uniquely held Ganesh cache entries after failed flushes.",
       "body": null
     }
   }
