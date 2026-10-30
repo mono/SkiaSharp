@@ -358,6 +358,8 @@ Source-only changes outside the release tree are validation tools, not output to
 4. Call the `create_pull_request` safe-output with base `main` and `branch` equal to
    the host-provided `DOCS_PR_BRANCH`. Both production and branch-source tests always
    target `main`; only generated release files are allowed in the output.
+   Use the registered native safe-output tool directly; its schema is already supplied.
+   Do not probe a shell CLI with `command -v`, `--help`, or other discovery commands.
    Keep any PR payload in `/tmp/gh-aw/`;
    do not delete it before submission or add a cleanup command to the commit call.
    Use the exact contents of `/tmp/gh-aw/release-notes-pr-body.md` as `body`, without
