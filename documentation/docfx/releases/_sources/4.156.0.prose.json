@@ -1,0 +1,82 @@
+{
+  "theme": "Skia m156 preview",
+  "highlights_headline": "SkiaSharp 4.156.0 previews the Skia m156 engine with native GTK4 GPU views.",
+  "highlights_body": "Linux NoDependencies builds regain system-font discovery, and WebAssembly assets align with .NET 11. GTK4 high-density painting and Tizen platform requirements change; review the migration notes before upgrading.",
+  "breaking": [
+    {
+      "title": "GTK4 raster painting defaults to physical pixels",
+      "body": "SKDrawingArea now allocates full-resolution backing on high-density displays and reports physical pixels in CanvasSize and paint Info. Set IgnorePixelScaling=true to retain logical painting coordinates; RawInfo still describes physical pixels, and GTK input coordinates remain logical.",
+      "prs": [5249]
+    },
+    {
+      "title": "Tizen packages require Tizen 10",
+      "body": "SkiaSharp and HarfBuzzSharp Tizen native-assets packages now target net10.0-tizen10.0 and support x64 and arm64. Tizen 8/9 are no longer supported. Upgrade applications and devices to Tizen 10; source builds require the Tizen 10 rootstraps and GCC 14.2 toolchain.",
+      "prs": [5235]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m156",
+          "detail": "Updates the bundled renderer to milestone 156 without changing managed bindings. HarfBuzzSharp packages advance to 14.4.0.100 while the native HarfBuzz engine remains 14.4.0.",
+          "prs": [5247]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Native GTK4 GPU canvas",
+          "detail": "SKGLArea adds PaintSurface, a view-owned GRContext, optional display-clock rendering, and logical or physical pixel painting. GTK owns the GL context; manually bundled GTK runtimes must include libepoxy.",
+          "prs": [5249]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Linux NoDependencies font discovery restored",
+          "detail": "Default font matching scans /usr/share/fonts/ without requiring fontconfig, restoring family lookup and SKShaper use when fonts are installed. Builds can override the font directory; explicitly loaded font files continue to work.",
+          "prs": [5086]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebAssembly archives match the target framework",
+          "detail": "SkiaSharp and HarfBuzzSharp select Emscripten 6.0.2 archives for .NET 11 and later, retaining threading and SIMD variants. .NET 8 keeps 3.1.34 and .NET 9/10 keep 3.1.56.",
+          "prs": [5306]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Windows native runtime and ANGLE build hardening",
+          "detail": "Native Windows builds select matching compiler and Spectre CRT libraries, and ANGLE propagates control-flow guard and stack-cookie flags through its build defaults. Spectre CRT provenance does not establish whole-program Spectre mitigation.",
+          "prs": [5238]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Restored directory-backed system-font discovery in Linux NoDependencies builds"
+  },
+  "preview_summaries": {
+    "v4.156.0-preview.1.26512.10": "Preview 1 introduces Skia m156, native GTK4 GPU rendering, and restored Linux NoDependencies font discovery. It aligns .NET 11 WebAssembly archives and raises the Tizen baseline to 10."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp aligns its WebAssembly archives with .NET 11, requires Tizen 10 for Tizen packages, and uses matching Spectre CRT libraries in Windows native builds. These changes do not upgrade the native HarfBuzz engine.",
+  "release_summaries": {
+    "v4.156.0-preview.1.26512.10": {
+      "headline": "SkiaSharp 4.156.0 previews Skia m156 and native GTK4 GPU rendering.",
+      "body": "Linux NoDependencies builds regain system-font discovery, and .NET 11 selects matching WebAssembly archives. Review the GTK4 high-density painting change and the new Tizen 10 requirement before upgrading."
+    }
+  }
+}

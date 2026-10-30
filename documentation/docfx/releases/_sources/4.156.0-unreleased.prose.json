@@ -1,0 +1,103 @@
+{
+  "theme": "Rendering and platform refinements",
+  "highlights_headline": "Upcoming 4.156 changes modernize Uno integration and correct rendering, native linking, and stream lifetimes.",
+  "highlights_body": "Android continuous texture rendering follows display refresh, Linux HarfBuzz avoids load-order conflicts, and WebAssembly consumers no longer compile WebGPU C++ support themselves. Apple deployment floors rise, and Uno views move to Uno Platform 7 and .NET 10.",
+  "breaking": [
+    {
+      "title": "Apple deployment floors increase",
+      "body": "Native SkiaSharp and HarfBuzzSharp require macOS 11 or iOS/tvOS/Mac Catalyst 14. Managed iOS/tvOS minimums rise to 14, while managed macOS 12 and Mac Catalyst 15 requirements remain higher. Update deployment settings and supported devices without lowering an existing higher framework or application minimum.",
+      "prs": [5383]
+    },
+    {
+      "title": "Uno views move to Uno Platform 7",
+      "body": "Upgrade non-Windows Uno applications to Uno Platform 7 and .NET 10; the old native-renderer packages and WasmShell pipeline are removed. SKSwapChainPanel now derives from Grid, renders through a CPU canvas, returns null GRContext, and drops RaiseOnUnsupported. Use SKCanvasElement for GPU rendering. The Windows facade retains the ANGLE-backed control.",
+      "prs": [5377]
+    },
+    {
+      "title": "WebGPU consumers need rebuilt WASM archives",
+      "body": "Newer WebAssembly consumers now link WebGPU C++ support from libSkiaSharp.a instead of compiling webgpu.cpp during application linking. Use matching rebuilt native archives; old archives and GPU-disabled custom archives do not meet this contract. The .NET 8 built-in WebGPU path is unchanged.",
+      "prs": [5316]
+    },
+    {
+      "title": "SKData.CreateCopy rejects lengths beyond the source array",
+      "body": "SKData.CreateCopy(byte[], ulong) now throws ArgumentOutOfRangeException when the requested length exceeds the array. Pass a length within the source array rather than relying on an out-of-bounds native read.",
+      "prs": [5429]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m156 shader and GLES corrections",
+          "detail": "SkSL rejects overflowing Raster Pipeline slot counts and invalid runtime-effect types earlier. Ganesh GL disables a BGRA8-as-RGBx upload configuration invalid in GLES; readback is unchanged.",
+          "prs": [5489, 5500]
+        },
+        {
+          "lead": "Updated Windows ANGLE renderer",
+          "detail": "The bundled WinUI ANGLE dependency advances from chromium/6275 to chromium/8118. Its packaged PDB names align with the DLLs for symbol discovery; the WinUI project's declared Windows minimum remains build 17763.",
+          "prs": [5321]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Display-paced Android texture rendering",
+          "detail": "Continuous texture rendering, including MAUI Android SKGLView.HasRenderLoop, follows Choreographer callbacks rather than buffer-swap throughput. Explicit render requests remain independent, rendering stays on the GL worker, and pause, resize, and mode changes continue to progress.",
+          "prs": [5345]
+        },
+        {
+          "lead": "HarfBuzz stays within its bundled Linux implementation",
+          "detail": "Internal HarfBuzz function calls bind locally, preventing global system-HarfBuzz symbols loaded by GTK from redirecting calls between incompatible implementations. Exported entry points and managed signatures remain unchanged.",
+          "prs": [5352]
+        },
+        {
+          "lead": "Character-code decoding and null validation corrected",
+          "detail": "StringUtilities.GetUnicodeCharacterCode validates one encoded unit: ASCII for UTF-8, one UTF-16 unit, or one UTF-32 code point. StringUtilities.GetString(byte[], SKTextEncoding) now throws ArgumentNullException, not NullReferenceException, for null input.",
+          "prs": [5506]
+        },
+        {
+          "lead": "C-string copying avoids a native over-read",
+          "detail": "Corrects FromCString's native buffer over-read and writes directly into SKData.",
+          "prs": [5429]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Disposed front-buffered streams release borrowed references",
+          "detail": "Disposing SKFrontBufferedManagedStream clears its reference to the wrapped stream even when disposeUnderlyingStream is false. It does not dispose that borrowed stream; the caller retains disposal responsibility.",
+          "prs": [5327]
+        },
+        {
+          "lead": "Fewer temporary pixel and text buffers",
+          "detail": "Valid managed image pixel copies avoid an intermediate SKData allocation while preserving invalid-input validation. HarfBuzzSharp pools AddUtf32 string encoding buffers and uses a bounded stack buffer for feature strings without changing decoding behavior.",
+          "prs": [5052, 5060, 5230]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Windows library dependencies aligned",
+          "detail": "WinUI, MAUI, and Uno library dependencies align with MAUI 9/10 using Windows App SDK 1.7.250909003. This does not change public APIs or declared Windows runtime minimums; the standalone WinUI sample keeps its separate dependency baseline.",
+          "prs": [5390]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Moved WebGPU C++ support into WASM native archives and rebuilt Uno views for Uno Platform 7",
+    "VirgilMing": "Fixed Linux HarfBuzz symbol binding and made Blazor CPU sample captures wait for their first paint",
+    "akoeplinger": "Disabled Azure DevOps dependabot updates to preserve the repository mirror",
+    "dalexsoto": "Addressed contextual terminology findings in CI and samples",
+    "rolfbjarne": "Removed unused sample files that triggered unnecessary scanning findings",
+    "Saad-elnagar": "Removed an obsolete libmicrohttpd notice"
+  },
+  "preview_summaries": {}
+}

@@ -313,3 +313,8 @@ not just the source template. Confirm comment markers are paired and no template
 API example or instruction has escaped a comment. Body construction must treat Markdown
 as data: use the edit tool or a quoted file/JSON encoder rather than an unquoted shell
 string that interprets backticks or angle brackets.
+
+Run the final `git commit` as a standalone command. Do not chain scratch-file cleanup
+onto it: the unattended workflow's tool policy can reject the entire compound command
+when cleanup needs a permission that committing does not. Keep temporary PR payloads in
+`/tmp/gh-aw/`; leaving them there does not add them to the commit.
