@@ -248,10 +248,13 @@ namespace SkiaSharp.Tests
 			else
 			{
 				Assert.Throws<OverflowException>(() => stream.OnGetLength());
-				Assert.Throws<OverflowException>(() => stream.Length64);
-				inner.Position = (long)uint.MaxValue + 1;
-				Assert.Throws<OverflowException>(() => stream.OnGetPosition());
-				Assert.Throws<OverflowException>(() => stream.Position64);
+				Assert.Throws<OverflowException>(() => SKData.Create((SKStream)stream));
+
+				using var positionSource = new ConfigurableTestStream(Array.Empty<byte>(), reportedLength: uint.MaxValue);
+				positionSource.Position = (long)uint.MaxValue + 1;
+				using var positionStream = new SKManagedStream(positionSource);
+				Assert.Throws<OverflowException>(() => positionStream.OnGetPosition());
+				Assert.Throws<OverflowException>(() => SKData.Create((SKStream)positionStream));
 			}
 		}
 
@@ -297,29 +300,33 @@ namespace SkiaSharp.Tests
 		[InlineData(3)]
 		public void ReadRejectsInvalidNativeCounts(int result)
 		{
-			using var stream = new SizeReportingStream(10) { ReadResult = new IntPtr(result) };
+			using var stream = new SizeReportingStream(2) { ReadResult = new IntPtr(result) };
 
 			Assert.Throws<IOException>(() => stream.Read(IntPtr.Zero, 2));
 			Assert.Equal(1, stream.ReadCalls);
+			Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
+			Assert.Equal(2, stream.ReadCalls);
 		}
 
 		[Fact]
 		public void ReadValidatesNativeCountBeforeNarrowing()
 		{
 			var result = IntPtr.Size == 8 ? (1UL << 32) + 2 : uint.MaxValue;
-			using var stream = new SizeReportingStream(10) { ReadResult = Utils.ToNativeSize(result) };
+			using var stream = new SizeReportingStream(2) { ReadResult = Utils.ToNativeSize(result) };
 
 			Assert.Throws<IOException>(() => stream.Read(IntPtr.Zero, 2));
 			Assert.Equal(1, stream.ReadCalls);
+			Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
+			Assert.Equal(2, stream.ReadCalls);
 		}
 
 		[Fact]
-		public void ReadPropagatesOriginalManagedOverrideException()
+		public void DataFactoryPropagatesOriginalManagedOverrideReadException()
 		{
 			var failure = new IOException("Managed read failed.");
 			using var stream = new SizeReportingStream(10) { ReadFailure = failure };
 
-			var actual = Assert.Throws<IOException>(() => stream.Read(new byte[2], 2));
+			var actual = Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
 
 			Assert.Same(failure, actual);
 			Assert.Equal(1, stream.ReadCalls);
@@ -329,14 +336,13 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData(false)]
 		[InlineData(true)]
-		public void ManagedStreamPublicReadKeepsIOExceptionOnManagedStack(bool arrayRead)
+		public void ManagedDataFactoryKeepsIOExceptionOnManagedStack(bool knownLength)
 		{
 			using var inner = new ThrowingReadStream();
-			using var stream = new SKManagedStream(inner);
+			using var nonSeekable = new NonSeekableReadOnlyStream(inner);
+			using var stream = new SKManagedStream(knownLength ? inner : nonSeekable);
 
-			var actual = Assert.Throws<IOException>(() => arrayRead
-				? stream.Read(new byte[2], 2)
-				: stream.Read(IntPtr.Zero, 2));
+			var actual = Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
 
 			Assert.Equal("Simulated read error.", actual.Message);
 			Assert.DoesNotContain("SkiaSharp.DelegateProxies.", actual.StackTrace);

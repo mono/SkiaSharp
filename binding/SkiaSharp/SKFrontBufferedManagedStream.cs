@@ -120,7 +120,13 @@ namespace SkiaSharp
 				var tempBuffer = Marshal.AllocCoTaskMem (bytesToBuffer);
 				int bytesRead;
 				try {
-					bytesRead = stream.Read (tempBuffer, bytesToBuffer);
+					var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
+						? managed.OnRead (tempBuffer, (IntPtr)bytesToBuffer)
+						: (IntPtr)stream.Read (tempBuffer, bytesToBuffer));
+					GC.KeepAlive (stream);
+					if (read > (ulong)bytesToBuffer)
+						throw new IOException ("The stream returned an invalid byte count.");
+					bytesRead = (int)read;
 					Marshal.Copy (tempBuffer, frontBuffer, offset, bytesRead);
 				} finally {
 					Marshal.FreeCoTaskMem (tempBuffer);
@@ -142,7 +148,13 @@ namespace SkiaSharp
 			// 3. read the rest directly
 			if ((int)size > 0 && !isAtEnd)
 			{
-				var bytesRead = stream.Read (buffer, (int)size);
+				var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
+					? managed.OnRead (buffer, size)
+					: (IntPtr)stream.Read (buffer, (int)size));
+				GC.KeepAlive (stream);
+				if (read > (ulong)(int)size)
+					throw new IOException ("The stream returned an invalid byte count.");
+				var bytesRead = (int)read;
 
 				// past the buffer, so dispose it
 				if (bytesRead > 0)

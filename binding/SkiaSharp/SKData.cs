@@ -345,7 +345,7 @@ namespace SkiaSharp
 
 		private static SKData CreateFromManagedStream (SKAbstractManagedStream stream)
 		{
-			// Invoke overrides directly so metadata and seek failures stay on the managed stack.
+			// Keep factory reads, metadata and seek failures on the managed stack.
 			if (stream.OnHasLength () && stream.OnHasPosition ()) {
 				var len = Utils.FromNativeSize (stream.OnGetLength ());
 				var pos = Utils.FromNativeSize (stream.OnGetPosition ());
@@ -354,9 +354,31 @@ namespace SkiaSharp
 				if (pos >= len)
 					return Empty;
 
-				var data = CreateFromStream (stream, len - pos);
-				if (data != null)
-					return data;
+				var length = len - pos;
+				var data = Create (length);
+				if (data != null) {
+					try {
+						var dst = (byte*)data.Data;
+						ulong totalRead = 0;
+						while (totalRead < length) {
+							var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
+							var read = Utils.FromNativeSize (stream.OnRead ((IntPtr)(dst + totalRead), (IntPtr)toRead));
+							GC.KeepAlive (stream);
+							if (read > (ulong)toRead)
+								throw new IOException ("The stream returned an invalid byte count.");
+							if (read == 0)
+								break;
+							totalRead += read;
+						}
+
+						if (totalRead == length)
+							return data;
+					} catch {
+						data.Dispose ();
+						throw;
+					}
+					data.Dispose ();
+				}
 
 				var rewound = stream.OnSeek (Utils.ToNativeSize (pos));
 				GC.KeepAlive (stream);
@@ -364,7 +386,21 @@ namespace SkiaSharp
 					return null;
 			}
 
-			return CreateFromUnknownLengthStream (stream);
+			using var memory = new SKDynamicMemoryWStream ();
+			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
+			fixed (byte* ptr = buffer.Array) {
+				while (true) {
+					var read = Utils.FromNativeSize (stream.OnRead ((IntPtr)ptr, (IntPtr)buffer.Length));
+					GC.KeepAlive (stream);
+					if (read > (ulong)buffer.Length)
+						throw new IOException ("The stream returned an invalid byte count.");
+					if (read == 0)
+						break;
+					if (!memory.Write (buffer.Array, (int)read))
+						return null;
+				}
+			}
+			return memory.DetachAsData ();
 		}
 
 		private static SKData CreateFromUnknownLengthStream (SKStream stream)
