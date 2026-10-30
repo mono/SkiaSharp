@@ -37,14 +37,23 @@ For `documentation/docfx/releases/<version>.md`, use these inputs:
 | `breaking_candidates` paths | API breaking diffs and maintainer `.notes.md` companions to read |
 | `_sources/<version>.prose.json` | Your per-page output |
 
+`data.prs` is an object keyed by string PR numbers, not an array:
+`{"123": {"title": "...", "body": "...", "tag": "product", "author": "login"}}`.
+The classification field is `tag` (`product`, `mixed`, or `internal`).
+`contributors`, `previews`, `shipments`, and `breaking_candidates` are arrays;
+`harfbuzz` is an object or `null`. Start inventories with field names and counts,
+not whole documents or nested records.
+
 An empty page list still requires the final render in step 6. HarfBuzzSharp ships
 inside the SkiaSharp page, not as a separate release-note page.
 
 ### 2. Read the complete evidence
 
-Read the `product` and `mixed` PR bodies completely before drafting. Use bounded
-groups for large inputs; `head`, line slices, or opening paragraphs lose late
-compatibility qualifications. Titles alone are not sufficient evidence.
+Read the `product` and `mixed` PR bodies completely before drafting. Bound all tool
+output by bytes, not a fixed number of PRs: aim below 12 KiB of UTF-8 output per call,
+including metadata indexes and internal-title lists. Split a longer body into
+consecutive labelled chunks and read every chunk. A clipped preview, `head`, or an
+opening paragraph loses late compatibility qualifications; titles alone are not evidence.
 
 Read identical PR bodies once per run and reuse that evidence across cumulative
 pages. Batch independent reads where practical, without truncating bodies. Keep each
@@ -86,6 +95,13 @@ Write `documentation/docfx/releases/_sources/<version>.prose.json`.
 Read the [field guide](#prose-fields) below and use
 `scripts/infra/docs/release-notes-schema/prose.schema.json` for the JSON shape.
 The [worked examples](samples/README.md) show complete inputs, prose, and rendered output.
+
+Before the first write, review existing `release_summaries` in a bounded batch,
+using previous prose on disk or in committed `HEAD` where available. Retain a reviewed
+exact-tag summary only when its shipment facts are unchanged and its text is still
+supported; otherwise re-author it or omit it until reviewed. Optional does not mean
+discard already-reviewed, applicable summaries. This does not permit copying the old
+website prose instead of re-authoring it from current facts.
 
 Prefer concise, concrete prose. Say what changes for the consumer, not how the PR
 was developed. Use `null` or an empty array where permitted rather than padding.

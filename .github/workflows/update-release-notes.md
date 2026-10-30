@@ -282,6 +282,9 @@ rooted at `origin/main`; the selected source's skill and tools remain in the wor
 
 ## Write and validate
 
+Use the skill's input-shape reference and byte-bounded reads. Account for existing
+exact-tag summaries before the first prose write, not during final diff repair.
+
 Re-author every listed page using the skill's complete-body reading, consumer
 selection, companion, scope, and factual-review rules. The list may be empty;
 in that case proceed directly to the final render.

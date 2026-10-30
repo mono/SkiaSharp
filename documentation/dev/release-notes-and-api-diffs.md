@@ -443,6 +443,18 @@ Identical complete PR bodies can be read once and reused across pages, while eac
 page, preview and shipment keeps its own PR membership. Every rewritten page still
 receives a factual review against its supporting bodies and companions.
 
+Initial inventories show field names and counts rather than dumping whole documents.
+`data.prs` is an object keyed by string PR numbers, with classification in each value's
+`tag`; contributors, previews, shipments and breaking candidates are arrays. Metadata
+and complete-body reads are byte-bounded; long bodies are read in consecutive chunks,
+never replaced by a clipped preview.
+
+Before writing new prose, Polish reviews existing exact-tag `release_summaries` from
+previous on-disk or committed prose where available. A reviewed summary is retained
+only if shipment facts are unchanged and its text remains supported; otherwise it is
+re-authored or omitted until reviewed. This does not authorize retaining old website
+prose without re-authoring it against current facts.
+
 After writing and factual review, Polish runs the offline batch validator/finalizer — either
 `.agents/skills/release-notes/scripts/render.sh` or its core command,
 `release-notes-render.py --all`. `render.sh` accepts the same three flags as `prepare.sh` for
