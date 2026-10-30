@@ -1,17 +1,19 @@
 {
-  "theme": "Platform and reliability updates",
-  "highlights_headline": "SkiaSharp 4.156.0 improves platform compatibility, native reliability, and managed image and text-processing performance.",
-  "highlights_body": "The upcoming release adopts Uno Platform 7, raises Apple deployment minimums, refreshes the bundled renderer, and corrects native data handling.",
+  "theme": "Platform and runtime reliability",
+  "highlights_headline": "SkiaSharp 4.156.0 updates the bundled engine and broadens platform support while fixing stream and encoding behavior.",
+  "highlights_body": "This unreleased line adds Uno Platform 7 compatibility, modernizes Apple and Windows support, and improves the reliability and efficiency of managed interop, image, stream, and text paths.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "m156 upstream fixes included",
-          "detail": "Updates the bundled renderer with the latest Chrome m156 bug fixes.",
+          "lead": "Skia updated with m156 fixes",
+          "detail": "Refreshes the bundled Skia engine with the latest upstream Chrome m156 bug fixes and updates the GN toolchain used to build it.",
           "prs": [
-            5489
+            5500,
+            5489,
+            5420
           ]
         }
       ]
@@ -20,29 +22,39 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native string data handling corrected",
-          "detail": "FromCString now avoids reading past its native input buffer and writes directly into SKData.",
+          "lead": "Managed callback interop corrected",
+          "detail": "Uses native-compatible boolean representations for Skia stream callbacks and HarfBuzz font and Unicode callbacks, improving callback reliability across platforms.",
           "prs": [
+            5479
+          ]
+        },
+        {
+          "lead": "String and data conversion made safer",
+          "detail": "Validates single-character text conversion correctly and creates null-terminated native data without reading beyond the managed buffer.",
+          "prs": [
+            5506,
             5429
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained stream data once it is no longer needed.",
-          "prs": [
-            5327
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "Managed pixel and text processing optimized",
-          "detail": "Reduces allocation and copying overhead for image pixels, HarfBuzz UTF-32 encoding, and native feature strings.",
+          "lead": "Image and stream handling improved",
+          "detail": "Avoids an unnecessary intermediate allocation when copying image pixels and releases retained front-buffered managed streams correctly.",
           "prs": [
             5052,
+            5327
+          ]
+        },
+        {
+          "lead": "Android texture updates synchronized",
+          "detail": "Coordinates Android GL texture rendering with display refresh to provide smoother visual updates.",
+          "prs": [
+            5345
+          ]
+        },
+        {
+          "lead": "HarfBuzz text processing allocates less",
+          "detail": "Pools UTF-32 conversion buffers and formats feature strings without allocating unmanaged memory, reducing overhead in text shaping workflows.",
+          "prs": [
             5060,
             5230
           ]
@@ -53,46 +65,38 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Uno Platform 7 support added",
-          "detail": "Builds SkiaSharp.Views.Uno.WinUI against Uno Platform 7.",
+          "lead": "Uno Platform 7 is supported",
+          "detail": "Updates SkiaSharp.Views.Uno.WinUI and its native asset integration for Uno Platform 7.",
           "prs": [
             5377
           ]
         },
         {
-          "lead": "Apple and Android platform support updated",
-          "detail": "Raises Apple deployment minimums and synchronizes Android texture rendering with display refresh.",
+          "lead": "Apple platform minimums updated",
+          "detail": "Raises iOS and tvOS deployment targets to 14.0 and aligns native Apple builds with current platform toolchains.",
           "prs": [
-            5383,
-            5345
+            5383
           ]
         },
         {
-          "lead": "Native platform dependencies refreshed",
-          "detail": "Aligns Windows dependencies with current MAUI releases, modernizes ANGLE, and includes WebGPU support in the native library.",
+          "lead": "WebGPU and native dependencies packaged consistently",
+          "detail": "Includes the WebGPU implementation in WebAssembly native assets, resolves bundled HarfBuzz locally on Linux, and aligns Windows native dependencies with current MAUI releases.",
           "prs": [
-            5390,
-            5321,
-            5316
-          ]
-        },
-        {
-          "lead": "Linux HarfBuzz binding made self-contained",
-          "detail": "Resolves bundled HarfBuzz functions locally on Linux.",
-          "prs": [
-            5352
+            5316,
+            5352,
+            5390
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Uno Platform 7 support and native WebGPU packaging",
-    "VirgilMing": "Bundled HarfBuzz binding support on Linux and Blazor sample test stabilization",
-    "akoeplinger": "Azure DevOps dependency automation cleanup",
-    "dalexsoto": "CI policy cleanup",
+    "ramezgerges": "WebGPU packaging for WebAssembly and Uno Platform 7 support",
+    "VirgilMing": "Linux bundled-HarfBuzz loading and Blazor CPU sample test stabilization",
+    "akoeplinger": "Dependency-update automation cleanup",
+    "dalexsoto": "CI policy compliance improvements",
     "rolfbjarne": "Sample cleanup",
-    "Saad-elnagar": "Native dependency notice cleanup"
+    "Saad-elnagar": "Removal of an obsolete dependency notice"
   },
   "preview_summaries": {},
   "harfbuzz_summary": null
