@@ -276,8 +276,8 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 **Prepare** phase on its own disk-managed runner — the single script
 `.agents/skills/release-notes/scripts/prepare.sh` (API diffs via Cake, then the
 per-page `_sources/<version>.data.json` facts, then the network-sourced
-`_sources/index.json` and the **"Files to polish"** list). See the skill's "Running
-the full pipeline" section and `documentation/dev/release-notes-and-api-diffs.md` §2
+`_sources/index.json` and the **"Files to polish"** list). See the skill's "Local
+regeneration" section and `documentation/dev/release-notes-and-api-diffs.md` §2
 for exactly what it produces.
 
 The `prepare` job uploaded its complete working-tree change as a patch plus that
