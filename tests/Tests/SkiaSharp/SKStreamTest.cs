@@ -105,6 +105,8 @@ namespace SkiaSharp.Tests
 			Assert.Equal(2L, stream.Position64);
 			Assert.Equal(2, stream.Position);
 			Assert.Equal(30, stream.ReadByte());
+			Assert.True(stream.Move(-1));
+			Assert.Equal(2L, stream.Position64);
 
 			stream.Position64 = 4;
 			Assert.Equal(50, stream.ReadByte());
@@ -200,6 +202,96 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0L, stream.Position64);
 		}
 
+		[Theory]
+		[InlineData((long)int.MaxValue + 1)]
+		[InlineData((long)uint.MaxValue)]
+		public void ManagedStream64MembersPreserveUnsignedNativePositions(long position)
+		{
+			using var inner = new ConfigurableTestStream(Array.Empty<byte>(), reportedLength: uint.MaxValue);
+			inner.Position = position;
+			using var stream = new SKManagedStream(inner);
+
+			// Check callbacks directly before exercising the public native round trip.
+			Assert.Equal((ulong)uint.MaxValue, Utils.FromNativeSize(stream.OnGetLength()));
+			Assert.Equal((ulong)position, Utils.FromNativeSize(stream.OnGetPosition()));
+			Assert.True(stream.OnSeek(Utils.ToNativeSize((ulong)position)));
+			Assert.Equal(position, inner.Position);
+			Assert.False(inner.NegativePositionAttempted);
+			Assert.Equal((ulong)uint.MaxValue, Utils.FromNativeSize(SkiaApi.sk_stream_get_length(stream.Handle)));
+			Assert.Equal((ulong)position, Utils.FromNativeSize(SkiaApi.sk_stream_get_position(stream.Handle)));
+
+			Assert.Equal((long)uint.MaxValue, stream.Length64);
+			Assert.Equal(position, stream.Position64);
+			Assert.True(stream.Seek(position));
+			Assert.Equal(position, inner.Position);
+			stream.Position64 = position - 1;
+			Assert.Equal(position - 1, inner.Position);
+			Assert.Equal(position - 1, stream.Position64);
+			Assert.False(inner.NegativePositionAttempted);
+			Assert.Equal(0, inner.TotalReadCalls);
+		}
+
+		[Fact]
+		public void ManagedStreamRejectsUnrepresentableNativeSeekWithoutChangingPosition()
+		{
+			using var inner = new ConfigurableTestStream(Array.Empty<byte>(), reportedLength: long.MaxValue);
+			inner.Position = 5;
+			using var stream = new SKManagedStream(inner);
+
+			if (IntPtr.Size == 8)
+			{
+				Assert.False(stream.OnSeek(new IntPtr(long.MinValue)));
+				Assert.False(stream.OnSeek(new IntPtr(-1)));
+				Assert.Equal(5, inner.Position);
+				Assert.False(inner.NegativePositionAttempted);
+			}
+			else
+			{
+				Assert.Throws<OverflowException>(() => stream.OnGetLength());
+				Assert.Throws<OverflowException>(() => stream.Length64);
+				inner.Position = (long)uint.MaxValue + 1;
+				Assert.Throws<OverflowException>(() => stream.OnGetPosition());
+				Assert.Throws<OverflowException>(() => stream.Position64);
+			}
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(int.MinValue)]
+		public void NegativeStreamArgumentsAreRejectedBeforeNativeCallbacks(int value)
+		{
+			using var stream = new SizeReportingStream(10);
+
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Read(new byte[1], value));
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Read(IntPtr.Zero, value));
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Peek(IntPtr.Zero, value));
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Skip(value));
+			Assert.Throws<ArgumentOutOfRangeException>("position", () => stream.Seek(value));
+			Assert.Throws<ArgumentOutOfRangeException>("position", () => stream.Position = value);
+			Assert.Equal(0, stream.ReadCalls);
+			Assert.Equal(0, stream.PeekCalls);
+			Assert.Equal(0, stream.SeekCalls);
+		}
+
+		[Fact]
+		public void ArrayReadRejectsOversizedCountBeforeNativeCallback()
+		{
+			using var stream = new SizeReportingStream(10);
+
+			Assert.Throws<ArgumentOutOfRangeException>("size", () => stream.Read(new byte[1], 2));
+			Assert.Equal(0, stream.ReadCalls);
+		}
+
+		[Fact]
+		public void NullArrayReadStillSkipsBytes()
+		{
+			using var stream = new SKMemoryStream(new byte[] { 10, 20, 30 });
+
+			Assert.Equal(2, stream.Read((byte[])null, 2));
+			Assert.Equal(2L, stream.Position64);
+			Assert.Equal(30, stream.ReadByte());
+		}
+
 		private sealed class SizeReportingStream : SKAbstractManagedStream
 		{
 			public SizeReportingStream(ulong length) => ReportedLength = length;
@@ -207,18 +299,30 @@ namespace SkiaSharp.Tests
 			public ulong ReportedLength { get; set; }
 			public ulong ReportedPosition { get; set; }
 			public int SeekCalls { get; private set; }
+			public int ReadCalls { get; private set; }
+			public int PeekCalls { get; private set; }
 
 			protected internal override IntPtr OnGetLength() => ToNativeSize(ReportedLength);
 			protected internal override IntPtr OnGetPosition() => ToNativeSize(ReportedPosition);
 			protected internal override bool OnHasLength() => true;
 			protected internal override bool OnHasPosition() => true;
 			protected internal override bool OnIsAtEnd() => ReportedPosition >= ReportedLength;
-			protected internal override IntPtr OnRead(IntPtr buffer, IntPtr size) => IntPtr.Zero;
-			protected internal override IntPtr OnPeek(IntPtr buffer, IntPtr size) => IntPtr.Zero;
 			protected internal override IntPtr OnCreateNew() => IntPtr.Zero;
 			protected internal override bool OnMove(int offset) => false;
 
 			protected internal override bool OnRewind() => OnSeek(IntPtr.Zero);
+
+			protected internal override IntPtr OnRead(IntPtr buffer, IntPtr size)
+			{
+				ReadCalls++;
+				return IntPtr.Zero;
+			}
+
+			protected internal override IntPtr OnPeek(IntPtr buffer, IntPtr size)
+			{
+				PeekCalls++;
+				return IntPtr.Zero;
+			}
 
 			protected internal override bool OnSeek(IntPtr position)
 			{

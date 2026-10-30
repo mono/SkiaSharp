@@ -145,7 +145,7 @@ namespace SkiaSharp.Tests
 			var stream = new MemoryStream(data);
 			var managedStream = new SKManagedStream(stream);
 
-			var buffer = new byte[dataSize * 2];
+			var buffer = new byte[Math.Max(dataSize * 2, readSize)];
 
 			var actualReadSize = managedStream.Read(buffer, readSize);
 
