@@ -1475,6 +1475,25 @@ namespace SkiaSharp.Tests
 		}
 
 		[Theory]
+		[InlineData(0x8000000000000080UL)]
+		[InlineData(ulong.MaxValue)]
+		public void NativeSkipPreservesUnsigned64BitCount(ulong requested)
+		{
+			Assert.SkipWhen(IntPtr.Size != 8, "Native 64-bit counts require a 64-bit process.");
+
+			var data = CreateSequentialBytes(128);
+			using var inner = new ConfigurableTestStream(data, canSeek: false);
+			using var managed = new SKManagedStream(inner);
+
+			var skipped = SkiaApi.sk_stream_skip(managed.Handle, Utils.ToNativeSize(requested));
+
+			Assert.Equal((ulong)data.Length, Utils.FromNativeSize(skipped));
+			Assert.Equal(2, inner.TotalReadCalls);
+			Assert.InRange(inner.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+			Assert.True(managed.IsAtEnd);
+		}
+
+		[Theory]
 		[InlineData(-5)]
 		[InlineData(int.MaxValue)]
 		public unsafe void HostileStream_InvalidReadReturnValues_DoNotOverrunBuffer(int returnMode)
@@ -1572,6 +1591,62 @@ namespace SkiaSharp.Tests
 			inner.Position = 95;
 			Assert.Null(managed.Fork());
 			Assert.Equal(95, inner.Position);
+		}
+
+		[Theory]
+		[InlineData(false, 0)]
+		[InlineData(true, 0)]
+		[InlineData(false, SKData.CopyBufferSize)]
+		[InlineData(true, SKData.CopyBufferSize)]
+		public void UnknownLengthSnapshotReadFailureDoesNotPublishAndCanRetry(bool fork, int failAtPosition)
+		{
+			var bytes = CreateSequentialBytes(SKData.CopyBufferSize + 17);
+			using var inner = new SnapshotReadFailureStream(bytes, failAtPosition);
+			inner.Position = 5;
+			using var managed = new SKManagedStream(inner);
+
+			using var failed = fork ? managed.Fork() : managed.Duplicate();
+			Assert.Null(failed);
+			Assert.Null(managed.snapshotData);
+			Assert.Equal(5, inner.Position);
+			Assert.Equal(0, managed.hasError);
+			Assert.False(managed.IsAtEnd);
+			Assert.True(inner.CanRead);
+
+			inner.FailReads = false;
+			using var recovered = fork ? managed.Fork() : managed.Duplicate();
+			Assert.NotNull(recovered);
+			Assert.Equal(bytes.Length, recovered.Length);
+			Assert.Equal(fork ? 5 : 0, recovered.Position);
+			var actual = new byte[bytes.Length - recovered.Position];
+			Assert.Equal(actual.Length, recovered.Read(actual, actual.Length));
+			Assert.Equal(bytes.Skip(fork ? 5 : 0), actual);
+			Assert.Equal(5, inner.Position);
+			Assert.False(managed.IsAtEnd);
+			Assert.True(inner.CanRead);
+		}
+
+		private sealed class SnapshotReadFailureStream : MemoryStream
+		{
+			private readonly int failAtPosition;
+
+			public SnapshotReadFailureStream(byte[] bytes, int failAtPosition) : base(bytes, writable: false) =>
+				this.failAtPosition = failAtPosition;
+
+			public bool FailReads { get; set; } = true;
+			public override long Length => -1;
+
+			public override int Read(byte[] buffer, int offset, int count) =>
+				FailReads && Position >= failAtPosition
+					? throw new IOException("Snapshot read failed.")
+					: base.Read(buffer, offset, count);
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+			public override int Read(Span<byte> buffer) =>
+				FailReads && Position >= failAtPosition
+					? throw new IOException("Snapshot read failed.")
+					: base.Read(buffer);
+#endif
 		}
 
 		[Theory]
