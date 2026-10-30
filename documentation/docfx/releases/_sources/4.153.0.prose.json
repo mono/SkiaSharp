@@ -1,11 +1,11 @@
 {
-  "theme": "Skia m153 rendering corrections",
-  "highlights_headline": "SkiaSharp 4.153.0 updates the renderer to Skia m153 and incorporates native lifetime and GPU correctness fixes.",
-  "highlights_body": "Linux font fallback can choose a different face. HarfBuzzSharp uses a new package revision bucket, not a new native engine version.",
+  "theme": "Font selection and GPU correctness",
+  "highlights_headline": "SkiaSharp 4.153.0 brings Skia m153 with Linux font-fallback changes and GPU correctness fixes.",
+  "highlights_body": null,
   "breaking": [
     {
-      "title": "Linux fallback font selection may change",
-      "body": "Fontconfig now tries FcFontMatch before the previous FcFontSort fallback, which can change selected glyphs or text metrics. Use an explicit family/style or a bundled typeface when deterministic font selection matters.",
+      "title": "Make Linux fallback fonts explicit when needed",
+      "body": "FontConfig now tries FcFontMatch before the previous FcFontSort fallback, which can select a different face and change glyphs or text metrics. Choose an explicit family/style or bundle a typeface when deterministic font selection matters.",
       "prs": [
         4826
       ]
@@ -13,40 +13,46 @@
   ],
   "categories": [
     {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "Skia updated to m153",
-          "detail": "Advances the bundled renderer without managed API or native C ABI changes. HarfBuzzSharp package revision .300 still uses native HarfBuzz 14.2.1.",
-          "prs": [
-            4826
-          ]
-        }
-      ]
-    },
-    {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Glyph-atlas and GPU failure handling corrected",
-          "detail": "Prevents stale atlas reuse after partial glyph updates, propagates failed native flushes, and rejects incomplete GPU-buffer uploads under memory pressure. Managed flush signatures remain unchanged.",
+          "lead": "Windows HarfBuzz BinSkim compatibility",
+          "detail": "The bundled libHarfBuzzSharp.dll now passes BA2007 by scoping truncation-warning suppression to vendored source. Existing unrelated BinSkim warnings are unchanged.",
           "prs": [
-            5062,
+            5120
+          ]
+        },
+        {
+          "lead": "GPU buffer upload failures",
+          "detail": "Ganesh rejects incomplete buffers and drops affected draws when GPU uploads fail under memory pressure, rather than drawing stale contents. Triangulated paths retain CPU vertex data for a later upload attempt.",
+          "prs": [
             5116
           ]
         },
         {
-          "lead": "Cached-data cleanup releases the mutex before deletion",
-          "detail": "Avoids unlocking a mutex through freed storage when SkCachedData is released.",
+          "lead": "Cached-data teardown safety",
+          "detail": "Releases the native cached-data mutex guard before deleting its owner, preventing access to a mutex in freed storage.",
           "prs": [
             4927
           ]
         },
         {
-          "lead": "Windows HarfBuzz binaries pass BinSkim BA2007",
-          "detail": "Consumers no longer need to baseline the disabled-critical-warnings error in libHarfBuzzSharp.dll. The native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
+          "lead": "Glyph-atlas and GPU failure handling",
+          "detail": "Prevents partial glyph updates from reusing evicted atlas locations and propagates Ganesh task, flush, and submission failures internally. Existing managed flush methods remain void.",
           "prs": [
-            5120
+            5062
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m153",
+          "detail": "Updates the bundled renderer to m153. HarfBuzzSharp moves to package revision 14.2.1.300 while its native HarfBuzz engine remains 14.2.1.",
+          "prs": [
+            4826
           ]
         }
       ]
@@ -54,22 +60,22 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.153.0-preview.1.26454.6": "Preview 1 introduced Skia m153, its Linux fallback-font selection change, and the cached-data mutex lifetime correction.",
-    "v4.153.0-rc.1.26456.2": "The release candidate prepared the m153 line for stable release without additional collected product changes."
+    "v4.153.0-rc.1.26456.2": "Cut the release candidate with release-workflow changes only; this bucket adds no consumer-facing API or rendering changes.",
+    "v4.153.0-preview.1.26454.6": "Introduced Skia m153 and the Linux FontConfig fallback-order change, with native cached-data teardown corrected. The new HarfBuzzSharp package revision still uses native HarfBuzz 14.2.1."
   },
-  "harfbuzz_summary": "The Windows native library now passes BinSkim BA2007 by scoping vendored-source warning suppression. The bundled HarfBuzz engine and exported ABI are unchanged.",
+  "harfbuzz_summary": "The Windows native library now passes BinSkim BA2007 through source-scoped warning suppression. Package revision 14.2.1.300 does not upgrade the native HarfBuzz 14.2.1 engine.",
   "release_summaries": {
     "v4.153.0-preview.1.26454.6": {
-      "headline": "Preview 1 introduced Skia m153, its Linux fallback-font selection change, and the cached-data mutex lifetime correction.",
-      "body": null
+      "headline": "SkiaSharp 4.153.0 previews Skia m153 with revised Linux font fallback.",
+      "body": "Explicitly select or bundle fonts when deterministic fallback matters. The preview also corrects native cached-data teardown; its new HarfBuzzSharp package revision still uses native HarfBuzz 14.2.1."
     },
     "v4.153.0-rc.1.26456.2": {
-      "headline": "The release candidate prepared the m153 line for stable release without additional collected product changes.",
-      "body": null
+      "headline": "This release candidate updates release-workflow integration.",
+      "body": "Its exact shipment contains no additional consumer-facing API or rendering changes."
     },
     "v4.153.0": {
-      "headline": "SkiaSharp 4.153.0 finalizes glyph-atlas and GPU-buffer failure corrections.",
-      "body": "It also corrects the Windows HarfBuzz BinSkim BA2007 disabled-warnings error."
+      "headline": "SkiaSharp 4.153.0 adds GPU upload and atlas corrections after the release candidate.",
+      "body": "It improves Ganesh failure propagation and includes Windows HarfBuzz binaries that pass BinSkim BA2007. The managed flush methods remain void."
     }
   }
 }

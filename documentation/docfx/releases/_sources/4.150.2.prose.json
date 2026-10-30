@@ -1,6 +1,6 @@
 {
   "theme": "Ganesh and shader stability",
-  "highlights_headline": "SkiaSharp 4.150.2 improves Ganesh failure handling and fixes a native shader-code generation use-after-free.",
+  "highlights_headline": "SkiaSharp 4.150.2 improves Ganesh failure recovery and fixes a native shader-compiler lifetime issue.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,18 +8,29 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Failed GPU work no longer leaves stale readbacks",
-          "detail": "Propagates failed flushes, restores resolve-task dirty tracking, and includes the Imagination GPU framebuffer-deletion workaround.",
+          "lead": "Ganesh failure recovery",
+          "detail": "Prevents stale readbacks after failed flushes, restores resolve dirty-state tracking, and includes the Imagination GPU framebuffer-deletion workaround.",
           "prs": [
             4517,
             4561
           ]
         },
         {
-          "lead": "SkSL RasterPipeline lifetime corrected",
-          "detail": "Includes the upstream shader-code generation use-after-free correction and additional same-milestone fixes.",
+          "lead": "SkSL compiler lifetime correction",
+          "detail": "Fixes a native use-after-free in Raster Pipeline shader code generation.",
           "prs": [
-            4663,
+            4663
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m150 servicing",
+          "detail": "Refreshes the bundled m150 engine without changing the managed API or native C API.",
+          "prs": [
             4648
           ]
         }
@@ -31,7 +42,7 @@
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.150.2": {
-      "headline": "SkiaSharp 4.150.2 improves Ganesh failure handling and fixes a native shader-code generation use-after-free.",
+      "headline": "SkiaSharp 4.150.2 improves Ganesh failure recovery and fixes a native shader-compiler lifetime issue.",
       "body": null
     }
   }

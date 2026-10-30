@@ -1,18 +1,18 @@
 {
-  "theme": "Skia m150 and filter APIs",
-  "highlights_headline": "SkiaSharp 4.150.0 brings Skia m150, new image-filter APIs, and faster CPU blur rendering.",
-  "highlights_body": "Paint bounds and overdraw visualization make drawing diagnostics easier. Existing pre-v4 deprecations now require migration, and the deprecated notebook integration is no longer included.",
+  "theme": "Filters and faster raster drawing",
+  "highlights_headline": "SkiaSharp 4.150.0 brings Skia m150, composable filters, and faster CPU blur and canvas access.",
+  "highlights_body": null,
   "breaking": [
     {
-      "title": "Remaining pre-v4 obsolete APIs become compile errors",
-      "body": "Replace sampleCount-based Vulkan/Metal GRBackendRenderTarget constructors with their counterparts without sampleCount. Use run-buffer Glyphs and Positions properties instead of obsolete span accessors, SKFontHinting instead of SKPaintHinting, and SKSamplingOptions instead of SKFilterQuality. The obsolete enum types remain in implementation assemblies for ABI compatibility but are absent from reference assemblies.",
+      "title": "Replace remaining pre-v4 obsolete APIs",
+      "body": "Remaining pre-v4 obsolete constructors and run-buffer methods now produce compile errors. Use GRBackendRenderTarget constructors without sampleCount and the Glyphs/Positions properties. Replace SKPaintHinting with SKFontHinting and SKFilterQuality with SKSamplingOptions; obsolete enum types remain in the implementation assembly for ABI compatibility. The two SKCanvas.DrawText overloads with SKFont but without explicit SKTextAlign remain warning-only.",
       "prs": [
         4195
       ]
     },
     {
-      "title": "Notebook integration no longer ships",
-      "body": "The SkiaSharp NuGet package no longer embeds its deprecated .NET Interactive/Polyglot Notebooks extension. Notebook consumers must provide their own rendering integration rather than rely on the removed extension.",
+      "title": "Notebook integration is no longer bundled",
+      "body": "The deprecated .NET Interactive / Polyglot Notebooks extension is no longer embedded in the SkiaSharp package. Applications or notebooks relying on automatic formatter registration must provide their own integration or move to a supported host.",
       "prs": [
         4186
       ]
@@ -23,15 +23,15 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to m150",
-          "detail": "Updates the bundled renderer from m148 while preserving PDF support on Tizen and the existing Windows runtime floor.",
+          "lead": "Skia m150",
+          "detail": "Updates the bundled renderer from m148 to m150 while retaining PDF support on Tizen and the existing Windows runtime floor.",
           "prs": [
             4146
           ]
         },
         {
-          "lead": "Bundled HarfBuzz updated to 14.2.1",
-          "detail": "Includes AAT and Arabic fallback-shaping corrections, COLR v1 fixes, and glyph-extents improvements.",
+          "lead": "HarfBuzz 14.2.1",
+          "detail": "Refreshes bundled text shaping with AAT, Arabic fallback, COLR v1, and glyph-extents corrections.",
           "prs": [
             4167
           ]
@@ -42,19 +42,19 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Composable image-filter nodes",
-          "detail": "CreateCrop restricts filter output with a rectangle and tile mode; CreateEmpty discards input to transparent black.",
+          "lead": "Fast paint bounds for culling",
+          "detail": "SKPaint.GetFastBounds returns conservative bounds for use with SKCanvas.QuickReject, or false when the paint cannot compute them.",
           "prs": [
-            4229,
-            4228
+            4271
           ]
         },
         {
-          "lead": "Paint bounds and overdraw diagnostics",
-          "detail": "SKPaint.GetFastBounds returns conservative bounds when available for quick-reject culling. SKColorFilter.CreateOverdraw maps draw counts to a caller-supplied six-color palette.",
+          "lead": "Composable filters and overdraw inspection",
+          "detail": "SKImageFilter.CreateCrop adds rectangle and tile-mode cropping; CreateEmpty discards input to transparent black. SKColorFilter.CreateOverdraw maps draw counts to a six-color palette.",
           "prs": [
-            4271,
-            4227
+            4227,
+            4229,
+            4228
           ]
         }
       ]
@@ -63,15 +63,15 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "CPU blur performance restored",
-          "detail": "Small-sigma blurs of 8888 images use the faster dedicated approximation path instead of the regressed raster-pipeline path.",
+          "lead": "Small-blur raster performance restored",
+          "detail": "Restores the dedicated CPU blur path for small-sigma blurs of 8888 images instead of the slower shader-based path.",
           "prs": [
             4269
           ]
         },
         {
-          "lead": "Apple typeface stream access synchronized",
-          "detail": "Corrects a native data race between opening and reusing a CoreText-backed typeface stream.",
+          "lead": "Apple typeface stream synchronization",
+          "detail": "Corrects a race when opening or cloning streams from shared CoreText-backed typefaces.",
           "prs": [
             4190
           ]
@@ -82,8 +82,8 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Surface canvas access avoids repeated interop",
-          "detail": "SKSurface.Canvas reuses its managed wrapper across calls and recreates the wrapper if it was explicitly disposed.",
+          "lead": "Cheaper surface canvas access",
+          "detail": "SKSurface.Canvas reuses its managed wrapper instead of repeating native lookups, and reacquires a usable wrapper if the previous one was explicitly disposed.",
           "prs": [
             4247
           ]
@@ -92,30 +92,30 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Completed the v4 deprecation pass, cached surface canvas wrappers, and restored small-sigma CPU blur performance"
+    "ramezgerges": "Completed the obsolete API transition, cached surface canvas wrappers, and restored small-blur CPU performance."
   },
   "preview_summaries": {
-    "v4.150.0-preview.1.1": "Preview 1 opened the 4.150 line with Skia m150.",
-    "v4.150.0-preview.2.1": "Preview 2 updated bundled HarfBuzz to 14.2.1, completed the pre-v4 deprecation pass, and retired notebook integration.",
-    "v4.150.0-rc.1.1": "The release candidate added crop and empty image filters, paint bounds and overdraw diagnostics, and restored CPU blur performance."
+    "v4.150.0-rc.1.1": "Added paint fast bounds, crop and empty image filters, and overdraw visualization. Restored small-blur CPU performance, cached surface canvas wrappers, and corrected Apple typeface stream synchronization.",
+    "v4.150.0-preview.2.1": "Updated bundled HarfBuzz to 14.2.1, completed the pre-v4 obsolete API transition, and removed the deprecated notebook integration.",
+    "v4.150.0-preview.1.1": "Opened the m150 line with the Skia engine update, retaining Tizen PDF support and the existing Windows runtime floor."
   },
-  "harfbuzz_summary": "The HarfBuzzSharp test suite moves to xUnit v3; this collected HarfBuzz-specific work does not introduce new shaping APIs.",
+  "harfbuzz_summary": "The collected companion changes are test-infrastructure updates; this HarfBuzzSharp block adds no consumer-facing shaping or API change.",
   "release_summaries": {
     "v4.150.0-preview.1.1": {
-      "headline": "Preview 1 opened the 4.150 line with Skia m150.",
-      "body": null
+      "headline": "SkiaSharp 4.150.0 previews the Skia m150 engine.",
+      "body": "The update retains Tizen PDF support and the existing Windows runtime floor."
     },
     "v4.150.0-preview.2.1": {
-      "headline": "Preview 2 updated bundled HarfBuzz to 14.2.1, completed the pre-v4 deprecation pass, and retired notebook integration.",
-      "body": null
+      "headline": "This preview completes the transition away from pre-v4 obsolete APIs.",
+      "body": "Update obsolete constructor, run-buffer, and enum references. It also updates bundled HarfBuzz to 14.2.1 and removes the deprecated notebook extension."
     },
     "v4.150.0-rc.1.1": {
-      "headline": "The release candidate added crop and empty image filters, paint bounds and overdraw diagnostics, and restored CPU blur performance.",
-      "body": null
+      "headline": "This release candidate adds composable filters and faster CPU drawing.",
+      "body": "New APIs cover crop and empty image filters, overdraw visualization, and paint fast bounds. Small-sigma raster blurs and repeated surface-canvas access are faster, and Apple typeface stream synchronization is corrected."
     },
     "v4.150.0": {
-      "headline": "SkiaSharp 4.150.0 promotes the release candidate to stable without additional collected changes.",
-      "body": null
+      "headline": "SkiaSharp 4.150.0 promotes the release candidate to stable.",
+      "body": "There are no additional collected PR changes since Release Candidate 1."
     }
   }
 }

@@ -1,11 +1,11 @@
 {
   "theme": "RAW decoding retired",
-  "highlights_headline": "SkiaSharp 4.150.5 removes built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+  "highlights_headline": "SkiaSharp 4.150.5 retires built-in RAW and DNG decoding while preserving the public format enum.",
   "highlights_body": null,
   "breaking": [
     {
-      "title": "Built-in RAW and DNG decoding removed",
-      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
+      "title": "Use a separate RAW or DNG decoder",
+      "body": "Built-in RAW/DNG development and PIEX extraction of embedded JPEG previews are disabled; no replacement decoder is included. Decode those containers with another library and pass supported pixels or images to SkiaSharp. SKEncodedImageFormat.Dng remains value 10 for compatibility but no longer indicates decoding support. Standalone JPEG decoding is unchanged.",
       "prs": [
         5184
       ]
@@ -17,7 +17,7 @@
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.150.5": {
-      "headline": "SkiaSharp 4.150.5 removes built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+      "headline": "SkiaSharp 4.150.5 retires built-in RAW and DNG decoding while preserving the public format enum.",
       "body": null
     }
   }
