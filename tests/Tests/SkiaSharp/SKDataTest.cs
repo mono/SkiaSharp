@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -749,13 +750,6 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
-		public void CreateFromStream_WhenReadThrows_DisposesAllocatedDataImmediately()
-		{
-			using var throwingStream = new ThrowingReadStream();
-			Assert.Throws<IOException>(() => SKData.Create(throwingStream, 1024));
-		}
-
 		[Theory]
 		[InlineData(-1)]
 		[InlineData(int.MaxValue)]
@@ -775,6 +769,84 @@ namespace SkiaSharp.Tests
 			using (var nonSeekable = new NonSeekableReadOnlyStream(hostile))
 			{
 				Assert.Throws<IOException>(() => SKData.Create(nonSeekable));
+			}
+		}
+	}
+
+	// Allocation capture inspects the global registry, so no other test collection may run concurrently.
+	[Collection(HandleDictionaryThreadingCollection.Name)]
+	public class SKDataDisposalTest : SKTest
+	{
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void CreateFromStream_WhenReadThrows_DisposesAllocatedDataImmediately(bool managedWrapper)
+		{
+			using var source = new AllocationObservingReadStream();
+			using var managed = new SKManagedStream(source);
+			try
+			{
+				var exception = Assert.Throws<IOException>(() =>
+					managedWrapper ? SKData.Create((SKStream)managed) : SKData.Create(source, 1024));
+
+				Assert.Same(source.Failure, exception);
+				Assert.NotNull(source.AllocatedData);
+				SKHandleDictionaryTestHelpers.AssertDeregistered(source.AllocatedHandle, source.AllocatedData);
+				Assert.Equal(1, source.AllocatedHandle.GetReferenceCount(isVirtual: false));
+				Assert.True(source.CanRead);
+			}
+			finally
+			{
+				source.AllocatedData?.Dispose();
+				if (source.AllocatedHandle != IntPtr.Zero)
+					SkiaApi.sk_data_unref(source.AllocatedHandle);
+			}
+		}
+
+		private sealed class AllocationObservingReadStream : MemoryStream
+		{
+			private readonly SKData[] existingData;
+
+			public AllocationObservingReadStream() : base(new byte[1024], writable: false)
+			{
+				HandleDictionary.instancesLock.EnterReadLock();
+				try
+				{
+					existingData = HandleDictionary.instances.Values.Select(weak => weak.Target).OfType<SKData>().ToArray();
+				}
+				finally
+				{
+					HandleDictionary.instancesLock.ExitReadLock();
+				}
+			}
+
+			public IOException Failure { get; } = new IOException("Read failed after allocating SKData.");
+			public SKData AllocatedData { get; private set; }
+			public IntPtr AllocatedHandle { get; private set; }
+
+			public override int Read(byte[] buffer, int offset, int count) => Fail();
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+			public override int Read(Span<byte> buffer) => Fail();
+#endif
+
+			private int Fail()
+			{
+				HandleDictionary.instancesLock.EnterReadLock();
+				try
+				{
+					AllocatedData = Assert.Single(HandleDictionary.instances.Values.Select(weak => weak.Target).OfType<SKData>(),
+						data => !data.IsDisposed && !existingData.Contains(data));
+					AllocatedHandle = AllocatedData.Handle;
+					// Retain the native object so its reference count can be checked safely after wrapper disposal.
+					((ISKReferenceCounted)AllocatedData).SafeRef();
+					Assert.Equal(2, AllocatedHandle.GetReferenceCount(isVirtual: false));
+				}
+				finally
+				{
+					HandleDictionary.instancesLock.ExitReadLock();
+				}
+				throw Failure;
 			}
 		}
 	}
