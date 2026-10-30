@@ -433,16 +433,17 @@ network** and no permission to re-run Cake, `prepare.sh`, `release-notes-data.py
 page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 `_sources/<version>.notes.md` companions (§4.7), writes
 `_sources/<version>.prose.json` (schema: `release-notes-schema/prose.schema.json`, including
-`harfbuzz_summary` when required), and runs
-`release-notes-render.py <data.json> <prose.json> <out.md>` to validate the prose. A render
-that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
-never hand-edited.
+`harfbuzz_summary` when required). It then validates and renders the complete page set
+with `release-notes-render.py --all`. A batch that prints `PROSE VALIDATION FAILED`
+is fixed in prose and rerun; the `.md` page is never hand-edited. The positional
+`release-notes-render.py <data.json> <prose.json> <out.md>` form is available to diagnose
+a particular failure, not as a routine pre-pass for every page.
 
 Identical complete PR bodies can be read once and reused across pages, while each
 page, preview and shipment keeps its own PR membership. Every rewritten page still
 receives a factual review against its supporting bodies and companions.
 
-After every changed page validates, Polish runs the offline finalizer once — either
+After writing and factual review, Polish runs the offline batch validator/finalizer — either
 `.agents/skills/release-notes/scripts/render.sh` or its core command,
 `release-notes-render.py --all`. `render.sh` accepts the same three flags as `prepare.sh` for
 a uniform interface; `--force` is a no-op because rendering is idempotent, and scoped
@@ -456,8 +457,9 @@ the finished page set and the committed Chrome schedule in `_sources/index.json`
 consumers see just two phases — **Prepare** (run one script) then **Polish** (write
 prose, render) — and never juggle the individual generators by hand.
 
-Successful checks remain valid until their inputs change. Fix findings and revalidate
-affected pages, rerunning the full finalizer after further prose edits. Inspect the
+The batch applies the same prose validator as the single-page command to every page.
+Successful checks remain valid until their inputs change. Fix findings and rerun the
+batch after further prose edits; use individual-page calls only for diagnostics. Inspect the
 final diff for scope and unexpected changes; staging alone does not require repeating
 the factual review or successful validation.
 
@@ -566,13 +568,14 @@ the work is split by artifact:
    `harfbuzz_summary` when `data.harfbuzz.prs` is non-empty, and optional
    `release_summaries` for exact shipments. Page headings, tables, banners, handles,
    and PR links remain renderer-owned. The output PR description is separately AI-authored.
-4. **`release-notes-render.py` renders Markdown** — per-page validation with
-   `release-notes-render.py <data.json> <prose.json> [out.md]`, and the final
-   `release-notes-render.py --all` pass that prunes stale `-unreleased` pages (per
+4. **`release-notes-render.py` validates and renders Markdown** — the normal
+   `release-notes-render.py --all` batch applies the prose validator to every page,
+   prunes stale `-unreleased` pages (per
    `index.json`'s `live_unreleased`), retires old HarfBuzz hub pages, then rebuilds
    every SkiaSharp page plus `TOC.yml` and `index.md` from committed JSON. It is pure
    stdlib, dependency-free, and offline; the release-cadence timeline reads the
-   schedule from `_sources/index.json`.
+   schedule from `_sources/index.json`. The positional per-page form is available
+   for diagnosing a particular failure; a successful batch needs no per-page pre-pass.
 
 **Why the split.** Every failure mode that recurred under the single-agent path lived
 exactly where the agent owned structure: dropped `## Breaking Changes` headings, bare
@@ -1272,9 +1275,8 @@ Always the same incremental Prepare + offline Polish sequence:
    each listed page from scratch** against its current `data.json` and companions,
    whether an older prose file still exists or not. It does not keep prose merely because
    it looks plausible. After the AI writes each
-   `_sources/<stem>.prose.json` and validates the page with
-   `release-notes-render.py <data.json> <prose.json> [out.md]`, it runs `render.sh` (or the
-   equivalent `release-notes-render.py --all`) once to regenerate every SkiaSharp page, retire
+   `_sources/<stem>.prose.json`, it runs `render.sh` (or the equivalent
+   `release-notes-render.py --all`) to validate the full batch and regenerate every SkiaSharp page, retire
    old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. **`--all`
    hard-fails** if any `data.json` has no matching `prose.json` — i.e. a changed/new page
    the AI forgot to author — so a changed page can never ship with stale (or missing)

@@ -110,26 +110,28 @@ replace this review.
 
 ### 6. Render and finalize
 
-Validate each page as you finish it, using full paths under
-`documentation/docfx/releases/`:
-
-```bash
-python3 scripts/infra/docs/release-notes-render.py <data.json> <prose.json> <version.md>
-```
-
-If it reports `PROSE VALIDATION FAILED`, correct the prose and rerun. After the listed
-pages validate, run the authoritative offline pass, including when the page list is empty:
+After writing and factually reviewing the listed pages, validate and finalize them
+in one batch, including when the page list is empty:
 
 ```bash
 python3 scripts/infra/docs/release-notes-render.py --all
 ```
 
-This rebuilds pages, TOC, and index and handles page creation/pruning. Do not create,
-rename, delete, or repair generated Markdown by hand. Missing or invalid prose must
-be resolved before finalization succeeds.
+`--all` applies the same prose validator to every page, fails on missing or invalid
+prose, and rebuilds pages, TOC, and index with page creation/pruning. Do not run a
+separate validation command for every page before this batch pass. Do not create,
+rename, delete, or repair generated Markdown by hand.
 
-A successful check remains valid while its inputs are unchanged. Fix findings and
-revalidate the affected pages; after further prose edits, rerun the final full render.
+If the batch reports `PROSE VALIDATION FAILED`, fix the named prose files and rerun it.
+Use a single-page command only when useful to diagnose a particular failure, with full
+paths under `documentation/docfx/releases/`:
+
+```bash
+python3 scripts/infra/docs/release-notes-render.py <data.json> <prose.json> <version.md>
+```
+
+Successful checks remain valid while their inputs are unchanged. After further prose
+edits, rerun the batch; individual-page calls are not a routine additional pass.
 Do not repeat unchanged successful checks or the completed factual review merely
 because you are staging or preparing to submit.
 

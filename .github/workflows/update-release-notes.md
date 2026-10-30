@@ -286,13 +286,15 @@ Re-author every listed page using the skill's complete-body reading, consumer
 selection, companion, scope, and factual-review rules. The list may be empty;
 in that case proceed directly to the final render.
 
-Validate each page as the skill describes. Then finalize with:
+After writing and factual review, validate and finalize all pages in one batch:
 
 ```bash
 python3 scripts/infra/docs/release-notes-render.py --all
 ```
 
-Correct reported prose errors and rerun until it succeeds. Optional exact-tag
+This validates every page; do not precede it with individual calls for all listed pages.
+Fix reported prose errors and rerun the batch; single-page calls are for diagnosing
+specific failures only. Optional exact-tag
 `release_summaries` are not checked by this renderer; a separate workflow validates
 and publishes them later. Do not publish GitHub Release bodies in this run.
 
