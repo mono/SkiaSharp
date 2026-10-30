@@ -94,6 +94,144 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void MemoryStreamSupports64BitLengthPositionAndSeek()
+		{
+			using var stream = new SKMemoryStream(new byte[] { 10, 20, 30, 40, 50 });
+
+			Assert.Equal(5L, stream.Length64);
+			Assert.Equal(5, stream.Length);
+			Assert.Equal(0L, stream.Position64);
+			Assert.True(stream.Seek(2L));
+			Assert.Equal(2L, stream.Position64);
+			Assert.Equal(2, stream.Position);
+			Assert.Equal(30, stream.ReadByte());
+
+			stream.Position64 = 4;
+			Assert.Equal(50, stream.ReadByte());
+			Assert.True(stream.Seek(100L));
+			Assert.Equal(5L, stream.Position64);
+			stream.Position = 1;
+			Assert.Equal(1L, stream.Position64);
+			Assert.True(stream.Seek(0));
+			Assert.Equal(0L, stream.Position64);
+		}
+
+		[Theory]
+		[InlineData(0L)]
+		[InlineData((long)int.MaxValue)]
+		[InlineData((long)int.MaxValue + 1)]
+		[InlineData((long)uint.MaxValue)]
+		public void Stream64MembersPreserveNativeUnsignedValues(long value)
+		{
+			using var stream = new SizeReportingStream((ulong)value);
+
+			Assert.Equal(value, stream.Length64);
+			Assert.True(stream.Seek(value));
+			Assert.Equal(value, stream.Position64);
+			stream.Position64 = value;
+			Assert.Equal(value, stream.Position64);
+			Assert.Equal(2, stream.SeekCalls);
+
+			if (value <= int.MaxValue)
+			{
+				Assert.Equal((int)value, stream.Length);
+				Assert.Equal((int)value, stream.Position);
+			}
+			else
+			{
+				Assert.Throws<OverflowException>(() => stream.Length);
+				Assert.Throws<OverflowException>(() => stream.Position);
+			}
+		}
+
+		[Fact]
+		public void Stream64MembersHandlePlatformLimitsWithoutAllocatingPayload()
+		{
+			using var stream = new SizeReportingStream(IntPtr.Size == 8 ? (ulong)long.MaxValue : uint.MaxValue);
+
+			if (IntPtr.Size == 8)
+			{
+				Assert.Equal(long.MaxValue, stream.Length64);
+				Assert.True(stream.Seek(long.MaxValue));
+				Assert.Equal(long.MaxValue, stream.Position64);
+
+				stream.ReportedLength = (ulong)long.MaxValue + 1;
+				Assert.Throws<OverflowException>(() => stream.Length64);
+				Assert.Throws<OverflowException>(() => stream.Length);
+				stream.ReportedPosition = ulong.MaxValue;
+				Assert.Throws<OverflowException>(() => stream.Position64);
+				Assert.Throws<OverflowException>(() => stream.Position);
+			}
+			else
+			{
+				Assert.Equal((long)uint.MaxValue, stream.Length64);
+				Assert.Throws<ArgumentOutOfRangeException>("position", () => stream.Seek((long)uint.MaxValue + 1));
+				Assert.Throws<ArgumentOutOfRangeException>("position", () => stream.Position64 = long.MaxValue);
+				Assert.Equal(0, stream.SeekCalls);
+			}
+		}
+
+		[Theory]
+		[InlineData(-1L)]
+		[InlineData(long.MinValue)]
+		public void Stream64SeekRejectsNegativePositionsBeforeNativeEntry(long position)
+		{
+			using var stream = new SizeReportingStream(10);
+
+			Assert.Throws<ArgumentOutOfRangeException>("position", () => stream.Seek(position));
+			Assert.Throws<ArgumentOutOfRangeException>("position", () => stream.Position64 = position);
+			Assert.Equal(0, stream.SeekCalls);
+			Assert.Equal(0L, stream.Position64);
+		}
+
+		[Fact]
+		public void Stream64MembersPreserveUnsupportedCapabilityResults()
+		{
+			using var inner = new MemoryStream(new byte[] { 1, 2, 3 });
+			using var nonSeekable = new NonSeekableReadOnlyStream(inner);
+			using var stream = new SKManagedStream(nonSeekable);
+
+			Assert.False(stream.HasLength);
+			Assert.False(stream.HasPosition);
+			Assert.Equal(0L, stream.Length64);
+			Assert.Equal(0L, stream.Position64);
+			Assert.False(stream.Seek(0L));
+			stream.Position64 = 1;
+			Assert.Equal(0L, stream.Position64);
+		}
+
+		private sealed class SizeReportingStream : SKAbstractManagedStream
+		{
+			public SizeReportingStream(ulong length) => ReportedLength = length;
+
+			public ulong ReportedLength { get; set; }
+			public ulong ReportedPosition { get; set; }
+			public int SeekCalls { get; private set; }
+
+			protected internal override IntPtr OnGetLength() => ToNativeSize(ReportedLength);
+			protected internal override IntPtr OnGetPosition() => ToNativeSize(ReportedPosition);
+			protected internal override bool OnHasLength() => true;
+			protected internal override bool OnHasPosition() => true;
+			protected internal override bool OnIsAtEnd() => ReportedPosition >= ReportedLength;
+			protected internal override IntPtr OnRead(IntPtr buffer, IntPtr size) => IntPtr.Zero;
+			protected internal override IntPtr OnPeek(IntPtr buffer, IntPtr size) => IntPtr.Zero;
+			protected internal override IntPtr OnCreateNew() => IntPtr.Zero;
+			protected internal override bool OnMove(int offset) => false;
+
+			protected internal override bool OnRewind() => OnSeek(IntPtr.Zero);
+
+			protected internal override bool OnSeek(IntPtr position)
+			{
+				SeekCalls++;
+				ReportedPosition = IntPtr.Size == 8 ? (ulong)position.ToInt64() : (uint)position.ToInt32();
+				return true;
+			}
+
+			private static IntPtr ToNativeSize(ulong value) =>
+				IntPtr.Size == 8 ? new IntPtr((long)value) : new IntPtr((int)(uint)value);
+		}
+
+		[Fact]
 		public void GarbageCollectionCollectsStreams()
 		{
 			SkipOnMono();
