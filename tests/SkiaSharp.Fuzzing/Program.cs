@@ -171,7 +171,7 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 					{
 						["System.Tags"] = "SkiaSharp",
 						["System.Title"] = "[{{ job.project }} {{ job.name }}]: {{ report.crash_site }}",
-						["Microsoft.DevDiv.Custom01"] = "{{ job.name }}-{{ report.minimized_stack_function_lines_sha256 }}",
+						["Microsoft.DevDiv.Custom01"] = "{{ job.name }}-{{ report.call_stack_sha256 }}",
 					},
 					["UniqueFields"] = new JsonArray("Microsoft.DevDiv.Custom01"),
 					["OnDuplicate"] = new JsonObject
