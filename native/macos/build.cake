@@ -6,7 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"))
 
 string GetDeploymentTarget(string arch)
 {
-    return "11.0";
+    return "12.0";
 }
 
 Task("libSkiaSharp")

@@ -63,8 +63,8 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
    - The profile includes the .NET desktop, MAUI and UWP workloads, and the required Windows SDK
 
 **macOS Dependencies:**
-- macOS 12+ (Monterey or later)
-- [Xcode](https://developer.apple.com/xcode/) (latest stable)
+- macOS supported by the selected Xcode
+- [Xcode](https://developer.apple.com/xcode/) matching the installed Apple workloads; see [Xcode 27](#xcode-27)
 - Command Line Tools: `xcode-select --install`
 
 ### Preparation
@@ -167,6 +167,62 @@ dotnet cake --target=externals-linux --arch=x64
 ```
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
+
+### Xcode 27
+
+Xcode 27.0 requires macOS 26.6 or later. For managed Apple applications, use
+.NET SDK 10.0.401, workload set **10.0.401.1** (Apple packs **27.0.10722**)
+and MAUI **10.0.110** or a compatible later servicing release. These are separate
+version pins; installing the SDK alone does not update workloads. See the
+[Apple workload release](https://github.com/dotnet/macios/releases/tag/dotnet-10.0.1xx-xcode27.0-10722).
+Xcode 27.1 is not interchangeable with 27.0.
+
+To keep the machine's shared SDK and workloads unchanged, provision a
+repository-local SDK, then install the required workloads into that SDK:
+
+```sh
+use_installed_dotnet_cli=false ./eng/common/dotnet.sh --info
+./.dotnet/dotnet workload install ios tvos macos maccatalyst maui \
+  --version 10.0.401.1 --configfile nuget.config
+```
+
+Allow sufficient free space for the SDK, workload packs, Skia checkout and native
+build outputs. Select Xcode per process rather than changing `xcode-select`:
+
+```sh
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+xcodebuild -version
+./.dotnet/dotnet workload --info
+./.dotnet/dotnet cake --target=externals-macos --arch=arm64
+./.dotnet/dotnet cake --target=externals-ios
+./.dotnet/dotnet cake --target=externals-tvos
+./.dotnet/dotnet cake --target=externals-maccatalyst --arch=arm64
+```
+
+The iOS and tvOS packaging targets require the complete device and simulator
+architecture set, including Intel simulators. Omit `--arch=arm64` from the
+macOS/Catalyst commands to include their Intel slices. Native deployment
+minimums are macOS 12, iOS 15, tvOS 15 and Mac Catalyst 15. Catalyst 14 maps to
+macOS 11, which Xcode 27 rejects; Catalyst 15 maps to macOS 12. These minimums apply
+to both native libraries and cannot be lowered by an application's managed TFM.
+The .NET 10 Apple 27 application runtime additionally requires macOS 14 and
+Catalyst 17; iOS/tvOS simulator applications require version 16 or later.
+An SDK version, a deployment minimum and the build host OS are different settings.
+
+After rebuilding natives, rebuild the test hosts and run the complete suite so
+their output directories contain the newly built libraries:
+
+```sh
+./.dotnet/dotnet test tests/SkiaSharp.Tests.Console.slnx \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+```
+
+Do not use `externals-download` for native changes or disable Xcode-version
+validation to work around an incompatible workload. Existing .NET 9 targets
+still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
+workload. The existing CI Xcode 26.3/workload 10.0.202 path is retained for that
+coverage; use the local pairing above to validate Xcode 27 without changing the
+CI pins. The current macOS 15/Sequoia CI images cannot run Xcode 27.
 
 ## GTK4 Tests
 

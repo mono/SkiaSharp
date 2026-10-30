@@ -97,9 +97,9 @@
     <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
   </PropertyGroup>
 
-  <!-- MAUI Package Versions (must match installed workload versions per TFM) -->
+  <!-- MAUI package versions per TFM; Apple workload/Xcode versions are pinned separately. -->
   <PropertyGroup>
-    <MauiVersion Condition="$(TargetFramework.StartsWith('net10'))">10.0.20</MauiVersion>
+    <MauiVersion Condition="$(TargetFramework.StartsWith('net10'))">10.0.110</MauiVersion>
     <MauiVersion Condition="$(TargetFramework.StartsWith('net9'))">9.0.120</MauiVersion>
   </PropertyGroup>
 
@@ -222,12 +222,12 @@
 
   <!-- platform version number information -->
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
-    <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>14.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>14.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
