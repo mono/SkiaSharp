@@ -15,9 +15,12 @@ Do not hand-edit generated pages, machine-owned data, or maintainer companions.
 
 ## Workflow
 
-In hosted CI, Prepare and output-branch checkout have already run. Work offline from
-the restored files; do not rerun network generators or choose another branch.
-For local preparation commands, see [Local regeneration](#local-regeneration).
+Start according to the caller:
+
+| Caller | Starting point |
+|---|---|
+| Hosted workflow | Inputs and output branch are ready. Work offline; do not rerun preparation or choose a branch. |
+| Local regeneration | Run [Local regeneration](#local-regeneration) first, then use the same writing steps below. |
 
 ### 1. Identify the pages
 

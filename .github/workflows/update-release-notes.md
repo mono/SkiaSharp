@@ -263,104 +263,56 @@ safe-outputs:
     recreate-ref: true
 ---
 
-# Sync - Release Notes & API Diffs
+# Write release notes and open the docs PR
 
-This is the single pipeline that keeps the website release notes **and** the API
-api diffs current — there is no separate api-diff workflow. The deterministic
-generators run in a dedicated **`prepare`** job, the agent then polishes prose,
-and **one** pull request ships everything.
+Follow [the release-notes skill](../../.agents/skills/release-notes/SKILL.md) to turn
+the collected evidence into consumer-facing prose. Validate the pages, then write
+the PR description and publish one documentation update.
 
-## What already ran: the Prepare phase (do NOT re-run)
+## Inputs and checkout are ready
 
-Before you (the agent) started, a **separate `prepare` job** ran the skill's
-**Prepare** phase on its own disk-managed runner — the single script
-`.agents/skills/release-notes/scripts/prepare.sh` (API diffs via Cake, then the
-per-page `_sources/<version>.data.json` facts, then the network-sourced
-`_sources/index.json` and the **"Files to polish"** list). See the skill's "Local
-regeneration" section and `documentation/dev/release-notes-and-api-diffs.md` §2
-for exactly what it produces.
+The host has restored generated API diffs, page facts, index data, and
+`output/files-to-polish.txt`. It has checked out `bot/release-notes` with history
+rooted at `origin/main`; the selected source's skill and tools remain in the working tree.
 
-The `prepare` job uploaded its complete working-tree change as a patch plus that
-list as an artifact, and a host step **already restored both** into this checkout:
-the regenerated files (every `_sources/<version>.data.json` and `_sources/index.json`)
-are on disk, and the list is at `output/files-to-polish.txt`. **You have no network —
-do not re-run `prepare.sh`, `dotnet cake`, `release-notes-data.py`, or `release-notes-index.py`.**
-Your job is to write the prose and render the pages (below), then commit and open the PR.
+- Work offline. Do not run `prepare.sh`, Cake, `release-notes-data.py`, or
+  `release-notes-index.py`, or fetch new evidence.
+- Do not check out, create, reset, or choose a branch.
+- Do not commit source-only tools outside `documentation/docfx/releases/`.
 
-> This agent job is gated on Prepare having actually changed something
-> (`prepare.outputs.has_changes`). A no-op run — where the deterministic
-> generators reproduced the existing tree byte-for-byte — is skipped *before* you
-> start. After the host roots the output history at `origin/main`, inspect the final
-> release-tree diff; if nothing remains to publish, exit without a commit or PR.
+## Write and validate
 
-## Your job: write the prose and render each page
+Re-author every listed page using the skill's complete-body reading, consumer
+selection, companion, scope, and factual-review rules. The list may be empty;
+in that case proceed directly to the final render.
 
-Follow the **release-notes skill**
-([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
-for **how** to write each page's prose and render it — the prose slots, the six
-categories, the breaking-change sources (`*.breaking.md` + `_sources/<version>.notes.md`),
-the optional per-shipment `release_summaries` slot that converges reviewed GitHub Release
-summaries (a separate, non-blocking surface from the website page — see the skill),
-the per-page `release-notes-render.py` validation, and the "never hand-edit the page" rules all
-live there. The renderer owns every heading, table, banner, `@handle`, ❤️, and PR link,
-so you only ever write prose.
+Validate each page as the skill describes. Then finalize with:
 
-This run's **CI-specific deltas** on top of the skill:
+```bash
+python3 scripts/infra/docs/release-notes-render.py --all
+```
 
-1. Your page list is `output/files-to-polish.txt` (one repo-relative
-   `documentation/docfx/releases/<version>.md` per line). It **may be empty** — that
-   means no page needs prose, but there is still deterministic work to materialize
-   (a rebuilt no-changes HarfBuzz section, a refreshed API diff, or the TOC/index), so
-   do **not** exit early; go straight to the final render.
-2. You have **no network**, and Prepare already ran — never re-run it (above).
-3. Use `release-notes-render.py` per page to validate as you go (per the skill), then
-   finalize with this exact command:
-   `python3 scripts/infra/docs/release-notes-render.py --all`
-   to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
-   committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
-4. Inspect the final release-tree diff, write the PR description, then commit and
-   submit through the native safe-output tool (below). If the release tree is unchanged,
-   make no commit and exit. Source-only tooling differences are not output to publish.
+Correct reported prose errors and rerun until it succeeds. Optional exact-tag
+`release_summaries` are not checked by this renderer; a separate workflow validates
+and publishes them later. Do not publish GitHub Release bodies in this run.
 
-`release_summaries` entries you write are **not** validated by
-`release-notes-render.py` (they render nowhere on the website page) — a separate,
-classic workflow (`update-github-release-summaries.yml`) validates and converges
-them into the matching GitHub Release afterwards, on its own schedule. Getting one
-wrong never blocks this PR or this run; fix it in a follow-up.
+## Commit and submit
 
-## How the PR is made
+Inspect the final release-tree diff. If it is empty, exit without a commit or PR,
+even when source-only tools elsewhere differ from main.
 
-`create-pull-request` is a **commit-based** safe-output: it turns your commit into
-the PR. It does **not** stage or commit for you. If you call it with an uncommitted
-working tree it returns *"No changes to commit"*, and gh-aw then falls back to
-diffing months of history (2000+ files, exceeding the PR file cap and failing the
-run). So once every page renders cleanly you **must** commit everything yourself,
-then create the PR:
+1. Write the PR description yourself from the repository template and actual diff,
+   following the skill. Preserve sections/checklists, omit complete instructional
+   HTML comments, and report only observed validation commands and results.
+2. Run `git add -- documentation/docfx/releases` to stage the prepared facts, prose,
+   rendered pages, API diffs, and navigation changes together.
+3. Run `git commit -m "docs: regenerate API diffs and release notes"` as a standalone
+   shell call. The safe-output tool requires a commit; it does not stage or commit for you.
+   Do not chain cleanup or other commands onto this call.
+4. Call the registered native `create_pull_request` safe-output with base `main`
+   and branch `bot/release-notes`. Its schema is already supplied; do not probe a
+   shell CLI with `command -v`, `--help`, or other discovery commands.
 
-The host has already checked out `bot/release-notes`. Its
-history starts at `origin/main`, while the working tree retains the selected source's
-tools and prepared files. Do not check out, create, reset, or choose another branch.
-Source-only changes outside the release tree are validation tools, not output to commit.
-
-1. `git add -- documentation/docfx/releases` — stage the restored Prepare output
-   (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
-   the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
-   **and** the regenerated `TOC.yml` + `index.md`.
-2. Run `git commit -m "docs: regenerate API diffs and release notes"` as its own
-   shell call. Do not append cleanup or other commands to this call: an unallowed
-   command in a compound call prevents the commit from running.
-3. Call the `create_pull_request` safe-output with base `main` and branch
-   `bot/release-notes`. Both production and branch-source tests always
-   target `main`; only generated release files are allowed in the output.
-   Use the registered native safe-output tool directly; its schema is already supplied.
-   Do not probe a shell CLI with `command -v`, `--help`, or other discovery commands.
-   Keep any PR payload in `/tmp/gh-aw/`;
-   do not delete it before submission or add a cleanup command to the commit call.
-   Write `body` yourself using the repository template and the final generated diff,
-   following the skill's PR-body guidance. Summarize this run's actual release-note
-   changes and validation; omit complete instructional HTML comments before submission.
-
-
-Commit **once**, at the end, after the release files are validated. If the release
-tree has no changes relative to the main-rooted output branch, exit without a commit
-or PR even when source-only tools elsewhere in the working tree differ from main.
+Keep temporary PR payloads in `/tmp/gh-aw/`, outside the commit. Do not delete the
+payload before submission. Commit once after validation; do not hand-edit generated
+Markdown or manually push output outside the safe-output tool.
