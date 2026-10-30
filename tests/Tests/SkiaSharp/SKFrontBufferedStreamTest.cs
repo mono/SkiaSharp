@@ -182,6 +182,44 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void SKDataCreate_FromNonSeekableFrontBufferedStream_ReadsAllBytes()
+		{
+			using var inner = new ConfigurableTestStream(TwentyBytes, canSeek: false, maxBytesPerRead: 3);
+			using var buffered = new SKFrontBufferedStream(inner, 10);
+
+			using var data = SKData.Create(buffered);
+			Assert.NotNull(data);
+			Assert.Equal(TwentyBytes, data.ToArray());
+		}
+
+		[Fact]
+		public void NestedFrontBufferedStreams_PreserveUnknownLengthAndCreateDataCorrectly()
+		{
+			using var inner = new ConfigurableTestStream(TwentyBytes, canSeek: false, maxBytesPerRead: 4);
+			using var outer1 = new SKFrontBufferedStream(inner, 8);
+			using var outer2 = new SKFrontBufferedStream(outer1, 8);
+
+			Assert.Equal(-1, outer1.Length);
+			Assert.Equal(-1, outer2.Length);
+
+			using var data = SKData.Create(outer2);
+			Assert.NotNull(data);
+			Assert.Equal(TwentyBytes, data.ToArray());
+		}
+
+		[Fact]
+		public void SKDataCreate_FromEarlyEndingFrontBufferedStreamPastBuffer_SucceedsWithoutRewindException()
+		{
+			using var inner = new ConfigurableTestStream(
+				TwentyBytes, canSeek: true, maxBytesPerRead: 3, earlyEndPosition: 12, reportedLength: 20);
+			using var buffered = new SKFrontBufferedStream(inner, 4);
+
+			using var data = SKData.Create(buffered);
+			Assert.NotNull(data);
+			Assert.Equal(TwentyBytes.AsSpan(0, 12).ToArray(), data.ToArray());
+		}
+
+		[Fact]
 		public void InitialOffsetAndOverflowingReadArguments_HandledCorrectly()
 		{
 			Assert.Throws<ArgumentNullException>(() => new SKFrontBufferedStream(null, 10));

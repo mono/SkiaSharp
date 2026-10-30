@@ -368,6 +368,33 @@ namespace SkiaSharp.Tests
 			Assert.True (buffered.IsAtEnd);
 		}
 
+		[Fact]
+		public void FrontBufferedManagedStream_DuplicateAndForkReturnNull ()
+		{
+			using var memStream = new SKMemoryStream (gAbcs);
+			using var buffered = new SKFrontBufferedManagedStream (memStream, 16);
+
+			Assert.Null (buffered.Duplicate ());
+			Assert.Null (buffered.Fork ());
+		}
+
+		[Fact]
+		public void FrontBufferedNonSeekableStreamWrappedInManagedStream_ReadsAllBytes ()
+		{
+			var data = Enumerable.Range (0, 64).Select (i => (byte)i).ToArray ();
+			using var inner = new ConfigurableTestStream (data, canSeek: false, maxBytesPerRead: 5);
+			using var frontBuffered = new SKFrontBufferedStream (inner, 16);
+			using var managed = new SKManagedStream (frontBuffered);
+
+			Assert.False (managed.HasLength);
+			Assert.False (managed.IsAtEnd);
+
+			using var nestedFrontBuffered = new SKFrontBufferedManagedStream (managed, 16, disposeUnderlyingStream: false);
+			var actual = new byte[data.Length];
+			Assert.Equal (data.Length, nestedFrontBuffered.Read (actual, actual.Length));
+			Assert.Equal (data, actual);
+		}
+
 		private sealed class VirtualLargeSkipSKStream : ManagedStream
 		{
 			private long remaining = (long)int.MaxValue + 1;
