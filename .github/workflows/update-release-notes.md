@@ -1,10 +1,10 @@
 ---
 description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
 # ENGINE — deterministic preparation and rendering bound the task, but the prose
-# still requires nuanced API and breaking-change judgment, so use Terra.
+# still requires nuanced API and breaking-change judgment, so use Sol.
 engine:
   id: copilot
-model: gpt-5.6-terra
+model: gpt-6.1-sol
 # TRIGGERS — main is the single source of truth for EVERY version/branch.
 # Deliberately NOT triggered by `release/**` pushes or `v*` tags: a push/tag event
 # runs the workflow copy that lives on THAT ref, not main's, so those triggers can
