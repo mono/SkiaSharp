@@ -526,14 +526,15 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void CreateFromSeekableStream_HandlesEarlyEndAndPositionPastLength()
+		public void CreateFromSeekableStreamRejectsEarlyEndAndHandlesPositionPastLength()
 		{
 			var bytes = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80 };
 			using (var earlyStream = new ConfigurableTestStream(bytes, canSeek: true, maxBytesPerRead: 3, earlyEndPosition: 5))
 			{
 				using var data = SKData.Create(earlyStream);
-				Assert.NotNull(data);
-				Assert.Equal(new byte[] { 10, 20, 30, 40, 50 }, data.ToArray());
+				Assert.Null(data);
+				Assert.Equal(5, earlyStream.Position);
+				Assert.True(earlyStream.CanRead);
 			}
 
 			using (var pastEndStream = new MemoryStream(bytes))
@@ -548,9 +549,27 @@ namespace SkiaSharp.Tests
 			{
 				offsetEarlyStream.Position = 2;
 				using var data = SKData.Create(offsetEarlyStream);
-				Assert.NotNull(data);
-				Assert.Equal(new byte[] { 30, 40, 50, 60 }, data.ToArray());
+				Assert.Null(data);
+				Assert.Equal(6, offsetEarlyStream.Position);
+				Assert.True(offsetEarlyStream.CanRead);
 			}
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void KnownLengthEmptyReadFailsWithoutRetry(bool managedWrapper)
+		{
+			using var inner = new ConfigurableTestStream(OddData, earlyEndPosition: 0);
+			using var stream = new SKManagedStream(inner);
+
+			using var data = managedWrapper ? SKData.Create((SKStream)stream) : SKData.Create(inner);
+
+			Assert.Null(data);
+			Assert.Equal(0, inner.Position);
+			Assert.Equal(1, inner.TotalReadCalls);
+			Assert.Equal(1, inner.ZeroReadCount);
+			Assert.True(inner.CanRead);
 		}
 
 		[Fact]
@@ -609,17 +628,38 @@ namespace SkiaSharp.Tests
 		}
 
 		[Theory]
-		[InlineData(true, false)]
-		[InlineData(true, true)]
-		[InlineData(false, false)]
-		public void CreateFromManagedSKStreamPropagatesReadAndSeekFailures(bool canSeek, bool failOnSeek)
+		[InlineData(true)]
+		[InlineData(false)]
+		public void CreateFromManagedSKStreamPropagatesReadFailures(bool canSeek)
 		{
-			using var inner = new FailingAfterShortReadStream(canSeek, failOnSeek);
+			using var inner = new FailingAfterShortReadStream(canSeek, failOnSeek: false);
 			using var stream = new SKManagedStream(inner, disposeManagedStream: true);
 
 			var exception = Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
 
 			Assert.Same(inner.Failure, exception);
+			Assert.Equal(1, inner.Position);
+			Assert.True(inner.CanRead);
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void EarlyEndDoesNotResetAndOnlySucceedsForUnknownLength(bool knownLength)
+		{
+			using var inner = new FailingAfterShortReadStream(canSeek: knownLength, failOnSeek: true);
+			using var stream = new SKManagedStream(inner);
+
+			using var data = SKData.Create((SKStream)stream);
+
+			if (knownLength)
+				Assert.Null(data);
+			else
+			{
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 10 }, data.ToArray());
+			}
+			Assert.Equal(0, inner.SeekCalls);
 			Assert.Equal(1, inner.Position);
 			Assert.True(inner.CanRead);
 		}
@@ -657,6 +697,8 @@ namespace SkiaSharp.Tests
 
 			public IOException Failure { get; } = new IOException("Read or seek failed after a short read.");
 
+			public int SeekCalls { get; private set; }
+
 			public override bool CanSeek => canSeek;
 
 			public override int Read(byte[] buffer, int offset, int count)
@@ -673,6 +715,7 @@ namespace SkiaSharp.Tests
 				get => base.Position;
 				set
 				{
+					SeekCalls++;
 					if (failOnSeek && reads > 0)
 						throw Failure;
 					base.Position = value;
@@ -681,7 +724,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void CreateFromSKStream_EarlyEndingAndFrontBufferedSKStreams_DoNotLoseConsumedBytes()
+		public void CreateFromSKStreamRejectsEarlyEndAndPreservesFrontBufferedPosition()
 		{
 			var bytes = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80 };
 
@@ -689,8 +732,9 @@ namespace SkiaSharp.Tests
 			using (var skStream = new SKManagedStream(inner))
 			{
 				using var data = SKData.Create((SKStream)skStream);
-				Assert.NotNull(data);
-				Assert.Equal(new byte[] { 10, 20, 30, 40, 50 }, data.ToArray());
+				Assert.Null(data);
+				Assert.Equal(5, inner.Position);
+				Assert.True(inner.CanRead);
 			}
 
 			using (var ms = new MemoryStream(bytes))
