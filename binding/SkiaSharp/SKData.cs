@@ -172,20 +172,25 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
+		/// <returns>Returns data containing the remaining bytes, an empty instance if no bytes remain, or <see langword="null" /> if the result cannot be created.</returns>
 		/// <remarks>Reads all remaining bytes from the current position to the end of <paramref name="stream" />.</remarks>
 		public static SKData Create (Stream stream)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (!stream.CanSeek || stream.Length < 0)
+			if (!stream.CanSeek)
 				return CreateFromUnknownLengthStream (stream);
 
-			var remaining = stream.Length - stream.Position;
-			if (remaining <= 0)
+			var len = stream.Length;
+			if (len < 0)
+				return CreateFromUnknownLengthStream (stream);
+
+			var pos = stream.Position;
+			if (pos >= len)
 				return Empty;
 
+			var remaining = len - pos;
 			return CreateFromStream (stream, (ulong)remaining, failOnEarlyEof: false);
 		}
 
@@ -262,10 +267,14 @@ namespace SkiaSharp
 			if (length == 0)
 				return Empty;
 
-			if (failOnEarlyEof && stream.CanSeek && stream.Length >= 0) {
-				var remaining = stream.Length - stream.Position;
-				if (remaining < 0 || (ulong)remaining < length)
-					return null;
+			if (failOnEarlyEof && stream.CanSeek) {
+				var len = stream.Length;
+				if (len >= 0) {
+					var pos = stream.Position;
+					var remaining = len - pos;
+					if (remaining < 0 || (ulong)remaining < length)
+						return null;
+				}
 			}
 
 			var data = Create (length);
@@ -315,7 +324,7 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance.</returns>
+		/// <returns>Returns data containing the remaining bytes, an empty instance if no bytes remain, or <see langword="null" /> if the result cannot be created.</returns>
 		/// <remarks>Reads all remaining bytes from the current position to the end of <paramref name="stream" />.</remarks>
 		public static SKData Create (SKStream stream)
 		{
@@ -331,7 +340,8 @@ namespace SkiaSharp
 						if (pos >= len)
 							return Empty;
 
-						var data = CreateFromManagedStream (managed, len - pos);
+						var remaining = len - pos;
+						var data = CreateFromManagedStream (managed, remaining);
 						if (data != null)
 							return data;
 
@@ -349,7 +359,8 @@ namespace SkiaSharp
 					if (pos >= len)
 						return Empty;
 
-					var data = CreateFromStream (stream, (ulong)(len - pos));
+					var remaining = len - pos;
+					var data = CreateFromStream (stream, (ulong)remaining);
 					if (data != null)
 						return data;
 

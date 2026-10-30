@@ -231,6 +231,75 @@ namespace SkiaSharp.Tests
 			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
+		[Theory]
+		[InlineData(0)]
+		[InlineData(5)]
+		public void EmptyRemainderSucceedsButPositiveExactLengthFails(int position)
+		{
+			using var source = new MemoryStream();
+			source.Position = position;
+			using var managed = new SKManagedStream(source);
+			using var native = new SKMemoryStream();
+
+			using var sourceData = SKData.Create(source);
+			using var managedData = SKData.Create((SKStream)managed);
+			using var nativeData = SKData.Create((SKStream)native);
+			using var sourceZero = SKData.Create(source, 0);
+			using var managedZero = SKData.Create((SKStream)managed, 0);
+			using var nativeZero = SKData.Create((SKStream)native, 0);
+
+			Assert.All(new[] { sourceData, managedData, nativeData, sourceZero, managedZero, nativeZero }, data =>
+			{
+				Assert.NotNull(data);
+				Assert.Equal(0, data.Size);
+			});
+			Assert.Null(SKData.Create(source, 1));
+			Assert.Null(SKData.Create((SKStream)managed, 1));
+			Assert.Null(SKData.Create((SKStream)native, 1));
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void ManagedStreamMetadataIsReadOncePerCreation(bool exactLength)
+		{
+			using var stream = new CountingMetadataStream(OddData);
+			stream.Position = 2;
+
+			using var data = exactLength ? SKData.Create(stream, 3) : SKData.Create(stream);
+
+			Assert.Equal(new byte[] { 5, 7, 9 }, data.ToArray());
+			Assert.Equal(1, stream.LengthReads);
+			Assert.Equal(1, stream.PositionReads);
+		}
+
+		private sealed class CountingMetadataStream : MemoryStream
+		{
+			public CountingMetadataStream(byte[] data) : base(data, writable: false) { }
+
+			public int LengthReads { get; private set; }
+			public int PositionReads { get; private set; }
+
+			public override long Length
+			{
+				get
+				{
+					LengthReads++;
+					return base.Length;
+				}
+			}
+
+			public override long Position
+			{
+				get
+				{
+					PositionReads++;
+					return base.Position;
+				}
+				set => base.Position = value;
+			}
+		}
+
 		[Fact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
