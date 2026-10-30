@@ -13,13 +13,9 @@ heavy one.
 
 Each example is three files:
 
-These historical format-3 snapshots predate full commit `body` fields in format 6.
-Current Prepare output includes those bodies; read them as directed by `../SKILL.md`
-rather than treating the title-only snapshots as the current input contract.
-
 | File | Stage | Who writes it |
 |---|---|---|
-| `<v>.data.json` | facts | `release-notes-data.py` — PRs (each tagged + community flag), the contributor roster, preview buckets, breaking-change *sources*, banner + link facts. Machine-owned; the agent never edits it. |
+| `<v>.data.json` | facts | `release-notes-data.py` — PR titles and full commit bodies, classifications, contributors, preview buckets, exact shipments, breaking-change *sources*, banner + link facts. Machine-owned; the agent never edits it. |
 | `<v>.prose.json` | prose | the Polish agent — only `theme`, `highlights_*`, `breaking`, `categories`, `contributor_summaries`, `preview_summaries`. No headings, tables, handles, ❤️, or links. |
 | `<v>.rendered.md` | page | `release-notes-render.py <v>.data.json <v>.prose.json <v>.rendered.md` — every heading, table, banner, `@handle`, ❤️, and PR link. |
 
@@ -28,9 +24,9 @@ engine lives under `scripts/infra/docs/`; run from the repo root):
 
 ```sh
 python3 scripts/infra/docs/release-notes-render.py \
-  documentation/docfx/releases/_sources/4.148.0.data.json \
-  documentation/docfx/releases/_sources/4.148.0.prose.json /tmp/out.md
-diff documentation/docfx/releases/4.148.0.md /tmp/out.md   # identical
+  .agents/skills/release-notes/samples/4.148.0.data.json \
+  .agents/skills/release-notes/samples/4.148.0.prose.json /tmp/out.md
+diff .agents/skills/release-notes/samples/4.148.0.rendered.md /tmp/out.md   # identical
 ```
 
 Read a `<v>.prose.json` next to its rendered page to see how little prose the agent
