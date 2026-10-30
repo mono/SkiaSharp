@@ -1,11 +1,11 @@
 {
-  "theme": "Faster raster and text paths",
-  "highlights_headline": "SkiaSharp 4.151.0 restores CPU bitmap-rendering performance while advancing to Skia m151.",
-  "highlights_body": "Color conversion, tag parsing, and shaped-text extraction do less work. New span overloads avoid substring allocations, and matching .NET 11 WebAssembly archives address linking and exception-handling mismatches.",
+  "theme": "Raster and shaping efficiency",
+  "highlights_headline": "SkiaSharp 4.151.0 restores CPU bitmap rendering performance and reduces parsing and shaping overhead.",
+  "highlights_body": null,
   "breaking": [
     {
-      "title": "Color hex parsing rejects whitespace after the prefix",
-      "body": "SKColor.Parse and TryParse no longer accept whitespace immediately after # in the six- and eight-digit paths. Remove that whitespace before parsing. Case-insensitive hex parsing and outer whitespace trimming remain supported.",
+      "title": "Remove whitespace immediately after the color prefix",
+      "body": "SKColor.Parse and TryParse no longer accept whitespace immediately after # in six- or eight-digit input. Remove that inner whitespace before parsing; surrounding whitespace and case-insensitive hexadecimal input remain supported.",
       "prs": [
         4345
       ]
@@ -16,8 +16,8 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to m151",
-          "detail": "Advances the bundled renderer from m150 without changing the existing C API surface.",
+          "lead": "Skia m151",
+          "detail": "Updates the bundled engine to milestone 151 without changing the native C API.",
           "prs": [
             4294
           ]
@@ -28,8 +28,8 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Span-based color and tag parsing",
-          "detail": "SKColor.Parse/TryParse, SKFourByteTag.Parse, and HarfBuzzSharp.Tag.Parse accept ReadOnlySpan<char> so slices can be parsed without allocating substrings.",
+          "lead": "Parse buffer slices directly",
+          "detail": "Adds ReadOnlySpan<char> parsing for SKColor, SKFourByteTag, and HarfBuzzSharp.Tag, avoiding substring allocation and reducing parsing overhead.",
           "prs": [
             4345,
             4396,
@@ -42,25 +42,21 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Scaled and tiled CPU bitmap rendering restored",
-          "detail": "Restores the optimized legacy shader-context path for software bitmap draws that had regressed in earlier Skia milestones.",
+          "lead": "CPU bitmap performance restored",
+          "detail": "Restores the optimized CPU path for scaled and tiled bitmaps that regressed after Skia m146. Color conversion and single-value premultiply/unpremultiply also avoid per-color native calls while preserving results.",
           "prs": [
-            4428
+            4428,
+            4370,
+            4385
           ]
         },
         {
-          "lead": "Ganesh stencil and resolve tracking corrected",
-          "detail": "Tracks stencil clears in native coordinates, ensures preserve-mode clears occur, and unwinds dirty tracking when a resolve task does not execute.",
+          "lead": "Ganesh text and stencil stability",
+          "detail": "Corrects malformed native text-resource cleanup, native-coordinate stencil tracking, preserve-mode stencil clearing, and resolve dirty tracking after failed work.",
           "prs": [
+            4382,
             4443,
             4489
-          ]
-        },
-        {
-          "lead": "Malformed native text cleanup corrected",
-          "detail": "Fixes use-after-free and invalid frees when a corrupt Slug buffer fails deserialization.",
-          "prs": [
-            4382
           ]
         }
       ]
@@ -69,25 +65,11 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Faster color conversions with identical results",
-          "detail": "SKColor-to-SKColorF conversion and single-value SKPMColor premultiply/unpremultiply use managed math rather than a native transition.",
+          "lead": "Less shaping allocation and prompt image cleanup",
+          "detail": "SKShaper reads glyph results through zero-copy spans, HarfBuzz UTF-8 string input uses pooled encoding, and subset image decoding promptly disposes an intermediate image when a new subset is returned.",
           "prs": [
-            4370,
-            4385
-          ]
-        },
-        {
-          "lead": "Less temporary text storage",
-          "detail": "HarfBuzzSharp.Buffer.AddUtf8(string) pools its encoding buffer, while SKShaper reads glyph results through zero-copy spans instead of two temporary arrays.",
-          "prs": [
+            4388,
             4376,
-            4388
-          ]
-        },
-        {
-          "lead": "Subset decoding releases intermediate images",
-          "detail": "SKImage.FromEncodedData(SKData, SKRectI) deterministically disposes the full-size intermediate when Subset returns a different image, without changing output.",
-          "prs": [
             3997
           ]
         }
@@ -97,8 +79,8 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": ".NET 11 WebAssembly assets",
-          "detail": "Adds Emscripten 5.0.6 archives and the exnref exception model for .NET 11 preview 6+ consumers. .NET 8 keeps 3.1.34 and .NET 9/10 keep 3.1.56 with their legacy exception model.",
+          "lead": ".NET 11 WebAssembly archives",
+          "detail": "Supplies Emscripten 5.0.6 native assets with the new exception-handling instructions required by .NET 11 preview 6 and later in this release. .NET 8, 9, and 10 retain their existing toolchain mappings.",
           "prs": [
             4459,
             4487
@@ -108,14 +90,14 @@
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Added .NET 11 WebAssembly native assets and cross-backend visual regression coverage, and removed redundant WASM build warnings"
+    "ramezgerges": "Added .NET 11 WebAssembly native assets and cross-backend visual testing, and removed redundant WASM build warnings."
   },
   "preview_summaries": {
-    "v4.151.0-preview.1.1": "Preview 1 opened the Skia m151 line without changing the managed API surface.",
-    "v4.151.0-preview.2.1": "Preview 2 added span-based color and tag parsing, reduced shaping allocations, and corrected malformed native text cleanup.",
-    "v4.151.0-rc.1.1": "The release candidate restored CPU bitmap performance, optimized color math, fixed subset-image cleanup, and aligned .NET 11 WebAssembly assets and exception handling."
+    "v4.151.0-preview.1.1": "Opened the Skia m151 line without managed API changes.",
+    "v4.151.0-preview.2.1": "Added span-based color and tag parsing, reduced shaping allocations, and fixed malformed native text-resource cleanup. Color parsing now rejects whitespace immediately after #.",
+    "v4.151.0-rc.1.1": "Restored CPU bitmap performance, optimized color math, and fixed intermediate subset-image cleanup. Added matching .NET 11 WebAssembly archives and exception handling, plus Ganesh stencil and resolve corrections."
   },
-  "harfbuzz_summary": "Adds span-based tag parsing and pooled UTF-8 string encoding, and ships Emscripten 5.0.6 native archives for .NET 11 consumers. The native HarfBuzz version remains 14.2.1.",
+  "harfbuzz_summary": "Buffer.AddUtf8(string) uses pooled encoding, and Tag.Parse accepts ReadOnlySpan<char> without its former scratch-array work. HarfBuzz WebAssembly assets add the Emscripten 5.0.6 toolchain for .NET 11.",
   "release_summaries": {
     "v4.151.0-preview.1.1": {
       "headline": "Preview 1 opened the Skia m151 line without changing the managed API surface.",

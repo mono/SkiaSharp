@@ -1,6 +1,6 @@
 {
-  "theme": "Text and stencil correctness",
-  "highlights_headline": "SkiaSharp 4.150.1 corrects native text-resource cleanup and clipped render-pass stencil checks.",
+  "theme": "Native rendering stability",
+  "highlights_headline": "SkiaSharp 4.150.1 corrects malformed native text cleanup and clipped render-pass stencil checks.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,10 +8,16 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native text cleanup and stencil checks corrected",
-          "detail": "Fixes use-after-free during malformed Slug deserialization and checks clipped render-pass bounds against the cleared stencil area.",
+          "lead": "Malformed text-resource cleanup",
+          "detail": "Fixes native allocator destruction order when corrupt serialized Slug data is rejected, avoiding use-after-free and invalid frees.",
           "prs": [
-            4379,
+            4379
+          ]
+        },
+        {
+          "lead": "Clipped stencil checks",
+          "detail": "Checks clipped render-pass bounds against the cleared stencil area.",
+          "prs": [
             4429
           ]
         }

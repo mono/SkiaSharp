@@ -1,6 +1,6 @@
 {
-  "theme": "Ganesh and shader stability",
-  "highlights_headline": "SkiaSharp 4.150.2 improves Ganesh failure handling and fixes a native shader-code generation use-after-free.",
+  "theme": "Ganesh failure handling",
+  "highlights_headline": "SkiaSharp 4.150.2 improves GPU failure handling and corrects a native shader-code generation use-after-free.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -9,18 +9,17 @@
       "bullets": [
         {
           "lead": "Failed GPU work no longer leaves stale readbacks",
-          "detail": "Propagates failed flushes, restores resolve-task dirty tracking, and includes the Imagination GPU framebuffer-deletion workaround.",
+          "detail": "Propagates failed Ganesh flushes to readback and restores resolve dirty tracking when a task does not execute. Includes further failed-flush and Imagination GPU framebuffer-deletion corrections.",
           "prs": [
             4517,
             4561
           ]
         },
         {
-          "lead": "SkSL RasterPipeline lifetime corrected",
-          "detail": "Includes the upstream shader-code generation use-after-free correction and additional same-milestone fixes.",
+          "lead": "Shader-code generation lifetime",
+          "detail": "Corrects an upstream SkSL RasterPipeline code-generation use-after-free.",
           "prs": [
-            4663,
-            4648
+            4663
           ]
         }
       ]

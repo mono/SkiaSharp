@@ -1,5 +1,5 @@
 {
-  "theme": "Ganesh upload failure handling",
+  "theme": "Reliable GPU failure propagation",
   "highlights_headline": "SkiaSharp 4.152.2 improves Ganesh flush and GPU-buffer upload failure handling.",
   "highlights_body": null,
   "breaking": [],
@@ -8,16 +8,16 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Failed GPU work does not proceed with stale buffers",
-          "detail": "Propagates render-task, flush, and submission failures and rejects incomplete uploads under memory pressure. Affected draws are dropped; the existing managed flush operations remain void.",
+          "lead": "Reject unsuccessful GPU work",
+          "detail": "Tracks task execution separately from success and propagates upload failures so affected draws are dropped instead of using stale buffers. Existing managed flush operations remain void.",
           "prs": [
             5069,
             5117
           ]
         },
         {
-          "lead": "Windows HarfBuzz binaries pass BinSkim BA2007",
-          "detail": "Consumers no longer need to baseline the disabled-critical-warnings error in libHarfBuzzSharp.dll. The native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
+          "lead": "Windows HarfBuzz scanning compatibility",
+          "detail": "Windows HarfBuzz native assets no longer trigger BinSkim BA2007 for disabled compiler warnings. Exported symbols and shaping behavior are unchanged.",
           "prs": [
             5121
           ]
@@ -27,7 +27,7 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {},
-  "harfbuzz_summary": "The Windows native library now passes BinSkim BA2007 by scoping vendored-source warning suppression. The bundled HarfBuzz engine and exported ABI are unchanged.",
+  "harfbuzz_summary": "Windows HarfBuzz native assets no longer trigger BinSkim BA2007 for disabled compiler warnings. Exported symbols and shaping behavior are unchanged.",
   "release_summaries": {
     "v4.152.2": {
       "headline": "SkiaSharp 4.152.2 improves Ganesh flush and GPU-buffer upload failure handling.",

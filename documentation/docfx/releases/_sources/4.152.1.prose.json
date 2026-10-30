@@ -1,5 +1,5 @@
 {
-  "theme": "Glyph atlas correctness",
+  "theme": "Reliable glyph atlas reuse",
   "highlights_headline": "SkiaSharp 4.152.1 prevents partial glyph-atlas updates from reusing evicted glyph locations.",
   "highlights_body": null,
   "breaking": [],
@@ -8,8 +8,8 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Glyph-atlas generation recorded only for complete updates",
-          "detail": "Ganesh and Graphite no longer treat a partial glyph-vector update as proof that all earlier atlas locations are current.",
+          "lead": "Glyph-atlas generation tracking",
+          "detail": "Ganesh and Graphite no longer mark an entire glyph vector current after only a partial update, preventing stale atlas fast-path locations.",
           "prs": [
             5047
           ]
