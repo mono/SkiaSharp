@@ -1,0 +1,72 @@
+{
+  "theme": "Skia m156 and GTK4 rendering",
+  "highlights_headline": "SkiaSharp 4.156.0 previews Skia m156 alongside GPU-backed GTK4 views.",
+  "highlights_body": "Linux NoDependencies packages regain system-font discovery, and WebAssembly assets align with .NET 11. GTK4 high-density painting and Tizen support have new requirements; review the migration guidance before upgrading.",
+  "breaking": [
+    {
+      "title": "GTK4 raster painting defaults to physical pixels",
+      "body": "SKDrawingArea now allocates high-density backing storage and reports physical pixels through CanvasSize and paint Info by default. Set IgnorePixelScaling to true to retain logical painting coordinates; RawInfo still describes physical pixels, and GTK input coordinates remain logical.",
+      "prs": [5249]
+    },
+    {
+      "title": "Tizen packages require Tizen 10",
+      "body": "SkiaSharp and HarfBuzzSharp Tizen native packages now target net10.0-tizen10.0 and no longer support Tizen 8 or 9. Retarget applications to Tizen 10 and .NET 10; source builders need the Tizen 10 SDK and GCC 14.2 for x64 or arm64.",
+      "prs": [5235]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia milestone 156",
+          "detail": "Updates the bundled renderer to Skia m156 without adding managed bindings. HarfBuzzSharp advances to package revision 14.4.0.100 while the native HarfBuzz engine remains at 14.4.0.",
+          "prs": [5247]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Native GTK4 GPU canvas",
+          "detail": "SKGLArea adds PaintSurface, a view-owned GRContext, optional continuous rendering and pixel-scaling control using GTK's GL context. Manually bundled GTK runtimes must include libepoxy, which dispatches GL calls for the active context.",
+          "prs": [5249]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Linux NoDependencies font discovery restored",
+          "detail": "Finds installed fonts through the directory-backed default manager without requiring fontconfig. The default search root is /usr/share/fonts/, restoring family lookup and avoiding SKShaper failures caused by empty typefaces when fonts are installed.",
+          "prs": [5086]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Matching WebAssembly assets for .NET 11",
+          "detail": "SkiaSharp and HarfBuzzSharp select Emscripten 6.0.2 archives for net11 and later, including threading and SIMD variants. .NET 8 retains 3.1.34 assets, while .NET 9 and 10 retain 3.1.56.",
+          "prs": [5306]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Restored system-font discovery in Linux NoDependencies packages"
+  },
+  "preview_summaries": {
+    "v4.156.0-preview.1.26512.10": "Preview 1 introduces Skia m156, native GTK4 GPU rendering and restored Linux NoDependencies font discovery. It aligns WebAssembly assets with .NET 11 and raises Tizen packages to Tizen 10."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp selects Emscripten 6.0.2 assets for .NET 11 and later and raises its Tizen packages to net10.0-tizen10.0. Windows native builds also align their selected compiler and Spectre CRT versions.",
+  "release_summaries": {
+    "v4.156.0-preview.1.26512.10": {
+      "headline": "SkiaSharp 4.156.0 previews Skia m156 and native GTK4 GPU rendering.",
+      "body": "Linux NoDependencies packages regain directory-backed system-font discovery, and WebAssembly assets align with .NET 11. Review the release notes for GTK4 pixel-scaling changes and the new Tizen 10 requirement."
+    }
+  }
+}
