@@ -555,6 +555,24 @@ namespace SkiaSharp.Tests
 			Assert.True(inner.CanRead);
 		}
 
+		[Theory]
+		[InlineData(0)]
+		[InlineData(2)]
+		public void CreateFromFrontBufferedManagedStreamKeepsReadFailureOnManagedStack(int bufferSize)
+		{
+			using var inner = new FailingAfterShortReadStream(canSeek: true, failOnSeek: false);
+			using var managed = new SKManagedStream(inner);
+			using var buffered = new SKFrontBufferedManagedStream((SKStream)managed, bufferSize);
+
+			var exception = Assert.Throws<IOException>(() => SKData.Create((SKStream)buffered));
+
+			Assert.Same(inner.Failure, exception);
+			Assert.Equal(1, inner.Position);
+			Assert.True(inner.CanRead);
+			Assert.NotNull(exception.StackTrace);
+			Assert.DoesNotContain("SkiaSharp.DelegateProxies.", exception.StackTrace);
+		}
+
 		private sealed class FailingAfterShortReadStream : MemoryStream
 		{
 			private readonly bool canSeek;
