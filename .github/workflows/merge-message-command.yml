@@ -1,0 +1,62 @@
+name: Merge Message
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: merge-message-${{ github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    if: >
+      github.repository == 'mono/SkiaSharp' &&
+      github.event.issue.pull_request != null &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR') &&
+      (startsWith(github.event.comment.body, '/merge-message ') ||
+       startsWith(github.event.comment.body, '/merge-message\n') ||
+       github.event.comment.body == '/merge-message')
+    runs-on: ubuntu-latest
+    outputs:
+      pull_request: ${{ steps.resolve.outputs.pull_request }}
+      head_sha: ${{ steps.resolve.outputs.head_sha }}
+    steps:
+      - id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          [[ "$PR" =~ ^[1-9][0-9]*$ ]] || exit 1
+          pull=$(gh api "repos/mono/SkiaSharp/pulls/$PR")
+          [ "$(jq -r '.state' <<<"$pull")" = open ] || exit 1
+          head=$(jq -r '.head.sha' <<<"$pull")
+          [[ "$head" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          {
+            echo "pull_request=$PR"
+            echo "head_sha=$head"
+          } >> "$GITHUB_OUTPUT"
+
+  generate:
+    needs: resolve
+    uses: ./.github/workflows/merge-message.lock.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      actions: read
+    with:
+      repository: mono/SkiaSharp
+      pull_request: ${{ fromJSON(needs.resolve.outputs.pull_request) }}
+      expected_head_sha: ${{ needs.resolve.outputs.head_sha }}
+      artifact_name: merge-message-${{ github.run_id }}
+      post_comment: true

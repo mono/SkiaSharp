@@ -9,6 +9,15 @@ param(
     [Parameter(Mandatory)]
     [string] $SkiaBranch,
 
+    [Parameter(Mandatory)]
+    [string] $ReviewedSkiaSha,
+
+    [string] $ExpectedTargetSha,
+
+    [string] $ExpectedSkiaSha,
+
+    [switch] $Apply,
+
     [switch] $Push
 )
 
@@ -25,10 +34,24 @@ function Get-RemoteBranchSha {
     return ($result -split '\s+')[0]
 }
 
+function Assert-FullSha {
+    param([string] $Name, [string] $Value)
+
+    if ($Value -and $Value -notmatch '^[0-9a-f]{40}$') {
+        throw "$Name must be a lowercase, full 40-character Git SHA."
+    }
+}
+
 $repoRoot = git rev-parse --show-toplevel
 Set-Location $repoRoot
 git check-ref-format --branch $SkiaSharpBranch | Out-Null
 git check-ref-format --branch $SkiaBranch | Out-Null
+Assert-FullSha 'ExpectedTargetSha' $ExpectedTargetSha
+Assert-FullSha 'ExpectedSkiaSha' $ExpectedSkiaSha
+Assert-FullSha 'ReviewedSkiaSha' $ReviewedSkiaSha
+if ($Apply -and $Push) {
+    throw 'Apply and Push cannot be used together.'
+}
 
 $currentBranch = git branch --show-current
 $currentHead = git rev-parse 'HEAD^{commit}'
@@ -41,9 +64,14 @@ if ($status) {
 }
 
 $parentUrl = git remote get-url origin
+git fetch --no-tags origin "+refs/heads/${SkiaSharpBranch}:refs/remotes/origin/${SkiaSharpBranch}" | Out-Null
+$parentFetchedHead = git rev-parse "refs/remotes/origin/${SkiaSharpBranch}^{commit}"
 $parentRemoteHead = Get-RemoteBranchSha $parentUrl $SkiaSharpBranch
-if ($parentRemoteHead -ne $currentHead) {
+if ($parentRemoteHead -ne $currentHead -or $parentFetchedHead -ne $currentHead) {
     throw "Current checkout is $currentHead, but origin/$SkiaSharpBranch is $parentRemoteHead."
+}
+if ($ExpectedTargetSha -and $parentRemoteHead -ne $ExpectedTargetSha) {
+    throw "SkiaSharp branch $SkiaSharpBranch is $parentRemoteHead; expected $ExpectedTargetSha."
 }
 
 $oldGitlinkEntry = git ls-tree HEAD -- externals/skia
@@ -64,42 +92,73 @@ if ($oldManifestSha.Count -ne 1 -or $oldManifestSha[0] -ne $oldGitlink) {
     throw "cgmanifest mono/skia SHA does not match the current gitlink $oldGitlink."
 }
 
+$expectedNativeUrl = 'https://github.com/mono/skia.git'
+$configuredNativeUrl = git config -f .gitmodules --get submodule.externals/skia.url
+if ($configuredNativeUrl -ne $expectedNativeUrl) {
+    throw "externals/skia must use $expectedNativeUrl; found $configuredNativeUrl."
+}
+
 git submodule update --init -- externals/skia | Out-Null
 $skiaRoot = Join-Path $repoRoot 'externals/skia'
 Set-Location $skiaRoot
-$nativeUrl = git remote get-url origin
+$nativeUrl = git config --get remote.origin.url
+if ($nativeUrl -ne $expectedNativeUrl) {
+    throw "externals/skia origin must be $expectedNativeUrl; found $nativeUrl."
+}
+$nativeRemoteHead = Get-RemoteBranchSha $nativeUrl $SkiaBranch
+if ($ExpectedSkiaSha -and $nativeRemoteHead -ne $ExpectedSkiaSha) {
+    throw "mono/skia branch $SkiaBranch is $nativeRemoteHead; expected $ExpectedSkiaSha."
+}
 git fetch --no-tags origin "+refs/heads/${SkiaBranch}:refs/remotes/origin/${SkiaBranch}" | Out-Null
 $mergedSha = git rev-parse "refs/remotes/origin/${SkiaBranch}^{commit}"
+if ($ExpectedSkiaSha -and $mergedSha -ne $ExpectedSkiaSha) {
+    throw "mono/skia branch $SkiaBranch changed while fetching: $mergedSha; expected $ExpectedSkiaSha."
+}
+
+if ($oldGitlink -ne $ReviewedSkiaSha -and $oldGitlink -ne $mergedSha) {
+    throw "Current SkiaSharp gitlink is $oldGitlink; expected reviewed mono/skia SHA $ReviewedSkiaSha."
+}
 
 $parents = (git rev-list --parents -n 1 $mergedSha) -split '\s+'
 if ($parents.Count -ne 3) {
     throw "mono/skia $SkiaBranch tip $mergedSha is not a two-parent merge commit."
 }
-if ($oldGitlink -notin $parents[1..2]) {
-    throw "mono/skia $SkiaBranch tip $mergedSha does not merge the parent PR gitlink $oldGitlink."
+if ($parents[2] -ne $ReviewedSkiaSha) {
+    throw "mono/skia $SkiaBranch tip $mergedSha must have reviewed native PR SHA $ReviewedSkiaSha as its second parent; found $($parents[2])."
 }
 
-$oldTree = git rev-parse "${oldGitlink}^{tree}"
+$oldTree = git rev-parse "${ReviewedSkiaSha}^{tree}"
 $mergedTree = git rev-parse "${mergedSha}^{tree}"
 if ($mergedTree -ne $oldTree) {
-    throw "Merged mono/skia tree $mergedTree differs from the parent PR's reviewed tree $oldTree."
+    throw "Merged mono/skia tree $mergedTree differs from the reviewed native PR tree $oldTree."
 }
 
 Write-Host "SkiaSharp branch:  $SkiaSharpBranch @ $currentHead"
 Write-Host "mono/skia branch:  $SkiaBranch"
-Write-Host "Reviewed commit:   $oldGitlink"
+Write-Host "Reviewed commit:   $ReviewedSkiaSha"
 Write-Host "Merged commit:     $mergedSha"
 Write-Host "Identical tree:    $mergedTree"
 
-if (-not $Push) {
-    Write-Host 'DRY RUN: no files or refs were changed. Re-run with -Push to update the parent PR.'
+if ($oldGitlink -eq $mergedSha) {
+    Write-Host 'Already current: externals/skia and cgmanifest.json need no change.'
+    if (-not $Apply -and -not $Push) {
+        Write-Host 'DRY RUN: no commit, tracked source files, or remote refs were changed.'
+    }
+    exit 0
+}
+
+if (-not $Apply -and -not $Push) {
+    Write-Host 'DRY RUN: no commit, tracked source files, or remote refs were changed. Re-run with -Apply or -Push to update the parent PR.'
     exit 0
 }
 
 # Re-read both remote tips immediately before changing the worktree.
 $parentRemoteNow = Get-RemoteBranchSha $parentUrl $SkiaSharpBranch
 $nativeRemoteNow = Get-RemoteBranchSha $nativeUrl $SkiaBranch
-if ($parentRemoteNow -ne $currentHead -or $nativeRemoteNow -ne $mergedSha) {
+if ($parentRemoteNow -ne $currentHead -or
+    $nativeRemoteNow -ne $mergedSha -or
+    ($ExpectedTargetSha -and $parentRemoteNow -ne $ExpectedTargetSha) -or
+    ($ExpectedSkiaSha -and $nativeRemoteNow -ne $ExpectedSkiaSha)) {
     throw 'A source branch changed after preflight. Run the script without -Push again.'
 }
 
@@ -146,6 +205,11 @@ if ($staged.Count -eq 0 -or @($staged | Where-Object { $_ -notin @('cgmanifest.j
 
 git commit -m 'Update Skia reference to merged commit' -m "mono/skia $SkiaBranch advanced from $oldGitlink to $mergedSha." | Out-Null
 $newParentHead = git rev-parse 'HEAD^{commit}'
+if ($Apply) {
+    Write-Host "Updated $SkiaSharpBranch locally to $newParentHead without pushing."
+    exit 0
+}
+
 git push origin "HEAD:refs/heads/$SkiaSharpBranch" | Out-Null
 
 $remoteResult = Get-RemoteBranchSha $parentUrl $SkiaSharpBranch
