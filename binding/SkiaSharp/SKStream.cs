@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -254,6 +255,21 @@ namespace SkiaSharp
 			return result;
 		}
 
+		/// <summary>Seeks to an absolute position in the stream using a 64-bit offset.</summary>
+		/// <param name="position">The nonnegative absolute position, in bytes.</param>
+		/// <returns><see langword="true" /> if seeking is supported and the seek was successful; otherwise, <see langword="false" />.</returns>
+		/// <remarks>The native stream determines how seeking past its end is handled. The position must fit in the native pointer-sized unsigned integer.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="position" /> is negative, or exceeds <see cref="UInt32.MaxValue" /> in a 32-bit process.</exception>
+		public bool Seek (long position)
+		{
+			if (position < 0 || (!PlatformConfiguration.Is64Bit && position > UInt32.MaxValue))
+				throw new ArgumentOutOfRangeException (nameof (position));
+
+			var result = SkiaApi.sk_stream_seek (Handle, Utils.ToNativeSize ((ulong)position));
+			GC.KeepAlive (this);
+			return result;
+		}
+
 		/// <summary>Seeks to an relative offset in the stream.</summary>
 		/// <param name="offset">The relative offset.</param>
 		/// <returns><see langword="true" /> if seeking is supported and the seek was successful; otherwise, <see langword="false" />.</returns>
@@ -319,16 +335,25 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets the current position in the stream. If this is not supported, the position will be reported as 0.</summary>
 		/// <value>The current position in the stream, or 0 if not supported.</value>
-		/// <remarks />
+		/// <remarks>Use <see cref="Position64" /> for positions greater than <see cref="Int32.MaxValue" />.</remarks>
+		/// <exception cref="OverflowException">The current position is greater than <see cref="Int32.MaxValue" />.</exception>
 		public int Position {
+			get => checked ((int)Position64);
+			set => Seek (value);
+		}
+
+		/// <summary>Gets or sets the current position in the stream as a 64-bit integer. If this is not supported, the position will be reported as 0.</summary>
+		/// <value>The current position in bytes, or 0 if not supported.</value>
+		/// <remarks>Setting this property calls <see cref="Seek(long)" />. Native positions are unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented.</remarks>
+		/// <exception cref="OverflowException">The native position is greater than <see cref="Int64.MaxValue" />.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The assigned position is negative, or exceeds <see cref="UInt32.MaxValue" /> in a 32-bit process.</exception>
+		public long Position64 {
 			get {
-				var result = (int)SkiaApi.sk_stream_get_position (Handle);
+				var result = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (Handle));
 				GC.KeepAlive (this);
-				return result;
+				return checked ((long)result);
 			}
-			set {
-				Seek (value);
-			}
+			set => Seek (value);
 		}
 
 		/// <summary>Gets a value indicating whether this stream can report its total length.</summary>
@@ -344,12 +369,19 @@ namespace SkiaSharp
 
 		/// <summary>Gets the total length of the stream. If this is not supported, the length will be reported as 0.</summary>
 		/// <value>The total length of the stream, or 0 if not supported.</value>
-		/// <remarks />
-		public int Length {
+		/// <remarks>Use <see cref="Length64" /> for lengths greater than <see cref="Int32.MaxValue" />.</remarks>
+		/// <exception cref="OverflowException">The stream length is greater than <see cref="Int32.MaxValue" />.</exception>
+		public int Length => checked ((int)Length64);
+
+		/// <summary>Gets the total length of the stream as a 64-bit integer. If this is not supported, the length will be reported as 0.</summary>
+		/// <value>The total length of the stream in bytes, or 0 if not supported.</value>
+		/// <remarks>Native lengths are unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented.</remarks>
+		/// <exception cref="OverflowException">The native length is greater than <see cref="Int64.MaxValue" />.</exception>
+		public long Length64 {
 			get {
-				var result = (int)SkiaApi.sk_stream_get_length (Handle);
+				var result = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (Handle));
 				GC.KeepAlive (this);
-				return result;
+				return checked ((long)result);
 			}
 		}
 

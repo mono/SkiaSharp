@@ -326,23 +326,18 @@ namespace SkiaSharp
 				return CreateFromManagedStream (managed);
 
 			if (stream.HasLength && stream.HasPosition) {
-				var len = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (stream.Handle));
-				var pos = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (stream.Handle));
-				GC.KeepAlive (stream);
+				var len = stream.Length64;
+				var pos = stream.Position64;
 
 				if (pos >= len)
 					return Empty;
 
-				var data = CreateFromStream (stream, len - pos);
+				var data = CreateFromStream (stream, (ulong)(len - pos));
 				if (data != null)
 					return data;
 
-				var position = Utils.ToNativeSize (pos);
-				if (!SkiaApi.sk_stream_seek (stream.Handle, position)) {
-					GC.KeepAlive (stream);
+				if (!stream.Seek (pos))
 					return null;
-				}
-				GC.KeepAlive (stream);
 			}
 
 			return CreateFromUnknownLengthStream (stream);
