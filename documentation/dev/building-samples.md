@@ -161,10 +161,15 @@ iOS profiles use optional max-version directories:
 
 - `iphone-16-pro/18.6.0/maui-basic-cpu.png`
 
-Architecture-specific files override the unsuffixed reference. iOS references
-and captures stay unmodified. The shared Golden verifier excludes only the
-platform's declared system-owned inset during comparison; diagnostics and
-reference proposals retain the complete raw images.
+Architecture-specific files override the unsuffixed reference. Appium captures
+the selected canvas element, not necessarily the full device screen; image
+dimensions therefore follow the element screenshot returned by the driver.
+Those PNG bytes are saved unchanged. The shared Golden verifier transforms
+decoded copies of actual and reference images only during comparison.
+The iOS 39-pixel bottom inset applies only to the declared 1206 x 2622 profile;
+shorter element captures are not cropped again. Diagnostics and reference
+proposals retain the original captured images; only diff images use the
+comparison dimensions.
 Initial, drawn and cleared states use separate case names where needed.
 
 Use the sample helpers to select the profile:
