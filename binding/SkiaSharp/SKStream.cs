@@ -616,8 +616,12 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes from the buffer to write.</param>
 		/// <returns><see langword="true" /> if the write succeeded; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative or exceeds the length of a non-null <paramref name="buffer" />.</exception>
 		public virtual bool Write (byte[] buffer, int size)
 		{
+			if (size < 0 || (buffer != null && size > buffer.Length))
+				throw new ArgumentOutOfRangeException (nameof (size));
+
 			fixed (byte* b = buffer) {
 				var result = SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
 				GC.KeepAlive (this);
