@@ -457,14 +457,16 @@ A single GitHub workflow
 There is no separate "api-diff" vs "release-notes" workflow — they are one pipeline
 producing one coherent update.
 
-Branch-source validation runs set `source_branch` and publish their generated-output PR
-against that same branch; normal runs still target `main`. This keeps workflow changes
-out of the generated docs diff and avoids replaying workflow-file commits with a docs-only
-publishing token. Each branch-source test uses `bot/release-notes-test-<run_id>` and a
-source-specific concurrency group, separate from production's `bot/release-notes` output.
-The safe-output branch allowlist enforces that selection. A subsequent production run
-therefore cannot replace or close a test PR. PR publication failures are errors, not
-successful fallback issues.
+All generated PRs target `main`, including branch-source validation runs. A pre-agent step
+selects the output branch and exposes it as `DOCS_PR_BRANCH`; the agent never chooses or
+checks out a branch. The output history starts at `origin/main`, while the working tree
+retains the selected source's tools and prepared files. Only `documentation/docfx/releases/`
+is staged and allowed for publication, keeping workflow changes out of the docs diff.
+
+Each branch-source test uses `bot/release-notes-test-<run_id>` and a source-specific
+concurrency group, separate from production's `bot/release-notes` output. The safe-output
+branch allowlist enforces that selection. A subsequent production run therefore cannot
+replace or close a test PR. PR publication failures are errors, not successful fallback issues.
 
 The final renderer accepts `--all --pr-body <path>` to write the automation's complete PR
 body after validation succeeds. It preserves the contributor template's sections and
