@@ -474,6 +474,69 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Throws<ArgumentException>(() => app.Operations.SaveCapture([], "../foreign"));
 	}
 
+	[Theory]
+	[InlineData(1206, 2622, 39)]
+	[InlineData(1206, 2583, 0)]
+	[InlineData(1206, 2218, 0)]
+	[InlineData(1206, 2172, 0)]
+	[InlineData(1128, 922, 0)]
+	public async Task SavedCaptureAndReferenceStayRawWhileComparisonCropsEachInputOnce(
+		int width, int height, int bottomInset)
+	{
+		using var workspace = Workspace();
+		var app = new IosRunningApp(workspace, Path.Combine(workspace.Root, "Sample.app"));
+		using var referenceBitmap = new SKBitmap(width, height);
+		referenceBitmap.Erase(SKColors.Black);
+		using var referenceData = referenceBitmap.Encode(SKEncodedImageFormat.Png, 100);
+		var referenceBytes = referenceData.ToArray();
+		var referenceRoot = Path.Combine(workspace.Root, "references");
+		var expected = Path.Combine(referenceRoot, "fixture", "raw-capture.png");
+		Directory.CreateDirectory(Path.GetDirectoryName(expected)!);
+		File.WriteAllBytes(expected, referenceBytes);
+		var golden = new GoldenStore([referenceRoot]).Resolve(new("fixture", "raw-capture"));
+
+		using var actualBitmap = referenceBitmap.Copy();
+		for (var y = height - bottomInset; y < height; y++)
+			for (var x = 0; x < width; x++)
+				actualBitmap.SetPixel(x, y, SKColors.Blue);
+		using var actualData = actualBitmap.Encode(SKEncodedImageFormat.Png, 100);
+		var actualBytes = actualData.ToArray();
+		var actual = app.Operations.SaveCapture(actualBytes, "raw-capture");
+		Assert.Equal(actualBytes, File.ReadAllBytes(actual));
+
+		var transformedSizes = new List<SKSizeI>();
+		var options = new GoldenOptions(maxErrorPixelFraction: 0, comparisonTransform: image =>
+		{
+			Assert.Equal(new SKSizeI(width, height), image.Info.Size);
+			var transformed = app.Operations.TransformComparison(image);
+			Assert.Equal(bottomInset == 0, ReferenceEquals(image, transformed));
+			transformedSizes.Add(transformed.Info.Size);
+			return transformed;
+		});
+		Assert.Equal(actual, await golden.VerifyAsync(
+			GoldenInput.Capture(() => Task.FromResult(actual)), options,
+			cancellationToken: TestContext.Current.CancellationToken));
+		Assert.Equal(new[] { new SKSizeI(width, height - bottomInset), new SKSizeI(width, height - bottomInset) },
+			transformedSizes);
+		Assert.Equal(actualBytes, File.ReadAllBytes(actual));
+		Assert.Equal(referenceBytes, File.ReadAllBytes(expected));
+
+		// A second bottom crop would incorrectly exclude this last compared pixel.
+		actualBitmap.SetPixel(0, height - bottomInset - 1, SKColors.Red);
+		using var mismatchData = actualBitmap.Encode(SKEncodedImageFormat.Png, 100);
+		var mismatchBytes = mismatchData.ToArray();
+		var mismatch = app.Operations.SaveCapture(mismatchBytes, "interior-mismatch");
+		transformedSizes.Clear();
+		Assert.Throws<Xunit.Sdk.FailException>(() => golden.Verify(GoldenInput.Path(mismatch), options));
+		Assert.Equal(new[] { new SKSizeI(width, height - bottomInset), new SKSizeI(width, height - bottomInset) },
+			transformedSizes);
+		using var diff = SKBitmap.Decode(Path.ChangeExtension(mismatch, ".diff.png"));
+		Assert.NotNull(diff);
+		Assert.Equal(new SKSizeI(width, height - bottomInset), diff.Info.Size);
+		Assert.Equal(mismatchBytes, File.ReadAllBytes(mismatch));
+		Assert.Equal(referenceBytes, File.ReadAllBytes(expected));
+	}
+
 	[Fact]
 	public void IosComparisonPolicyExcludesOnlyTheKnownSystemBottomBand()
 	{
@@ -491,7 +554,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			"iPhone 16", "26.2", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.2", new(1032, 2592)));
-
 	}
 
 	[Theory]
