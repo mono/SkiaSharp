@@ -214,9 +214,24 @@ namespace SkiaSharp.Tests
 				TwentyBytes, canSeek: true, maxBytesPerRead: 3, earlyEndPosition: 12, reportedLength: 20);
 			using var buffered = new SKFrontBufferedStream(inner, 4);
 
+			var prefix = new byte[2];
+			Assert.Equal(prefix.Length, buffered.Read(prefix, 0, prefix.Length));
+			Assert.Equal(new byte[] { 1, 2 }, prefix);
+
 			using var data = SKData.Create(buffered);
-			Assert.NotNull(data);
-			Assert.Equal(TwentyBytes.AsSpan(0, 12).ToArray(), data.ToArray());
+			Assert.Null(data);
+			Assert.Equal(12, buffered.Position);
+			Assert.Equal(12, inner.Position);
+			Assert.True(inner.CanRead);
+			// The buffered read returns its partial progress; the factory then confirms EOF once.
+			Assert.Equal(2, inner.ZeroReadCount);
+			Assert.Equal(7, inner.TotalReadCalls);
+			Assert.False(inner.InfiniteLoopDetected);
+
+			var readCalls = inner.TotalReadCalls;
+			Assert.Throws<InvalidOperationException>(() => buffered.Seek(0, SeekOrigin.Begin));
+			Assert.Equal(readCalls, inner.TotalReadCalls);
+			Assert.Equal(12, inner.Position);
 		}
 
 		[Fact]
