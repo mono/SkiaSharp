@@ -322,76 +322,83 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (stream is SKAbstractManagedStream managed)
-				return CreateFromManagedStream (managed);
+			try {
+				if (stream is SKAbstractManagedStream managed) {
+					if (managed.OnHasLength () && managed.OnHasPosition ()) {
+						var len = Utils.FromNativeSize (managed.OnGetLength ());
+						var pos = Utils.FromNativeSize (managed.OnGetPosition ());
 
-			if (stream.HasLength && stream.HasPosition) {
-				var len = stream.Length64;
-				var pos = stream.Position64;
+						if (pos >= len)
+							return Empty;
 
-				if (pos >= len)
-					return Empty;
-
-				var data = CreateFromStream (stream, (ulong)(len - pos));
-				if (data != null)
-					return data;
-
-				if (!stream.Seek (pos))
-					return null;
-			}
-
-			return CreateFromUnknownLengthStream (stream);
-		}
-
-		private static SKData CreateFromManagedStream (SKAbstractManagedStream stream)
-		{
-			// Keep factory reads, metadata and seek failures on the managed stack.
-			if (stream.OnHasLength () && stream.OnHasPosition ()) {
-				var len = Utils.FromNativeSize (stream.OnGetLength ());
-				var pos = Utils.FromNativeSize (stream.OnGetPosition ());
-				GC.KeepAlive (stream);
-
-				if (pos >= len)
-					return Empty;
-
-				var length = len - pos;
-				var data = Create (length);
-				if (data != null) {
-					try {
-						var dst = (byte*)data.Data;
-						ulong totalRead = 0;
-						while (totalRead < length) {
-							var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
-							var read = Utils.FromNativeSize (stream.OnRead ((IntPtr)(dst + totalRead), (IntPtr)toRead));
-							GC.KeepAlive (stream);
-							if (read > (ulong)toRead)
-								throw new IOException ("The stream returned an invalid byte count.");
-							if (read == 0)
-								break;
-							totalRead += read;
-						}
-
-						if (totalRead == length)
+						var data = CreateFromManagedStream (managed, len - pos);
+						if (data != null)
 							return data;
-					} catch {
-						data.Dispose ();
-						throw;
+
+						if (!managed.OnSeek (Utils.ToNativeSize (pos)))
+							return null;
 					}
-					data.Dispose ();
+
+					return CreateFromUnknownLengthManagedStream (managed);
 				}
 
-				var rewound = stream.OnSeek (Utils.ToNativeSize (pos));
-				GC.KeepAlive (stream);
-				if (!rewound)
-					return null;
-			}
+				if (stream.HasLength && stream.HasPosition) {
+					var len = stream.Length64;
+					var pos = stream.Position64;
 
+					if (pos >= len)
+						return Empty;
+
+					var data = CreateFromStream (stream, (ulong)(len - pos));
+					if (data != null)
+						return data;
+
+					if (!stream.Seek (pos))
+						return null;
+				}
+
+				return CreateFromUnknownLengthStream (stream);
+			} finally {
+				GC.KeepAlive (stream);
+			}
+		}
+
+		private static SKData CreateFromManagedStream (SKAbstractManagedStream stream, ulong length)
+		{
+			var data = Create (length);
+			if (data == null)
+				return null;
+
+			try {
+				var dst = (byte*)data.Data;
+				ulong totalRead = 0;
+				while (totalRead < length) {
+					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
+					var read = Utils.FromNativeSize (stream.OnRead ((IntPtr)(dst + totalRead), (IntPtr)toRead));
+					if (read > (ulong)toRead)
+						throw new IOException ("The stream returned an invalid byte count.");
+					if (read == 0)
+						break;
+					totalRead += read;
+				}
+
+				if (totalRead == length)
+					return data;
+			} catch {
+				data.Dispose ();
+				throw;
+			}
+			data.Dispose ();
+			return null;
+		}
+
+		private static SKData CreateFromUnknownLengthManagedStream (SKAbstractManagedStream stream)
+		{
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			fixed (byte* ptr = buffer.Array) {
 				while (true) {
 					var read = Utils.FromNativeSize (stream.OnRead ((IntPtr)ptr, (IntPtr)buffer.Length));
-					GC.KeepAlive (stream);
 					if (read > (ulong)buffer.Length)
 						throw new IOException ("The stream returned an invalid byte count.");
 					if (read == 0)
@@ -429,7 +436,7 @@ namespace SkiaSharp
 				var dst = (byte*)data.Data;
 				ulong totalRead = 0;
 				while (totalRead < length) {
-					// Managed stream callbacks accept int-sized requests, even when the total length is larger.
+					// Bound each native request while retaining the full-width total length.
 					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
 					var read = stream.Read ((IntPtr)(dst + totalRead), toRead);
 					if (read == 0) {
@@ -444,8 +451,6 @@ namespace SkiaSharp
 			} catch {
 				data.Dispose ();
 				throw;
-			} finally {
-				GC.KeepAlive (stream);
 			}
 		}
 
