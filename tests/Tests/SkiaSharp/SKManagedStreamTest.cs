@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Xunit;
 using System.Collections.Generic;
 using System.Threading;
@@ -72,7 +73,7 @@ namespace SkiaSharp.Tests
 			Assert.False(stream.OwnsHandle);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -80,18 +81,18 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			var exists = SKObject.GetInstance<SKManagedStream>(handle, out _);
-			Assert.False(exists);
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
-			IntPtr DoWork()
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var dotnet = CreateTestStream();
 				var stream = new SKManagedStream(dotnet, true);
-				return stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 			}
 		}
 
@@ -347,7 +348,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -367,7 +368,7 @@ namespace SkiaSharp.Tests
 			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
 			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -377,17 +378,18 @@ namespace SkiaSharp.Tests
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
-			DoWork(out var codecH, out var streamH);
+			DoWork(out var codecH, out var weakCodec, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKManagedStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
-			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var codec = CreateCodec(out streamHandle);
-				codecHandle = codec.Handle;
+				var codec = CreateCodec(out streamHandle, out streamRef);
+				SKHandleDictionaryTestHelpers.Track(codec, out codecHandle, out codecRef);
 
 				CollectGarbage();
 
@@ -397,12 +399,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKManagedStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
 				Assert.True(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(codec);
 			}
 
-			SKCodec CreateCodec(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedStream(new MemoryStream(bytes), true);
-				streamHandle = stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
@@ -555,7 +560,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			dupe2.Dispose();
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, dupe2);
 
 			dupe1.Dispose();
 		}
@@ -565,13 +570,14 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakDupe);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakDupe);
 
-			IntPtr DoWork()
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			void DoWork(out IntPtr dupeHandle, out WeakReference dupeRef)
 			{
 				var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
 				var stream = new SKManagedStream(dotnet, true);
@@ -588,7 +594,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, dupe2.ReadByte());
 				Assert.Equal(2, dupe2.ReadByte());
 
-				return dupe2.Handle;
+				SKHandleDictionaryTestHelpers.Track(dupe2, out dupeHandle, out dupeRef);
 			}
 		}
 
