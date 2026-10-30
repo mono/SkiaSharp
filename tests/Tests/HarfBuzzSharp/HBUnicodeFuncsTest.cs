@@ -146,5 +146,27 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(7331, second);
 			}
 		}
+
+		[Fact]
+		public void FalseReturningComposeAndDecomposeDelegatesShouldReturnFalse()
+		{
+			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Empty))
+			{
+				unicodeFunctions.SetComposeDelegate((UnicodeFunctions f, uint a, uint b, out uint ab) =>
+				{
+					ab = 0;
+					return false;
+				});
+				unicodeFunctions.SetDecomposeDelegate((UnicodeFunctions f, uint ab, out uint a, out uint b) =>
+				{
+					a = 0;
+					b = 0;
+					return false;
+				});
+
+				Assert.False(unicodeFunctions.TryCompose('A', 0x0301, out _));
+				Assert.False(unicodeFunctions.TryDecompose(0x00C1, out _, out _));
+			}
+		}
 	}
 }

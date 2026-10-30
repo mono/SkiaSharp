@@ -78,16 +78,16 @@ namespace HarfBuzzSharp
 			return del.Invoke (functions, unicode);
 		}
 
-		private static partial bool UnicodeComposeProxyImplementation (IntPtr ufuncs, uint a, uint b, uint* ab, void* user_data)
+		private static partial int UnicodeComposeProxyImplementation (IntPtr ufuncs, uint a, uint b, uint* ab, void* user_data)
 		{
 			GetMultiUserData<ComposeDelegate, UnicodeFunctions> ((IntPtr)user_data, out var del, out var functions, out _);
 			var result = del.Invoke (functions, a, b, out var abManaged);
 			if (ab != null)
 				*ab = abManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
-		private static partial bool UnicodeDecomposeProxyImplementation (IntPtr ufuncs, uint ab, uint* a, uint* b, void* user_data)
+		private static partial int UnicodeDecomposeProxyImplementation (IntPtr ufuncs, uint ab, uint* a, uint* b, void* user_data)
 		{
 			GetMultiUserData<DecomposeDelegate, UnicodeFunctions> ((IntPtr)user_data, out var del, out var functions, out _);
 			var result = del.Invoke (functions, ab, out var aManaged, out var bManaged);
@@ -95,7 +95,7 @@ namespace HarfBuzzSharp
 				*a = aManaged;
 			if (b != null)
 				*b = bManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 	}
 }
