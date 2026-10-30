@@ -10,8 +10,8 @@
 # It fails loudly (non-zero) if any committed prose.json is invalid, so a bad page can
 # never ship.
 #
-# This is just release-notes-render.py --all under one banner — the single command the AI (and
-# a human) run to finalize. The three flags are accepted for a uniform interface with
+# This is release-notes-render.py --all under one banner for local finalization.
+# The hosted agent invokes the Python command directly. The three flags provide a uniform interface with
 # prepare.sh; --min-version/--max-version additionally render those pages individually
 # first (targeted validation output), and --force is a no-op (the render is idempotent —
 # it always rewrites from the current JSON).

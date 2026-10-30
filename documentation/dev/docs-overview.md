@@ -58,13 +58,17 @@ publication.
 
 Conceptual DocFX content remains in `documentation/docfx/guides/`. Release-note
 facts, prose sources, rendered release pages, and per-assembly API diffs remain
-under `documentation/docfx/releases/`. The release-notes Prepare and render
-entry points are:
+under `documentation/docfx/releases/`. The local Prepare and render entrypoints are:
 
 ```bash
 .agents/skills/release-notes/scripts/prepare.sh [--force] [--min-version X --max-version Y]
+# Write prose.json for each listed page, then render the complete page set.
 .agents/skills/release-notes/scripts/render.sh [--min-version X --max-version Y]
 ```
+
+Prepare's version bounds scope generation. The render wrapper's bounds add per-page
+validation before its full render; they do not restrict the final output set.
+In hosted CI, Prepare is a host job and the Polish agent runs the Python renderer directly.
 
 The parent docs Docker image supports those release-note/API-diff paths only.
 It intentionally has no API-reference generation dependencies.

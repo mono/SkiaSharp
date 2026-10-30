@@ -290,8 +290,8 @@ Your job is to write the prose and render the pages (below), then commit and ope
 > This agent job is gated on Prepare having actually changed something
 > (`prepare.outputs.has_changes`). A no-op run — where the deterministic
 > generators reproduced the existing tree byte-for-byte — is skipped *before* you
-> start, so when you are running there is always at least the regenerated Prepare
-> output on disk to commit.
+> start. After the host roots the output history at `origin/main`, inspect the final
+> release-tree diff; if nothing remains to publish, exit without a commit or PR.
 
 ## Your job: write the prose and render each page
 
@@ -313,14 +313,14 @@ This run's **CI-specific deltas** on top of the skill:
    (a rebuilt no-changes HarfBuzz section, a refreshed API diff, or the TOC/index), so
    do **not** exit early; go straight to the final render.
 2. You have **no network**, and Prepare already ran — never re-run it (above).
-3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
-   running the renderer directly: `release-notes-render.py` per page to validate as you go
-   (per the skill), then **once** at the end
+3. Use `release-notes-render.py` per page to validate as you go (per the skill), then
+   finalize with this exact command:
    `python3 scripts/infra/docs/release-notes-render.py --all`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
-4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
-   tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
+4. Inspect the final release-tree diff, write the PR description, then commit and
+   submit through the native safe-output tool (below). If the release tree is unchanged,
+   make no commit and exit. Source-only tooling differences are not output to publish.
 
 `release_summaries` entries you write are **not** validated by
 `release-notes-render.py` (they render nowhere on the website page) — a separate,
@@ -361,8 +361,6 @@ Source-only changes outside the release tree are validation tools, not output to
    changes and validation; omit complete instructional HTML comments before submission.
 
 
-Commit **once**, at the very end, after every edit is done — not incrementally.
-Because the job only starts when Prepare produced changes, the working tree is
-never completely clean here, so you will always commit and open exactly one PR.
-(As a defensive fallback only: if `git status` somehow shows no changes at all,
-make no edits, run no git, and exit — no PR is created.)
+Commit **once**, at the end, after the release files are validated. If the release
+tree has no changes relative to the main-rooted output branch, exit without a commit
+or PR even when source-only tools elsewhere in the working tree differ from main.
