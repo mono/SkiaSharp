@@ -382,11 +382,9 @@ namespace SkiaSharp
 				stream.Position = 0;
 				ClearEof ();
 				var length = stream.Length;
-				if (length > 0)
+				if (length >= 0) {
 					snapshotData = SKData.Create (this, length);
-				if (snapshotData == null) {
-					stream.Position = 0;
-					ClearEof ();
+				} else {
 					using var native = new SKDynamicMemoryWStream ();
 					using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
 					int readLen;
