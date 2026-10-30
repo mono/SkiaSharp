@@ -41,6 +41,8 @@ namespace SkiaSharp
 	/// ]]></format></remarks>
 	public class SKManagedStream : SKAbstractManagedStream
 	{
+		// A zero read may precede reported Length; only reuse that EOF observation while position/length match.
+		// Non-seekable streams have no metadata to invalidate it; peek and snapshot operations restore it.
 		private struct EofState
 		{
 			public bool IsAtEnd;

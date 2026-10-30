@@ -1609,7 +1609,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(failed);
 			Assert.Null(managed.snapshotData);
 			Assert.Equal(5, inner.Position);
-			Assert.Equal(0, managed.hasError);
+			Assert.False(managed.hasError);
 			Assert.False(managed.IsAtEnd);
 			Assert.True(inner.CanRead);
 

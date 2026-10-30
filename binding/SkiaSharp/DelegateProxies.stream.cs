@@ -89,7 +89,7 @@ internal static unsafe partial class DelegateProxies
 	{
 		try {
 			var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-			if (stream == null || Interlocked.CompareExchange (ref stream.hasError, 0, 0) != 0)
+			if (stream == null || stream.hasError)
 				return 1;
 			return stream.OnIsAtEnd () ? (byte)1 : (byte)0;
 		} catch {
@@ -103,13 +103,13 @@ internal static unsafe partial class DelegateProxies
 		try {
 			stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
 			if (stream.OnMove (offset)) {
-				Interlocked.Exchange (ref stream.hasError, 0);
+				stream.hasError = false;
 				return 1;
 			}
 			return 0;
 		} catch {
 			if (stream != null)
-				Interlocked.Exchange (ref stream.hasError, 1);
+				stream.hasError = true;
 			return 0;
 		}
 	}
@@ -123,7 +123,7 @@ internal static unsafe partial class DelegateProxies
 			return stream.OnPeek ((IntPtr)buffer, size);
 		} catch {
 			if (stream != null)
-				Interlocked.Exchange (ref stream.hasError, 1);
+				stream.hasError = true;
 			return IntPtr.Zero;
 		}
 	}
@@ -137,7 +137,7 @@ internal static unsafe partial class DelegateProxies
 			return stream.OnRead ((IntPtr)buffer, size);
 		} catch {
 			if (stream != null)
-				Interlocked.Exchange (ref stream.hasError, 1);
+				stream.hasError = true;
 			return IntPtr.Zero;
 		}
 	}
@@ -148,13 +148,13 @@ internal static unsafe partial class DelegateProxies
 		try {
 			stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
 			if (stream.OnRewind ()) {
-				Interlocked.Exchange (ref stream.hasError, 0);
+				stream.hasError = false;
 				return 1;
 			}
 			return 0;
 		} catch {
 			if (stream != null)
-				Interlocked.Exchange (ref stream.hasError, 1);
+				stream.hasError = true;
 			return 0;
 		}
 	}
@@ -166,13 +166,13 @@ internal static unsafe partial class DelegateProxies
 		try {
 			stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
 			if (stream.OnSeek (position)) {
-				Interlocked.Exchange (ref stream.hasError, 0);
+				stream.hasError = false;
 				return 1;
 			}
 			return 0;
 		} catch {
 			if (stream != null)
-				Interlocked.Exchange (ref stream.hasError, 1);
+				stream.hasError = true;
 			return 0;
 		}
 	}
