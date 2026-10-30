@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.152.3",
   "family": "skiasharp",
   "status": "stable",
@@ -77,6 +77,7 @@
     "5188": {
       "url": "https://github.com/mono/SkiaSharp/pull/5188",
       "title": "[release/4.152.x] Disable RAW and DNG image decoding",
+      "body": "[release/4.152.x] Disable RAW and DNG image decoding (#5188)\n\nRequires: https://github.com/mono/skia/pull/378\nContext: https://github.com/mono/SkiaSharp/pull/5162\nContext: https://github.com/mono/skia/pull/373\nChanges: https://github.com/mono/skia/compare/c44705eb6af2999f92c9437f098aa8d9be2b6970...ed63096f86c573cf06efc3565baf5b24d7290187\n\nRemove built-in RAW/DNG decoding and PIEX preview extraction from M152.\nThis is a deliberate loss of RAW support, not a replacement reader:\nJPEG previews embedded in RAW containers are no longer extracted, while\nstandalone JPEG decoding remains available.\n\n~~ Disable native RAW decoding consistently ~~\n\nSkia's RAW target is gated by DNG SDK and PIEX flags. Set both false in\nthe shared GenerateGnBuild path so native platform builds inherit the\nsame policy. Drop conflicting platform overrides and the Alpine\n__WORDSIZE define needed only by the DNG SDK. No C API exports,\ngenerated bindings, or version increments change.\n\n~~ Stop unused downloads and pin the merged native tree ~~\n\nDisabling the codec does not stop fetching dng_sdk and piex while their\nDEPS entries remain active. Consume the companion change commenting\nthem out and remove their Component Governance registrations.\n\nPin externals/skia and its manifest registration to native release merge\ned63096f86c573cf06efc3565baf5b24d7290187. Its tree matches reviewed head\n457ae3f21b00651666daf98d152a085409707d6c. The macOS ARM64 source build\nsucceeded with both source trees absent; GN arguments, Ninja commands,\nand the Skia/Skottie dependency graph exclude the RAW codec.\n\n~~ Align callers and documentation with codec availability ~~\n\nRemove the unsupported Gallery DNG choice and correct subsequent picker\nindices. Move the original DNG media byte-for-byte into test content.\nThe regression verifies null file and managed-stream codec results with\nUnimplemented, plus null SKData codec, bitmap, and image results.\n\nRetain SKEncodedImageFormat.Dng = 10 for public ABI compatibility and\nupdate build, dependency, and user guidance. The Gallery shared build\nand focused DNG test passed.\n\nThe local unfiltered console suite had one ganesh-gl/DiagonalLines\ngolden mismatch: 1,832 pixels over tolerance, with 1,310 allowed.\nVisual tests and goldens are unchanged. An untouched M151 base reproduced\nthe same images; an untouched M152 baseline was not run. No skips,\ngoldens, or tolerances were changed to hide the failure.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -84,6 +85,7 @@
     "5177": {
       "url": "https://github.com/mono/SkiaSharp/pull/5177",
       "title": "Backport macOS 15 native CI image for Xcode 26.3",
+      "body": "Align the release/4.152.x package pipeline native macOS agent with the existing Xcode 26.3 configuration.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -91,6 +93,7 @@
     "5157": {
       "url": "https://github.com/mono/SkiaSharp/pull/5157",
       "title": "[4.152] Backport AcesShared Apple CI and Xcode 26.3",
+      "body": "[4.152] Backport AcesShared Apple CI and Xcode 26.3 (#5157)\n\nContext: https://github.com/mono/SkiaSharp/pull/5146\n\nBackport the public Apple CI configuration from main to `release/4.152.x`.\nThis line has the same hosted `macos-15` defaults and 26.3/16.2\nmanaged/native Xcode split as the source baseline, so retain both decisions\ntogether.\n\n~~ Move release/4.152.x macOS jobs to AcesShared ~~\n\n`buildAgentMac` and `buildAgentMacNative` previously used `Azure Pipelines`\nwith `vmImage: macos-15`. Route both through `AcesShared` with\n`ImageOverride -equals ACES_VM_SharedPool_Sequoia` so managed macOS work and\nthe native Apple stage share the same pool configuration.\n\n~~ Align the native Xcode selector ~~\n\nThe common bootstrapper selects `XCODE_VERSION_NATIVE` for names beginning\nwith `native_`. The iOS, Mac Catalyst, macOS, and tvOS jobs take that path,\nwhile managed macOS uses `XCODE_VERSION`. Raise the native pin from 16.2 to\n26.3 so the release line no longer selects separate Apple compiler baselines.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -98,6 +101,7 @@
     "5151": {
       "url": "https://github.com/mono/SkiaSharp/pull/5151",
       "title": "Bump to the next version (4.152.3) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

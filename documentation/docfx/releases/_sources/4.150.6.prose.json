@@ -1,15 +1,15 @@
 {
-  "theme": "M150 servicing updates",
-  "highlights_headline": "SkiaSharp 4.150.6 incorporates the latest upstream m150 Ganesh servicing fixes.",
+  "theme": "Ganesh failure handling",
+  "highlights_headline": "Upcoming 4.150.6 changes improve Ganesh flush status and GPU-buffer upload failure handling.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "m150 Ganesh fixes updated",
-          "detail": "Refreshes the bundled m150 renderer with upstream servicing fixes, including strengthened buffer-upload checks.",
+          "lead": "GPU failures propagate instead of exposing stale data",
+          "detail": "Tracks render-task execution separately from success and checks buffer-upload failures under memory pressure. Affected work can fail rather than draw stale buffer contents; managed flush signatures remain unchanged.",
           "prs": [
             5258,
             5323
@@ -20,5 +20,6 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {},
-  "harfbuzz_summary": null
+  "harfbuzz_summary": null,
+  "release_summaries": {}
 }

@@ -64,25 +64,63 @@ BAR build on the exact branch commit; newer canceled or failed reruns are
 reported without displacing that build. A partially succeeded build with a
 BAR is reported for review, not marked ready.
 
-Lead with:
+## Report tables
 
-| Line | Current stage | Exact-tip build / BAR | Upstream / sync | Next action |
+Keep the three views below, in this order, and render each as a Markdown
+table, not paragraphs or bullet lists. Each view has its own build and action:
+ship the current cut, ready the maintenance branch, then land upstream work.
+Do not split public packages, prepared cuts, build evidence, and release actions
+into separate summaries.
+
+### 1. Current release — state as of the audit
+
+| Line | On NuGet | Prepared cut | Build / BAR | Release action |
 |---|---|---|---|---|
+| A.B | Exact public version | Cut awaiting publication, or None | Linked exact-cut build, result and BAR | Release action emitted by the audit |
 
-Then group exact actions under:
+The prepared cut is an existing release branch, not proof CI passed. Use only
+its own exact-SHA build/BAR here, never `.x`/`main` CI. Show Finish when public
+packages need tags/Releases; show Publish or Prepare only when emitted by the
+audit. If none is emitted, say so, rather than substituting a sync action.
+Keep partial builds, unavailable checks, provenance errors, and newer
+failed/canceled reruns explicit.
 
-1. **Finish now** — public packages with incomplete tags or Releases.
-2. **Resume publication** — prepared branches whose exact-tip build is green
-   and has one BAR ID.
-3. **Build blocked, running, or needing review** — missing, active, failed,
-   canceled, BAR-less, or partially succeeded exact-tip builds without a
-   succeeded BAR build.
-4. **Merge or synchronize before branching** — upstream work and sync PRs.
-5. **Start next releases** — only Prepare actions emitted by the script.
-6. **Unavailable or inconsistent checks** — every exit `2`, provenance
-   mismatch, ambiguous state, or unreachable service.
+### 2. Branch readiness — get the base ready for Prepare
 
-Always name and link every `incomingPullRequest` in the line summary, including
+| Line | Base branch / version | Additional commits | Open PRs | Build / BAR | Readiness action |
+|---|---|---|---|---|---|
+| A.B | `.x` or `main`, plus checked-in version | Merged since the latest cut, excluding the version bump | Linked PRs targeting this line | Linked exact-base build, result and BAR | Fix/review/wait for base CI, review pending PRs, or base ready |
+
+Use `openPullRequests` to retain the open work targeting each line, including
+backports and draft PRs. Name the target when a PR targets a cut branch rather
+than `.x`. Open PRs are not additional merged commits, nor automatically
+required for the release: review their inclusion rather than assuming all
+must merge. An older JSON snapshot without this check means Not checked,
+not None.
+
+This table's action concerns the source branch, not shipping an existing cut.
+Base readiness is not permission to Prepare: current-shipment and upstream
+gates still apply. The source version is not a public package version, and
+its BAR is not the prepared cut's BAR.
+
+### 3. Upstream / sync — land upstream changes
+
+| Line | Base branch | Upstream commits | Merge / sync PRs | Sync build | Sync action |
+|---|---|---|---|---|---|
+| A.B | Target `.x` or `main` | Gap and actual native branch compared | Native PR, then parent PR, with draft/open state | Linked exact-sync-branch package build, or Not checked / Not built / N/A | Sync action emitted by the audit |
+
+The sync build belongs to `incomingPullRequest.HeadBranch` at `HeadSha`,
+from `packageBuilds`; do not borrow maintenance or prepared-release CI, or
+call it a PR merge build. Keep all sync actions here. `Current` on an unmerged
+sync branch does not mean its changes landed in the release source.
+Upstream work concerns the next cut, not publication/Finish of an existing cut.
+
+Put full SHAs, exceptional details, and exact workflow inputs below their
+table when needed, without repeating rows as paragraphs. Keep the three
+tables together instead of adding a section per fact. Historical finished
+shipments remain in `-Json`. No reporting change bypasses release gates.
+
+Always name and link every `incomingPullRequest` in the upstream section, including
 draft PRs with `BlocksRelease: false`. Draft means not ready to merge, not
 absent: identify the review needed and do not describe the sync branch as
 already merged merely because its upstream comparison says `current`. For

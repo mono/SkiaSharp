@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.152.4",
   "family": "skiasharp",
   "status": "unreleased",
@@ -40,6 +40,7 @@
     "5287": {
       "url": "https://github.com/mono/SkiaSharp/pull/5287",
       "title": "[skia-sync] Adopt Chrome M152 failed-flush cache fix",
+      "body": "[skia-sync] Adopt Chrome M152 failed-flush cache fix (#5287)\n\nRequires: https://github.com/mono/skia/pull/395\nContext: https://github.com/mono/SkiaSharp/pull/5294\nChanges: https://github.com/mono/skia/compare/ed63096f86c573cf06efc3565baf5b24d7290187...81b0e06342b1c55e0601afe372a5338da8d82baa\n\nUpdate release/4.152.x to the merged Ganesh failed-flush cache correction.\nCache entries published before rendering can point to uninitialized\ntextures when render-task execution, instantiation, or preFlush fails.\nThe native fix drops uniquely held thread-safe-cache entries when\nfAllTasksSuccessful is false, preventing subsequent cache hits on those\nevicted entries. Entries still held elsewhere are not removed.\n\nPin externals/skia and its cgmanifest registration to the actual native\nrelease-branch merge:\n81b0e06342b1c55e0601afe372a5338da8d82baa\n\nThat two-parent merge contains the reviewed native head\n2729c9098d97370ea785504cf47ad4a8e67869f1 and has the same tree. Record\n747cf654ed6f864f4402e7d6eb54a6ede60141e5 as the upstream merge commit,\nretaining chrome/m152 as the upstream ref and milestone.\n\nThe parent diff changes only the gitlink and manifest pins. The native\nrange changes the failed-flush cleanup and its View/Verts regression\nexpectations, with no C API or DEPS changes. Package version files and\nmanaged APIs remain unchanged.\n\nIndependent regeneration matched the four Skia interop outputs. The\nbroader generator check also exposed existing HarfBuzz binding drift;\nthis update does not change that dependency or its managed bindings.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -47,6 +48,7 @@
     "5203": {
       "url": "https://github.com/mono/SkiaSharp/pull/5203",
       "title": "Bump to the next version (4.152.4) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

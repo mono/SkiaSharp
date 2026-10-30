@@ -1,15 +1,15 @@
 {
-  "theme": "M152 cache fix",
-  "highlights_headline": "SkiaSharp 4.152.4 incorporates the Chrome m152 failed-flush cache correction.",
+  "theme": "Failed flush cache cleanup",
+  "highlights_headline": "SkiaSharp 4.152.4 clears uniquely held Ganesh cache entries after failed flushes.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Failed-flush cache state corrected",
-          "detail": "Updates the bundled m152 renderer with Chrome's fix for stale Ganesh cache entries after a failed flush.",
+          "lead": "Failed flushes no longer leave reusable uninitialized cache textures",
+          "detail": "Drops uniquely held thread-safe-cache entries after unsuccessful GPU work so later draws cannot reuse those entries. Entries still held elsewhere are not removed.",
           "prs": [
             5287
           ]
@@ -19,5 +19,6 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {},
-  "harfbuzz_summary": null
+  "harfbuzz_summary": null,
+  "release_summaries": {}
 }

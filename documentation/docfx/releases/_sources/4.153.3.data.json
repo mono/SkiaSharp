@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.153.3",
   "family": "skiasharp",
   "status": "unreleased",
@@ -27,6 +27,7 @@
     "5461": {
       "url": "https://github.com/mono/SkiaSharp/pull/5461",
       "title": "Use pinned Alpine CDN package for native bootstrap (#5414)",
+      "body": "[Native/Alpine] Bootstrap from a pinned Alpine CDN package (#5414)\n\nContext: https://github.com/mono/SkiaSharp/pull/4013\nContext: https://dev.azure.com/dnceng/internal/_build/results?buildId=3112792\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1645006\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1645300\n\nRemove the GitLab generic-package endpoint from Alpine cross-image\nbootstrap. October 22 public and internal builds failed before native\ncompilation while connecting to gitlab.alpinelinux.org:443. One internal\nx64 download spent approximately 852 seconds exhausting six attempts.\nThe same main commit had downloaded and checksum-verified the artifact\nsuccessfully on October 20. DNS resolved during investigation, but HTTPS\nconnections also timed out from the developer machine, including forced\nIPv4; this was not confined to 1ES. The exact server or routing fault\nremains unconfirmed.\n\nThe earlier retry fix in #4013 handled transient GitLab HTTP 500 responses,\nbut retries cannot repair sustained endpoint unavailability. Use Alpine's\nreachable package-distribution CDN instead of its GitLab package registry.\nReplace the standalone apk.static 2.12.14 download with the exact\napk-tools-static-2.14.6-r3.apk archive from the existing v3.21/main/x86_64\nrepository, and pin its SHA-256 before extracting sbin/apk.static.\nThe x86_64 executable runs on the cross-build host; APK_ARCH continues to\nselect the target sysroot rather than the bootstrap tool architecture.\n\nRetain curl's HTTP failure detection and five retries, adding a 20-second\nconnection timeout and 120-second transfer limit per attempt. Preserve\nsigned fontconfig-dev installation and the explicit Azure Linux CA-bundle\npath. Missing artifacts and checksum mismatches stop the build; do not\nprobe alternate tools or bypass verification. Document updating the exact\npackage version and archive checksum together. These pins constrain the\nbootstrap artifact, not the versions resolved from Alpine's package feeds.\n\nValidation independently verified the embedded executable's Alpine\nRSA-SHA256 signature, exercised signed fontconfig-dev installation for\nx64, arm, arm64, riscv64 and loongarch64, and rejected both a wrong checksum\nand an unavailable package. Public build 1645300 tested head d96d97a4baf\nthrough its PR merge ref and passed the ten Alpine native jobs, covering\nthose five architectures with and without nodeps. Its x64 image log shows\nan actual archive download and successful checksum verification, not a\ncached bootstrap layer. The overall run failed in the non-Alpine Linux\nx86 job; the Alpine results do not imply a green pipeline.\n\n\n\n(cherry picked from commit 48e2083869ab2b154b2058c32682391d1c77e403)\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -34,6 +35,7 @@
     "5351": {
       "url": "https://github.com/mono/SkiaSharp/pull/5351",
       "title": "[skia-sync] Incorporate M153 branch cleanup and repaired ancestry",
+      "body": "[skia-sync] Incorporate M153 branch cleanup and repaired ancestry (#5351)\n\nContext: https://github.com/mono/skia/pull/398\nRequires: https://github.com/mono/skia/pull/399\nChanges: https://github.com/mono/skia/compare/99b6e44ce97cbd7f53f3d6e89c9e8cfa3ccad01d...6bbb2db758f0abaa562e133de2ae4ae7e4b14abf\n\nAdvance the release/4.153.x Skia pin to the merged native history while\npreserving the reviewed source tree and exact upstream provenance.\n\n~~ Reconcile upstream CQ cleanup ~~\n\nUpstream chrome/m153 commit 37140e1a6a25590812b0103231294f07c2c35977\nremoves infra/skcq.json because the branch is unsupported by its commit\nqueue. The fork had already deleted that configuration, so integrating\nthe cleanup changes ancestry rather than tracked source content.\n\nRecord that exact upstream commit in cgmanifest.json. The previous\nnative pin, reviewed merge, and final native merge share the same tree;\nC API exports, dependency pins, and rendering behavior are unchanged.\nIndependent regeneration matched the four Skia binding files.\n\n~~ Preserve ancestry after the native squash ~~\n\nmono/skia#398 was accidentally squash-merged, retaining the source tree\nbut losing the reviewed merge and upstream ancestry. mono/skia#399\nrestored that history through a forward-only, two-parent repair.\n\nPin externals/skia and its governance commitHash to the actual repair\nmerge 6bbb2db758f0abaa562e133de2ae4ae7e4b14abf. Verified that the reviewed\nhead and upstream commit are ancestors and that the complete native\ntree matches the reviewed tree.\n\nThe repin script requires the reviewed head to be a direct parent,\nwhich this recovery shape does not satisfy. The approved manual repin\ninstead verified transitive ancestry, two-parent merge structure, and\ntree equality, changing only the gitlink and governance commitHash.\nThe upstream provenance SHA remains unchanged by the repair.\n\nThe original sync records successful Linux x64 native-source, managed\nbuild, and console-test validation. Builds and runtime tests were not\nrerun for the identical-tree repin; other platforms were not validated\nlocally.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -41,6 +43,7 @@
     "5336": {
       "url": "https://github.com/mono/SkiaSharp/pull/5336",
       "title": "Bump to the next version (4.153.3) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
