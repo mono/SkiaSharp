@@ -873,13 +873,13 @@ namespace SkiaSharp.Tests
 			Assert.True(stream.IsAtEnd);
 			Assert.False(stream.HasPosition);
 			Assert.False(stream.HasLength);
-			// Native callbacks contain errors; public managed metadata access does not cross that boundary.
+			// Public reads and metadata queries remain native-backed and contain callback errors.
 			Assert.Equal(IntPtr.Zero, SkiaApi.sk_stream_get_position(stream.Handle));
 			Assert.Equal(IntPtr.Zero, SkiaApi.sk_stream_get_length(stream.Handle));
-			Assert.Throws<InvalidOperationException>(() => stream.Position);
-			Assert.Throws<InvalidOperationException>(() => stream.Length);
-			Assert.Throws<InvalidOperationException>(() => stream.Position64);
-			Assert.Throws<InvalidOperationException>(() => stream.Length64);
+			Assert.Equal(0, stream.Position);
+			Assert.Equal(0, stream.Length);
+			Assert.Equal(0L, stream.Position64);
+			Assert.Equal(0L, stream.Length64);
 			Assert.False(stream.Rewind());
 			Assert.False(stream.Seek(4));
 			Assert.False(stream.Move(4));
@@ -890,6 +890,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, stream.Read(buf, buf.Length));
 			fixed (byte* p = buf)
 			{
+				Assert.Equal(IntPtr.Zero, SkiaApi.sk_stream_read(stream.Handle, p, (IntPtr)buf.Length));
 				Assert.Equal(0, stream.Peek((IntPtr)p, buf.Length));
 			}
 
