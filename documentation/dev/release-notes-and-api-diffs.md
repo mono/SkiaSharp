@@ -438,6 +438,10 @@ page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
 never hand-edited.
 
+Identical complete PR bodies can be read once and reused across pages, while each
+page, preview and shipment keeps its own PR membership. Every rewritten page still
+receives a factual review against its supporting bodies and companions.
+
 After every changed page validates, Polish runs the offline finalizer once — either
 `.agents/skills/release-notes/scripts/render.sh` or its core command,
 `release-notes-render.py --all`. `render.sh` accepts the same three flags as `prepare.sh` for
@@ -451,6 +455,11 @@ folded HarfBuzz sections where present), then rebuilds `TOC.yml` + `index.md` fr
 the finished page set and the committed Chrome schedule in `_sources/index.json`. So
 consumers see just two phases — **Prepare** (run one script) then **Polish** (write
 prose, render) — and never juggle the individual generators by hand.
+
+Successful checks remain valid until their inputs change. Fix findings and revalidate
+affected pages, rerunning the full finalizer after further prose edits. Inspect the
+final diff for scope and unexpected changes; staging alone does not require repeating
+the factual review or successful validation.
 
 ### 2.3 One workflow, one PR
 
@@ -516,8 +525,9 @@ then runs the **Polish** phase (§2.2) offline: it writes only prose JSON for th
 listed pages, may read only the companion files those pages reference, runs
 `release-notes-render.py` to materialize Markdown, and never reruns the network producers.
 
-After validation the agent stages release-tree changes, makes one commit, and writes
-the template-based PR description. The `create-pull-request` safe-output publishes that
+After validation and final diff inspection, the agent writes the template-based PR
+description, stages release-tree changes, and makes one commit.
+The `create-pull-request` safe-output publishes that
 *combined* committed release-tree diff
 (restored Prepare output + agent prose JSON + rendered pages + `TOC.yml` +
 `index.md`) into the single PR, so all artifacts always ship together. The agent job

@@ -296,10 +296,15 @@ Correct reported prose errors and rerun until it succeeds. Optional exact-tag
 `release_summaries` are not checked by this renderer; a separate workflow validates
 and publishes them later. Do not publish GitHub Release bodies in this run.
 
+Use the Python commands directly; shell loops are not allowlisted. Follow the skill's
+check-reuse rule: repeat successful checks only when their inputs change or a concrete
+finding requires it.
+
 ## Commit and submit
 
-Inspect the final release-tree diff. If it is empty, exit without a commit or PR,
-even when source-only tools elsewhere differ from main.
+After final validation, inspect the release-tree diff for scope and unexpected changes.
+Do not repeat the completed factual review after staging. If the diff is empty, exit
+without a commit or PR, even when source-only tools elsewhere differ from main.
 
 1. Write the PR description yourself from the repository template and actual diff,
    following the skill. Preserve sections/checklists, omit complete instructional
