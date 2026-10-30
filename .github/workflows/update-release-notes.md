@@ -336,10 +336,11 @@ diffing months of history (2000+ files, exceeding the PR file cap and failing th
 run). So once every page renders cleanly you **must** commit everything yourself,
 then create the PR:
 
-1. Create the PR branch from the current HEAD using
-   `git checkout -b "${{ (inputs.source_branch && inputs.source_branch != 'main') && 'bot/release-notes-test-' || 'bot/release-notes' }}${{ (inputs.source_branch && inputs.source_branch != 'main') && github.run_id || '' }}"`.
-   Production runs use `bot/release-notes`. Branch-source tests use their own run-specific
-   output branch and concurrency group, so production cannot replace or close the test PR.
+1. Create the PR branch from the current HEAD. If the selected source
+   `${{ inputs.source_branch || 'main' }}` is `main`, run `git checkout -b bot/release-notes`.
+   Otherwise run `git checkout -b bot/release-notes-test-${{ github.run_id }}`.
+   Branch-source tests use their own run-specific output branch and concurrency group,
+   so production cannot replace or close the test PR.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
    (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
    the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
