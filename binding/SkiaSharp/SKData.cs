@@ -322,11 +322,12 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			// Keep managed overrides on the managed stack so their exceptions never cross reverse P/Invoke here.
-			var managed = stream as SKAbstractManagedStream;
-			if ((managed?.OnHasLength () ?? stream.HasLength) && (managed?.OnHasPosition () ?? stream.HasPosition)) {
-				var len = Utils.FromNativeSize (managed?.OnGetLength () ?? SkiaApi.sk_stream_get_length (stream.Handle));
-				var pos = Utils.FromNativeSize (managed?.OnGetPosition () ?? SkiaApi.sk_stream_get_position (stream.Handle));
+			if (stream is SKAbstractManagedStream managed)
+				return CreateFromManagedStream (managed);
+
+			if (stream.HasLength && stream.HasPosition) {
+				var len = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (stream.Handle));
+				var pos = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (stream.Handle));
 				GC.KeepAlive (stream);
 
 				if (pos >= len)
@@ -337,13 +338,42 @@ namespace SkiaSharp
 					return data;
 
 				var position = Utils.ToNativeSize (pos);
-				if (!(managed?.OnSeek (position) ?? SkiaApi.sk_stream_seek (stream.Handle, position))) {
+				if (!SkiaApi.sk_stream_seek (stream.Handle, position)) {
 					GC.KeepAlive (stream);
 					return null;
 				}
 				GC.KeepAlive (stream);
 			}
 
+			return CreateFromUnknownLengthStream (stream);
+		}
+
+		private static SKData CreateFromManagedStream (SKAbstractManagedStream stream)
+		{
+			// Invoke overrides directly so metadata and seek failures stay on the managed stack.
+			if (stream.OnHasLength () && stream.OnHasPosition ()) {
+				var len = Utils.FromNativeSize (stream.OnGetLength ());
+				var pos = Utils.FromNativeSize (stream.OnGetPosition ());
+				GC.KeepAlive (stream);
+
+				if (pos >= len)
+					return Empty;
+
+				var data = CreateFromStream (stream, len - pos);
+				if (data != null)
+					return data;
+
+				var rewound = stream.OnSeek (Utils.ToNativeSize (pos));
+				GC.KeepAlive (stream);
+				if (!rewound)
+					return null;
+			}
+
+			return CreateFromUnknownLengthStream (stream);
+		}
+
+		private static SKData CreateFromUnknownLengthStream (SKStream stream)
+		{
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			fixed (byte* ptr = buffer.Array) {
