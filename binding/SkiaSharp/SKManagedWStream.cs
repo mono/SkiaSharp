@@ -6,7 +6,7 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKWStream" /> (a writeable Skia stream)</summary>
-	/// <remarks />
+	/// <remarks>Exceptions from the underlying stream's write and flush operations are caught rather than rethrown. After either operation throws, subsequent writes return <see langword="false" /> and subsequent flushes are ignored.</remarks>
 	public class SKManagedWStream : SKAbstractManagedWStream
 	{
 		private Stream stream;
@@ -60,7 +60,7 @@ namespace SkiaSharp
 		/// <param name="buffer">The buffer to copy into the underlying stream.</param>
 		/// <param name="size">The number of bytes to copy from the buffer.</param>
 		/// <returns>Returns <see langword="true" /> on success, otherwise <see langword="false" />.</returns>
-		/// <remarks />
+		/// <remarks>Managed exceptions raised while writing are caught and reported as <see langword="false" />. After a write or flush exception, this wrapper rejects subsequent writes.</remarks>
 		protected internal override unsafe bool OnWrite (IntPtr buffer, IntPtr size)
 		{
 			if (hasFaulted || stream == null)
@@ -106,7 +106,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedWStream" /> types to flush the bytes to the underlying stream.</summary>
-		/// <remarks />
+		/// <remarks>Exceptions from the underlying stream are caught and mark this wrapper as faulted. After a write or flush exception, further flushes are ignored and further writes return <see langword="false" />.</remarks>
 		protected internal override void OnFlush ()
 		{
 			if (hasFaulted || stream == null)
