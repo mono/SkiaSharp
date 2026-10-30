@@ -1,17 +1,18 @@
 {
-  "theme": "Platform and reliability updates",
-  "highlights_headline": "SkiaSharp 4.156.0 improves platform compatibility, native reliability, and managed image and text-processing performance.",
-  "highlights_body": "The upcoming release adopts Uno Platform 7, raises Apple deployment minimums, refreshes the bundled renderer, and corrects native data handling.",
+  "theme": "Platform reliability and m156",
+  "highlights_headline": "SkiaSharp 4.156 improves platform support and native reliability while incorporating the latest Skia m156 fixes.",
+  "highlights_body": "This release updates Apple and Uno support, strengthens Linux and WebAssembly native packaging, and fixes stream, string, image-copy, and Android rendering behavior.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "m156 upstream fixes included",
-          "detail": "Updates the bundled renderer with the latest Chrome m156 bug fixes.",
+          "lead": "Skia m156 fixes incorporated",
+          "detail": "The bundled renderer includes the current upstream Chrome m156 bug-fix syncs.",
           "prs": [
-            5489
+            5489,
+            5500
           ]
         }
       ]
@@ -20,17 +21,26 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native string data handling corrected",
-          "detail": "FromCString now avoids reading past its native input buffer and writes directly into SKData.",
+          "lead": "String and native data conversion hardened",
+          "detail": "StringUtilities now validates Unicode character codes and string inputs correctly, while native C-string conversion avoids reading past its source buffer and writes directly to SKData.",
           "prs": [
-            5429
+            5429,
+            5506
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained stream data once it is no longer needed.",
+          "lead": "Stream and image-copy behavior corrected",
+          "detail": "Front-buffered streams no longer retain data unnecessarily, and managed image pixel copies avoid avoidable overhead.",
           "prs": [
+            5052,
             5327
+          ]
+        },
+        {
+          "lead": "Android texture rendering follows display refresh",
+          "detail": "Texture rendering is synchronized with display refresh to improve Android presentation behavior.",
+          "prs": [
+            5345
           ]
         }
       ]
@@ -39,12 +49,17 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed pixel and text processing optimized",
-          "detail": "Reduces allocation and copying overhead for image pixels, HarfBuzz UTF-32 encoding, and native feature strings.",
+          "lead": "Feature parsing avoids native allocations",
+          "detail": "HarfBuzz feature-string handling no longer allocates native memory while preserving existing decoding behavior.",
           "prs": [
-            5052,
-            5060,
             5230
+          ]
+        },
+        {
+          "lead": "HarfBuzz UTF-32 encoding uses pooled buffers",
+          "detail": "HarfBuzzSharp reuses encoding buffers to reduce allocation pressure when processing UTF-32 text.",
+          "prs": [
+            5060
           ]
         }
       ]
@@ -53,47 +68,32 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Uno Platform 7 support added",
-          "detail": "Builds SkiaSharp.Views.Uno.WinUI against Uno Platform 7.",
+          "lead": "Uno WinUI support updated for Uno Platform 7",
+          "detail": "SkiaSharp.Views.Uno.WinUI now builds against Uno Platform 7.",
           "prs": [
             5377
           ]
         },
         {
-          "lead": "Apple and Android platform support updated",
-          "detail": "Raises Apple deployment minimums and synchronizes Android texture rendering with display refresh.",
+          "lead": "Native assets aligned across Apple, Windows, Linux, and WebAssembly",
+          "detail": "Apple deployment targets and Windows dependencies align with current .NET platform requirements; Linux binds bundled HarfBuzz locally, and WebAssembly packages the required WebGPU implementation in libSkiaSharp.",
           "prs": [
+            5316,
+            5352,
             5383,
-            5345
-          ]
-        },
-        {
-          "lead": "Native platform dependencies refreshed",
-          "detail": "Aligns Windows dependencies with current MAUI releases, modernizes ANGLE, and includes WebGPU support in the native library.",
-          "prs": [
-            5390,
-            5321,
-            5316
-          ]
-        },
-        {
-          "lead": "Linux HarfBuzz binding made self-contained",
-          "detail": "Resolves bundled HarfBuzz functions locally on Linux.",
-          "prs": [
-            5352
+            5390
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Uno Platform 7 support and native WebGPU packaging",
-    "VirgilMing": "Bundled HarfBuzz binding support on Linux and Blazor sample test stabilization",
-    "akoeplinger": "Azure DevOps dependency automation cleanup",
-    "dalexsoto": "CI policy cleanup",
-    "rolfbjarne": "Sample cleanup",
-    "Saad-elnagar": "Native dependency notice cleanup"
+    "ramezgerges": "Bundled the WebGPU implementation for WebAssembly and updated the Uno WinUI view package for Uno Platform 7",
+    "VirgilMing": "Bound the bundled HarfBuzz functions locally on Linux and stabilized Blazor CPU sample startup tests",
+    "akoeplinger": "Maintained dependency-update automation",
+    "dalexsoto": "Addressed contextual policy-check findings in CI",
+    "rolfbjarne": "Removed unused sample files",
+    "Saad-elnagar": "Removed the obsolete libmicrohttpd notice"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
