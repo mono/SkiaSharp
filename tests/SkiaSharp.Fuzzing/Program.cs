@@ -164,8 +164,24 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 				{
 					["Org"] = "devdiv",
 					["Project"] = "DevDiv",
+					["AssignedTo"] = "maleib@microsoft.com",
 					["AreaPath"] = @"DevDiv\.NET MAUI\SkiaSharp",
 					["IterationPath"] = "DevDiv",
+					["AdoFields"] = new JsonObject
+					{
+						["System.Tags"] = "SkiaSharp",
+						["System.Title"] = "[{{ job.project }} {{ job.name }}]: {{ report.crash_site }}",
+						["Microsoft.DevDiv.Custom01"] = "{{ job.name }}-{{ report.minimized_stack_function_lines_sha256 }}",
+					},
+					["UniqueFields"] = new JsonArray("Microsoft.DevDiv.Custom01"),
+					["OnDuplicate"] = new JsonObject
+					{
+						["SetState"] = new JsonObject
+						{
+							["Resolved"] = "Active",
+							["Closed"] = "Active",
+						},
+					},
 				}
 			});
 		}
