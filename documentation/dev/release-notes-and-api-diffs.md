@@ -457,6 +457,16 @@ A single GitHub workflow
 There is no separate "api-diff" vs "release-notes" workflow — they are one pipeline
 producing one coherent update.
 
+Branch-source validation runs set `source_branch` and publish their generated-output PR
+against that same branch; normal runs still target `main`. This keeps workflow changes
+out of the generated docs diff and avoids replaying workflow-file commits with a docs-only
+publishing token. PR publication failures are errors, not successful fallback issues.
+
+The final renderer accepts `--all --pr-body <path>` to write the automation's complete PR
+body after validation succeeds. It preserves the contributor template's sections and
+checklists, omits whole instructional comments, and records the successful render command.
+The agent submits that body unchanged rather than reconstructing the template.
+
 **`main` is the only source of truth, on a daily schedule.** The workflow runs on
 pushes to `main` and on a **daily cron**, and is deliberately *not* triggered by
 `release/*` pushes or `v*` tags. A `push`/`tag` event runs the workflow copy that

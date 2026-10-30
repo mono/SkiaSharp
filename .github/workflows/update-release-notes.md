@@ -252,7 +252,9 @@ safe-outputs:
     title-prefix: "[docs] "
     labels: [area/Docs, partner/agentic-workflows]
     draft: false
-    allowed-base-branches: [main]
+    base-branch: ${{ inputs.source_branch || 'main' }}
+    allowed-base-branches: ${{ inputs.source_branch || 'main' }}
+    fallback-as-issue: false
     preserve-branch-name: true
     recreate-ref: true
 ---
@@ -310,9 +312,10 @@ This run's **CI-specific deltas** on top of the skill:
 3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
    running the renderer directly: `release-notes-render.py` per page to validate as you go
    (per the skill), then **once** at the end
-   `python3 scripts/infra/docs/release-notes-render.py --all`
+   `python3 scripts/infra/docs/release-notes-render.py --all --pr-body /tmp/gh-aw/release-notes-pr-body.md`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
+   The same command writes the complete template-based PR body only after rendering succeeds.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
 
@@ -339,9 +342,14 @@ then create the PR:
 3. Run `git commit -m "docs: regenerate API diffs and release notes"` as its own
    shell call. Do not append cleanup or other commands to this call: an unallowed
    command in a compound call prevents the commit from running.
-4. Call the `create_pull_request` safe-output. It opens or updates the PR targeting
-   `main` from the `bot/release-notes` branch. Keep any PR payload in `/tmp/gh-aw/`;
+4. Call the `create_pull_request` safe-output with base `${{ inputs.source_branch || 'main' }}`.
+   Normal runs target `main`; branch-source tests target their source branch so the docs
+   PR contains generated output, not the workflow changes being tested. Do not override
+   this base with `main` during a branch-source test.
+   Keep any PR payload in `/tmp/gh-aw/`;
    do not delete it before submission or add a cleanup command to the commit call.
+   Use the exact contents of `/tmp/gh-aw/release-notes-pr-body.md` as `body`, without
+   reconstructing the template or reintroducing its instructional HTML comments.
 
 
 Commit **once**, at the very end, after every edit is done — not incrementally.

@@ -302,17 +302,12 @@ let the script build the page.
 
 ## Pull request body
 
-When opening the generated-docs PR, fill the repository's PR template without
-rewriting its instructional comments. Keep each complete `<!-- ... -->` block intact;
-do not remove just a comment opener or closer, which exposes placeholder examples
-as visible API changes. Preserve headings and checklists, replace placeholders with
-accurate text, and include the actual render command and result.
-
-Before submitting, read the exact serialized body that will be sent to safe outputs,
-not just the source template. Confirm comment markers are paired and no template-only
-API example or instruction has escaped a comment. Body construction must treat Markdown
-as data: use the edit tool or a quoted file/JSON encoder rather than an unquoted shell
-string that interprets backticks or angle brackets.
+For automated docs PRs, run the final full renderer with
+`--pr-body /tmp/gh-aw/release-notes-pr-body.md`. After successful validation it writes
+the complete PR body deterministically from the repository template, preserving headings
+and checklists while removing entire instructional comment blocks. Safe-output sanitization
+can otherwise strip only parts of multiline comments and expose their examples as API changes.
+Submit that file's exact contents as `body`; do not ask the model to rewrite it.
 
 Run the final `git commit` as a standalone command. Do not chain scratch-file cleanup
 onto it: the unattended workflow's tool policy can reject the entire compound command
