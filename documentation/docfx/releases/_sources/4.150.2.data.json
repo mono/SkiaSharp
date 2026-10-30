@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.150.2",
   "family": "skiasharp",
   "status": "stable",
@@ -80,6 +80,7 @@
     "4663": {
       "url": "https://github.com/mono/SkiaSharp/pull/4663",
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+      "body": "* Sync Skia upstream chrome/m150 (SkSL RasterPipeline fix)\n\nAdvance the mono/skia submodule to the merge of upstream chrome/m150\n(a81173f17b) into the release/4.150.x fork base. The remaining upstream\ndelta is a single SkSL RasterPipeline codegen use-after-free bug fix plus\nits regression test; an infra-only DEPS infra_revision roll has no runtime\neffect. No public headers, C API, struct layout, or tracked dependency\nversions changed (release-line bug-fix mode: hashes advance, versions fixed).\n\nBackfill source-verified version_source evidence for all 15 tracked\nskia_dependency registrations in cgmanifest.json.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Sync Skia submodule and cgmanifest (#4665)\n\nLatest: Merge pull request #341 from mono/skia-sync/release-4.150.x\nCommit: b70519562e2d26d3cf56286d3a13ca25152cfae4\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\n\n---------\n\nCo-authored-by: skia-sync <skia-sync@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -87,6 +88,7 @@
     "4648": {
       "url": "https://github.com/mono/SkiaSharp/pull/4648",
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+      "body": "[skia-sync] Merge upstream chrome/m150 bug fixes (#4648)\n\nChanges: https://github.com/mono/skia/pull/336\n\nUpdate the release/4.150.x SkiaSharp line to the m150 bug-fix sync from mono/skia. Advance the Skia submodule and update cgmanifest.json to record the new fork and upstream merge commits.\n\nThis is a release-line sync only: package versions, SONAMEs, SK_C_INCREMENT, and the managed API remain unchanged. Regenerating the bindings produces no diff, confirming that the upstream fixes do not affect the C API or P/Invoke surface.\n\nNative and managed builds pass, along with the full test suite.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n`` inst",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -94,6 +96,7 @@
     "4652": {
       "url": "https://github.com/mono/SkiaSharp/pull/4652",
       "title": "Backport review Skia update skill",
+      "body": "Copy the self-contained review-skia-update skill and its binding regeneration helper and focused tests onto the 4.150.x release line.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -101,6 +104,7 @@
     "4561": {
       "url": "https://github.com/mono/SkiaSharp/pull/4561",
       "title": "[skia-sync] Update the m150 release line with Ganesh fixes",
+      "body": "[skia-sync] Update the m150 release line with Ganesh fixes (#4561)\n\nChanges: https://github.com/mono/skia/pull/299\n\nAdvance the Skia submodule on release/4.150.x to include three upstream\nGanesh fixes for failed flush handling and Imagination GPU framebuffer\ndeletion.\n\nThis is a same-milestone bug-fix sync, so the SkiaSharp, ABI, and NuGet\nversions remain unchanged. Update only the pinned Skia commit and its\nComponent Governance metadata.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -108,6 +112,7 @@
     "4522": {
       "url": "https://github.com/mono/SkiaSharp/pull/4522",
       "title": "[infra] Backport CI fixes to release/4.150.x (skiasharp-docker + Apple provisioning)",
+      "body": "[infra] Backport CI fixes to release/4.150.x (#4522)\n\nContext: https://dev.azure.com/dnceng-public/public/_build?definitionId=345\nCherry-picks: #4310, #4320\n\nThe new public `mono-SkiaSharp` Azure DevOps pipeline (dnceng-public,\ndefinition 345) failed on `release/4.150.x` at YAML compile time \u2014 the build\ndied in 0s with no timeline before any job ran:\n\n    The pipeline is not valid. Job native_linux_arm64_linux: Step Docker1 input\n    containerRegistry references service connection skiasharp-docker which could\n    not be found. ... Job native_linux_x86_linux: Step Docker1 ... skiasharp-docker\n\n`main` had already dropped that stale dependency, but `release/4.150.x` was cut\nbefore those fixes, so every run on the branch was a hard compile failure. This\nbackports the two infra commits needed to make the branch build under the new\npipeline. No product code is touched \u2014 only pipeline templates (30 deletions).\n\nRemove obsolete skiasharp-docker registry auth (#4310)\n\n  The native bootstrapper only builds a local image from the checked-in\n  Dockerfile and runs it; the private-registry login was obsolete. Removing the\n  1ES `authenticatedContainerRegistries` entry and the classic `Docker@2 login`\n  task drops the reference to the `skiasharp-docker` service connection, which\n  does not exist in the dnceng-public project. This is the change that lets the\n  pipeline compile.\n\nRemove Apple certificate and provisioning profile steps from tests (#4320)\n\n  With the compile blocker gone, the iOS/macOS/tvOS test jobs would then fail at\n  runtime: `InstallAppleCertificate`/`InstallAppleProvisioningProfile` load\n  secure files (`SkiaSharp iOS Certificate.p12`, etc.) that are not present in\n  the new public project. Dropping those steps (and the now-unused\n  provisioning-profiles template) keeps the test stage runnable.\n\nVerified: after both cherry-picks, PR #4522 triggered build 20260722.23, which\ngets past YAML validation and expands all 12 stages (instead of failing\ninstantly at compile). m151 milestone changes (#4294) were deliberately\nexcluded \u2014 4.150.x stays on m150.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -115,6 +120,7 @@
     "4517": {
       "url": "https://github.com/mono/SkiaSharp/pull/4517",
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+      "body": "[skia-sync] Merge upstream chrome/m150 bug fixes (#4517)\n\nCompanion: mono/skia#290\nChanges: https://github.com/mono/skia/compare/0aa2d542e8...80c7b8fdf0\n\nRelease-line bug-fix sync for release/4.150.x. Advance the externals/skia\nsubmodule from 0aa2d542e8 to the release/4.150.x tip 80c7b8fdf0, which\nmerges mono/skia#290 (upstream chrome/m150). The milestone is unchanged\n(stays m150) and there is no version bump.\n\nThe submodule bump picks up two upstream Ganesh correctness cherry-picks\nand nothing else:\n\n  * 587c5b0f5a  [M150] [ganesh] prevent stale readbacks (Bug: b/521491024)\n    SurfaceContext::readPixels() now propagates a failed flush so a\n    readback can no longer return stale texture data.\n  * 37d3aa648b  [Ganesh] If a resolve task fails to execute unwind the\n    dirty tracking (Bug: 517973093, Fixed: 536237281)\n    Restores a proxy's MSAA/mipmap dirty state when a resolve task ends\n    without executing, avoiding inconsistent dirty-rect tracking after a\n    dropped flush.\n\nScope is entirely Ganesh GPU internals plus GPU tests (6 files upstream,\n+279/-11). There are no C API changes (include/c, src/c), no DEPS\nchanges, and no exported-symbol changes, so P/Invoke bindings are not\nregenerated and the ABI is unchanged. The only files in this repo are\nthe submodule pointer and the matching cgmanifest.json commitHash;\nSK_C_INCREMENT stays 0 and VERSIONS.txt is untouched.\n\nBuild & test (Linux x64): native externals build, SkiaSharp.csproj\nbuild, and SkiaSharp.Tests.Console all pass (5584 passed / 172 skipped /\n0 failed). Remaining platforms are exercised by PR CI.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -122,6 +128,7 @@
     "4430": {
       "url": "https://github.com/mono/SkiaSharp/pull/4430",
       "title": "Bump to the next version (4.150.2) after release",
+      "body": "Copilot-Session: 51d95e80-1957-496e-ba25-8761691c7be5\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

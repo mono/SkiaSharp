@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.152.1",
   "family": "skiasharp",
   "status": "stable",
@@ -71,6 +71,7 @@
     "5047": {
       "url": "https://github.com/mono/SkiaSharp/pull/5047",
       "title": "[skia-sync] Merge Chrome M152 GlyphData fix",
+      "body": "[skia-sync] Merge Chrome M152 GlyphData fix (#5047)\n\nRequires: https://github.com/mono/skia/pull/358\n\nAdvance release/4.152.x to mono/skia merge commit\n723c5a03a7d18de5fb1a041e6cae2f09c4cb3c7e.\n\nThe upstream GlyphData fix prevents Ganesh and Graphite from recording an\natlas generation after a partial glyph-vector update. Glyphs from an earlier\nflush may have been evicted, so treating the partial update as a complete\ngeneration could take the atlas fast path with stale locations.\n\nRecord the matching chrome/m152 upstream commit in cgmanifest.json and point\nthe submodule gitlink at the actual two-parent mono/skia merge rather than the\nreviewed PR head. The guarded repin verified that the merge contains the\nreviewed commit and has an identical native tree, so it introduces no further\nnative changes after the completed review.\n\nThe final parent diff changes only externals/skia and cgmanifest.json. This\npreserves the M152 package and ABI versions without managed wrappers,\ngenerated bindings, C API exports, dependency pins, or test-source changes.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -78,6 +79,7 @@
     "5020": {
       "url": "https://github.com/mono/SkiaSharp/pull/5020",
       "title": "Bump to the next version (4.152.1) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

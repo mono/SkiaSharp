@@ -1,15 +1,28 @@
 {
-  "theme": "Skia m154 and docs",
-  "highlights_headline": "SkiaSharp 4.154.0 updates to Skia m154 and ships XML documentation with the managed packages.",
-  "highlights_body": "The release refreshes the bundled renderer, improves generated binding maintenance, and updates HarfBuzzSharp from the same native source used in the package.",
+  "theme": "Skia m154 and packaged docs",
+  "highlights_headline": "SkiaSharp 4.154.0 updates to Skia m154 and ships source-authored XML API documentation with managed assemblies.",
+  "highlights_body": "It corrects native glyph-atlas and GPU failure handling. Review the HarfBuzzSharp enum migrations and the removal of RAW/DNG decoding before upgrading.",
   "breaking": [
     {
-      "title": "UnicodeCombiningClass.CCC133 is renamed",
-      "body": "The misspelled `CCC133` member is now `CCC132`, matching the corrected upstream HarfBuzz name. Update source references to the new member name before upgrading."
+      "title": "HarfBuzz combining-class spelling corrected",
+      "body": "Replace UnicodeCombiningClass.CCC133 with CCC132. The numeric value remains 132; no compatibility alias is retained.",
+      "prs": [
+        5057
+      ]
     },
     {
-      "title": "GlyphFlags.Defined is removed",
-      "body": "The aggregate flag mask is no longer exposed. Code that used `GlyphFlags.Defined` should combine the concrete glyph flags it needs instead."
+      "title": "HarfBuzz aggregate glyph flag removed",
+      "body": "GlyphFlags.Defined is no longer exposed. Combine the concrete flags required by your application instead. The aggregate BufferFlags.Defined and SerializeFlag.Defined masks are not introduced.",
+      "prs": [
+        5057
+      ]
+    },
+    {
+      "title": "Built-in RAW and DNG decoding removed",
+      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
+      "prs": [
+        5190
+      ]
     }
   ],
   "categories": [
@@ -17,13 +30,10 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone m154",
-          "detail": "Moves the bundled renderer to m154 and incorporates upstream Chrome fixes for buffer uploads and stale Ganesh cache entries after failed flushes.",
+          "lead": "Skia updated to m154",
+          "detail": "Includes upstream Ganesh clipping, Graphite triangle-strip, and SVG color-filter improvements while preserving existing C exports.",
           "prs": [
-            4945,
-            5054,
-            5114,
-            5253
+            4945
           ]
         }
       ]
@@ -32,23 +42,21 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "XML API documentation now ships with packages",
-          "detail": "Managed package consumers receive compiler-generated XML documentation, including Markdown-authored view remarks, alongside the API assemblies.",
+          "lead": "HarfBuzz enum values match the bundled engine",
+          "detail": "Synchronizes supported buffer, cluster, glyph, and baseline-tag values with HarfBuzz 14.2.1. Callback-heavy API families and new unwrapped native types remain excluded.",
           "prs": [
-            5053,
-            5064,
-            5066,
-            5078,
-            5080,
-            5091
+            5057
           ]
         },
         {
-          "lead": "HarfBuzz bindings follow the bundled source",
-          "detail": "HarfBuzzSharp bindings are generated from the HarfBuzz revision pinned by Skia, keeping ordinary existing APIs synchronized with the native library.",
+          "lead": "API documentation travels with reference assemblies",
+          "detail": "NuGet packages include matching compiler XML beside implementation and reference assemblies, making source-authored API guidance available to package consumers.",
           "prs": [
-            5056,
-            5057
+            5064,
+            5078,
+            5066,
+            5080,
+            5053
           ]
         }
       ]
@@ -57,40 +65,56 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "RAW and DNG decoding disabled",
-          "detail": "The m154 release disables RAW and DNG image decoding to avoid relying on unsupported decoding paths.",
+          "lead": "Glyph-atlas updates and failed GPU work handled consistently",
+          "detail": "Avoids stale glyph-atlas reuse and propagates failed prerequisite flushes through existing null/false contracts. Failed uploads drop affected draws, and failed flushes clear uniquely held cache entries.",
           "prs": [
-            5190
+            5054,
+            5114,
+            5253
+          ]
+        },
+        {
+          "lead": "Uno WebAssembly uses matching HarfBuzz native assets",
+          "detail": "The Uno views package depends on the matching HarfBuzz WebAssembly assets rather than an older implicit archive missing required symbols.",
+          "prs": [
+            5057
+          ]
+        },
+        {
+          "lead": "Windows HarfBuzz binaries pass BinSkim BA2007",
+          "detail": "Consumers no longer need to baseline the disabled-critical-warnings error in libHarfBuzzSharp.dll. The native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
+          "prs": [
+            5111
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "azchohfi": "Improved the HarfBuzzSharp native build's compiler-warning handling"
+    "azchohfi": "Corrected Windows HarfBuzz warning suppression so consuming applications pass BinSkim BA2007"
   },
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opened the 4.154 line with the Skia m154 engine update.",
-    "v4.154.0-preview.2.26471.11": "Preview 2 added the XML documentation packaging and the regenerated HarfBuzzSharp bindings alongside the m154 upstream fixes.",
-    "v4.154.0-rc.1.26479.14": "The release candidate prepared the final package and disabled RAW and DNG decoding."
+    "v4.154.0-preview.1.26454.9": "Preview 1 opened the Skia m154 line while retaining native HarfBuzz 14.2.1.",
+    "v4.154.0-preview.2.26471.11": "Preview 2 added packaged compiler XML, synchronized HarfBuzz enums, and corrected glyph-atlas, GPU-upload, Windows BinSkim, and Uno WebAssembly issues.",
+    "v4.154.0-rc.1.26479.14": "The release candidate removed built-in RAW/DNG decoding and embedded RAW-preview extraction."
   },
-  "harfbuzz_summary": "HarfBuzzSharp now generates its bindings from the bundled HarfBuzz source, keeping the managed declarations aligned with version 14.2.1 while correcting its enum surface.",
+  "harfbuzz_summary": "Synchronizes supported enums with native HarfBuzz 14.2.1, correcting CCC133 to CCC132 and removing GlyphFlags.Defined. Adds source-authored compiler XML and fixes Windows BinSkim BA2007 and Uno WebAssembly native-asset matching; the .400 package revision does not upgrade the engine.",
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
-      "headline": "SkiaSharp 4.154.0 Preview 1 opens the line with the Skia m154 engine update.",
+      "headline": "Preview 1 opened the Skia m154 line while retaining native HarfBuzz 14.2.1.",
       "body": null
     },
     "v4.154.0-preview.2.26471.11": {
-      "headline": "SkiaSharp 4.154.0 Preview 2 adds package XML documentation and updated HarfBuzzSharp bindings.",
-      "body": "It also incorporates current m154 renderer fixes."
+      "headline": "Preview 2 added packaged compiler XML, synchronized HarfBuzz enums, and corrected glyph-atlas, GPU-upload, Windows BinSkim, and Uno WebAssembly issues.",
+      "body": null
     },
     "v4.154.0-rc.1.26479.14": {
-      "headline": "SkiaSharp 4.154.0 Release Candidate 1 prepares the m154 release for final validation.",
-      "body": "RAW and DNG image decoding are disabled in this candidate."
+      "headline": "The release candidate removed built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+      "body": null
     },
     "v4.154.0": {
-      "headline": "SkiaSharp 4.154.0 ships the Skia m154 engine update and package XML documentation.",
-      "body": "It includes the current upstream renderer servicing fixes."
+      "headline": "SkiaSharp 4.154.0 clears uniquely held Ganesh cache entries after failed flushes.",
+      "body": null
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.153.0",
   "family": "skiasharp",
   "status": "stable",
@@ -205,6 +205,7 @@
     "5116": {
       "url": "https://github.com/mono/SkiaSharp/pull/5116",
       "title": "[skia-sync] Adopt Chrome M153 buffer upload fix",
+      "body": "[skia-sync] Adopt Chrome M153 buffer upload fix (#5116)\n\nRequires: https://github.com/mono/skia/pull/368\nChanges: https://github.com/google/skia/compare/fca11a08da7c1ed3777b40b31611961c85c63c43...f8b66b7597c4cc859d3ed190e9c6872241e6721c\n\nUpdate release/4.153.x to the actual mono/skia merge that propagates Ganesh\nGPU-buffer upload failures.\n\nUnder high memory pressure, GrGpuBuffer::updateData() can fail while staging\ndata for a draw. Several native callers previously ignored that result and\ncontinued as though the GPU buffer contained current data, which could allow\nstale buffer contents to be drawn.\n\nThe native update propagates failures through buffer allocation and pre-draw\nsetup, rejects incomplete static and GL helper buffers, and drops affected\ndraws. Triangulated paths retain CPU-backed vertex data so a later draw can\nretry GPU-buffer creation.\n\nPin both externals/skia and the Component Governance registration to the actual\ntwo-parent mono/skia merge:\n\nd457ae4d1c82de55c9a84c8957869c8617be3939\n\nThat merge contains the reviewed native commit and has the identical tree. The\nupstream range changes no C API or DEPS state, so package versions, native ABI,\nand the managed API remain unchanged.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -212,6 +213,7 @@
     "5120": {
       "url": "https://github.com/mono/SkiaSharp/pull/5120",
       "title": "Fix BinSkim BA2007 for libHarfBuzzSharp by scoping C4244/C4267 suppression (#5111)",
+      "body": "libHarfBuzzSharp.dll fails BinSkim rule BA2007 (EnableCriticalCompilerWarnings)\nat error severity, because libHarfBuzzSharp.vcxproj passed\n<DisableSpecificWarnings>4267;4244</DisableSpecificWarnings> in all six\nItemDefinitionGroups. C4244 and C4267 are the \"possible loss of data\" truncation\nwarnings BinSkim policy does not allow to be suppressed, so the /wd4244 /wd4267\nrecorded in the PDB failed the rule.\n\nThis breaks consumers, not just us: Microsoft-internal CI runs BinSkim in break\nmode, and anything that takes SkiaSharp picks up HarfBuzzSharp.NativeAssets.Win32\ntransitively (Svg.Skia 5.x does), then fails its security gate on a binary it\ndoes not build. The only workaround available today is to baseline it.\n\nThe project compiles exactly one translation unit -- the vendored\nharfbuzz-subset.cc, itself an amalgamation of 73 upstream HarfBuzz sources -- so\nthere is no other object file to scope the suppression to, and BinSkim names\nharfbuzz-subset.obj precisely because it is the whole binary. Building with the\nsuppressions removed produces 1196 warnings (976 C4244, 220 C4267), every one of\nthem inside vendored HarfBuzz headers and sources, so simply dropping them is not\nviable and patching upstream code is not desirable.\n\nInstead, add a small SkiaSharp-owned translation unit that wraps the vendored\namalgamation in #pragma warning(push/disable/pop) and compile that. The\nsuppression now lives in source rather than on the command line, so the compiler\ncommand line recorded in the PDB is free of disabled warnings and BA2007 passes,\nwhile any first-party code added to this project in future still gets the\nwarnings. libSkiaSharp is untouched -- it is clang-built and already passes.\n\nVerified on Windows with BinSkim 4.4.9.11 (the version in the report):\n\n  before  BA2007 error  Error_WarningsDisabled ... [Explicitly disabled warnings: 4244;4267]\n  after   BA2007 pass\n\nBA2007 now reports kind=pass on x64, ARM64 and Win32, and those are the only\nresults that changed -- the pre-existing BA2024/BA2025/BA2026/BA2027 warnings are\nunaffected. All three platforms build with 0 warnings and 0 errors, the DLL still\nexports the same 560 symbols (no ABI change), and the rebuilt binary loads and\nshapes correctly (hb_version_string reports 14.2.1).\n\nFixes #5108\n\nCo-authored-by: Alexandre Zollinger Chohfi <chohfi@outlook.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "mixed",
@@ -222,6 +224,7 @@
     "5062": {
       "url": "https://github.com/mono/SkiaSharp/pull/5062",
       "title": "[skia-sync] Adopt the Chrome M153 correctness fixes",
+      "body": "[skia-sync] Adopt the Chrome M153 correctness fixes (#5062)\n\nRequires: https://github.com/mono/skia/pull/360\nChanges: https://github.com/google/skia/compare/4f574af2444846ceca4d277a8095c5d4229d175f...fca11a08da7c1ed3777b40b31611961c85c63c43\nContext: https://github.com/mono/SkiaSharp/pull/5099\n\nBump externals/skia to the merged release/4.153.x tip\nad62f38dd3afb72d7abb143f407cb681fb8e319a and record the final upstream\nChrome M153 commit in cgmanifest.\n\nThe upstream range prevents partial glyph-atlas updates from recording a\ngeneration that could permit reuse of evicted glyph locations. It also\nseparates whether Ganesh render tasks executed from whether they succeeded\nand propagates task, flush, and submission failures through\nGrDirectContext::FlushResult.\n\nKeep the existing SkiaSharp C and managed flush operations as ABI-compatible\nvoid calls. This servicing update does not change the Skia milestone, package\nor assembly versions, managed wrappers, Skia generated bindings, or dependency\npins.\n\nThe review preserved 90 non-interop fork patches, 108 interop patches, and 19\ndependency entries. Its HarfBuzz warning was caused by mixing newer checker\nscope with the release branch's legacy generator configuration; the M153 range\ndoes not change HarfBuzz. Native source, managed tests, and all 116 companion\nCI checks passed.\n\nThe actual native merge has the same tree as the reviewed native PR head.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -229,6 +232,7 @@
     "4970": {
       "url": "https://github.com/mono/SkiaSharp/pull/4970",
       "title": "[migration] Adopt Arcade backport workflow (#4966)",
+      "body": "Replace the label-driven tibdex action with the trusted .NET Arcade reusable workflow. Preserve the tracked workflow name while moving maintainers to comment-driven backport requests and enabling Arcade's scheduled cleanup.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: v <v@v.v>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -236,6 +240,7 @@
     "4883": {
       "url": "https://github.com/mono/SkiaSharp/pull/4883",
       "title": "[CI] Simplify artifact downloads to exact build IDs",
+      "body": "[CI] Simplify artifact downloads to exact build IDs (#4883)\n\nContext: https://github.com/mono/SkiaSharp/pull/3826\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1571238\n\nRemove obsolete arbitrary-build selection from the shared artifact download\ntemplate. Content-based caching introduced in #3826 now decides whether native\ncompilation can be skipped; artifact transfer should identify the producing run\nrather than rediscover a build by branch.\n\nThe template has one caller, and it no longer supplies `sourceBuildId`. The\nremaining sources are Azure run IDs: `BUILD_BUILDID` for combined pipelines or\n`RESOURCES_PIPELINE_SKIASHARP_RUNID` for the connected Tests pipeline. The\n`latest` value therefore could not reach `DownloadBuildArtifacts@1`, leaving\nthe `latestFromBranch` selection and its `branchName` input unused.\n\nAlways request `specific` and pass the exact resolved build ID. Remove\n`sourceBuildId`, `DOWNLOAD_BRANCH`, and `DOWNLOAD_VERSION_TYPE`, while retaining\nthe pipeline ID because the task requires its `pipeline`/`definition` input for\nspecific downloads.\n\nUpdate the .NET upgrade guide to remove the retired `buildExternals` workflow\nand document `repo-deps.py` plus `Cache@2` as the supported native-artifact reuse\nmechanism.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -243,6 +248,7 @@
     "4952": {
       "url": "https://github.com/mono/SkiaSharp/pull/4952",
       "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -250,6 +256,7 @@
     "4949": {
       "url": "https://github.com/mono/SkiaSharp/pull/4949",
       "title": "[release] Align releases with Chromium cadence markers",
+      "body": "[release] Align releases with Chromium cadence markers (#4949)\n\nContext: https://developer.chrome.com/blog/chrome-two-week-release\nContext: https://chromiumdash.appspot.com/schedule\n\nAlign the public release train with Chromium Dash while keeping its marker\nnames distinct from SkiaSharp package stages. Chrome 153 starts a two-week\nmilestone cadence, but each train still spans about three weeks and overlaps\nthe next.\n\n~~ Milestone timing ~~\n\nKeep Preview 1 on `earliest_beta`, move Preview 2 one day earlier from\n`early_stable` to `early_stable_cut`, and leave RC 1 and Stable on\n`stable_cut` and `stable_date`.\n\nFor M153 onward, this places releases on days 2, 8, 15, and 22 relative to\nbranch point, giving gaps of 6, 7, and 7 days. Stable for one milestone and\nPreview 2 for the next intentionally share a release date.\n\nThe live rollout updated Preview 2 and RC 1 metadata for M153 through M155.\nA post-write dry run planned no further milestone mutations, while 4.152\nreconciliation reported all 72 assignments already correct.\n\n~~ Shared schedule vocabulary ~~\n\nStore the Chromium Dash fields under their original names rather than the\ngeneric `beta`, `early_stable`, and `stable` aliases. Map those fields to\nSkiaSharp Preview 1, Preview 2, RC 1, and Stable only when rendering or\ncreating milestones.\n\nPresent Chromium markers and SkiaSharp releases in separate columns. Add a\nstaggered M153/M154 timeline to expose branch-relative offsets and the\noverlapping release day without duplicating identical date columns.\n\nCorrect the earlier claim that Chrome moved to a three-week release cycle:\nChrome milestones now ship every two weeks, while each beta-to-stable train\ncontinues to span about three weeks. Reject stale schedule data with an\nactionable regeneration error, and pin the complete overlapping timeline and\nmilestone descriptions in regression tests.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -257,6 +264,7 @@
     "4951": {
       "url": "https://github.com/mono/SkiaSharp/pull/4951",
       "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -264,6 +272,7 @@
     "4927": {
       "url": "https://github.com/mono/SkiaSharp/pull/4927",
       "title": "[skia-sync] Merge upstream chrome/m153 bug fixes",
+      "body": "[skia-sync] Merge upstream chrome/m153 bug fixes (#4927)\n\nRequires: https://github.com/mono/skia/pull/350\nChanges: https://github.com/mono/skia/compare/ca4e52cbb95210aaf4cc5d2deaa32b478a28429a...92dc1a61df70e9238e7efe435f40a4136e887df8\n\nAdvance the mono/skia submodule within milestone 153 to include the upstream\nSkCachedData::internalUnref use-after-free fix.\n\nThe previous implementation could delete SkCachedData before its\nAutoMutexWritable guard released the object's mutex. The upstream correction\nrecords the unref result, destroys the guard, and only then deletes the object,\npreventing an unlock through freed memory.\n\nKeep chrome_milestone and product versions at 153. Update the cgmanifest\nupstream commit to 4f574af24448 and point both its Skia registration and the\nsubmodule gitlink at the actual mono/skia merge commit 92dc1a61df70.\n\nThat merge has the reviewed native commit d87457da65b2 as its second parent and\nan identical tree, so the repin preserves the source that passed the native\nLinux x64 build, binding regeneration, and full managed test solution.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -271,6 +280,7 @@
     "4948": {
       "url": "https://github.com/mono/SkiaSharp/pull/4948",
       "title": "[infra] Preserve release lines only for Skia milestone bumps",
+      "body": "[infra] Preserve release lines only for Skia milestone bumps (#4948)\n\nDistinguish milestone bumps from same-milestone syncs before preserving a\nrelease line, and carry the resolved parent target through the remaining merge\nhandoff.\n\n~~ Milestone-aware release preservation ~~\n\nPrepare-SkiaReleaseBranches now reads chrome_milestone from the parent base and\nhead commits. Equal milestones require no release branch; a regression is\nrejected; an increase retains the existing release-line preflight and guarded\npush.\n\nThe push path also rechecks the parent head SHA so the milestone decision cannot\nbe applied after the reviewed source changes. Dry runs confirmed that m153 to\nm153 creates no refs, while m153 to m154 proposes release/4.153.x.\n\n~~ Target-aware merge handoff ~~\n\nUse the resolved parent base branch for post-merge gitlink, cgmanifest, and CI\nverification. This keeps servicing updates on release/A.B.x instead of\nincorrectly directing their final checks to main.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -278,6 +288,7 @@
     "4944": {
       "url": "https://github.com/mono/SkiaSharp/pull/4944",
       "title": "Fix milestone due-date normalization",
+      "body": "Write milestone deadlines at the end of the intended UTC day so GitHub preserves the Chromium schedule's calendar date during API normalization.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\nCo-authored-by: v <v@v.v>\nCopilot-Session: 4334d2f3-f72f-44cc-a5e6-364873836605",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -285,6 +296,7 @@
     "4942": {
       "url": "https://github.com/mono/SkiaSharp/pull/4942",
       "title": "[release] Simplify workflow confirmation and split release guidance",
+      "body": "[release] Simplify workflow confirmation and split release guidance (#4942)\n\nMake remote release mutations one explicit operator decision and separate the\nshort shipping runbook from the implementation reference. This keeps routine\nreleases easy to scan without losing the invariants needed to debug or recover\nthe automation.\n\n~~ Make remote writes one explicit decision ~~\n\nRelease - Prepare and Release - Finish exposed DryRun, Apply, and Push even\nthough Apply only changed their disposable GitHub Actions checkouts. Replace\nthat choice with an unchecked `push` boolean: unchecked maps to the scripts'\nDryRun mode, while checked maps to Push and performs the remote writes.\n\nKeep Apply in the PowerShell entry points because local callers retain the\nprepared branches, commits, and support-file edits for inspection. Update the\nrelease skills to teach the two-dispatch plan-then-push flow, and extend the\npublishing suite to require both workflows to omit `mode`, default `push` to\nfalse, and map it only to DryRun or Push.\n\n~~ Separate operator steps from implementation mechanics ~~\n\nRefocus `documentation/dev/releasing.md` as a seven-step maintainer runbook\ncovering the exact workflow inputs, connected Build and Tests pipelines,\noptional package approval, protected publication boundary, finalization,\nmilestones, follow-up pull requests, and the release record.\n\nMove the underlying sources of truth, identity transformations, HarfBuzzSharp\nversion coupling, signing and BAR stages, test-resource inheritance, Finish\nbehavior, milestone reconciliation, convergence rules, and local commands into\n`documentation/dev/release-process-internals.md`.\n\n  * Keep `-stable` as a Prepare-only confirmation sentinel so a stable cut is\n    explicit. Strip it before branch creation and keep package versions, tags,\n    and GitHub Releases on the bare numeric identity.\n\n  * Mark release-testing as optional and route it through the repository skill\n    with a copyable prompt. Leave the Maestro-to-NuGet.org operation as an\n    explicit placeholder until its protected UI and approval sequence settle.\n\n  * Document both accepted Finish prerelease forms. A short identity resolves\n    through NuGet.org when one public build matches; zero matches stop, and an\n    exact version disambiguates multiple builds.\n\nUpdate the development-document index, package documentation, and release\nskills to point each audience at the appropriate guide. The publishing and\nmilestone suites pass, and the changed documentation links resolve locally.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -292,6 +304,7 @@
     "4941": {
       "url": "https://github.com/mono/SkiaSharp/pull/4941",
       "title": "[docs] Regenerate API diffs and release notes",
+      "body": "* docs: regenerate API diffs and release notes\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* docs: polish 4.151 and 4.152 release notes\n\nRemove internal build and test details from the consumer-facing prose, correct the lifetime description, and highlight Apple native symbol packages.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\nCopilot-Session: 4ad68640-cb2e-4e84-a566-edee55f38996\n\n---------\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: v <v@v.v>\nCopilot-Session: 4ad68640-cb2e-4e84-a566-edee55f38996",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -299,6 +312,7 @@
     "4933": {
       "url": "https://github.com/mono/SkiaSharp/pull/4933",
       "title": "Cover Push-ReleaseTag and run the release-notes tests in CI",
+      "body": "Push-ReleaseTag is the irreversible step Finish uses to publish a release tag,\nand it had no test coverage. A tag is immutable once a GitHub Release consumes\nit, so its guards matter: refuse to act without -Push, verify the tag after\ncreating it, stay quiet when re-run against an identical tag, and never move a\ntag that already points elsewhere. All four are now pinned, including that the\nconflict is detected before -Push is considered.\n\nAlso covers the offline branches of Resolve-NuGetPackageVersion \u2014 the versions\nit must return untouched rather than resolving against nuget.org. The one shape\nthat would reach the network is deliberately excluded, so the suite stays\ndeterministic. Everything drives a local bare git remote.\n\nSeparately, scripts/infra/docs/release_notes/tests holds 137 tests that nothing\nran in CI, including the GitHub Release summary mutation Finish dispatches. Adds\nthat step and broadens the paths filters, which matched none of\nscripts/infra/docs/**, .agents/skills/release-notes/**, or\nupdate-github-release-summaries.yml \u2014 so release-note tooling could change\nwithout any gate running.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -306,6 +320,7 @@
     "4930": {
       "url": "https://github.com/mono/SkiaSharp/pull/4930",
       "title": "Guard the docs-sync force push with an explicit lease",
+      "body": "The daily docs-submodule sync pushed its PR branch with a bare `git push\n--force`, which AGENTS.md forbids: a concurrent push to the same branch is\noverwritten with no diagnostic.\n\nCapture the remote tip with `git ls-remote` before `checkout -B` rewrites the\nbranch locally, then push with an explicit\n`--force-with-lease=refs/heads/$BRANCH:$REMOTE_SHA`. A concurrent move is now\nrejected with \"stale info\"; an empty capture is a valid lease meaning the\nbranch must not exist yet, so the first run still creates it.\n\nThe explicit form is used instead of a bare `--force-with-lease` because a\nbare lease consults refs/remotes/origin/$BRANCH, which is only present because\nthe checkout step sets fetch-depth: 0. At the action's default depth that ref\nis absent and every push after the first is rejected, silently stalling the\nsync.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -313,6 +328,7 @@
     "4939": {
       "url": "https://github.com/mono/SkiaSharp/pull/4939",
       "title": "Run the automation tooling tests in CI",
+      "body": "Three test suites live in the repository, pass, and are wired to no workflow,\nso a regression in any of them reaches main silently:\n\n  .agents/skills/ci-status/scripts/tests/        8 tests\n  .agents/skills/update-skia/scripts/*_test.py   4 modules\n  .github/scripts/tests/skia-sync-detect.test.sh\n\nThe ci-status registry suite is the sharpest example. It exists to catch a\ndashboard that reports a workflow which is not there, but nothing ran it \u2014 so\nthe guard itself was unguarded.\n\nAdds a workflow covering all three, scoped tightly to the paths that feed them\nplus any .github/workflows/*.yml edit, which is what makes the registry suite\nre-check its tracked list whenever a workflow is added, renamed or deleted.\n\nThe ci-status suite is invoked directly rather than behind an existence check.\nOn the runner's Python, unittest discover already fails loudly in both\ndegenerate cases \u2014 exit 1 if the directory is gone, exit 5 on \"NO TESTS RAN\"\nif it is empty \u2014 so a wrapper could only convert those into a silent pass. The\nupdate-skia loop does need an explicit guard, because a glob that matches\nnothing would otherwise iterate zero times and succeed.\n\nAlso registers the new workflow with the ci-status dashboard it runs, keeping\ncoverage at 27 of 29.\n\nCo-authored-by: v <v@v.v>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -320,6 +336,7 @@
     "4938": {
       "url": "https://github.com/mono/SkiaSharp/pull/4938",
       "title": "Fix release notes versions JSON",
+      "body": "Remove the trailing comma added to the preview support list so the strict Python JSON parser can generate release-notes data.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\nCo-authored-by: v <v@v.v>\nCopilot-Session: ff1a363e-70b5-4b17-9815-e600dc4f16a4",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -327,6 +344,7 @@
     "4937": {
       "url": "https://github.com/mono/SkiaSharp/pull/4937",
       "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -334,6 +352,7 @@
     "4924": {
       "url": "https://github.com/mono/SkiaSharp/pull/4924",
       "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -341,6 +360,7 @@
     "4931": {
       "url": "https://github.com/mono/SkiaSharp/pull/4931",
       "title": "Fix a paths-ignore typo and pin the rebase checkout",
+      "body": "Two unrelated one-line workflow defects, both silent.\n\nbuild-site.yml listed 'CODE_OF_CONDUCT.md' in paths-ignore, but the file is\nCODE-OF-CONDUCT.md. The entry matched nothing, so a PR touching only the code\nof conduct still built and deployed a full staging site preview. paths-ignore\nfails open by design, so the effect is wasted work rather than a bad deploy \u2014\nand nothing reports the mismatch.\n\nrebase.yml still used actions/checkout@v2, which declares `using: node12`.\nThe runner no longer provides that runtime and forcibly executes the action on\ncurrent Node, so v2's node12-era bundle runs on a combination its maintainers\nnever supported, and the mutable @v2 tag is unpinned. Pin to the same\nSHA-pinned v7.0.1 already used 36 times elsewhere in this repo.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -348,6 +368,7 @@
     "4936": {
       "url": "https://github.com/mono/SkiaSharp/pull/4936",
       "title": "Update 4.152 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -355,6 +376,7 @@
     "4934": {
       "url": "https://github.com/mono/SkiaSharp/pull/4934",
       "title": "Update 4.151 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -362,6 +384,7 @@
     "4932": {
       "url": "https://github.com/mono/SkiaSharp/pull/4932",
       "title": "Fix the ci-status workflow registry and guard it with a test",
+      "body": "The registry is a hand-maintained list of workflow filenames that nothing\nchecked against the repository. Three defects had accumulated, none of which\nsurfaces as an error:\n\n- nightly-fix-finder.lock.yml has never existed on main; it only lived on an\n  unmerged branch. GitHub kept the workflow registered from that branch push,\n  so the API returns state:active with 17 successful runs from 2026-05-15\n  rather than 404ing. The entry is scope:global, so the collector queries it\n  with no branch filter and reports those stale branch runs as current health\n  \u2014 a green row for a workflow that does not exist.\n- persist-aw-data.yml was tracked as trigger:push but runs on workflow_run.\n- SKILL.md advertised \"API Diff\", removed in #4184 when it was folded into\n  \"Sync - Release Notes & API Diffs\", and described Sync - Skia Upstream as\n  \"Daily (07:00 UTC)\" when its cron is 17 */6.\n\nCorrects those, adds the 11 workflows the registry had never covered, and adds\ntest_workflow_registry.py to keep it honest: every tracked file must exist, the\ndeclared trigger must appear in the file's on: block, display names must match,\nscheduled entries must define a cron, and any schedule SKILL.md states must\nagree with the workflow. Schedules for gh-aw locks are documented imprecisely\non purpose \u2014 the compiler re-jitters their cron on upgrade \u2014 and the test\nfails if a literal is reintroduced.\n\nCoverage is now 26 of the 28 workflows on main; copilot-setup-steps.yml\n(agent setup, not repo CI health) and manage-nuget-feed.yml are untracked.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -369,6 +392,7 @@
     "4922": {
       "url": "https://github.com/mono/SkiaSharp/pull/4922",
       "title": "[infra] Fix cached Copilot CLI workflow startup",
+      "body": "Upgrade all agentic workflows from gh-aw v0.84.3 to v0.87.10 so cache-hit installs materialize and stage the Copilot CLI path used by the AWF harness. Refresh the standalone Copilot setup action and remove the maintenance workflow that is no longer generated without explicit expiry configuration.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -376,6 +400,7 @@
     "4920": {
       "url": "https://github.com/mono/SkiaSharp/pull/4920",
       "title": "[release] Automate support tier updates",
+      "body": "[release] Automate support tier updates (#4920)\n\nMake release support metadata follow published releases while retaining\nmaintainer control over support retirement. Standardize release automation\nmodes and centralize guarded file-update pull requests so local validation and\nCI publishing exercise the same core path.\n\n~~ Release-driven support membership ~~\n\nUpdate scripts/infra/docs/versions.json during Release Finish, after resolving\nthe exact public SkiaSharp package version from NuGet. Preview and RC releases\nensure their major.minor line is present in support.preview. Stable releases\nensure the line is present in support.stable and remove that same line from\nsupport.preview.\n\nRetain every other stable and preview line because ending support remains an\nexplicit maintainer policy decision. Use PowerShell's JSON model, return the\noriginal text when no change is needed, and preserve unrelated configuration\nwhen updating support membership.\n\nDocument the release-driven additions and promotions while keeping removals\nmanual. Cover preview, RC, stable promotion, idempotency, multiple supported\nlines, empty tiers, and unrelated configuration in the publishing tests.\n\n~~ Explicit publishing modes ~~\n\nReplace overlapping Apply and Push switches in release preparation, release\ncompletion, and issue-template maintenance with one validated Mode parameter:\nDryRun, Apply, or Push. Expose the same choices through their GitHub workflows\nand release skills.\n\nDryRun resolves and inspects the proposed state without entering the local\nbranch and commit path. Apply performs the same local writes, staging, branch\ncreation, and commit creation as Push, then stops before authentication,\nremote updates, and pull-request creation. Push continues from that shared\nstate to publish and verify the result.\n\nResolve the Finish repository from the script location so invoking it by an\nabsolute path cannot apply changes to the caller's unrelated checkout.\n\n~~ Guarded automation pull requests ~~\n\nMove desired-file branch convergence into Publishing.Common and generic GitHub\npull-request creation into GitHub.Common. Reuse this path for release-support\nupdates and the existing bug-template version updater instead of maintaining\nseparate branch and PR implementations.\n\nRequire Apply and Push to start from a clean checkout at the resolved base.\nRecognize an existing automation branch only when it is one commit on that\nbase, changes the expected paths, and contains the desired blobs. Reuse a\nmatching branch or open PR, replace stale owned branches with\n--force-with-lease, verify the pushed SHA, and reject multiple open PRs for the\nsame automation branch.\n\nThe publishing suite passes 90 tests, including local Apply commits and\nautomation-branch reuse. The release-milestone suite passes 25 tests.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -383,6 +408,7 @@
     "4918": {
       "url": "https://github.com/mono/SkiaSharp/pull/4918",
       "title": "[skills] Add guarded Skia update landing workflow",
+      "body": "[skills] Add guarded Skia update landing workflow (#4918)\n\nContext: https://github.com/mono/SkiaSharp/pull/4833\n\nAdd a maintainer-controlled workflow for landing an already-reviewed\nmono/skia and mono/SkiaSharp update pair. Keep both GitHub merges manual while\nautomating the deterministic release-branch and parent-repin operations.\n\n~~ Guarded two-repository landing ~~\n\nDiscover reciprocal PR pairs before requesting approval and require selection\nwhen multiple updates are open. Add ten eval scenarios covering pair selection,\nrelease preservation, servicing no-ops, conflicting refs, merge ancestry, and\nlocal or workflow-based parent repins.\n\nPrepare matching release branches from the exact native and parent base commits\nwhen a main update replaces a product line. Treat existing release targets as\nservicing updates, preflight both destinations, create the native branch first,\nand never move an existing ref.\n\nVerify that the merged native commit is a two-parent merge containing the\nreviewed head with an identical tree. Update only the Skia gitlink and matching\nComponent Governance hash, recheck remote tips before mutation, and default\nboth PowerShell helpers to read-only operation unless `-Push` is supplied.\n\n~~ Keep HarfBuzz revisions milestone-scoped ~~\n\nMove the reusable version-update helper and its tests into the update-skia\nskill. Advance the HarfBuzzSharp package revision bucket by 100 for every\ncrossed Skia milestone while the native HarfBuzz version remains unchanged,\nincluding partial-run repair and idempotent reruns.\n\nExtend publishing coverage for higher revision buckets so release preparation\ncontinues incrementing within the active milestone allocation instead of\ncrossing into a neighboring milestone's reserved range.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -390,6 +416,7 @@
     "4826": {
       "url": "https://github.com/mono/SkiaSharp/pull/4826",
       "title": "[skia-sync] Update skia to milestone 153",
+      "body": "[skia-sync] Update Skia to milestone 153 (#4826)\n\nRequires: https://github.com/mono/skia/pull/348\nChanges: https://github.com/mono/skia/compare/9f0d864fd60e9907a8bf5ec84a71d603e6c8db5f...ca4e52cbb95210aaf4cc5d2deaa32b478a28429a\n\nAdvance SkiaSharp from Skia m152 to m153, align the product and native\nversions, preserve HarfBuzzSharp servicing space, and document the reachable\nfont-selection change. The managed API and native C ABI remain unchanged.\n\n~~ Adopt the reviewed native merge ~~\n\nMove the Skia gitlink and cgmanifest registration from fork commit\n9f0d864fd60e to the actual two-parent mono/skia merge ca4e52cbb952. Record\nchrome/m153 and upstream commit 9d07e5bad9e3 in the component manifest.\n\nAdvance the native milestone and soname from 152.0.0 to 153.0.0, and update the\nSkiaSharp assembly, file, package, and build-pipeline versions from 4.152.0 to\n4.153.0. Independent binding regeneration found no changes, SK_C_INCREMENT\nremains zero, and the reviewed C API shim is unchanged.\n\nThe native source build passed on macOS ARM64. The companion build completed\nits native, managed, packaging, test, visual, and sample stages, and package\nmetadata and representative runtime assets were exercised from its artifacts.\n\n~~ Preserve HarfBuzzSharp servicing space ~~\n\nAdvance the HarfBuzzSharp package and file versions from 14.2.1.200 to\n14.2.1.300 even though the native HarfBuzz revision remains 14.2.1.\n\nEach Skia milestone reserves a 100-value package revision bucket. Reusing the\nm152 .200 bucket for m153 would collide with servicing releases from the\nprevious milestone, so m153 starts at .300 while native dependency updates\nremain independently versioned.\n\nThe versioning regression coverage passed fresh milestone, partial-run,\nservicing-offset, and idempotency cases.\n\n~~ Document reachable engine behavior ~~\n\nAdd the 4.153.0 release-note sidecar for the Linux fontconfig fallback change\nthat cannot appear in a managed API diff. Skia now attempts FcFontMatch before\nthe previous FcFontSort fallback, so applications depending on the exact\nfallback face can observe different text metrics or glyphs.\n\nDo not list the upstream Ganesh YUVA subset correction as customer-visible\nSkiaSharp behavior because the affected constructors are not exposed through\nthe current managed or C API bindings.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
