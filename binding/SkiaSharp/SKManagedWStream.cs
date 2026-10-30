@@ -70,6 +70,7 @@ namespace SkiaSharp
 			if (count == 0)
 				return true;
 
+			// Native size_t can exceed int; transfer bounded chunks and count only completed writes.
 			try {
 				if (buffer != IntPtr.Zero) {
 					var src = (byte*)buffer;
@@ -89,6 +90,7 @@ namespace SkiaSharp
 						src += toWrite;
 					}
 				} else {
+					// A null native buffer means zero-fill; pooled storage must be cleared before writing.
 					using var zeroes = Utils.RentArray<byte> ((int)Math.Min (count, (ulong)SKData.CopyBufferSize));
 					zeroes.Span.Clear ();
 					for (var left = count; left > 0;) {

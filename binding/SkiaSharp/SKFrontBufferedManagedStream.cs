@@ -95,6 +95,7 @@ namespace SkiaSharp
 		{
 			var start = offset;
 
+			// Read managed children directly so this adapter does not add a nested native callback boundary.
 			// 1. read any data that was previously buffered
 			if ((int)size > 0 && offset < bufferedSoFar)
 			{

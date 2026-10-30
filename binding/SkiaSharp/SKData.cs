@@ -183,6 +183,7 @@ namespace SkiaSharp
 				return CreateFromUnknownLengthStream (stream);
 
 			var len = stream.Length;
+			// SKFrontBufferedStream can report -1 for an unknown length despite CanSeek being true.
 			if (len < 0)
 				return CreateFromUnknownLengthStream (stream);
 
@@ -234,6 +235,7 @@ namespace SkiaSharp
 
 		private static SKData CreateFromUnknownLengthStream (Stream stream)
 		{
+			// Stage unknown-length input in native blocks, then gather it into contiguous SKData.
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 
@@ -267,6 +269,8 @@ namespace SkiaSharp
 			if (length == 0)
 				return Empty;
 
+			// Reject impossible explicit-length requests before allocating or consuming input.
+			// Lengthless callers already calculated the available count and skip this metadata check.
 			if (checkRemainingLength && stream.CanSeek) {
 				var len = stream.Length;
 				if (len >= 0) {
@@ -288,6 +292,7 @@ namespace SkiaSharp
 				using var scratch = Utils.RentArray<byte> ((int)Math.Min (length, (ulong)CopyBufferSize));
 #endif
 
+				// Fill the final allocation in bounded reads; a positive short read is progress, not EOF.
 				while (totalRead < length) {
 					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
@@ -324,8 +329,10 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
+			// Choose one copy route; a known-length failure must not restart as an unknown-length read.
 			try {
 				if (stream is SKAbstractManagedStream managed) {
+					// Keep managed overrides on the managed stack so their original exceptions can propagate.
 					if (managed.OnHasLength () && managed.OnHasPosition ()) {
 						var len = Utils.FromNativeSize (managed.OnGetLength ());
 						var pos = Utils.FromNativeSize (managed.OnGetPosition ());
@@ -353,12 +360,14 @@ namespace SkiaSharp
 
 				return CreateFromUnknownLengthStream (stream);
 			} finally {
+				// Keep the source owner alive through every helper and its cleanup, including early exits.
 				GC.KeepAlive (stream);
 			}
 		}
 
 		private static SKData CreateFromManagedStream (SKAbstractManagedStream stream, ulong length)
 		{
+			// Fill one final allocation exactly; early EOF is failure rather than a partial result.
 			var data = Create (length);
 			if (data == null)
 				return null;
@@ -388,6 +397,7 @@ namespace SkiaSharp
 
 		private static SKData CreateFromUnknownLengthManagedStream (SKAbstractManagedStream stream)
 		{
+			// No remaining-length snapshot is available, so accumulate bounded chunks until EOF.
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			fixed (byte* ptr = buffer.Array) {
@@ -406,6 +416,7 @@ namespace SkiaSharp
 
 		private static SKData CreateFromUnknownLengthStream (SKStream stream)
 		{
+			// Stage native reads until EOF because the final allocation size is not known yet.
 			using var memory = new SKDynamicMemoryWStream ();
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			fixed (byte* ptr = buffer.Array) {
