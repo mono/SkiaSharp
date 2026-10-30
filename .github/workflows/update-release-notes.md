@@ -57,8 +57,8 @@ on:
         type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
-  group: update-release-notes-${{ inputs.source_branch || 'main' }}
-  cancel-in-progress: true
+  group: update-release-notes
+  cancel-in-progress: false
   job-discriminator: ${{ github.run_id }}
 # The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
 # in its own `prepare` job (below), so the agent's own budget is modest.
@@ -223,8 +223,6 @@ pre-agent-steps:
         echo "Prepare produced no changes; nothing to apply."
       fi
   - name: Prepare main-based documentation output branch
-    env:
-      SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
     run: bash .agents/skills/release-notes/scripts/prepare-pr-branch.sh
 tools:
   # The agent reads the restored _sources/<version>.data.json sidecars, writes
@@ -259,8 +257,7 @@ safe-outputs:
     base-branch: main
     allowed-base-branches: [main]
     allowed-files: ["documentation/docfx/releases/**"]
-    allowed-branches:
-      - "${{ (inputs.source_branch && inputs.source_branch != 'main') && 'bot/release-notes-test-' || 'bot/release-notes' }}${{ (inputs.source_branch && inputs.source_branch != 'main') && github.run_id || '' }}"
+    allowed-branches: [bot/release-notes]
     fallback-as-issue: false
     preserve-branch-name: true
     recreate-ref: true
@@ -341,22 +338,20 @@ diffing months of history (2000+ files, exceeding the PR file cap and failing th
 run). So once every page renders cleanly you **must** commit everything yourself,
 then create the PR:
 
-The host has already checked out the output branch and set `DOCS_PR_BRANCH`. Its
+The host has already checked out `bot/release-notes`. Its
 history starts at `origin/main`, while the working tree retains the selected source's
 tools and prepared files. Do not check out, create, reset, or choose another branch.
 Source-only changes outside the release tree are validation tools, not output to commit.
 
-1. Read `DOCS_PR_BRANCH` from the process environment and confirm it is the current branch.
-   The host selects `bot/release-notes` for production and a unique test branch otherwise.
-2. `git add -- documentation/docfx/releases` — stage the restored Prepare output
+1. `git add -- documentation/docfx/releases` — stage the restored Prepare output
    (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
    the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
    **and** the regenerated `TOC.yml` + `index.md`.
-3. Run `git commit -m "docs: regenerate API diffs and release notes"` as its own
+2. Run `git commit -m "docs: regenerate API diffs and release notes"` as its own
    shell call. Do not append cleanup or other commands to this call: an unallowed
    command in a compound call prevents the commit from running.
-4. Call the `create_pull_request` safe-output with base `main` and `branch` equal to
-   the host-provided `DOCS_PR_BRANCH`. Both production and branch-source tests always
+3. Call the `create_pull_request` safe-output with base `main` and branch
+   `bot/release-notes`. Both production and branch-source tests always
    target `main`; only generated release files are allowed in the output.
    Use the registered native safe-output tool directly; its schema is already supplied.
    Do not probe a shell CLI with `command -v`, `--help`, or other discovery commands.

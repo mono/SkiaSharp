@@ -457,16 +457,19 @@ A single GitHub workflow
 There is no separate "api-diff" vs "release-notes" workflow — they are one pipeline
 producing one coherent update.
 
-All generated PRs target `main`, including branch-source validation runs. A pre-agent step
-selects the output branch and exposes it as `DOCS_PR_BRANCH`; the agent never chooses or
-checks out a branch. The output history starts at `origin/main`, while the working tree
-retains the selected source's tools and prepared files. Only `documentation/docfx/releases/`
-is staged and allowed for publication, keeping workflow changes out of the docs diff.
+All generated PRs use `bot/release-notes` and target `main`, including branch-source
+validation runs. A pre-agent step checks out that fixed output branch; the agent never
+chooses or checks out a branch. The output history starts at `origin/main`, while
+`git reset --mixed` preserves the selected source's working files, including its edited
+release-notes skill. It does not check out main's copies of those files.
+Only `documentation/docfx/releases/` is staged and allowed for publication, keeping
+workflow and skill changes out of the docs diff.
 
-Each branch-source test uses `bot/release-notes-test-<run_id>` and a source-specific
-concurrency group, separate from production's `bot/release-notes` output. The safe-output
-branch allowlist enforces that selection. A subsequent production run therefore cannot
-replace or close a test PR. PR publication failures are errors, not successful fallback issues.
+To test edited workflow and skill sources, dispatch with both `--ref <feature-branch>`
+and `--raw-field source_branch=<feature-branch>`. All runs share a concurrency group
+without cancelling an active run. Each successful run updates the same docs PR, so a
+later production run can replace test-generated notes. PR publication failures are
+errors, not successful fallback issues.
 
 The final renderer accepts `--all --pr-body <path>` to write the automation's complete PR
 body after validation succeeds. It preserves the contributor template's sections and

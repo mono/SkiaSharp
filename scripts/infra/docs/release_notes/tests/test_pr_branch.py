@@ -39,8 +39,10 @@ class PrBranchTests(unittest.TestCase):
                 docs = root / "documentation/docfx/releases"
                 docs.mkdir(parents=True)
                 (docs / "page.md").write_text("Existing page\n")
-                tool = root / "tool.py"
-                tool.write_text("existing tool\n")
+                skill = root / ".agents/skills/release-notes/SKILL.md"
+                skill.parent.mkdir(parents=True)
+                skill.write_text("main skill\n")
+                feature_rule = skill.parent / "feature-rule.md"
                 git("add", ".")
                 git("commit", "-m", "baseline")
                 baseline = git("rev-parse", "HEAD")
@@ -48,37 +50,28 @@ class PrBranchTests(unittest.TestCase):
 
                 if source != "main":
                     git("checkout", "-b", source)
-                    tool.write_text("feature tool\n")
-                    git("add", "tool.py")
+                    skill.write_text("feature skill\n")
+                    feature_rule.write_text("feature-only guidance\n")
+                    git("add", ".agents")
                     git("commit", "-m", "feature implementation")
 
+                source_head = git("rev-parse", source)
                 (docs / "page.md").write_text("Prepared and polished page\n")
                 git("add", "documentation")
-                env_path = root / "github-env"
-                script_env = dict(env, SOURCE_BRANCH=source, GITHUB_RUN_ID="123", GITHUB_ENV=str(env_path))
-                subprocess.run(["bash", str(_SCRIPT)], cwd=root, env=script_env, check=True, capture_output=True)
+                subprocess.run(["bash", str(_SCRIPT)], cwd=root, env=env, check=True, capture_output=True)
 
-                expected_branch = "bot/release-notes" if source == "main" else "bot/release-notes-test-123"
-                self.assertEqual(git("branch", "--show-current"), expected_branch)
+                self.assertEqual(git("branch", "--show-current"), "bot/release-notes")
                 self.assertEqual(git("rev-parse", "HEAD"), baseline)
-                self.assertEqual(tool.read_text(), "existing tool\n" if source == "main" else "feature tool\n")
+                self.assertEqual(git("rev-parse", source), source_head)
+                self.assertEqual(skill.read_text(), "main skill\n" if source == "main" else "feature skill\n")
+                self.assertEqual(feature_rule.exists(), source != "main")
                 self.assertEqual((docs / "page.md").read_text(), "Prepared and polished page\n")
-                self.assertEqual(env_path.read_text(), "DOCS_PR_BRANCH=" + expected_branch + "\n")
 
                 git("add", "--", "documentation/docfx/releases")
                 git("commit", "-m", "generated documentation")
                 self.assertEqual(git("rev-parse", "HEAD^"), baseline)
                 self.assertEqual(git("diff", "--name-only", baseline, "HEAD"),
                                  "documentation/docfx/releases/page.md")
-
-    def test_invalid_run_id_fails_before_git_changes(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env_path = Path(tmp) / "github-env"
-            env = _git_environment(SOURCE_BRANCH="feature/docs", GITHUB_RUN_ID="../main", GITHUB_ENV=str(env_path))
-            result = subprocess.run(["bash", str(_SCRIPT)], cwd=tmp, env=env, text=True, capture_output=True)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn("GITHUB_RUN_ID must be numeric", result.stderr)
-            self.assertFalse(env_path.exists())
 
     def test_git_environment_drops_inherited_repository_and_config_overrides(self):
         with mock.patch.dict(os.environ, {
