@@ -373,29 +373,14 @@ namespace SkiaSharp
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			fixed (byte* ptr = buffer.Array) {
 				while (true) {
-					var read = ReadStream (stream, ptr, buffer.Length);
+					var read = stream.Read ((IntPtr)ptr, buffer.Length);
 					if (read == 0)
 						break;
-					if (!memory.Write (buffer.Array, (int)read))
+					if (!memory.Write (buffer.Array, read))
 						return null;
 				}
 			}
 			return memory.DetachAsData ();
-		}
-
-		internal static ulong ReadStream (SKStream stream, void* buffer, int length)
-		{
-			try {
-				var size = (IntPtr)length;
-				var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
-					? managed.OnRead ((IntPtr)buffer, size)
-					: SkiaApi.sk_stream_read (stream.Handle, buffer, size));
-				if (read > (ulong)length)
-					throw new IOException ("The stream returned an invalid byte count.");
-				return read;
-			} finally {
-				GC.KeepAlive (stream);
-			}
 		}
 
 		private static SKData CreateFromStream (SKStream stream, ulong length)
@@ -410,13 +395,13 @@ namespace SkiaSharp
 				while (totalRead < length) {
 					// Managed stream callbacks accept int-sized requests, even when the total length is larger.
 					var toRead = (int)Math.Min (length - totalRead, (ulong)CopyBufferSize);
-					var read = ReadStream (stream, dst + totalRead, toRead);
+					var read = stream.Read ((IntPtr)(dst + totalRead), toRead);
 					if (read == 0) {
 						data.Dispose ();
 						return null;
 					}
 
-					totalRead += read;
+					totalRead += (ulong)read;
 				}
 
 				return data;

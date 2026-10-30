@@ -292,6 +292,58 @@ namespace SkiaSharp.Tests
 			Assert.Equal(30, stream.ReadByte());
 		}
 
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(3)]
+		public void ReadRejectsInvalidNativeCounts(int result)
+		{
+			using var stream = new SizeReportingStream(10) { ReadResult = new IntPtr(result) };
+
+			Assert.Throws<IOException>(() => stream.Read(IntPtr.Zero, 2));
+			Assert.Equal(1, stream.ReadCalls);
+		}
+
+		[Fact]
+		public void ReadValidatesNativeCountBeforeNarrowing()
+		{
+			var result = IntPtr.Size == 8 ? (1UL << 32) + 2 : uint.MaxValue;
+			using var stream = new SizeReportingStream(10) { ReadResult = Utils.ToNativeSize(result) };
+
+			Assert.Throws<IOException>(() => stream.Read(IntPtr.Zero, 2));
+			Assert.Equal(1, stream.ReadCalls);
+		}
+
+		[Fact]
+		public void ReadPropagatesOriginalManagedOverrideException()
+		{
+			var failure = new IOException("Managed read failed.");
+			using var stream = new SizeReportingStream(10) { ReadFailure = failure };
+
+			var actual = Assert.Throws<IOException>(() => stream.Read(new byte[2], 2));
+
+			Assert.Same(failure, actual);
+			Assert.Equal(1, stream.ReadCalls);
+			Assert.DoesNotContain("SkiaSharp.DelegateProxies.", actual.StackTrace);
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void ManagedStreamPublicReadKeepsIOExceptionOnManagedStack(bool arrayRead)
+		{
+			using var inner = new ThrowingReadStream();
+			using var stream = new SKManagedStream(inner);
+
+			var actual = Assert.Throws<IOException>(() => arrayRead
+				? stream.Read(new byte[2], 2)
+				: stream.Read(IntPtr.Zero, 2));
+
+			Assert.Equal("Simulated read error.", actual.Message);
+			Assert.DoesNotContain("SkiaSharp.DelegateProxies.", actual.StackTrace);
+			Assert.True(inner.CanRead);
+			Assert.Equal(0, inner.Position);
+		}
+
 		private sealed class SizeReportingStream : SKAbstractManagedStream
 		{
 			public SizeReportingStream(ulong length) => ReportedLength = length;
@@ -301,6 +353,8 @@ namespace SkiaSharp.Tests
 			public int SeekCalls { get; private set; }
 			public int ReadCalls { get; private set; }
 			public int PeekCalls { get; private set; }
+			public IntPtr ReadResult { get; set; }
+			public Exception ReadFailure { get; set; }
 
 			protected internal override IntPtr OnGetLength() => ToNativeSize(ReportedLength);
 			protected internal override IntPtr OnGetPosition() => ToNativeSize(ReportedPosition);
@@ -315,7 +369,9 @@ namespace SkiaSharp.Tests
 			protected internal override IntPtr OnRead(IntPtr buffer, IntPtr size)
 			{
 				ReadCalls++;
-				return IntPtr.Zero;
+				if (ReadFailure != null)
+					throw ReadFailure;
+				return ReadResult;
 			}
 
 			protected internal override IntPtr OnPeek(IntPtr buffer, IntPtr size)

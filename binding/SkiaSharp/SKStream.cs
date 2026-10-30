@@ -191,8 +191,9 @@ namespace SkiaSharp
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
-		/// <remarks />
+		/// <remarks>Uses the read and exception behavior of <see cref="Read(IntPtr, int)" />. A <see langword="null" /> buffer skips bytes.</remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative or exceeds the length of a non-null <paramref name="buffer" />.</exception>
+		/// <exception cref="IOException">The stream returns an invalid byte count, or the underlying managed stream reports an I/O error.</exception>
 		public int Read (byte[] buffer, int size)
 		{
 			if (size < 0 || (buffer != null && size > buffer.Length))
@@ -207,16 +208,22 @@ namespace SkiaSharp
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
-		/// <remarks />
+		/// <remarks>Invokes <see cref="SKAbstractManagedStream" /> read overrides directly and propagates their exceptions to the caller. Other streams use the native read operation. This method does not retry short reads. A zero buffer pointer skips bytes.</remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative.</exception>
+		/// <exception cref="IOException">The stream returns an invalid byte count, or the underlying managed stream reports an I/O error.</exception>
 		public int Read (IntPtr buffer, int size)
 		{
 			if (size < 0)
 				throw new ArgumentOutOfRangeException (nameof (size));
 
-			var result = (int)SkiaApi.sk_stream_read (Handle, (void*)buffer, (IntPtr)size);
+			var nativeSize = (IntPtr)size;
+			var result = Utils.FromNativeSize (this is SKAbstractManagedStream managed
+				? managed.OnRead (buffer, nativeSize)
+				: SkiaApi.sk_stream_read (Handle, (void*)buffer, nativeSize));
 			GC.KeepAlive (this);
-			return result;
+			if (result > (ulong)size)
+				throw new IOException ("The stream returned an invalid byte count.");
+			return (int)result;
 		}
 
 		/// <summary>Attempt to peek at <paramref name="size" /> bytes.</summary>

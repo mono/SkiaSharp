@@ -91,7 +91,7 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
 		/// <remarks />
-		protected internal override unsafe IntPtr OnRead (IntPtr buffer, IntPtr size)
+		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
 			var start = offset;
 
@@ -120,7 +120,7 @@ namespace SkiaSharp
 				var tempBuffer = Marshal.AllocCoTaskMem (bytesToBuffer);
 				int bytesRead;
 				try {
-					bytesRead = (int)SKData.ReadStream (stream, (void*)tempBuffer, bytesToBuffer);
+					bytesRead = stream.Read (tempBuffer, bytesToBuffer);
 					Marshal.Copy (tempBuffer, frontBuffer, offset, bytesRead);
 				} finally {
 					Marshal.FreeCoTaskMem (tempBuffer);
@@ -142,7 +142,7 @@ namespace SkiaSharp
 			// 3. read the rest directly
 			if ((int)size > 0 && !isAtEnd)
 			{
-				var bytesRead = (int)SKData.ReadStream (stream, (void*)buffer, (int)size);
+				var bytesRead = stream.Read (buffer, (int)size);
 
 				// past the buffer, so dispose it
 				if (bytesRead > 0)
