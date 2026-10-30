@@ -12,6 +12,7 @@ namespace SkiaSharp
 		private static readonly SKManagedStreamDelegates delegates;
 
 		internal int fromNative;
+		internal int hasError;
 
 		static SKAbstractManagedStream ()
 		{
@@ -63,6 +64,9 @@ namespace SkiaSharp
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0)
 				SkiaApi.sk_managedstream_destroy (Handle);
 		}
+
+		internal void CloseFromNative () =>
+			Handle = IntPtr.Zero;
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
 		/// <param name="buffer">The buffer to read into.</param>
@@ -131,7 +135,14 @@ namespace SkiaSharp
 		protected internal virtual IntPtr OnFork ()
 		{
 			var stream = OnCreateNew ();
-			SkiaApi.sk_stream_seek (stream, SkiaApi.sk_stream_get_position (Handle));
+			if (stream != IntPtr.Zero) {
+				try {
+					SkiaApi.sk_stream_seek (stream, OnGetPosition ());
+				} catch {
+					SkiaApi.sk_stream_destroy (stream);
+					throw;
+				}
+			}
 			return stream;
 		}
 

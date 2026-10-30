@@ -155,6 +155,28 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Fact]
+		public void ThrowingManagedWStreamCallbacksDoNotCrash()
+		{
+			using var stream = new ThrowingAbstractManagedWStream();
+
+			Assert.False(stream.Write(new byte[] { 1, 2, 3 }, 3));
+			stream.Flush();
+			Assert.Equal(0, stream.BytesWritten);
+		}
+
+		private sealed class ThrowingAbstractManagedWStream : SKAbstractManagedWStream
+		{
+			protected internal override bool OnWrite(IntPtr buffer, IntPtr size) =>
+				throw new InvalidOperationException();
+
+			protected internal override void OnFlush() =>
+				throw new InvalidOperationException();
+
+			protected internal override IntPtr OnBytesWritten() =>
+				throw new InvalidOperationException();
+		}
+
 		[Theory]
 		[InlineData(false, -1)]
 		[InlineData(false, int.MinValue)]

@@ -41,15 +41,21 @@ namespace SkiaSharp
 	/// ]]></format></remarks>
 	public class SKManagedStream : SKAbstractManagedStream
 	{
-		private Stream stream;
+		private struct EofState
+		{
+			public bool IsAtEnd;
+			public long Position;
+			public long Length;
+		}
 
-		private bool isAsEnd;
+		private Stream stream;
+		private EofState eofState;
 		private bool disposeStream;
 
 		// Lazily-created snapshot for duplicate/fork. Stored in native memory
 		// via SKData (ref-counted), so multiple duplicates share one native
 		// byte buffer with no additional managed byte-buffer allocations per duplicate.
-		private SKData snapshotData;
+		internal SKData snapshotData;
 
 		/// <summary>Creates a new read-only stream from a <see cref="T:System.IO.Stream" />.</summary>
 		/// <param name="managedStream">The managed stream.</param>
@@ -74,16 +80,22 @@ namespace SkiaSharp
 		/// <param name="destination">The destination stream.</param>
 		/// <returns>Returns the number of bytes that were copied.</returns>
 		/// <remarks />
-		public int CopyTo (SKWStream destination)
+		public int CopyTo (SKWStream destination) =>
+			CopyTo (stream, destination);
+
+		internal static int CopyTo (Stream source, SKWStream destination)
 		{
+			if (source == null)
+				throw new ArgumentNullException (nameof (source));
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
 			var total = 0;
 			int len;
 			using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
-			while ((len = stream.Read ((byte[])buffer, 0, buffer.Length)) > 0) {
-				destination.Write ((byte[])buffer, len);
+			while ((len = source.Read ((byte[])buffer, 0, buffer.Length)) > 0) {
+				if (!destination.Write ((byte[])buffer, len))
+					break;
 				total += len;
 			}
 			destination.Flush ();
@@ -123,33 +135,69 @@ namespace SkiaSharp
 			base.DisposeManaged ();
 		}
 
-		private IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
-		{
-			if ((int)size < 0)
-				throw new ArgumentOutOfRangeException (nameof (size));
+		private bool HasKnownLength => stream.CanSeek && stream.Length >= 0;
 
-			if (size == IntPtr.Zero)
+		private void MarkEof ()
+		{
+			eofState = stream.CanSeek
+				? new EofState { IsAtEnd = true, Position = stream.Position, Length = stream.Length }
+				: new EofState { IsAtEnd = true, Position = -1, Length = -1 };
+		}
+
+		private void ClearEof () =>
+			eofState = default;
+
+		private unsafe IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
+		{
+			var count = (long)Utils.FromNativeSize (size);
+			if (count <= 0)
 				return IntPtr.Zero;
 
-			// NOTE: some skips still requires a read as some streams cannot seek
-			using var managedBuffer = Utils.RentArray<byte> ((int)size);
-			var len = stream.Read (managedBuffer.Array, 0, managedBuffer.Length);
+			using var scratch = RentScratchBuffer (buffer, count);
 
-			if (buffer != IntPtr.Zero) {
-				// read
-				var src = managedBuffer.Span.Slice (0, len);
-				var dst = buffer.AsSpan (managedBuffer.Length);
-				src.CopyTo (dst);
+			long totalRead = 0;
+			while (totalRead < count) {
+				var toRead = (int)Math.Min (count - totalRead, SKData.CopyBufferSize);
+				var len = ReadChunk (buffer, totalRead, toRead, scratch);
+				if (len <= 0) {
+					MarkEof ();
+					break;
+				}
+				if (len > toRead) {
+					totalRead += toRead;
+					MarkEof ();
+					break;
+				}
+
+				ClearEof ();
+				totalRead += len;
 			}
 
-			if (!stream.CanSeek) {
-				if ((int)size > 0 && len <= (int)size)
-					isAsEnd = true;
-			} else if (stream.Length < 0) {
-				isAsEnd = len == 0;
-			}
+			return Utils.ToNativeSize ((ulong)totalRead);
+		}
 
-			return (IntPtr)len;
+		private static Utils.RentedArray<byte> RentScratchBuffer (IntPtr buffer, long count)
+		{
+			var maxChunk = (int)Math.Min (count, SKData.CopyBufferSize);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+			return buffer == IntPtr.Zero ? Utils.RentArray<byte> (maxChunk) : default;
+#else
+			return Utils.RentArray<byte> (maxChunk);
+#endif
+		}
+
+		private unsafe int ReadChunk (IntPtr buffer, long offset, int toRead, Utils.RentedArray<byte> scratch)
+		{
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+			if (buffer != IntPtr.Zero)
+				return stream.Read (new Span<byte> ((byte*)buffer + offset, toRead));
+#endif
+			var len = stream.Read (scratch.Array, 0, toRead);
+			if (len > 0 && buffer != IntPtr.Zero) {
+				var copyLen = Math.Min (len, toRead);
+				scratch.Span.Slice (0, copyLen).CopyTo (new Span<byte> ((byte*)buffer + offset, copyLen));
+			}
+			return len;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
@@ -169,13 +217,17 @@ namespace SkiaSharp
 		/// <remarks>The stream's cursor must be returned to the position before this method was called.</remarks>
 		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			if (!stream.CanSeek) {
+			if (!stream.CanSeek || buffer == IntPtr.Zero || (long)Utils.FromNativeSize (size) <= 0) {
 				return (IntPtr)0;
 			}
 			var oldPos = stream.Position;
-			var result = OnReadManagedStream (buffer, size);
-			stream.Position = oldPos;
-			return result;
+			var oldEof = eofState;
+			try {
+				return OnReadManagedStream (buffer, size);
+			} finally {
+				stream.Position = oldPos;
+				eofState = oldEof;
+			}
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether all the bytes in the stream have been read.</summary>
@@ -184,10 +236,18 @@ namespace SkiaSharp
 		protected internal override bool OnIsAtEnd ()
 		{
 			if (!stream.CanSeek) {
-				return isAsEnd;
+				return eofState.IsAtEnd;
 			}
-			var length = stream.Length;
-			return length < 0 ? isAsEnd : stream.Position >= length;
+			var pos = stream.Position;
+			var len = stream.Length;
+			if (len >= 0 && pos >= len) {
+				return true;
+			}
+			if (eofState.IsAtEnd && pos == eofState.Position && len == eofState.Length) {
+				return true;
+			}
+			ClearEof ();
+			return false;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its current position.</summary>
@@ -203,8 +263,7 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override bool OnHasLength ()
 		{
-			// Front-buffered streams can seek within their buffer without knowing the total length.
-			return stream.CanSeek && stream.Length >= 0;
+			return HasKnownLength;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to rewind the current stream.</summary>
@@ -216,7 +275,7 @@ namespace SkiaSharp
 				return false;
 			}
 			stream.Position = 0;
-			isAsEnd = false;
+			ClearEof ();
 			return true;
 		}
 
@@ -262,9 +321,7 @@ namespace SkiaSharp
 			var nativePosition = Utils.FromNativeSize (position);
 			if (nativePosition > Int64.MaxValue)
 				return false;
-			stream.Position = (long)nativePosition;
-			isAsEnd = false;
-			return true;
+			return SeekTo ((long)nativePosition);
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to seek to a relative offset.</summary>
@@ -276,8 +333,30 @@ namespace SkiaSharp
 			if (!stream.CanSeek) {
 				return false;
 			}
-			stream.Position += offset;
-			isAsEnd = false;
+			var pos = stream.Position;
+			var target = offset > 0 && pos > long.MaxValue - offset
+				? long.MaxValue
+				: offset < 0 && pos < long.MinValue - offset
+					? 0
+					: pos + offset;
+			return SeekTo (target);
+		}
+
+		private bool SeekTo (long target)
+		{
+			if (!stream.CanSeek) {
+				return false;
+			}
+			if (target < 0) {
+				target = 0;
+			} else {
+				var len = stream.Length;
+				if (len >= 0 && target > len)
+					target = len;
+			}
+
+			stream.Position = target;
+			ClearEof ();
 			return true;
 		}
 
@@ -298,11 +377,28 @@ namespace SkiaSharp
 				return null;
 
 			var pos = stream.Position;
+			var oldEof = eofState;
 			try {
 				stream.Position = 0;
-				snapshotData = SKData.Create (stream, stream.Length);
+				ClearEof ();
+				var length = stream.Length;
+				if (length > 0)
+					snapshotData = SKData.Create (this, length);
+				if (snapshotData == null) {
+					stream.Position = 0;
+					ClearEof ();
+					using var native = new SKDynamicMemoryWStream ();
+					using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
+					int readLen;
+					while ((readLen = Read (buffer.Array, buffer.Length)) > 0) {
+						if (!native.Write (buffer.Array, readLen))
+							return null;
+					}
+					snapshotData = native.DetachAsData ();
+				}
 			} finally {
 				stream.Position = pos;
+				eofState = oldEof;
 			}
 
 			return snapshotData;
@@ -326,8 +422,19 @@ namespace SkiaSharp
 		protected internal override IntPtr OnFork ()
 		{
 			var duplicate = OnDuplicate ();
-			if (duplicate != IntPtr.Zero)
-				SkiaApi.sk_stream_seek (duplicate, (IntPtr)stream.Position);
+			if (duplicate != IntPtr.Zero) {
+				try {
+					var target = Utils.ToNativeSize ((ulong)stream.Position);
+					if (!SkiaApi.sk_stream_seek (duplicate, target) ||
+						SkiaApi.sk_stream_get_position (duplicate) != target) {
+						SkiaApi.sk_stream_destroy (duplicate);
+						return IntPtr.Zero;
+					}
+				} catch {
+					SkiaApi.sk_stream_destroy (duplicate);
+					throw;
+				}
+			}
 			return duplicate;
 		}
 	}
