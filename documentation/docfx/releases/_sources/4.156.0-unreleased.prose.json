@@ -1,16 +1,17 @@
 {
   "theme": "Platform and reliability updates",
-  "highlights_headline": "SkiaSharp 4.156.0 improves platform compatibility, native reliability, and managed image and text-processing performance.",
-  "highlights_body": "The upcoming release adopts Uno Platform 7, raises Apple deployment minimums, refreshes the bundled renderer, and corrects native data handling.",
+  "highlights_headline": "SkiaSharp 4.156.0 updates platform integrations and fixes reliability and performance issues across managed and native code.",
+  "highlights_body": "The release aligns Uno and Windows dependencies with current platform versions, refreshes the bundled Skia m156 fixes, and improves image, stream, string, Android, and HarfBuzz workloads.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "m156 upstream fixes included",
-          "detail": "Updates the bundled renderer with the latest Chrome m156 bug fixes.",
+          "lead": "Bundled Skia receives m156 fixes",
+          "detail": "Incorporates the latest upstream Chrome m156 bug fixes into the renderer shipped with SkiaSharp.",
           "prs": [
+            5500,
             5489
           ]
         }
@@ -20,31 +21,28 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native string data handling corrected",
-          "detail": "FromCString now avoids reading past its native input buffer and writes directly into SKData.",
+          "lead": "String conversion validation corrected",
+          "detail": "StringUtilities now validates Unicode character codes and string inputs correctly, and native C-string conversion no longer reads beyond its source buffer.",
           "prs": [
+            5506,
             5429
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained stream data once it is no longer needed.",
-          "prs": [
-            5327
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "Managed pixel and text processing optimized",
-          "detail": "Reduces allocation and copying overhead for image pixels, HarfBuzz UTF-32 encoding, and native feature strings.",
+          "lead": "Image and text processing allocations reduced",
+          "detail": "Managed image pixel copies, HarfBuzz UTF-32 encoding, and native feature-string parsing avoid unnecessary allocations while preserving their results.",
           "prs": [
             5052,
             5060,
             5230
+          ]
+        },
+        {
+          "lead": "Stream and Android rendering behavior stabilized",
+          "detail": "Front-buffered streams no longer retain data unnecessarily, and Android texture rendering is synchronized with display refresh.",
+          "prs": [
+            5327,
+            5345
           ]
         }
       ]
@@ -53,47 +51,32 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Uno Platform 7 support added",
-          "detail": "Builds SkiaSharp.Views.Uno.WinUI against Uno Platform 7.",
+          "lead": "Uno and Windows dependencies updated",
+          "detail": "SkiaSharp.Views.Uno.WinUI now builds against Uno Platform 7, while Windows native dependencies align with MAUI 9 and 10.",
           "prs": [
-            5377
+            5377,
+            5390
           ]
         },
         {
-          "lead": "Apple and Android platform support updated",
-          "detail": "Raises Apple deployment minimums and synchronizes Android texture rendering with display refresh.",
+          "lead": "Native platform builds modernized",
+          "detail": "Apple deployment targets, Windows build tooling, and bundled WebGPU support are updated for current platform environments.",
           "prs": [
             5383,
-            5345
-          ]
-        },
-        {
-          "lead": "Native platform dependencies refreshed",
-          "detail": "Aligns Windows dependencies with current MAUI releases, modernizes ANGLE, and includes WebGPU support in the native library.",
-          "prs": [
-            5390,
             5321,
             5316
-          ]
-        },
-        {
-          "lead": "Linux HarfBuzz binding made self-contained",
-          "detail": "Resolves bundled HarfBuzz functions locally on Linux.",
-          "prs": [
-            5352
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Uno Platform 7 support and native WebGPU packaging",
-    "VirgilMing": "Bundled HarfBuzz binding support on Linux and Blazor sample test stabilization",
-    "akoeplinger": "Azure DevOps dependency automation cleanup",
-    "dalexsoto": "CI policy cleanup",
-    "rolfbjarne": "Sample cleanup",
-    "Saad-elnagar": "Native dependency notice cleanup"
+    "ramezgerges": "Updated Uno Platform support and bundled the WebGPU implementation in the native library",
+    "VirgilMing": "Bound bundled HarfBuzz functions locally on Linux and improved Blazor CPU sample test synchronization",
+    "akoeplinger": "Disabled the Azure DevOps Dependabot configuration",
+    "dalexsoto": "Addressed contextual policy findings in CI",
+    "rolfbjarne": "Removed unused sample files",
+    "Saad-elnagar": "Removed an obsolete libmicrohttpd notice"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
