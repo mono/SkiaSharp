@@ -1,6 +1,6 @@
 {
-  "theme": "Ganesh failure handling",
-  "highlights_headline": "Upcoming 4.150.6 changes improve Ganesh flush status and GPU-buffer upload failure handling.",
+  "theme": "GPU failure handling",
+  "highlights_headline": "The 4.150.6 snapshot improves Ganesh handling of failed render tasks and buffer uploads.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,10 +8,16 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "GPU failures propagate instead of exposing stale data",
-          "detail": "Tracks render-task execution separately from success and checks buffer-upload failures under memory pressure. Affected work can fail rather than draw stale buffer contents; managed flush signatures remain unchanged.",
+          "lead": "Render-task failure propagation",
+          "detail": "Separates whether a task executed from whether it succeeded so native flush handling can recognize task and intermediate submission failures. Existing managed flush signatures are unchanged.",
           "prs": [
-            5258,
+            5258
+          ]
+        },
+        {
+          "lead": "Buffer upload checks",
+          "detail": "Adds checks that reject affected draws after GPU buffer upload failures under memory pressure and retains CPU triangulation data for later upload attempts; this does not establish complete upload-failure coverage.",
+          "prs": [
             5323
           ]
         }
@@ -19,7 +25,5 @@
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": null,
-  "release_summaries": {}
+  "preview_summaries": {}
 }

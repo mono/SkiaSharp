@@ -1,6 +1,6 @@
 {
-  "theme": "Windows native asset compliance",
-  "highlights_headline": "SkiaSharp 4.151.4 removes the Windows HarfBuzz BinSkim BA2007 disabled-warnings error.",
+  "theme": "Windows HarfBuzz compatibility",
+  "highlights_headline": "SkiaSharp 4.151.4 removes the Windows HarfBuzz BinSkim BA2007 blocker for dependent applications.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,8 +8,8 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Windows HarfBuzz binaries pass BinSkim BA2007",
-          "detail": "Consumers no longer need to baseline the disabled-critical-warnings error in libHarfBuzzSharp.dll. The native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
+          "lead": "Windows HarfBuzz passes BA2007",
+          "detail": "Removes command-line truncation-warning suppression from libHarfBuzzSharp so dependent applications no longer need a BinSkim BA2007 baseline for that DLL. Other reported BinSkim warnings are unchanged.",
           "prs": [
             5122
           ]
@@ -19,10 +19,10 @@
   ],
   "contributor_summaries": {},
   "preview_summaries": {},
-  "harfbuzz_summary": "The Windows native library now passes BinSkim BA2007 by scoping vendored-source warning suppression. The bundled HarfBuzz engine and exported ABI are unchanged.",
+  "harfbuzz_summary": "The Windows native DLL now passes BinSkim BA2007 without changing its exported ABI or the bundled HarfBuzz version. Other existing BinSkim warnings are unchanged.",
   "release_summaries": {
     "v4.151.4": {
-      "headline": "SkiaSharp 4.151.4 removes the Windows HarfBuzz BinSkim BA2007 disabled-warnings error.",
+      "headline": "SkiaSharp 4.151.4 removes the Windows HarfBuzz BinSkim BA2007 blocker for dependent applications.",
       "body": null
     }
   }
