@@ -336,9 +336,12 @@ then create the PR:
    (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
    the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
    **and** the regenerated `TOC.yml` + `index.md`.
-3. `git commit -m "docs: regenerate API diffs and release notes"`.
-4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
-   the `bot/release-notes` branch.
+3. Run `git commit -m "docs: regenerate API diffs and release notes"` as its own
+   shell call. Do not append cleanup or other commands to this call: an unallowed
+   command in a compound call prevents the commit from running.
+4. Call the `create_pull_request` safe-output. It opens or updates the PR targeting
+   `main` from the `bot/release-notes` branch. Keep any PR payload in `/tmp/gh-aw/`;
+   do not delete it before submission or add a cleanup command to the commit call.
 
 
 Commit **once**, at the very end, after every edit is done — not incrementally.
