@@ -1,25 +1,25 @@
 {
-  "theme": "Skia m154 and packaged docs",
-  "highlights_headline": "SkiaSharp 4.154.0 updates to Skia m154 and ships source-authored XML API documentation with managed assemblies.",
-  "highlights_body": "It corrects native glyph-atlas and GPU failure handling. Review the HarfBuzzSharp enum migrations and the removal of RAW/DNG decoding before upgrading.",
+  "theme": "Skia and HarfBuzz alignment",
+  "highlights_headline": "SkiaSharp 4.154.0 aligns HarfBuzz bindings with the bundled engine and improves GPU failure handling.",
+  "highlights_body": "The Skia m154 release also packages source-authored API XML beside managed assemblies. Review the HarfBuzz enum migrations and the removal of RAW/DNG decoding before upgrading.",
   "breaking": [
     {
-      "title": "HarfBuzz combining-class spelling corrected",
-      "body": "Replace UnicodeCombiningClass.CCC133 with CCC132. The numeric value remains 132; no compatibility alias is retained.",
+      "title": "Rename UnicodeCombiningClass.CCC133 to CCC132",
+      "body": "HarfBuzzSharp follows the corrected upstream enum name without retaining an alias. Replace UnicodeCombiningClass.CCC133 with UnicodeCombiningClass.CCC132; its numeric value remains 132.",
       "prs": [
         5057
       ]
     },
     {
-      "title": "HarfBuzz aggregate glyph flag removed",
-      "body": "GlyphFlags.Defined is no longer exposed. Combine the concrete flags required by your application instead. The aggregate BufferFlags.Defined and SerializeFlag.Defined masks are not introduced.",
+      "title": "Replace GlyphFlags.Defined with concrete flags",
+      "body": "HarfBuzzSharp no longer exposes GlyphFlags.Defined, an aggregate mask rather than an independent option. Combine the concrete glyph flags your code requires. The corresponding BufferFlags.Defined and SerializeFlag.Defined aggregate masks are not exposed either.",
       "prs": [
         5057
       ]
     },
     {
-      "title": "Built-in RAW and DNG decoding removed",
-      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
+      "title": "Use an external decoder for RAW and DNG images",
+      "body": "Built-in RAW/DNG decoding and PIEX extraction of embedded JPEG previews are disabled; no replacement reader is included. Decode these files externally before passing pixels to SkiaSharp. SKEncodedImageFormat.Dng remains for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
       "prs": [
         5190
       ]
@@ -30,8 +30,8 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to m154",
-          "detail": "Includes upstream Ganesh clipping, Graphite triangle-strip, and SVG color-filter improvements while preserving existing C exports.",
+          "lead": "Skia milestone m154",
+          "detail": "Updates the bundled renderer to m154, including upstream SVG color-filter improvements and Ganesh clipping fixes. The milestone sync preserves existing C exports; native HarfBuzz remains 14.2.1 despite its .400 package revision.",
           "prs": [
             4945
           ]
@@ -42,21 +42,18 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "HarfBuzz enum values match the bundled engine",
-          "detail": "Synchronizes supported buffer, cluster, glyph, and baseline-tag values with HarfBuzz 14.2.1. Callback-heavy API families and new unwrapped native types remain excluded.",
+          "lead": "Supported HarfBuzz enum values track the native source",
+          "detail": "Synchronizes supported buffer, cluster, glyph, and baseline-tag enum values with HarfBuzz 14.2.1. No new managed types or callback-heavy API families are introduced.",
           "prs": [
             5057
           ]
         },
         {
           "lead": "API documentation travels with reference assemblies",
-          "detail": "NuGet packages include matching compiler XML beside implementation and reference assemblies, making source-authored API guidance available to package consumers.",
+          "detail": "Packages include matching compiler-generated XML beside implementation and reference assemblies, so source-authored API documentation reaches package consumers without changing which obsolete members are compile-visible.",
           "prs": [
             5064,
-            5078,
-            5066,
-            5080,
-            5053
+            5066
           ]
         }
       ]
@@ -65,24 +62,36 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Glyph-atlas updates and failed GPU work handled consistently",
-          "detail": "Avoids stale glyph-atlas reuse and propagates failed prerequisite flushes through existing null/false contracts. Failed uploads drop affected draws, and failed flushes clear uniquely held cache entries.",
+          "lead": "GPU atlas tracking and failure propagation",
+          "detail": "Corrects partial glyph-atlas generation tracking and propagates Ganesh prerequisite failures instead of continuing image creation or handle extraction. Unsupported asynchronous reads complete with a null result; existing managed flush signatures stay void.",
           "prs": [
-            5054,
-            5114,
+            5054
+          ]
+        },
+        {
+          "lead": "Failed GPU uploads no longer feed stale draws",
+          "detail": "Ganesh checks failed buffer uploads and initialization under memory pressure instead of drawing stale contents. Triangulated paths retain CPU vertex data for a later upload attempt.",
+          "prs": [
+            5114
+          ]
+        },
+        {
+          "lead": "Failed flushes discard unusable cached textures",
+          "detail": "Ganesh drops uniquely held thread-safe cache entries after a failed flush, preventing later draws from reusing entries for textures that were never initialized. Entries still held elsewhere are not removed.",
+          "prs": [
             5253
           ]
         },
         {
-          "lead": "Uno WebAssembly uses matching HarfBuzz native assets",
-          "detail": "The Uno views package depends on the matching HarfBuzz WebAssembly assets rather than an older implicit archive missing required symbols.",
+          "lead": "Uno WebAssembly uses matching HarfBuzz assets",
+          "detail": "The Uno views package depends on the matching HarfBuzzSharp WebAssembly native-assets package, avoiding missing-symbol links against an older implicit archive.",
           "prs": [
             5057
           ]
         },
         {
-          "lead": "Windows HarfBuzz binaries pass BinSkim BA2007",
-          "detail": "Consumers no longer need to baseline the disabled-critical-warnings error in libHarfBuzzSharp.dll. The native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
+          "lead": "Windows HarfBuzz binaries pass BA2007",
+          "detail": "Corrects the compiler-warning configuration that caused BinSkim BA2007 failures in applications consuming HarfBuzzSharp.NativeAssets.Win32. Native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
           "prs": [
             5111
           ]
@@ -91,14 +100,14 @@
     }
   ],
   "contributor_summaries": {
-    "azchohfi": "Corrected Windows HarfBuzz warning suppression so consuming applications pass BinSkim BA2007"
+    "azchohfi": "Corrected Windows HarfBuzz compiler-warning configuration so consuming applications pass BinSkim BA2007"
   },
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opened the Skia m154 line while retaining native HarfBuzz 14.2.1.",
-    "v4.154.0-preview.2.26471.11": "Preview 2 added packaged compiler XML, synchronized HarfBuzz enums, and corrected glyph-atlas, GPU-upload, Windows BinSkim, and Uno WebAssembly issues.",
-    "v4.154.0-rc.1.26479.14": "The release candidate removed built-in RAW/DNG decoding and embedded RAW-preview extraction."
+    "v4.154.0-preview.1.26454.9": "Preview 1 opened the line with Skia m154. HarfBuzzSharp moved to the .400 package revision bucket while its native engine remained 14.2.1.",
+    "v4.154.0-preview.2.26471.11": "Preview 2 synchronized supported HarfBuzz enum values, including the CCC132 rename and removal of GlyphFlags.Defined, and packaged API XML beside reference assemblies. It also corrected GPU atlas, flush, and upload handling.",
+    "v4.154.0-rc.1.26479.14": "Release Candidate 1 retired built-in RAW/DNG decoding and embedded RAW JPEG-preview extraction; no replacement decoder is included."
   },
-  "harfbuzz_summary": "Synchronizes supported enums with native HarfBuzz 14.2.1, correcting CCC133 to CCC132 and removing GlyphFlags.Defined. Adds source-authored compiler XML and fixes Windows BinSkim BA2007 and Uno WebAssembly native-asset matching; the .400 package revision does not upgrade the engine.",
+  "harfbuzz_summary": "Bindings now follow the bundled HarfBuzz 14.2.1 source, including supported enum additions, the CCC132 rename, and removal of GlyphFlags.Defined. Packages carry source-authored API XML, and Windows native assets correct BinSkim BA2007 failures; no native engine upgrade is implied by revision .400.",
   "release_summaries": {
     "v4.154.0-preview.1.26454.9": {
       "headline": "Preview 1 opened the Skia m154 line while retaining native HarfBuzz 14.2.1.",
