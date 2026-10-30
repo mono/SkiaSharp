@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -220,7 +221,10 @@ namespace SkiaSharp
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
-			return (IntPtr)stream.Position;
+			var position = stream.Position;
+			if (!PlatformConfiguration.Is64Bit && position > UInt32.MaxValue)
+				throw new OverflowException ("The position exceeds the size of native stream positions.");
+			return Utils.ToNativeSize ((ulong)position);
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to return the total length of the stream.</summary>
@@ -231,7 +235,10 @@ namespace SkiaSharp
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
-			return (IntPtr)stream.Length;
+			var length = stream.Length;
+			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
+				throw new OverflowException ("The length exceeds the size of native stream lengths.");
+			return Utils.ToNativeSize ((ulong)length);
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to seek to an absolute position.</summary>
@@ -243,7 +250,10 @@ namespace SkiaSharp
 			if (!stream.CanSeek) {
 				return false;
 			}
-			stream.Position = (long)position;
+			var nativePosition = Utils.FromNativeSize (position);
+			if (nativePosition > Int64.MaxValue)
+				return false;
+			stream.Position = (long)nativePosition;
 			return true;
 		}
 
