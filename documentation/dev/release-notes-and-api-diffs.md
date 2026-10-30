@@ -460,7 +460,11 @@ producing one coherent update.
 Branch-source validation runs set `source_branch` and publish their generated-output PR
 against that same branch; normal runs still target `main`. This keeps workflow changes
 out of the generated docs diff and avoids replaying workflow-file commits with a docs-only
-publishing token. PR publication failures are errors, not successful fallback issues.
+publishing token. Each branch-source test uses `bot/release-notes-test-<run_id>` and a
+source-specific concurrency group, separate from production's `bot/release-notes` output.
+The safe-output branch allowlist enforces that selection. A subsequent production run
+therefore cannot replace or close a test PR. PR publication failures are errors, not
+successful fallback issues.
 
 The final renderer accepts `--all --pr-body <path>` to write the automation's complete PR
 body after validation succeeds. It preserves the contributor template's sections and

@@ -57,7 +57,7 @@ on:
         type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
-  group: update-release-notes
+  group: update-release-notes-${{ inputs.source_branch || 'main' }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 # The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
@@ -254,6 +254,8 @@ safe-outputs:
     draft: false
     base-branch: ${{ inputs.source_branch || 'main' }}
     allowed-base-branches: ${{ inputs.source_branch || 'main' }}
+    allowed-branches:
+      - "${{ (inputs.source_branch && inputs.source_branch != 'main') && 'bot/release-notes-test-' || 'bot/release-notes' }}${{ (inputs.source_branch && inputs.source_branch != 'main') && github.run_id || '' }}"
     fallback-as-issue: false
     preserve-branch-name: true
     recreate-ref: true
@@ -334,7 +336,10 @@ diffing months of history (2000+ files, exceeding the PR file cap and failing th
 run). So once every page renders cleanly you **must** commit everything yourself,
 then create the PR:
 
-1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
+1. Create the PR branch from the current HEAD using
+   `git checkout -b "${{ (inputs.source_branch && inputs.source_branch != 'main') && 'bot/release-notes-test-' || 'bot/release-notes' }}${{ (inputs.source_branch && inputs.source_branch != 'main') && github.run_id || '' }}"`.
+   Production runs use `bot/release-notes`. Branch-source tests use their own run-specific
+   output branch and concurrency group, so production cannot replace or close the test PR.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
    (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
    the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
@@ -343,6 +348,7 @@ then create the PR:
    shell call. Do not append cleanup or other commands to this call: an unallowed
    command in a compound call prevents the commit from running.
 4. Call the `create_pull_request` safe-output with base `${{ inputs.source_branch || 'main' }}`.
+   Set `branch` to the exact branch created in step 1.
    Normal runs target `main`; branch-source tests target their source branch so the docs
    PR contains generated output, not the workflow changes being tested. Do not override
    this base with `main` during a branch-source test.
