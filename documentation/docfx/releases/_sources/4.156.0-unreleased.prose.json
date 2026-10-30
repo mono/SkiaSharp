@@ -1,17 +1,18 @@
 {
-  "theme": "Platform and reliability updates",
-  "highlights_headline": "SkiaSharp 4.156.0 improves platform compatibility, native reliability, and managed image and text-processing performance.",
-  "highlights_body": "The upcoming release adopts Uno Platform 7, raises Apple deployment minimums, refreshes the bundled renderer, and corrects native data handling.",
+  "theme": "Skia m156 platform update",
+  "highlights_headline": "SkiaSharp 4.156.0 updates to Skia m156 and modernizes support across several platforms.",
+  "highlights_body": "Uno applications move to Uno Platform 7, Apple native assets have newer deployment baselines, and WebAssembly WebGPU linking is simplified. The release also fixes Unicode character-code validation, native data creation, buffered streams, and Android texture synchronization.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "m156 upstream fixes included",
-          "detail": "Updates the bundled renderer with the latest Chrome m156 bug fixes.",
+          "lead": "Skia m156 includes current upstream fixes",
+          "detail": "Updates the bundled renderer with the current m156 upstream bug-fix set.",
           "prs": [
-            5489
+            5489,
+            5500
           ]
         }
       ]
@@ -20,17 +21,25 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native string data handling corrected",
-          "detail": "FromCString now avoids reading past its native input buffer and writes directly into SKData.",
+          "lead": "Unicode character-code conversion corrected",
+          "detail": "Character-code APIs now validate encoded code-unit sizes correctly and report consistent argument exceptions for invalid input.",
           "prs": [
-            5429
+            5506
           ]
         },
         {
-          "lead": "Front-buffered streams no longer retain data unnecessarily",
-          "detail": "Releases retained stream data once it is no longer needed.",
+          "lead": "Native data and buffered streams handled safely",
+          "detail": "Creating SKData from C strings avoids reading past the native buffer, and front-buffered streams no longer retain their input unnecessarily.",
           "prs": [
+            5429,
             5327
+          ]
+        },
+        {
+          "lead": "Android texture rendering synchronized",
+          "detail": "Android texture rendering now follows the display refresh cycle for more reliable presentation.",
+          "prs": [
+            5345
           ]
         }
       ]
@@ -39,8 +48,8 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Managed pixel and text processing optimized",
-          "detail": "Reduces allocation and copying overhead for image pixels, HarfBuzz UTF-32 encoding, and native feature strings.",
+          "lead": "Managed pixel and text-shaping allocations reduced",
+          "detail": "Image pixel copies, HarfBuzz UTF-32 conversion, and feature-string decoding avoid unnecessary managed or native allocations.",
           "prs": [
             5052,
             5060,
@@ -53,46 +62,47 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Uno Platform 7 support added",
-          "detail": "Builds SkiaSharp.Views.Uno.WinUI against Uno Platform 7.",
+          "lead": "Uno WinUI views updated for Uno Platform 7",
+          "detail": "The Uno views package and samples adopt Uno Platform 7's unified renderer and .NET 10 baseline while retaining a CPU fallback where a swap chain is unavailable.",
           "prs": [
             5377
           ]
         },
         {
-          "lead": "Apple and Android platform support updated",
-          "detail": "Raises Apple deployment minimums and synchronizes Android texture rendering with display refresh.",
+          "lead": "Native assets align with current platform toolchains",
+          "detail": "Windows dependencies, GN, Visual Studio, ANGLE, and Apple native deployment baselines are updated for current supported build environments.",
           "prs": [
+            5321,
             5383,
-            5345
+            5390,
+            5420
           ]
         },
         {
-          "lead": "Native platform dependencies refreshed",
-          "detail": "Aligns Windows dependencies with current MAUI releases, modernizes ANGLE, and includes WebGPU support in the native library.",
+          "lead": "WebAssembly WebGPU linking simplified",
+          "detail": "The WebGPU C++ support is bundled into the native archive, so consumer WebAssembly links no longer compile it alongside application code.",
           "prs": [
-            5390,
-            5321,
             5316
           ]
         },
         {
-          "lead": "Linux HarfBuzz binding made self-contained",
-          "detail": "Resolves bundled HarfBuzz functions locally on Linux.",
+          "lead": "Bundled HarfBuzz functions load locally on Linux",
+          "detail": "Linux native packages bind their bundled HarfBuzz functions locally, preventing symbol conflicts with an application's installed HarfBuzz library.",
           "prs": [
-            5352
+            5352,
+            5366
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Uno Platform 7 support and native WebGPU packaging",
-    "VirgilMing": "Bundled HarfBuzz binding support on Linux and Blazor sample test stabilization",
-    "akoeplinger": "Azure DevOps dependency automation cleanup",
-    "dalexsoto": "CI policy cleanup",
-    "rolfbjarne": "Sample cleanup",
-    "Saad-elnagar": "Native dependency notice cleanup"
+    "ramezgerges": "Updated Uno WinUI support for Uno Platform 7 and bundled the WebGPU C++ support in WebAssembly native assets",
+    "VirgilMing": "Bound bundled HarfBuzz functions locally on Linux and stabilized Blazor CPU sample tests",
+    "akoeplinger": "Retired the unused Azure DevOps Dependabot configuration",
+    "dalexsoto": "Addressed contextual PoliCheck findings in continuous integration",
+    "rolfbjarne": "Removed unused sample files",
+    "Saad-elnagar": "Removed the obsolete libmicrohttpd notice"
   },
   "preview_summaries": {},
   "harfbuzz_summary": null
