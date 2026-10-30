@@ -316,10 +316,9 @@ This run's **CI-specific deltas** on top of the skill:
 3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
    running the renderer directly: `release-notes-render.py` per page to validate as you go
    (per the skill), then **once** at the end
-   `python3 scripts/infra/docs/release-notes-render.py --all --pr-body /tmp/gh-aw/release-notes-pr-body.md`
+   `python3 scripts/infra/docs/release-notes-render.py --all`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
-   The same command writes the complete template-based PR body only after rendering succeeds.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
 
@@ -357,8 +356,9 @@ Source-only changes outside the release tree are validation tools, not output to
    Do not probe a shell CLI with `command -v`, `--help`, or other discovery commands.
    Keep any PR payload in `/tmp/gh-aw/`;
    do not delete it before submission or add a cleanup command to the commit call.
-   Use the exact contents of `/tmp/gh-aw/release-notes-pr-body.md` as `body`, without
-   reconstructing the template or reintroducing its instructional HTML comments.
+   Write `body` yourself using the repository template and the final generated diff,
+   following the skill's PR-body guidance. Summarize this run's actual release-note
+   changes and validation; omit complete instructional HTML comments before submission.
 
 
 Commit **once**, at the very end, after every edit is done — not incrementally.

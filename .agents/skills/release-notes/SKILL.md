@@ -302,12 +302,18 @@ let the script build the page.
 
 ## Pull request body
 
-For automated docs PRs, run the final full renderer with
-`--pr-body /tmp/gh-aw/release-notes-pr-body.md`. After successful validation it writes
-the complete PR body deterministically from the repository template, preserving headings
-and checklists while removing entire instructional comment blocks. Safe-output sanitization
-can otherwise strip only parts of multiline comments and expose their examples as API changes.
-Submit that file's exact contents as `body`; do not ask the model to rewrite it.
+Write the PR description yourself after rendering and inspecting the final generated diff.
+Use the repository's PR template, preserving its section order and checklists. Explain
+which release pages changed, the meaningful consumer-facing themes, and the actual
+validation command and result. Describe the generated-docs diff, not the implementation
+changes on a feature branch used to test the workflow.
+
+Read the template's instructional HTML comments, but omit each complete `<!-- ... -->`
+block from the submitted body. Safe-output sanitization can strip only parts of multiline
+comments and expose their example APIs as real changes. Do not copy placeholder examples
+or instructions into visible prose, and replace `Fixes #` with `None.` when no issue closes.
+Before submission, reread the exact body: confirm headings/checklists remain, no comment
+fragments or example APIs leaked, and every validation claim matches the observed result.
 
 Run the final `git commit` as a standalone command. Do not chain scratch-file cleanup
 onto it: the unattended workflow's tool policy can reject the entire compound command

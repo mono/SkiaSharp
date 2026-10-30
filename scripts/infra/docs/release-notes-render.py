@@ -3,7 +3,6 @@
 
     release-notes-render.py <data.json> <prose.json> [out.md]   # normal page
     release-notes-render.py --all                                # regenerate every page + TOC.yml + index.md
-    release-notes-render.py --all --pr-body <out.md>              # also write the automation's PR body after validation
 
 `data.json`  — facts emitted by release-notes-data.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
@@ -27,7 +26,6 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
-import shlex
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -1003,31 +1001,6 @@ def render_all():
     return len(invalid)
 
 
-def render_pr_body(output_path):
-    template = (_GEN.parents[3] / ".github" / "pull_request_template.md").read_text()
-    body = re.sub(r"<!--.*?-->", "", template, flags=re.DOTALL)
-    command = ("python3 scripts/infra/docs/release-notes-render.py --all --pr-body "
-               + shlex.quote(str(output_path)))
-    replacements = [
-        ("## Description", "## Description\n\nRegenerate website release notes and API-diff facts "
-         "from the prepared inputs. Consumer-facing prose is checked against collected commit "
-         "descriptions and maintainer notes, then rendered offline."),
-        ("Fixes #", "None."),
-        ("- [ ] Documentation or samples", "- [x] Documentation or samples"),
-        ("## Changes\n\nNone.", "## Changes\n\nNone. Generated documentation only; "
-         "no public API or application runtime behavior changes."),
-        ("## Testing", "## Testing\n\nPassed: `" + command + "` "
-         "(all release pages and aggregate navigation rendered successfully).\n\n"
-         "No product tests added or run for generated documentation; renderer validation covers "
-         "the prose contract. This is not a claim of native or application runtime testing."),
-    ]
-    for old, new in replacements:
-        if body.count(old) != 1:
-            raise ValueError("PR template must contain exactly one {!r}".format(old))
-        body = body.replace(old, new, 1)
-    return re.sub(r"\n{3,}", "\n\n", body).strip() + "\n"
-
-
 def main(argv):
     flags = [a for a in argv[1:] if a.startswith("-")]
     args = [a for a in argv[1:] if not a.startswith("-")]
@@ -1036,18 +1009,7 @@ def main(argv):
     # committed JSON, offline. Takes no positional args. Returns non-zero if any
     # committed prose.json failed validation (a bad page must never ship).
     if "--all" in flags:
-        if "--pr-body" in flags and len(args) != 1:
-            print("--all --pr-body requires one output path", file=sys.stderr)
-            return 2
-        if render_all():
-            return 1
-        if "--pr-body" in flags:
-            Path(args[0]).write_text(render_pr_body(args[0]))
-        return 0
-
-    if "--pr-body" in flags:
-        print("--pr-body requires --all", file=sys.stderr)
-        return 2
+        return 1 if render_all() else 0
 
     if not args:
         print(__doc__)

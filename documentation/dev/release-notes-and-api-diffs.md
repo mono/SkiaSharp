@@ -471,10 +471,11 @@ without cancelling an active run. Each successful run updates the same docs PR, 
 later production run can replace test-generated notes. PR publication failures are
 errors, not successful fallback issues.
 
-The final renderer accepts `--all --pr-body <path>` to write the automation's complete PR
-body after validation succeeds. It preserves the contributor template's sections and
-checklists, omits whole instructional comments, and records the successful render command.
-The agent submits that body unchanged rather than reconstructing the template.
+After successful rendering, the agent writes the PR description from the final generated
+diff using the contributor template's sections and checklists. It summarizes the affected
+releases and meaningful changes, and records the actual validation commands and results.
+Complete instructional HTML comment blocks are omitted before submission so safe-output
+sanitization cannot expose their placeholder examples as real API changes.
 
 **`main` is the only source of truth, on a daily schedule.** The workflow runs on
 pushes to `main` and on a **daily cron**, and is deliberately *not* triggered by
