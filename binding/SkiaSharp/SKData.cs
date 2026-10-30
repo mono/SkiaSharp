@@ -172,8 +172,8 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <returns>Returns data containing the remaining bytes, an empty instance if no bytes remain, or <see langword="null" /> if the result cannot be created.</returns>
-		/// <remarks>Reads all remaining bytes from the current position to the end of <paramref name="stream" />.</remarks>
+		/// <returns>Returns the resulting data, an empty instance for a successful zero-byte result, or <see langword="null" /> if the known remaining byte count cannot be read or the result cannot be created.</returns>
+		/// <remarks>Reads from the current position. If the remaining length is known, an early end of the stream returns <see langword="null" />. Otherwise, reads until EOF. The input is not rewound after an incomplete read.</remarks>
 		public static SKData Create (Stream stream)
 		{
 			if (stream == null)
@@ -191,7 +191,7 @@ namespace SkiaSharp
 				return Empty;
 
 			var remaining = len - pos;
-			return CreateFromStream (stream, (ulong)remaining, failOnEarlyEof: false);
+			return CreateFromStream (stream, (ulong)remaining, checkRemainingLength: false);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -206,7 +206,7 @@ namespace SkiaSharp
 			if (length < 0)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			return CreateFromStream (stream, (ulong)length, failOnEarlyEof: true);
+			return CreateFromStream (stream, (ulong)length, checkRemainingLength: true);
 		}
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
@@ -215,7 +215,7 @@ namespace SkiaSharp
 		/// <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance containing <paramref name="length" /> bytes, or <see langword="null" /> if the stream does not contain enough data.</returns>
 		/// <remarks>Reads <paramref name="length" /> bytes from the current position in <paramref name="stream" />. If the stream contains at least <paramref name="length" /> bytes, a new <see cref="T:SkiaSharp.SKData" /> of that size is returned; if the end of the stream is reached before <paramref name="length" /> bytes are read, this method returns <see langword="null" />.</remarks>
 		public static SKData Create (Stream stream, ulong length) =>
-			CreateFromStream (stream, length, failOnEarlyEof: true);
+			CreateFromStream (stream, length, checkRemainingLength: true);
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
@@ -229,7 +229,7 @@ namespace SkiaSharp
 			if (length < 0)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length cannot be negative.");
 
-			return CreateFromStream (stream, (ulong)length, failOnEarlyEof: true);
+			return CreateFromStream (stream, (ulong)length, checkRemainingLength: true);
 		}
 
 		private static SKData CreateFromUnknownLengthStream (Stream stream)
@@ -257,7 +257,7 @@ namespace SkiaSharp
 			return memory.DetachAsData ();
 		}
 
-		private static SKData CreateFromStream (Stream stream, ulong length, bool failOnEarlyEof)
+		private static SKData CreateFromStream (Stream stream, ulong length, bool checkRemainingLength)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
@@ -267,7 +267,7 @@ namespace SkiaSharp
 			if (length == 0)
 				return Empty;
 
-			if (failOnEarlyEof && stream.CanSeek) {
+			if (checkRemainingLength && stream.CanSeek) {
 				var len = stream.Length;
 				if (len >= 0) {
 					var pos = stream.Position;
@@ -298,15 +298,8 @@ namespace SkiaSharp
 					if ((uint)len > (uint)toRead)
 						throw new IOException ("The stream returned an invalid byte count.");
 					if (len == 0) {
-						if (failOnEarlyEof) {
-							data.Dispose ();
-							return null;
-						}
-						using (data) {
-							return totalRead == 0
-								? Empty
-								: GetObject (SkiaApi.sk_data_new_with_copy (dst, (IntPtr)totalRead));
-						}
+						data.Dispose ();
+						return null;
 					}
 
 #if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP2_1_OR_GREATER
@@ -324,8 +317,8 @@ namespace SkiaSharp
 
 		/// <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data from the stream.</summary>
 		/// <param name="stream">The stream to read.</param>
-		/// <returns>Returns data containing the remaining bytes, an empty instance if no bytes remain, or <see langword="null" /> if the result cannot be created.</returns>
-		/// <remarks>Reads all remaining bytes from the current position to the end of <paramref name="stream" />.</remarks>
+		/// <returns>Returns the resulting data, an empty instance for a successful zero-byte result, or <see langword="null" /> if the known remaining byte count cannot be read or the result cannot be created.</returns>
+		/// <remarks>Reads from the current position. If the remaining length is known, an early end of the stream returns <see langword="null" />. Otherwise, reads until EOF. The input is not rewound after an incomplete read.</remarks>
 		public static SKData Create (SKStream stream)
 		{
 			if (stream == null)
@@ -341,12 +334,7 @@ namespace SkiaSharp
 							return Empty;
 
 						var remaining = len - pos;
-						var data = CreateFromManagedStream (managed, remaining);
-						if (data != null)
-							return data;
-
-						if (!managed.OnSeek (Utils.ToNativeSize (pos)))
-							return null;
+						return CreateFromManagedStream (managed, remaining);
 					}
 
 					return CreateFromUnknownLengthManagedStream (managed);
@@ -360,12 +348,7 @@ namespace SkiaSharp
 						return Empty;
 
 					var remaining = len - pos;
-					var data = CreateFromStream (stream, (ulong)remaining);
-					if (data != null)
-						return data;
-
-					if (!stream.Seek (pos))
-						return null;
+					return CreateFromStream (stream, (ulong)remaining);
 				}
 
 				return CreateFromUnknownLengthStream (stream);
