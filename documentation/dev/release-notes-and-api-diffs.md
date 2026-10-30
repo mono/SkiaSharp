@@ -493,9 +493,10 @@ workflow and skill changes out of the docs diff.
 
 To test edited workflow and skill sources, dispatch with both `--ref <feature-branch>`
 and `--raw-field source_branch=<feature-branch>`. All runs share a concurrency group
-without cancelling an active run. Each successful run updates the same docs PR, so a
-later production run can replace test-generated notes. PR publication failures are
-errors, not successful fallback issues.
+without cancelling an active run. With `recreate-ref` enabled, replacing the existing
+bot branch closes its open PR and creates a replacement; the branch is fixed, not the
+PR number. A later production run can replace test-generated notes. PR publication
+failures are errors, not successful fallback issues.
 
 After successful rendering, the agent writes the PR description from the final generated
 diff using the contributor template's sections and checklists. It summarizes the affected

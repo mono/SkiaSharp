@@ -1,4 +1,5 @@
 ---
+name: "Sync - Release Notes & API Diffs"
 description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
 # ENGINE — deterministic preparation and rendering bound the task, but the prose
 # still requires nuanced API and breaking-change judgment, so use Sol.
