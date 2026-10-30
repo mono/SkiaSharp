@@ -1,0 +1,145 @@
+{
+  "theme": "Platform and runtime reliability",
+  "highlights_headline": "The upcoming 4.156 release strengthens native-platform support, fixes data and text handling, and modernizes Uno and WebAssembly integrations.",
+  "highlights_body": "It raises Apple deployment baselines, moves Uno views to Uno Platform 7, and incorporates targeted m156 engine fixes. Review the migration guidance before upgrading platform-specific applications.",
+  "breaking": [
+    {
+      "title": "Apple platform minimums are higher",
+      "body": "Native macOS now requires 11.0, while iOS, tvOS, and Mac Catalyst require 14.0. Update application deployment targets before consuming the new native assets.",
+      "prs": [
+        5383
+      ]
+    },
+    {
+      "title": "Uno views require Uno Platform 7 and .NET 10",
+      "body": "SkiaSharp.Views.Uno.WinUI now targets Uno Platform 7 and .NET 10. Upgrade Uno applications and use SKCanvasElement for GPU rendering on non-Windows Uno targets; SKSwapChainPanel uses a CPU fallback there.",
+      "prs": [
+        5377
+      ]
+    },
+    {
+      "title": "SKData.CreateCopy validates requested array length",
+      "body": "SKData.CreateCopy(byte[], ulong) now rejects a length beyond the source array with ArgumentOutOfRangeException. Pass a length within the supplied array rather than relying on an out-of-bounds native read.",
+      "prs": [
+        5429
+      ]
+    },
+    {
+      "title": "WebGPU consumers need rebuilt WebAssembly native archives",
+      "body": "WebGPU support now compiles emdawnwebgpu C++ code into libSkiaSharp.a. Rebuild custom or cached WebAssembly archives before linking .NET 8 and later WebGPU applications.",
+      "prs": [
+        5316
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "m156 upstream rendering fixes integrated",
+          "detail": "Updates the bundled renderer with fixes for invalid runtime-effect types, raster-pipeline overflow handling, and BGRA uploads on GLES.",
+          "prs": [
+            5489,
+            5500
+          ]
+        },
+        {
+          "lead": "Native builds use a current GN generator",
+          "detail": "Updates GN for the native build while retaining SkiaSharp's established generated-header and include behavior.",
+          "prs": [
+            5420
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "String character-code conversion is corrected",
+          "detail": "Character-code APIs now decode exactly one unit for the selected text encoding, and byte-array string conversion consistently reports null arguments.",
+          "prs": [
+            5506
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Android texture rendering follows the display clock",
+          "detail": "Continuous GL texture rendering is paced by Android display callbacks instead of swap throughput, while explicit rendering requests remain responsive.",
+          "prs": [
+            5345
+          ]
+        },
+        {
+          "lead": "Managed image and text paths reduce allocations",
+          "detail": "Managed pixel copies, HarfBuzz UTF-32 input, and native feature-string handling avoid unnecessary temporary allocations without changing results.",
+          "prs": [
+            5052,
+            5060,
+            5230
+          ]
+        },
+        {
+          "lead": "Front-buffered streams retain their backing data",
+          "detail": "Fixes stream ownership so front-buffered data remains available for its intended lifetime.",
+          "prs": [
+            5327
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Linux HarfBuzz keeps its bundled implementation isolated",
+          "detail": "Bundled HarfBuzz function calls are bound locally on Linux, preventing conflicts with a system HarfBuzz library loaded by another component such as GTK.",
+          "prs": [
+            5352
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Uno views move to Uno Platform 7",
+          "detail": "The Uno views package adopts Uno 7's unified renderer and .NET 10 baseline while preserving CPU rendering where non-Windows targets have no swap chain.",
+          "prs": [
+            5377
+          ]
+        },
+        {
+          "lead": "Windows native components use updated platform dependencies",
+          "detail": "WinUI, MAUI, Uno, and ANGLE build paths align on current Windows App SDK, WebView2, Visual Studio, and Windows SDK dependencies.",
+          "prs": [
+            5390,
+            5321
+          ]
+        },
+        {
+          "lead": "WebAssembly WebGPU linking is simplified",
+          "detail": "The WebGPU C++ support is included in the SkiaSharp static archive while required JavaScript glue remains a consumer link input.",
+          "prs": [
+            5316
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "WebAssembly WebGPU archive integration and the Uno Platform 7 views update",
+    "VirgilMing": "Linux HarfBuzz symbol isolation and browser sample rendering readiness",
+    "akoeplinger": "Azure DevOps dependency-update configuration maintenance",
+    "dalexsoto": "Reviewed source-analysis findings and documented their scope",
+    "rolfbjarne": "Removed obsolete sample files",
+    "Saad-elnagar": "Removed the obsolete libmicrohttpd notice"
+  },
+  "preview_summaries": {}
+}

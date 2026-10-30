@@ -1,0 +1,98 @@
+{
+  "theme": "Skia m156 preview",
+  "highlights_headline": "SkiaSharp 4.156.0 previews the Skia m156 renderer and expands support for GTK4, Tizen 10, and .NET 11.",
+  "highlights_body": "It adds native GTK4 GPU rendering, updates platform and WebAssembly build assets, and restores system-font discovery for Linux NoDependencies deployments.",
+  "breaking": [
+    {
+      "title": "Tizen 8 and 9 are no longer supported",
+      "body": "Tizen native assets and package targets now require Tizen 10. Update Tizen applications and device-test manifests to target Tizen 10 before upgrading.",
+      "prs": [
+        5235
+      ]
+    },
+    {
+      "title": "High-density GTK4 drawing uses physical pixels by default",
+      "body": "SKDrawingArea now creates physical-pixel backing surfaces on high-density displays. Set IgnorePixelScaling to true when an existing application requires logical paint coordinates.",
+      "prs": [
+        5249
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m156",
+          "detail": "Updates the bundled renderer to the m156 engine line while preserving the existing managed API surface.",
+          "prs": [
+            5247
+          ]
+        },
+        {
+          "lead": "Skia fork cleanup integrated",
+          "detail": "Aligns the bundled m155 native sources more closely with upstream while retaining compatibility required by supported toolchains.",
+          "prs": [
+            5208
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "GTK4 gains a GPU-backed drawing control",
+          "detail": "SKGLArea provides a GTK-owned OpenGL Skia canvas with paint events, render-loop control, and explicit physical or logical pixel behavior.",
+          "prs": [
+            5249
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Linux NoDependencies finds installed system fonts",
+          "detail": "The no-fontconfig Linux native package again discovers fonts from the configured system font directory, restoring family-based font matching.",
+          "prs": [
+            5086
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": ".NET 11 WebAssembly assets are aligned with the preview toolchain",
+          "detail": "SkiaSharp and HarfBuzzSharp packages select matching WebAssembly archives for .NET 11 and later, avoiding a stale toolchain selection.",
+          "prs": [
+            5306
+          ]
+        },
+        {
+          "lead": "Tizen 10 with GCC 14.2 is the supported native baseline",
+          "detail": "Tizen x64 and arm64 native assets now target Tizen 10 and its GCC 14.2 toolchain.",
+          "prs": [
+            5235
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Restored system-font discovery for Linux NoDependencies deployments"
+  },
+  "preview_summaries": {
+    "v4.156.0-preview.1.26512.10": "Preview 1 opens the 4.156 line with the Skia m156 engine, GTK4 GPU rendering, and updated .NET 11 WebAssembly and Tizen support."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 14.4.0.100 accompanies the m156 line with the aligned WebAssembly assets, Tizen baseline, and Linux font-discovery support.",
+  "release_summaries": {
+    "v4.156.0-preview.1.26512.10": {
+      "headline": "SkiaSharp 4.156.0 Preview 1 introduces the Skia m156 renderer and expanded GTK4, Tizen, and .NET 11 support.",
+      "body": "It adds a GPU-backed GTK4 control, updates native platform baselines, and restores Linux NoDependencies system-font discovery."
+    }
+  }
+}
