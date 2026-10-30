@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Xunit;
@@ -269,6 +270,78 @@ namespace SkiaSharp.Tests
 			Assert.False(wstream.Write(new byte[] { 1, 2, 3 }, 3));
 			Assert.False(wstream.Write8(42));
 			Assert.Equal(0, wstream.BytesWritten);
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void LaterChunkWriteFailurePreservesCompletedBytesAndLatchesFault(bool nullBuffer)
+		{
+			var bytes = new byte[SKData.CopyBufferSize * 2 + 17];
+			if (!nullBuffer)
+			{
+				for (var i = 0; i < bytes.Length; i++)
+					bytes[i] = (byte)(i * 31 + 7);
+			}
+
+			using var destination = new RecordingWriteStream(failOnSecondWrite: true);
+			using var stream = new SKManagedWStream(destination);
+
+			Assert.False(stream.Write(nullBuffer ? null : bytes, bytes.Length));
+			Assert.Equal(SKData.CopyBufferSize, stream.BytesWritten);
+			Assert.Equal(bytes.AsSpan(0, SKData.CopyBufferSize).ToArray(), destination.ToArray());
+			Assert.Equal(new[] { SKData.CopyBufferSize, SKData.CopyBufferSize }, destination.WriteSizes);
+
+			Assert.False(stream.Write8(42));
+			Assert.False(stream.Write(null, 3));
+			stream.Flush();
+
+			Assert.Equal(SKData.CopyBufferSize, stream.BytesWritten);
+			Assert.Equal(SKData.CopyBufferSize, destination.ToArray().Length);
+			Assert.Equal(2, destination.WriteSizes.Count);
+			Assert.Equal(0, destination.FlushCalls);
+		}
+
+		[Fact]
+		public void NullBufferZeroFillsAcrossChunksAndPartialTail()
+		{
+			var size = SKData.CopyBufferSize * 2 + 17;
+			using var destination = new RecordingWriteStream();
+			using var stream = new SKManagedWStream(destination);
+
+			// Exercise reuse of pooled storage containing nonzero bytes.
+			using (var dirty = Utils.RentArray<byte>(SKData.CopyBufferSize))
+				dirty.Span.Fill(0xA5);
+
+			Assert.True(stream.Write(null, size));
+			Assert.Equal(new byte[size], destination.ToArray());
+			Assert.Equal(size, stream.BytesWritten);
+			Assert.Equal(new[] { SKData.CopyBufferSize, SKData.CopyBufferSize, 17 }, destination.WriteSizes);
+		}
+
+		private sealed class RecordingWriteStream : NonSeekableWriteOnlyStream
+		{
+			private readonly bool failOnSecondWrite;
+
+			public RecordingWriteStream(bool failOnSecondWrite = false) =>
+				this.failOnSecondWrite = failOnSecondWrite;
+
+			public List<int> WriteSizes { get; } = new List<int>();
+			public int FlushCalls { get; private set; }
+
+			public override void Write(byte[] buffer, int offset, int count)
+			{
+				WriteSizes.Add(count);
+				if (failOnSecondWrite && WriteSizes.Count == 2)
+					throw new IOException("The second chunk could not be written.");
+				base.Write(buffer, offset, count);
+			}
+
+			public override void Flush()
+			{
+				FlushCalls++;
+				base.Flush();
+			}
 		}
 
 		[Fact]
