@@ -132,16 +132,6 @@ namespace SkiaSharp
 	/// <remarks />
 	public unsafe static class StringUtilities
 	{
-		// GetUnicodeStringLength
-
-		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
-			encoding switch {
-				SKTextEncoding.Utf8 => 1,
-				SKTextEncoding.Utf16 => 1,
-				SKTextEncoding.Utf32 => 2,
-				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported.")
-			};
-
 		// GetCharacterByteSize
 
 		internal static int GetCharacterByteSize (this SKTextEncoding encoding) =>
@@ -163,11 +153,17 @@ namespace SkiaSharp
 		{
 			if (character == null)
 				throw new ArgumentNullException (nameof (character));
-			if (GetUnicodeStringLength (encoding) != character.Length)
-				throw new ArgumentException (nameof (character), $"Only a single character can be specified.");
 
 			var bytes = GetEncodedText (character, encoding);
-			return BitConverter.ToInt32 (bytes, 0);
+			if (bytes.Length != encoding.GetCharacterByteSize ())
+				throw new ArgumentException ("Only a single character can be specified.", nameof (character));
+
+			return bytes.Length switch {
+				1 => bytes[0],
+				2 => BitConverter.ToUInt16 (bytes, 0),
+				4 => BitConverter.ToInt32 (bytes, 0),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
 		}
 
 		// GetEncodedText
@@ -241,8 +237,13 @@ namespace SkiaSharp
 		/// <param name="encoding">The encoding to use.</param>
 		/// <returns>Returns the decoded text.</returns>
 		/// <remarks />
-		public static string GetString (byte[] data, SKTextEncoding encoding) =>
-			GetString (data, 0, data.Length, encoding);
+		public static string GetString (byte[] data, SKTextEncoding encoding)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			return GetString (data, 0, data.Length, encoding);
+		}
 
 		/// <summary>Encodes the specified string using the encoding as a byte array.</summary>
 		/// <param name="data">The bytes representing text.</param>
