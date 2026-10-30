@@ -217,6 +217,7 @@ namespace SkiaSharp
 				throw new ArgumentOutOfRangeException (nameof (size));
 
 			var nativeSize = (IntPtr)size;
+			// Check the full unsigned result before narrowing it to this API's int return type.
 			var result = Utils.FromNativeSize (SkiaApi.sk_stream_read (Handle, (void*)buffer, nativeSize));
 			GC.KeepAlive (this);
 			if (result > (ulong)size)
