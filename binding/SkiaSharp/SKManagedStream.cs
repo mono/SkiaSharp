@@ -149,36 +149,36 @@ namespace SkiaSharp
 
 		private unsafe IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
 		{
-			var count = (long)Utils.FromNativeSize (size);
-			if (count <= 0)
+			var count = Utils.FromNativeSize (size);
+			if (count == 0)
 				return IntPtr.Zero;
 
 			using var scratch = RentScratchBuffer (buffer, count);
 
-			long totalRead = 0;
+			ulong totalRead = 0;
 			while (totalRead < count) {
-				var toRead = (int)Math.Min (count - totalRead, SKData.CopyBufferSize);
+				var toRead = (int)Math.Min (count - totalRead, (ulong)SKData.CopyBufferSize);
 				var len = ReadChunk (buffer, totalRead, toRead, scratch);
 				if (len <= 0) {
 					MarkEof ();
 					break;
 				}
 				if (len > toRead) {
-					totalRead += toRead;
+					totalRead += (ulong)toRead;
 					MarkEof ();
 					break;
 				}
 
 				ClearEof ();
-				totalRead += len;
+				totalRead += (ulong)len;
 			}
 
-			return Utils.ToNativeSize ((ulong)totalRead);
+			return Utils.ToNativeSize (totalRead);
 		}
 
-		private static Utils.RentedArray<byte> RentScratchBuffer (IntPtr buffer, long count)
+		private static Utils.RentedArray<byte> RentScratchBuffer (IntPtr buffer, ulong count)
 		{
-			var maxChunk = (int)Math.Min (count, SKData.CopyBufferSize);
+			var maxChunk = (int)Math.Min (count, (ulong)SKData.CopyBufferSize);
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
 			return buffer == IntPtr.Zero ? Utils.RentArray<byte> (maxChunk) : default;
 #else
@@ -186,7 +186,7 @@ namespace SkiaSharp
 #endif
 		}
 
-		private unsafe int ReadChunk (IntPtr buffer, long offset, int toRead, Utils.RentedArray<byte> scratch)
+		private unsafe int ReadChunk (IntPtr buffer, ulong offset, int toRead, Utils.RentedArray<byte> scratch)
 		{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
 			if (buffer != IntPtr.Zero)
@@ -217,7 +217,7 @@ namespace SkiaSharp
 		/// <remarks>The stream's cursor must be returned to the position before this method was called.</remarks>
 		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			if (!stream.CanSeek || buffer == IntPtr.Zero || (long)Utils.FromNativeSize (size) <= 0) {
+			if (!stream.CanSeek || buffer == IntPtr.Zero || size == IntPtr.Zero) {
 				return (IntPtr)0;
 			}
 			var oldPos = stream.Position;
@@ -368,7 +368,7 @@ namespace SkiaSharp
 			return IntPtr.Zero;
 		}
 
-		private SKData GetOrCreateSnapshot ()
+		private unsafe SKData GetOrCreateSnapshot ()
 		{
 			if (snapshotData != null)
 				return snapshotData;
@@ -387,10 +387,17 @@ namespace SkiaSharp
 				} else {
 					using var native = new SKDynamicMemoryWStream ();
 					using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
-					int readLen;
-					while ((readLen = Read (buffer.Array, buffer.Length)) > 0) {
-						if (!native.Write (buffer.Array, readLen))
-							return null;
+					fixed (byte* ptr = buffer.Array) {
+						// Keep read failures inside the outer duplicate/fork callback, not a nested read callback.
+						while (true) {
+							var readLen = Utils.FromNativeSize (OnRead ((IntPtr)ptr, (IntPtr)buffer.Length));
+							if (readLen > (ulong)buffer.Length)
+								throw new IOException ("The stream returned an invalid byte count.");
+							if (readLen == 0)
+								break;
+							if (!native.Write (buffer.Array, (int)readLen))
+								return null;
+						}
 					}
 					snapshotData = native.DetachAsData ();
 				}
