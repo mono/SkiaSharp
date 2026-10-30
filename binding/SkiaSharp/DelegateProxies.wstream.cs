@@ -28,10 +28,10 @@ internal static unsafe partial class DelegateProxies
 		stream.OnFlush ();
 	}
 
-	private static partial bool SKManagedWStreamWriteProxyImplementation (IntPtr s, void* context,
+	private static partial byte SKManagedWStreamWriteProxyImplementation (IntPtr s, void* context,
 		void* buffer, /* size_t */ IntPtr size)
 	{
 		var stream = GetUserData<SKAbstractManagedWStream> ((IntPtr)context, out _);
-		return stream.OnWrite ((IntPtr)buffer, size);
+		return stream.OnWrite ((IntPtr)buffer, size) ? (byte)1 : (byte)0;
 	}
 }
