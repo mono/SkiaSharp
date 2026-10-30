@@ -129,7 +129,7 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
 		/// <remarks />
-		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
+		protected internal override unsafe IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
 			var remaining = GetNativeSize (size);
 			if (remaining <= 0)
