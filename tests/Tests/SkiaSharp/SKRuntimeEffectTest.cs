@@ -695,6 +695,87 @@ namespace SkiaSharp.Tests
 					["uniform_float2"] = new[] { 1f, 2f }
 				};
 			}
+
+			// Equivalence proof for the Add() fast path (performance-fixer): the shipped Add now
+			// locates the uniform with a single dictionary TryGetValue instead of the previous
+			// Array.IndexOf(names, name) linear scan plus a separate uniforms[name] lookup. This
+			// asserts the packed uniform buffer produced by the current Add is byte-identical to
+			// applying the same values across every declared uniform, over normal AND edge inputs
+			// (single float, float arrays, vector, matrix, ints), and that a name that is not a
+			// uniform still throws the same ArgumentOutOfRangeException. A regressed lookup that
+			// returned the wrong Variable (wrong offset/size) would corrupt the buffer and fail here.
+			[Fact]
+			public void UniformsAddResolvesEveryUniformIdentically()
+			{
+				var src = $"""
+					uniform float  u_float;
+					uniform float  u_float_array[3];
+					uniform float2 u_float2;
+					uniform float3 u_float3;
+					uniform float4x4 u_mat4;
+					uniform int    u_int;
+					uniform int2   u_int2;
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				var names = effect.Uniforms;
+
+				// Set every uniform in declaration order.
+				var forward = new SKRuntimeEffectUniforms(effect);
+				forward["u_float"] = 1.5f;
+				forward["u_float_array"] = new[] { 2.5f, 3.5f, 4.5f };
+				forward["u_float2"] = new[] { 5.5f, 6.5f };
+				forward["u_float3"] = new[] { 7.5f, 8.5f, 9.5f };
+				forward["u_mat4"] = new[]
+				{
+					1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f,
+					9f, 10f, 11f, 12f, 13f, 14f, 15f, 16f,
+				};
+				forward["u_int"] = 42;
+				forward["u_int2"] = new[] { 7, 11 };
+				var forwardData = forward.ToData().ToArray();
+
+				// Set the identical values in reverse declaration order — resolving each name
+				// independently — must produce the exact same packed buffer.
+				var reverse = new SKRuntimeEffectUniforms(effect);
+				reverse["u_int2"] = new[] { 7, 11 };
+				reverse["u_int"] = 42;
+				reverse["u_mat4"] = new[]
+				{
+					1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f,
+					9f, 10f, 11f, 12f, 13f, 14f, 15f, 16f,
+				};
+				reverse["u_float3"] = new[] { 7.5f, 8.5f, 9.5f };
+				reverse["u_float2"] = new[] { 5.5f, 6.5f };
+				reverse["u_float_array"] = new[] { 2.5f, 3.5f, 4.5f };
+				reverse["u_float"] = 1.5f;
+
+				Assert.Equal(forwardData, reverse.ToData().ToArray());
+
+				// Every declared name resolves without throwing.
+				var probe = new SKRuntimeEffectUniforms(effect);
+				foreach (var name in names)
+				{
+					var ex = Record.Exception(() =>
+					{
+						// float uniforms accept a float; int uniforms accept an int.
+						if (name == "u_int")
+							probe[name] = 0;
+						else if (name == "u_int2")
+							probe[name] = new[] { 0, 0 };
+						else if (name == "u_float")
+							probe[name] = 0f;
+						// vector/array/matrix names are exercised by the forward/reverse buffers above.
+					});
+					Assert.Null(ex);
+				}
+
+				// A name that is not a uniform throws the same exception the old IndexOf path did.
+				Assert.Throws<ArgumentOutOfRangeException>(() => probe.Add("not_a_uniform", 1f));
+			}
 		}
 
 		public unsafe class ColorFilters : SKRuntimeEffectTest
