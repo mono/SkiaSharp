@@ -263,11 +263,6 @@ namespace SkiaSharp
 			if (isUnderlyingAtEnd)
 				return true;
 
-			// Until #5464 lands, SKManagedStream reports EOF after any non-seekable read.
-			// For that adapter, only a zero-byte read can establish EOF reliably.
-			if (!hasLength && stream is SKManagedStream)
-				return false;
-
 			return stream.IsAtEnd;
 		}
 
