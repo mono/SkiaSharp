@@ -128,9 +128,13 @@ def stable_id(prefix, title):
     return prefix + "".join(c if c.isascii() and c.isalnum() else "-" for c in title.lower())
 
 
-def run_checks(flow, output, all_samples, share, report):
+def number(value):
+    return float(str(value).replace(",", "."))
+
+
+def run_checks(flow, output, all_samples, share, report, expected_app_id):
     status = flow.call("status")
-    assert status["app"]["packageId"] == "com.skiasharp.gallery.maui", "Refusing to drive a different app"
+    assert status["app"]["packageId"] == expected_app_id, "Refusing to drive a different app"
     report["app"] = status
 
     def checked(message):
@@ -189,7 +193,7 @@ def run_checks(flow, output, all_samples, share, report):
     assert not flow.query("gallery-filter-popup-api-search")
     if status["device"]["platform"] == "MacCatalyst":
         assert flow.wait(search_id())["type"] == "GallerySearchEntry"
-        assert float(flow.value(search_id(), "Parent.Parent.StrokeThickness")) == 1
+        assert number(flow.value(search_id(), "Parent.Parent.StrokeThickness")) == 1
     flow.call("fill", search_id(), "Lottie Player")
     assert flow.wait("gallery-result-count")["text"].startswith("1 of ")
     open_filters()
@@ -273,11 +277,12 @@ def run_checks(flow, output, all_samples, share, report):
 
     def open_sample(title):
         flow.call("fill", search_id(), title)
-        card = flow.wait(stable_id("sample-", title))
+        card_id = stable_id("sample-", title)
+        card = flow.wait(card_id)
         if not card["isEnabled"]:
             report["unsupported"].append(title)
             return False
-        flow.tap(card["id"])
+        flow.tap(card_id)
         flow.wait("sample-title", lambda item: item.get("text") == title)
         return True
 
@@ -323,7 +328,7 @@ def run_checks(flow, output, all_samples, share, report):
     flow.tap("gallery-info-close")
     flow.wait_gone("gallery-popup")
     flow.set("control-angle", "Value", 91.4)
-    assert float(flow.value("control-angle", "Value")) == 91
+    assert number(flow.value("control-angle", "Value")) == 91
     flow.set("control-gradienttype", "SelectedIndex", 2)
     assert int(flow.value("control-gradienttype", "SelectedIndex")) == 2
     flow.screenshot(output / "gradient-cpu.png")
@@ -339,25 +344,25 @@ def run_checks(flow, output, all_samples, share, report):
     backend("gpu")
     flow.set("control-contrast", "IsToggled", True)
     flow.set("control-contrast-amount", "Value", 0.53)
-    assert abs(float(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
+    assert abs(number(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
     flow.set("control-contrast", "IsToggled", False)
     flow.set("control-contrast", "IsToggled", True)
-    assert abs(float(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
+    assert abs(number(flow.value("control-contrast-amount", "Value")) - 0.55) < 0.0001
     flow.screenshot(output / "photo-lab.png")
     checked("Nested effect groups retain stepped child values")
     back()
 
     assert open_sample("Nine-Patch Scaler")
     backend("cpu")
-    assert float(flow.value("control-width", "Value")) == 400
-    assert float(flow.value("control-height", "Value")) == 300
+    assert number(flow.value("control-width", "Value")) == 400
+    assert number(flow.value("control-height", "Value")) == 300
     flow.set("control-width", "Value", 413)
-    assert float(flow.value("control-width", "Value")) == 410
+    assert number(flow.value("control-width", "Value")) == 410
     checked("XAML slider range initialization preserves sample defaults and live stepping")
     back()
 
     assert open_sample("Color Fonts")
-    assert float(flow.value("control-palette", "Maximum")) > 0
+    assert number(flow.value("control-palette", "Maximum")) > 0
     flow.set("control-palette", "Value", 2)
     backend("gpu")
     checked("Controls use font metadata loaded during initialization")
@@ -421,13 +426,15 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("output/maui-gallery-smoke"))
     parser.add_argument("--all-samples", action="store_true", help="Render every supported catalog sample on CPU and GPU")
     parser.add_argument("--share", action="store_true", help="Request PDF sharing last; leaves the native share sheet open")
+    parser.add_argument("--expected-app-id", default="com.skiasharp.gallery.maui",
+                        help="Exact package ID of the gallery host to automate")
     args = parser.parse_args()
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
     report = {"passed": False, "checks": [], "unsupported": []}
     flow = DevFlow(args.port, args.output, args.device)
     try:
-        run_checks(flow, args.output, args.all_samples, args.share, report)
+        run_checks(flow, args.output, args.all_samples, args.share, report, args.expected_app_id)
         report["passed"] = True
     except (AssertionError, RuntimeError, TimeoutError, ValueError, OSError) as error:
         report["error"] = str(error)
