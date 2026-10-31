@@ -16,11 +16,19 @@
   "api_links": [],
   "tallies": {
     "product": 18,
-    "mixed": 2,
-    "internal": 44
+    "mixed": 3,
+    "internal": 47
   },
   "breaking_candidates": [],
   "contributors": [
+    {
+      "login": "akoeplinger",
+      "url": "https://github.com/akoeplinger",
+      "prs": [
+        5481,
+        5484
+      ]
+    },
     {
       "login": "ramezgerges",
       "url": "https://github.com/ramezgerges",
@@ -35,13 +43,6 @@
       "prs": [
         5352,
         5353
-      ]
-    },
-    {
-      "login": "akoeplinger",
-      "url": "https://github.com/akoeplinger",
-      "prs": [
-        5481
       ]
     },
     {
@@ -69,6 +70,41 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5537": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5537",
+      "title": "[Build] Use Windows SDK rc.exe instead of downloading Chromium rc.exe in ANGLE build",
+      "body": "[Build] Use Windows SDK rc.exe instead of downloading Chromium rc.exe in ANGLE build (#5537)\n\nContext: https://github.com/mono/SkiaSharp/pull/5321\nContext: https://dev.azure.com/dnceng/internal/_build/results?buildId=3121659\nContext: https://dev.azure.com/dnceng/internal/_build/results?buildId=3122081\nContext: https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1657048\n\nPatch ANGLE's `build/toolchain/win/rc/rc.py` in `sync-ANGLE`\n(`native/winui-angle/build.cake`) to compile `.rc` files directly with the\nWindows SDK `rc.exe` instead of downloading Chromium's prebuilt\n`build/toolchain/win/rc/win/rc.exe` from Google Cloud Storage.\n\nIn internal `skiasharp-package` build 3122081, `ANGLE WinUI x86`,\n`ANGLE WinUI x64`, and `ANGLE WinUI arm64` failed in `sync-ANGLE` with\n`Response status code does not indicate success: 404 (Not Found).` Between\npassing build 3121659 (`NetworkIsolationConfigs` commit `7bff1b3663b2`) and\nfailing build 3122081 (`NetworkIsolationConfigs` commit `e0e0053dbb95`), 1ES\nNetwork Isolation 1.0.191 added `GoogleApis` to the HTTP proxy's enabled\ngroups. `sync-ANGLE` fetched `build/toolchain/win/rc/win/rc.exe` from\n`https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media`;\nrouting that Google Cloud Storage JSON API URL through `HTTPS_PROXY` decoded\n`%2F` to `/` in the object path, which Google Cloud Storage rejected with HTTP\n404.\n\nIn ANGLE `d39da9a2abc47fc5fee3711b18b461feab80d34c` (`build` submodule\n`abca3d7d84757607c6a51d0ab95c58abbde1525b`), `build/toolchain/win/toolchain.gni`\n(`tool(\"rc\")`) invokes `build/toolchain/win/tool_wrapper.py rc-wrapper`, which\nloads the `vcvarsall.bat` environment (`environment.x86`, `environment.x64`, or\n`environment.arm64` for Windows SDK `10.0.28000.0`) and runs\n`build/toolchain/win/rc/rc.py` with `/showIncludes`. `rc.py` preprocesses `.rc`\ninputs with `third_party/llvm-build/Release+Asserts/bin/clang-cl.exe /P` (wired\nto Visual Studio's `LLVM_HOME` junction by `#5321`), pipes the preprocessed\noutput to `RunRc()` (`build/toolchain/win/rc/win/rc.exe`, Chromium's\ncross-platform resource compiler for non-Windows hosts), and then on `win32`\nruns `CompareToMsRcOutput()`, which invokes the Windows SDK `rc` (`rc /nologo\n/x /fo<output>_ms_rc`) from the toolchain `PATH` and asserts\n`filecmp.cmp(msrc_out, flags.output)`.\n\nRemove the `build/toolchain/win/rc/win/rc.exe` download and `.sha1` verification\nfrom `sync-ANGLE`, and patch `rc.py` to replace\n`rc_exe_exit_code = RunRc(preprocessed_output, is_utf8, flags)` with\n`rc_exe_exit_code = 0` and `msrc_out = flags.output + '_ms_rc'` with\n`msrc_out = flags.output`, throwing if either replacement anchor is missing.\nKeeping `rc.py` rather than calling `rc.exe` directly from `toolchain.gni` or\nsymlinking `build/toolchain/win/rc/win/rc.exe` avoids passing `RunRc()`'s\nstdin-based `/cd`, `/utf-8`, and `/showIncludes` interface to Microsoft's\n`rc.exe` while preserving `Preprocess()`'s `clang-cl /P /showIncludes` header\ndependency output (`depsformat = \"msvc\"`), `-Werror` (`/WX`), `-imsvc`\nsystem-include flags, and macro names longer than 31 characters (omitting only\n`RunRc()`'s self-dependency notes on `tool_wrapper.py`, `rc.py`, and `.sha1`\nfiles).\n\nIn public build 1657048, `ANGLE WinUI x86`, `ANGLE WinUI x64`, and\n`ANGLE WinUI arm64` compiled `libEGL.res` and `libGLESv2.res` and linked\n`libEGL.dll` (`out/winui/<arch>`) and `libGLESv2.dll`\n(`out/winui_wasdk/<arch>`), and `Native tests (Linux)` passed all 13 native\nartifact inspection cases.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
+    "5469": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5469",
+      "title": "Guard .NET 11 WASM archives against legacy setjmp symbols",
+      "body": "* Initial plan\n\n* Guard .NET 11 WASM archives against legacy setjmp symbols (#5467)\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>",
+      "author": "Copilot",
+      "community": false,
+      "tag": "internal",
+      "fixes": [
+        5467
+      ]
+    },
+    "5484": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5484",
+      "title": "Remove duplicate @ prefix from issueAuthor in GitOps",
+      "body": "https://github.com/GitOps-microsoft/GitOps.PullRequestIssueManagement/pull/262 (internal Microsoft link) changed the `${issueAuthor}` placeholder to include the `@` character.\n\nRemove the one we added so we don't duplicate it.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "author": "akoeplinger",
+      "community": true,
+      "tag": "internal"
+    },
+    "5539": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5539",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5507": {
       "url": "https://github.com/mono/SkiaSharp/pull/5507",
       "title": "[docs] Preserve commit evidence and bound release-note publication",
