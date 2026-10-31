@@ -189,18 +189,8 @@ jobs:
           path: output/gallery-uno-publish/smoke.png
           if-no-files-found: ignore
 
-      - name: Retain Gallery publish output for maintenance diagnosis
-        if: always() && inputs.dry_run
-        uses: actions/upload-artifact@v4
-        with:
-          name: issue-5545-gallery-publish
-          path: output/gallery-uno-publish/wwwroot
-          retention-days: 7
-          if-no-files-found: error
-
       # ── Build SkiaFiddle Uno WASM app ────────────────────────────
       - name: Publish SkiaFiddle WASM
-        if: ${{ !cancelled() && (success() || inputs.dry_run) }}
         env:
           SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
           BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
@@ -216,7 +206,6 @@ jobs:
             -p:BuildFooter="$BUILD_FOOTER"
 
       - name: Smoke test SkiaFiddle WASM
-        if: ${{ !cancelled() && (success() || inputs.dry_run) }}
         run: |
           bash samples/SkiaFiddle/scripts/smoke.sh \
             output/skia-fiddle-publish/wwwroot \
@@ -229,15 +218,6 @@ jobs:
           name: skia-fiddle-smoke-screenshot
           path: output/skia-fiddle-publish/smoke.png
           if-no-files-found: ignore
-
-      - name: Retain SkiaFiddle publish output for maintenance diagnosis
-        if: always() && inputs.dry_run
-        uses: actions/upload-artifact@v4
-        with:
-          name: issue-5545-fiddle-publish
-          path: output/skia-fiddle-publish/wwwroot
-          retention-days: 7
-          if-no-files-found: error
 
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
@@ -378,12 +358,6 @@ jobs:
           name: ${{ steps.vars.outputs.artifact_name }}
           path: site
           retention-days: 1
-
-      - name: Prevent downstream publication during maintenance diagnosis
-        if: always() && inputs.dry_run
-        run: |
-          echo "::error::Diagnostic run intentionally fails to prevent downstream Pages publication."
-          exit 1
 
   # ── Deploy to docs-live ───────────────────────────────────────
   deploy:
