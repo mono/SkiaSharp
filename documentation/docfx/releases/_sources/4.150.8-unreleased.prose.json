@@ -1,11 +1,25 @@
 {
-  "theme": "Next servicing line opened",
-  "highlights_headline": "The 4.150.8 servicing line is open, with no collected product changes yet.",
+  "theme": "Region and texture corrections",
+  "highlights_headline": "The upcoming 4.150.8 servicing release corrects region buffer sizing and GPU texture handling in Skia m150.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Safe region sizing for conics",
+          "detail": "Corrects scanline-transition allocation for subdivided conics in SkRegion::setPath and rejects accumulation overflow, preventing a heap out-of-bounds write.",
+          "prs": [5543]
+        },
+        {
+          "lead": "Correct texture uploads and subset sampling",
+          "detail": "Disables GLES-invalid RGBA uploads for BGRA textures interpreted as RGBx. Nearest-filtered texture subsets retain shader clamps where magnification or fractional mappings could sample neighboring texels, while preserving the touching-edge fast path for one-to-one integer-relative mappings.",
+          "prs": [5543]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": null,
-  "release_summaries": {}
+  "preview_summaries": {}
 }
