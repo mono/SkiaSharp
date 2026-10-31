@@ -6,11 +6,14 @@
 
     <Grid>
         <!-- Canvas fills everything -->
-        <skia:SKXamlCanvas x:Name="skiaView" AutomationProperties.AutomationId="basic-canvas-drawing" PaintSurface="OnPaintSurface"
+        <UserControl AutomationProperties.AutomationId="basic-canvas-drawing"
+                     AutomationProperties.Name="Drawing canvas" AutomationProperties.AccessibilityView="Content">
+            <skia:SKXamlCanvas x:Name="skiaView" PaintSurface="OnPaintSurface"
                            PointerPressed="OnPointerPressed"
                            PointerMoved="OnPointerMoved"
                            PointerReleased="OnPointerReleased"
                            PointerWheelChanged="OnPointerWheelChanged" />
+        </UserControl>
 
         <!-- Clear button top-right -->
         <Button Content="Clear" Click="OnClearClicked" AutomationProperties.AutomationId="basic-drawing-clear"

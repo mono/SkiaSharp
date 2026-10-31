@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text;
 using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Shared;
 using Xunit;
@@ -22,12 +23,18 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
 	}
 
 	private Process? application;
+	private Task<string>? applicationOutput;
+	private Task<string>? applicationErrors;
 	private Process? service;
 	private Task<string>? serviceOutput;
 	private Task<string>? serviceErrors;
 	private IntPtr window;
 
 	internal override string DeviceProfile => "windows-desktop";
+	// The declared Basic profile includes the compositor's right/bottom window border.
+	internal override SKRectI ComparisonInsets(SKSizeI size) =>
+		size == new SKSizeI(1422, 721) ? new(0, 0, 1, 1) : SKRectI.Empty;
+
 	internal override GoldenCase Reference(string caseName) =>
 		new(DeviceProfile, caseName, Environment.OSVersion.Version,
 			RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
@@ -47,17 +54,21 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
 				"Windows Application Driver", "WinAppDriver.exe");
 		Assert.True(File.Exists(servicePath), $"Install WinAppDriver before desktop tests: {servicePath}");
 
+		application = ProcessRunner.Start(Artifact, [], Path.GetDirectoryName(Artifact)!);
+		applicationOutput = application.StandardOutput.ReadToEndAsync();
+		applicationErrors = application.StandardError.ReadToEndAsync();
+		window = WindowsWindow.WaitForOwnedWindow(application, title);
+
 		var port = AppiumFixture.GetFreePort();
-		service = ProcessRunner.Start(servicePath, ["127.0.0.1", $"{port}/wd/hub"], Workspace.Root);
+		service = ProcessRunner.Start(servicePath, ["127.0.0.1", $"{port}/wd/hub"], Workspace.Root, start =>
+		{
+			start.RedirectStandardInput = true;
+			start.StandardOutputEncoding = Encoding.Unicode;
+		});
 		serviceOutput = service.StandardOutput.ReadToEndAsync();
 		serviceErrors = service.StandardError.ReadToEndAsync();
 		var endpoint = new Uri($"http://127.0.0.1:{port}/wd/hub");
 		await WaitForService(service, endpoint);
-
-		application = ProcessRunner.Start(Artifact, [], Path.GetDirectoryName(Artifact)!);
-		_ = application.StandardOutput.ReadToEndAsync();
-		_ = application.StandardError.ReadToEndAsync();
-		window = WindowsWindow.WaitForOwnedWindow(application, title);
 
 		var options = new AppiumOptions { PlatformName = "Windows", AutomationName = "Windows", DeviceName = "WindowsPC" };
 		options.AddAdditionalAppiumOption("appTopLevelWindow", $"0x{window.ToInt64():x}");
@@ -85,10 +96,17 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
 	{
 		get
 		{
-			var position = Driver.Manage().Window.Position;
-			var size = Driver.Manage().Window.Size;
-			return new Rectangle(position, size);
+			// WinAppDriver element positions are window-relative, but /window/position is screen-relative.
+			return new Rectangle(Point.Empty, Driver.Manage().Window.Size);
 		}
+	}
+
+	internal void Activate()
+	{
+		Assert.True(window != IntPtr.Zero && application is not null &&
+			WindowsWindow.ProcessId(window) == (uint)application.Id, "The Appium window must belong to the launched app.");
+		Driver.SwitchTo().Window($"0x{window.ToInt64():x}");
+		Assert.Equal((uint)application.Id, WindowsWindow.ProcessId(WindowsWindow.GetForegroundWindow()));
 	}
 
 	protected override async Task StopPlatform()
@@ -105,6 +123,10 @@ internal sealed class WindowsRunningApp(SampleWorkspace workspace, string artifa
 				await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(30));
 			});
 		}
+		if (applicationOutput is not null)
+			await Attempt(failures, async () => await SaveText("application.stdout.log", await applicationOutput.WaitAsync(TimeSpan.FromSeconds(30))));
+		if (applicationErrors is not null)
+			await Attempt(failures, async () => await SaveText("application.stderr.log", await applicationErrors.WaitAsync(TimeSpan.FromSeconds(30))));
 		if (serviceOutput is not null)
 			await Attempt(failures, async () => await SaveText("winappdriver.stdout.log", await serviceOutput.WaitAsync(TimeSpan.FromSeconds(30))));
 		if (serviceErrors is not null)
@@ -164,8 +186,10 @@ internal static partial class WindowsWindow
 	internal static partial uint GetWindowThreadProcessId(IntPtr handle, out uint processId);
 
 	[LibraryImport("user32.dll")]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	private static partial bool GetWindowRect(IntPtr handle, out Rect bounds);
+	internal static partial IntPtr GetForegroundWindow();
+
+	[LibraryImport("dwmapi.dll")]
+	private static partial int DwmGetWindowAttribute(IntPtr handle, int attribute, out Rect bounds, int size);
 
 	[LibraryImport("user32.dll")]
 	private static partial IntPtr SetThreadDpiAwarenessContext(IntPtr context);
@@ -214,7 +238,8 @@ internal static partial class WindowsWindow
 
 	internal static Rectangle PhysicalBounds(IntPtr handle) => WithPhysicalDpi(() =>
 	{
-		if (!GetWindowRect(handle, out var rect))
+		// Match UI Automation's visible frame, excluding invisible resize borders.
+		if (DwmGetWindowAttribute(handle, 9, out var rect, Marshal.SizeOf<Rect>()) != 0)
 			throw new InvalidOperationException("Could not read the owned window's physical screen bounds.");
 		return Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom);
 	});
