@@ -296,5 +296,24 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(28u, buffer.GlyphInfos[3].Codepoint);
 			}
 		}
+
+		[Fact]
+		public void ShouldRoundTripJsonGlyphSerialization()
+		{
+			string json;
+			using (var source = new Buffer())
+			{
+				source.AddUtf8(SimpleText);
+				source.GuessSegmentProperties();
+				Font.Shape(source);
+				json = source.SerializeGlyphs(Font, SerializeFormat.Json, SerializeFlag.Default);
+			}
+
+			using (var destination = new Buffer())
+			{
+				destination.DeserializeGlyphs(json, Font, SerializeFormat.Json);
+				Assert.Equal(SimpleText.Length, destination.Length);
+			}
+		}
 	}
 }

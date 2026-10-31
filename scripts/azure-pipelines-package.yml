@@ -82,6 +82,10 @@ parameters:
     displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
     type: boolean
     default: false
+  - name: runFuzzing
+    displayName: 'Run fuzzing for this build (scheduled main builds run automatically)'
+    type: boolean
+    default: false
   - name: forceRealSigning
     displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
@@ -158,3 +162,4 @@ extends:
           forceRealSigning: ${{ parameters.forceRealSigning }}
           registerInBar: ${{ parameters.registerInBar }}
           runApiScan: ${{ parameters.runApiScan }}
+          runFuzzing: ${{ parameters.runFuzzing }}

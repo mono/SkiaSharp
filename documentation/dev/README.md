@@ -60,6 +60,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | [golden-image-tests.md](golden-image-tests.md) | The cross-backend visual-regression matrix: scenes, renderers, goldens, tolerance and how to seed them |
 | [gpu-test-policy.md](gpu-test-policy.md) | When a GPU backend is required vs skipped, and the `SKIASHARP_TEST_SKIP_GPU` opt-out |
 | [containerized-testing.md](containerized-testing.md) | Run the console test suite inside a Docker container (Linux glibc/Alpine + Nano Server) via the bootstrapper `docker:` feature + the `tests-container` cake target |
+| [fuzzing.md](fuzzing.md) | Run coverage-guided fuzzing locally (native or Docker), replay crash inputs, add `IFuzzer` targets, and inspect OneFuzz cloud jobs |
 
 ### Releasing
 | Document | Description |
