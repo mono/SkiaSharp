@@ -134,6 +134,10 @@ namespace SkiaSharp.Tests
 		public string PathToImages => Path.Combine(PathRoot, "Content", "images");
 
 		public virtual GlContext CreateGlContext() =>
+#if WINDOWS
+			new WglContext();
+#else
 			throw new PlatformNotSupportedException();
+#endif
 	}
 }

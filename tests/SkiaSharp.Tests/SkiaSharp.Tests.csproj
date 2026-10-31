@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**;..\Tests\SkiaSharp\Visual\Renderers\Desktop\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Wgl\*.cs" Link="SkiaSharp\GlContexts\Wgl\%(Filename)%(Extension)" Condition="$(TargetFramework.Contains('-windows'))" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
 

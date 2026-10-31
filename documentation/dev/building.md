@@ -11,6 +11,7 @@ This guide covers building SkiaSharp on Windows and macOS.
     * [Preparation](#preparation-1)
     * [Making Changes](#making-changes)
     * [Building](#building)
+ * [Windows Device Tests](#windows-device-tests)
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
  * [GTK4 Tests](#gtk4-tests)
@@ -95,6 +96,22 @@ Once you are finished making changes, you can run the `tests` target and make su
 ```
 > dotnet cake --target=Everything --skipExternals=all
 ```
+
+## Windows Device Tests
+
+On Windows, run the MAUI device test app after preparing the native libraries:
+
+```powershell
+dotnet cake --target=tests-windows --skipExternals=all
+```
+
+This builds and runs `SkiaSharp.Tests.Devices` for
+`net10.0-windows10.0.19041.0` as an unpackaged x64 app with a self-contained
+Windows App SDK runtime, avoiding MSIX registration and machine-wide runtime
+installation. It writes TRX results under
+`output/logs/testlogs/SkiaSharp.Tests.Devices.windows/`.
+The **Windows (MAUI)** CI job runs the same target, provisions software OpenGL
+and Vulkan drivers, and publishes test results and visual-regression images.
 
 ## Native Building
 

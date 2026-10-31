@@ -24,6 +24,10 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(WindowsPackageType)' == 'None'">
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
   <PropertyGroup>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
@@ -89,5 +93,12 @@
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(WindowsPackageType)' == 'None'">
+    <Content Update="..\..\output\native\windows\$(Platform)\libSkiaSharp.*;..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.*"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\output\native\winui\$(Platform)\*"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
 </Project>
