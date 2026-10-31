@@ -7,10 +7,13 @@
     Unloaded="OnUnloaded">
 
     <Grid>
-        <skia:SKSwapChainPanel x:Name="skiaView" AutomationProperties.AutomationId="basic-canvas-gpu" PaintSurface="OnPaintSurface"
+        <UserControl AutomationProperties.AutomationId="basic-canvas-gpu"
+                     AutomationProperties.Name="GPU canvas" AutomationProperties.AccessibilityView="Content">
+            <skia:SKSwapChainPanel x:Name="skiaView" PaintSurface="OnPaintSurface"
                                PointerPressed="OnPointerPressed"
                                PointerMoved="OnPointerMoved"
                                PointerReleased="OnPointerReleased" />
+        </UserControl>
 
         <!-- FPS pill overlay — centered top -->
         <Border HorizontalAlignment="Center"

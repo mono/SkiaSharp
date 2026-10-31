@@ -11,6 +11,11 @@ internal static class Appium
 
 		try
 		{
+			if (OperatingSystem.IsWindows())
+				return ProcessRunner.Start(
+					Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe"),
+					["/d", "/c", "appium", .. arguments], workingDirectory);
+
 			return ProcessRunner.Start(
 				"appium", arguments,
 				workingDirectory);
