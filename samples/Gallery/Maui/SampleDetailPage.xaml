@@ -42,6 +42,10 @@
             <Border x:Name="surfaceCard" Style="{StaticResource GalleryCardSurface}"
                     Margin="12,4,12,6" MinimumHeightRequest="200">
                 <Grid x:Name="surfaceHost">
+                    <ContentView x:Name="cpuHost" AutomationId="sample-canvas-cpu"
+                                 SemanticProperties.Description="CPU canvas" IsVisible="False" />
+                    <ContentView x:Name="gpuHost" AutomationId="sample-canvas-gpu"
+                                 SemanticProperties.Description="GPU canvas" IsVisible="False" />
                     <Label x:Name="state" Text="Loading sample…" AutomationId="sample-state"
                            FontSize="14" Style="{StaticResource PrimaryLabel}"
                            HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />

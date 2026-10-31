@@ -148,7 +148,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 		var filterTrigger = app.FindOptional("gallery-filter-trigger");
 		if (filterTrigger is not null)
 		{
-			filterTrigger.Click();
+			app.Click("gallery-filter-trigger");
 			app.Find("gallery-filter-popup-count");
 		}
 		else
@@ -168,7 +168,7 @@ public abstract class AppiumSampleRunTestBase : DotNetSampleTestBase
 				if (app.FindOptional("sample-controls-toggle")?.Text == "Controls ▸")
 					app.Click("sample-controls-toggle");
 				app.ScrollIntoView("sample-controls", "control-angle");
-				app.Drag(app.Find("control-angle"), 0.2, 0.5, 0.0, 0.5);
+				app.SetSliderToMinimum(app.Find("control-angle"));
 				app.WaitText("control-angle-value", text => text == "Angle: 0");
 				await Compare(app, "sample-canvas-cpu", "gallery-gradient-adjusted", "Maui");
 			},

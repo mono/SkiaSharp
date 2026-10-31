@@ -19,6 +19,23 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	private const string Folder = "Basic/Maui";
 	private const string Project = "SkiaSharpSample/SkiaSharpSample.csproj";
 
+	[Fact]
+	public async Task WindowsAppiumLaunchesTheNpmCommandShim()
+	{
+		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows npm shims require cmd.exe.");
+		var directory = Path.Combine(root, "appium shim");
+		Directory.CreateDirectory(directory);
+		await File.WriteAllTextAsync(Path.Combine(directory, "appium.cmd"), "@echo %*\r\n", TestContext.Current.CancellationToken);
+		using var process = Utils.Appium.StartServer(4723, directory);
+		var output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+		var errors = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+		await process.WaitForExitAsync(TestContext.Current.CancellationToken)
+			.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+		Assert.Equal(0, process.ExitCode);
+		Assert.Equal("", await errors);
+		Assert.Equal("--address 127.0.0.1 --port 4723 --log-timestamp", (await output).Trim());
+	}
+
 	private static string AppOutput(string directory, string folder = Folder) =>
 		Path.GetFullPath(Path.Combine(directory, "samples", folder, "SkiaSharpSample", "bin", "Debug", "net10.0-ios", "iossimulator-arm64"));
 
@@ -311,7 +328,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		string platform, string framework, string rid)
 	{
 		var apps = Path.Combine(root, "sample-apps");
-		var directory = Path.Combine(apps, platform, "arm64", Folder);
+		var directory = Path.GetFullPath(Path.Combine(apps, platform, "arm64", Folder));
 		var output = Path.Combine(directory, "samples", Folder, "SkiaSharpSample",
 			"bin", "Debug", framework, rid);
 		Directory.CreateDirectory(output);
@@ -354,6 +371,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData(120, 80, 800, 600, 120, 80, 800, 600, 320, 280, 320, 280)]
 	[InlineData(100, 50, 400, 300, 200, 100, 800, 600, 300, 200, 600, 400)]
 	[InlineData(-400, 25, 800, 600, -800, 50, 1200, 900, -200, 125, -500, 200)]
+	[InlineData(0, 0, 1424, 822, 136, 128, 1424, 822, 427, 424, 563, 552)]
 	public void WindowsPointerCoordinatesStayOnTheOwnedPhysicalWindow(
 		int lx, int ly, int lw, int lh, int px, int py, int pw, int ph,
 		int x, int y, int expectedX, int expectedY)
@@ -603,6 +621,30 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("The owned Appium session is not ready.", failure.Message);
+	}
+
+	[Fact]
+	public void WindowsComparisonExcludesOnlyTheCompositorEdgesAndKeepsTheRawImage()
+	{
+		using var workspace = Workspace();
+		var app = new WindowsRunningApp(workspace, "Sample.exe", "Sample");
+		using var bitmap = new SKBitmap(1422, 721);
+		bitmap.Erase(SKColors.Blue);
+		for (var x = 0; x < bitmap.Width; x++)
+			bitmap.SetPixel(x, bitmap.Height - 1, SKColors.Red);
+		for (var y = 0; y < bitmap.Height; y++)
+			bitmap.SetPixel(bitmap.Width - 1, y, SKColors.Red);
+		bitmap.SetPixel(1420, 719, SKColors.Green);
+		using var image = SKImage.FromBitmap(bitmap);
+		using var comparison = app.TransformComparison(image);
+		using var pixels = SKBitmap.FromImage(comparison);
+		Assert.Equal(new SKSizeI(1421, 720), comparison.Info.Size);
+		Assert.Equal(SKColors.Blue, pixels.GetPixel(0, 0));
+		Assert.Equal(SKColors.Green, pixels.GetPixel(1420, 719));
+		Assert.Equal(new SKSizeI(1422, 721), image.Info.Size);
+		Assert.Equal(SKColors.Red, bitmap.GetPixel(1421, 720));
+		Assert.Equal(SKRectI.Empty, app.ComparisonInsets(new(976, 527)));
+		Assert.Equal(SKRectI.Empty, app.ComparisonInsets(new(1422, 720)));
 	}
 
 	[Fact]

@@ -233,19 +233,21 @@ public sealed partial class SampleDetailPage : ContentPage
         if (!active || sample is DocumentSampleBase) return;
         if (useGpu)
         {
-            gpuView = new SKGLView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
+            gpuView = new SKGLView { IgnorePixelScaling = true, HasRenderLoop = false };
             gpuView.PaintSurface += PaintGpu;
             gpuView.HandlerChanged += RendererReady;
             gpuView.SizeChanged += RendererReady;
-            surfaceHost.Insert(0, gpuView);
+            gpuHost.Content = gpuView;
+            gpuHost.IsVisible = true;
         }
         else
         {
-            cpuView = new SKCanvasView { IgnorePixelScaling = true, AutomationId = "sample-canvas-cpu" };
+            cpuView = new SKCanvasView { IgnorePixelScaling = true };
             cpuView.PaintSurface += PaintCpu;
             cpuView.HandlerChanged += RendererReady;
             cpuView.SizeChanged += RendererReady;
-            surfaceHost.Insert(0, cpuView);
+            cpuHost.Content = cpuView;
+            cpuHost.IsVisible = true;
         }
     }
 
@@ -265,7 +267,8 @@ public sealed partial class SampleDetailPage : ContentPage
             oldGpu.PaintSurface -= PaintGpu;
             oldGpu.HandlerChanged -= RendererReady;
             oldGpu.SizeChanged -= RendererReady;
-            surfaceHost.Children.Remove(oldGpu);
+            gpuHost.IsVisible = false;
+            gpuHost.Content = null;
             oldGpu.Handler?.DisconnectHandler();
         }
         if (cpuView is { } oldCpu)
@@ -274,7 +277,8 @@ public sealed partial class SampleDetailPage : ContentPage
             oldCpu.PaintSurface -= PaintCpu;
             oldCpu.HandlerChanged -= RendererReady;
             oldCpu.SizeChanged -= RendererReady;
-            surfaceHost.Children.Remove(oldCpu);
+            cpuHost.IsVisible = false;
+            cpuHost.Content = null;
             oldCpu.Handler?.DisconnectHandler();
         }
     }
