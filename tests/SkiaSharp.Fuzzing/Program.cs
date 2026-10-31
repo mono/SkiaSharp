@@ -172,15 +172,23 @@ static void Prepare(FuzzerDescriptor[] fuzzers, string dropDirectory, bool instr
 						["System.Tags"] = "SkiaSharp",
 						["System.Title"] = "[{{ job.project }} {{ job.name }}]: {{ report.crash_site }}",
 						["Microsoft.DevDiv.Custom01"] = "{{ job.name }}-{{ report.call_stack_sha256 }}",
+						["Microsoft.DevDiv.HitCount"] = "1",
 					},
 					["UniqueFields"] = new JsonArray("Microsoft.DevDiv.Custom01"),
 					["OnDuplicate"] = new JsonObject
 					{
+						["Increment"] = new JsonArray("Microsoft.DevDiv.HitCount"),
 						["SetState"] = new JsonObject
 						{
 							["Resolved"] = "Active",
 							["Closed"] = "Active",
 						},
+						["Unless"] = new JsonArray(
+							new JsonObject
+							{
+								["System.State"] = "Closed",
+								["System.Reason"] = "Wont Fix",
+							}),
 					},
 				}
 			});
