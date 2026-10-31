@@ -5,11 +5,12 @@
              Title="Drawing">
 
     <Grid>
-        <skia:SKCanvasView x:Name="skiaView"
-                           AutomationId="basic-canvas-drawing"
+        <ContentView AutomationId="basic-canvas-drawing" SemanticProperties.Description="Drawing canvas">
+            <skia:SKCanvasView x:Name="skiaView"
                            PaintSurface="OnPaintSurface"
                            EnableTouchEvents="True"
                            Touch="OnTouch" />
+        </ContentView>
 
         <!-- Floating Clear button — top-right -->
         <Button Text="Clear"

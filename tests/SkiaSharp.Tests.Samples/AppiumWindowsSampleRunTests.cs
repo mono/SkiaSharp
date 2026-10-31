@@ -1,4 +1,5 @@
-using OpenQA.Selenium;
+using System.Xml.Linq;
+using OpenQA.Selenium.Appium;
 using SkiaSharp.Tests.Samples.Utils;
 using Xunit;
 
@@ -62,18 +63,28 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 	private async Task<WindowsRunningApp> BuildWindowsApp(string folder, string project)
 	{
 		const string framework = "net10.0-windows10.0.19041.0";
-		const string rid = "win10-x64";
+		const string rid = "win-x64";
 		string FindApp(SampleWorkspace workspace) => WindowsRunningApp.FindApp(Path.Combine(
 			workspace.Root, "samples", folder, Path.GetDirectoryName(project)!, "bin", "Debug", framework, rid), project);
 		var workspace = await appium.PrepareWorkspace("windows/x64", folder, project, async prepared =>
 		{
+			// A global Windows RID would also reach MAUI's Android restore.
+			// Set it early for output paths and late for single-target project restore.
+			foreach (var name in new[] { "Directory.Build.props", "Directory.Build.targets" })
+			{
+				var path = Path.Combine(prepared.Root, "samples", name);
+				var properties = XElement.Load(path);
+				properties.Add(new XElement("PropertyGroup",
+					new XAttribute("Condition", $"'$(TargetFramework)' == '{framework}'"),
+					new XElement("RuntimeIdentifier", rid)));
+				properties.Save(path);
+			}
 			await BuildSample(prepared, folder, project, new DotNetOptions
 			{
 				Configuration = "Debug",
 				Framework = framework,
 				Properties = new Dictionary<string, string>
 				{
-					["RuntimeIdentifier"] = rid,
 					["WindowsPackageType"] = "None",
 					["WindowsAppSDKSelfContained"] = "true"
 				}
@@ -83,6 +94,9 @@ public sealed class AppiumWindowsSampleRunTests(AppiumFixture appium) : AppiumSa
 			folder == "Gallery" ? "SkiaSharp Gallery" : "SkiaSharp Sample");
 	}
 
-	private static void NavigateMaui(AppiumOperations operations, string title) =>
-		operations.Click(By.Name(title));
+	private static void NavigateMaui(AppiumOperations operations, string title)
+	{
+		operations.Click(MobileBy.AccessibilityId("OK"));
+		operations.Click(new ByName(title));
+	}
 }

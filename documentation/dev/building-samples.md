@@ -54,6 +54,8 @@ Sample projects still build their declared target frameworks.
 `BuildSample`, `DotNet.Build` and `DotNet.Run` accept an optional
 `DotNetOptions` record for framework, configuration, additional properties,
 working directory and timeouts.
+Sample builds use private NuGet/CLI caches without installing workloads,
+registering global-tool paths or generating development certificates.
 
 ## Browser runs
 
@@ -164,6 +166,10 @@ Xcode installation compatible with the selected .NET workload. Do not start
 WinAppDriver or an Appium server separately: the tests own their service,
 application and window lifetimes.
 
+Use a short checkout path on Windows, such as `C:\src\SkiaSharp`. WinUI's XAML
+compiler can reject assemblies in the private package cache when their paths
+exceed the Windows path-length limit.
+
 ```sh
 pwsh scripts/infra/tests/install-appium.ps1 -Platform Windows # on Windows
 pwsh scripts/infra/tests/install-appium.ps1 -Platform Mac     # on macOS
@@ -176,9 +182,11 @@ dotnet cake --target=samples --runGroup=Windows --appiumMode=run --skipExternals
 Use `--runGroup=Mac` for both Mac Catalyst and native macOS. Match the app
 workspaces' OS/architecture and retain their exact `output/nugets` cohort. Desktop
 goldens belong to `windows-desktop`, `mac-catalyst` and `macos-desktop`; they
-cannot reuse mobile captures. Until a maintainer reviews and commits each
-desktop reference set, missing references fail strictly. Inspect the captured
-PNG images in the CI sample logs' `golden-images` directory before adding them.
+cannot reuse mobile captures. Windows x64 references are committed under
+`tests/Goldens/Samples/windows-desktop`. Other desktop reference sets still
+require reviewed captures; missing references fail strictly. Inspect the
+captured PNG images in the CI sample logs' `golden-images` directory before
+adding or updating references.
 
 ## Test groups and diagnostics
 
@@ -224,6 +232,10 @@ The iOS 39-pixel bottom inset applies only to the declared 1206 x 2622 profile;
 shorter element captures are not cropped again. Diagnostics and reference
 proposals retain the original captured images; only diff images use the
 comparison dimensions.
+The Windows 1422 x 721 Basic profile omits the one-pixel right and bottom
+compositor edges from comparison; their color varies with window activation.
+Other Windows capture sizes are not cropped. Raw screenshots and references
+retain those edges.
 Initial, drawn and cleared states use separate case names where needed.
 
 Use the sample helpers to select the profile:

@@ -177,6 +177,9 @@ public static class DotNet
         start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
         start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
         start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
+        start.Environment["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"] = "false";
+        start.Environment["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false";
+        start.Environment["DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK"] = "true";
         start.Environment["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
         start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
         start.Environment["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";

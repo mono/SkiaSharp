@@ -199,6 +199,9 @@ public class SampleInfrastructureTests : IDisposable
         DotNet.ConfigureProcess(start, workspace);
         Assert.False(start.Environment.ContainsKey("MSBUILD_EXAMPLE"));
         Assert.Equal(path, start.Environment["PATH"]);
+        Assert.Equal("false", start.Environment["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"]);
+        Assert.Equal("false", start.Environment["DOTNET_GENERATE_ASPNET_CERTIFICATE"]);
+        Assert.Equal("true", start.Environment["DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK"]);
         foreach (var key in new[] { "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "NUGET_SCRATCH", "DOTNET_CLI_HOME" })
             Assert.StartsWith(working + Path.DirectorySeparatorChar, start.Environment[key]);
         var selected = await DotNet.GetVersion(workspace);
