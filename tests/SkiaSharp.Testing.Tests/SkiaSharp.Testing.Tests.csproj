@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net48</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Testing.Tests</RootNamespace>
+    <AssemblyName>SkiaSharp.Testing.Tests</AssemblyName>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);SKIA4001</NoWarn>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <PackageReference Include="coverlet.msbuild" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\source\SkiaSharp.Testing\SkiaSharp.Testing.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>
