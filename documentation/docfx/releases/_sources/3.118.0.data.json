@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "3.118.0",
   "family": "skiasharp",
   "status": "preview",
@@ -164,6 +164,7 @@
     "3101": {
       "url": "https://github.com/mono/SkiaSharp/pull/3101",
       "title": "Use the correct PackagePath attribute (#3100)",
+      "body": "The PackageFile is a typo and is the build action, not the attribute\n\n(cherry picked from commit 16e61a177c4a1aaa973affdefe21b7cc3e909401)\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "product"
@@ -171,6 +172,7 @@
     "3099": {
       "url": "https://github.com/mono/SkiaSharp/pull/3099",
       "title": "Update the Android NDK to r27c and update to 16kb alignment (#3096)",
+      "body": "* Update the Android NDK to r27c\n\n* Set the max page size to be 16kb\n\n* https://developer.android.com/guide/practices/page-sizes\n* https://android-developers.googleblog.com/2024/08/adding-16-kb-page-size-to-android.html\n\n* Add a test\n\n(cherry picked from commit db01ee168ac455c824a74ff09fbd197fe83cbf64)\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "mixed"
@@ -178,6 +180,7 @@
     "3090": {
       "url": "https://github.com/mono/SkiaSharp/pull/3090",
       "title": "Log more information about disk space and skip the MSVC builds on public",
+      "body": "* Try and get more information as to disk space\n* Only build MSVC on the internal build\n\nThe MSVC compiler is so heavy that the outputs are over 10.8GB\nwhereas the LLVM compiler is just under 10.1GB.\n\nThe public agent only starts with 12GB and after the checkout we are\nleft with 10.67GB which is smaller than the 10.8GB required. The LLVM\ncompiler just manages to pass under the bar with about 600MB spare.\n\nIf the SkiaSharp artifacts get any bigger, then we will need custom\nmachines for the public build.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -185,6 +188,7 @@
     "3092": {
       "url": "https://github.com/mono/SkiaSharp/pull/3092",
       "title": "Fix the import for apps with a base path",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -192,6 +196,7 @@
     "3088": {
       "url": "https://github.com/mono/SkiaSharp/pull/3088",
       "title": "Move the WASM fix to SkiaSharp",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -199,6 +204,7 @@
     "3051": {
       "url": "https://github.com/mono/SkiaSharp/pull/3051",
       "title": "Use the Microsoft Hosted Pool",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -206,6 +212,7 @@
     "3070": {
       "url": "https://github.com/mono/SkiaSharp/pull/3070",
       "title": "Add Metal API for GRBackendRenderTarget to all platforms",
+      "body": "Co-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "spouliot",
       "community": true,
       "tag": "product",
@@ -216,6 +223,7 @@
     "3082": {
       "url": "https://github.com/mono/SkiaSharp/pull/3082",
       "title": "Move the Blazor workaround into WASM",
+      "body": "The workaround needed for WASM is not really Blazor specific\nand if the project is not using the Blazor views, the fix will not\nbe applied to the build.",
       "author": "mattleibow",
       "community": false,
       "tag": "product",
@@ -227,6 +235,7 @@
     "3085": {
       "url": "https://github.com/mono/SkiaSharp/pull/3085",
       "title": "Use `<WindowsSdkPackageVersion>` to set the SDK version",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -234,6 +243,7 @@
     "3083": {
       "url": "https://github.com/mono/SkiaSharp/pull/3083",
       "title": "Skip the skia PR checkout",
+      "body": "This was a feature added to help with merging, but it does not really help and it fails with forks after the increased restrictions",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -241,6 +251,7 @@
     "3080": {
       "url": "https://github.com/mono/SkiaSharp/pull/3080",
       "title": "Add a workflow to auto label issues",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -248,6 +259,7 @@
     "3064": {
       "url": "https://github.com/mono/SkiaSharp/pull/3064",
       "title": "Fix .NET 9 ASP.NET Blazor issues",
+      "body": "* Fix .NET 9 ASP.NET Blazor issues\n* Fix the build!\n* Fix https://github.com/mono/SkiaSharp/issues/3065\nThe wrong API was used\n* fix the yaml",
       "author": "mattleibow",
       "community": false,
       "tag": "product",
@@ -259,6 +271,7 @@
     "3063": {
       "url": "https://github.com/mono/SkiaSharp/pull/3063",
       "title": "Update bug-report.yml",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -266,6 +279,7 @@
     "3061": {
       "url": "https://github.com/mono/SkiaSharp/pull/3061",
       "title": "Update freetype2 to 2.13.3+",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -273,6 +287,7 @@
     "3056": {
       "url": "https://github.com/mono/SkiaSharp/pull/3056",
       "title": "Update libexpat to v2.6.4",
+      "body": "* Update libexpat to v2.6.4\n\n* Externals",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -280,6 +295,7 @@
     "3060": {
       "url": "https://github.com/mono/SkiaSharp/pull/3060",
       "title": "Update libjpeg_turbo to the latest commit: 2.1.5.1+commits",
+      "body": "* Update libjpeg_turbo to the latest commit\n\n* Externals",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -287,6 +303,7 @@
     "3052": {
       "url": "https://github.com/mono/SkiaSharp/pull/3052",
       "title": "Update harfbuzz to 8.3.1",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -294,6 +311,7 @@
     "3050": {
       "url": "https://github.com/mono/SkiaSharp/pull/3050",
       "title": "Bump the version of the packages to 3.118",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -301,6 +319,7 @@
     "3048": {
       "url": "https://github.com/mono/SkiaSharp/pull/3048",
       "title": "Update skia to Milestone 118",
+      "body": "* Updated the C# API with the new C APIs\n\n* Update README.md with new milestone numbers\n\n* Fixed test\n\n* Update externals",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -308,6 +327,7 @@
     "3047": {
       "url": "https://github.com/mono/SkiaSharp/pull/3047",
       "title": "Update skia to milestone 117",
+      "body": "* Update the interop API after the update\n\n* Update the C# API after the update\n\n* More API changes\n\n* Tests\n\n* Update externals\n\n* Update readme",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
