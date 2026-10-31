@@ -105,26 +105,21 @@ Task("sync-ANGLE")
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
-    // download rc.exe
-    var rc_exe = "build/toolchain/win/rc/win/rc.exe";
-    var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
+    // Use the Windows SDK rc.exe instead of downloading Chromium's prebuilt rc.exe.
     {
-        string actualSha = "";
-        if (FileExists(rcPath)) {
-            using var stream = System.IO.File.OpenRead(rcPath.FullPath);
-            using var algorithm = System.Security.Cryptography.SHA1.Create();
-            actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
-        }
-        var sha = FileReadText(ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1")).Trim();
-        if (actualSha != sha) {
-            var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-            DownloadFile(url, rcPath);
-            using var stream = System.IO.File.OpenRead(rcPath.FullPath);
-            using var algorithm = System.Security.Cryptography.SHA1.Create();
-            actualSha = string.Concat(algorithm.ComputeHash(stream).Select(value => value.ToString("x2")));
-        }
-        if (actualSha != sha)
-            throw new Exception($"Chromium resource compiler hash mismatch: expected {sha}, found {actualSha}.");
+        var rcPy = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/rc/rc.py");
+        var contents = FileReadText(rcPy);
+        const string msrcOutput = "msrc_out = flags.output";
+        const string skipChromiumRc = "rc_exe_exit_code = 0";
+        var newContents = contents
+            .Replace("msrc_out = flags.output + '_ms_rc'", msrcOutput)
+            .Replace("rc_exe_exit_code = RunRc(preprocessed_output, is_utf8, flags)", skipChromiumRc);
+        if (newContents.Contains("flags.output + '_ms_rc'") ||
+            !newContents.Contains(msrcOutput) ||
+            !newContents.Contains(skipChromiumRc))
+            throw new Exception($"Cannot configure Windows SDK rc.exe at {rcPy}.");
+        if (contents != newContents)
+            FileWriteText(rcPy, newContents);
     }
 
     var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
