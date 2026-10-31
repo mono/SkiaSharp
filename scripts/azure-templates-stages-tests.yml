@@ -181,6 +181,26 @@ stages:
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
+            name: tests_windows_windows
+            displayName: Windows (MAUI)
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            target: tests-windows
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installXcode: false
+            dotnetSdks:
+              - sdkVersion: $(DOTNET_VERSION)
+                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
+                workloads: [maui-windows]
+            resultLabel: Windows MAUI
+            logArtifact: testlogs_windows
+            preBuildSteps:
+              - pwsh: .\scripts\infra\tests\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
+              - pwsh: .\scripts\infra\tests\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
+
+        - template: /scripts/azure-templates-jobs-tests-device.yml@self
+          parameters:
             name: tests_wasm_linux
             displayName: WASM
             buildAgent: ${{ parameters.buildAgentLinux }}
