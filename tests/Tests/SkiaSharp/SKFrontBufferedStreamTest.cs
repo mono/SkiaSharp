@@ -16,6 +16,36 @@ namespace SkiaSharp.Tests
 		private readonly byte[] TwentyBytes = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
 
 		[Fact]
+		public void DeprecationIsWarningOnlyAndNamesSkiaReplacements()
+		{
+			var obsolete = (ObsoleteAttribute)Attribute.GetCustomAttribute(typeof(SKFrontBufferedStream), typeof(ObsoleteAttribute));
+
+			Assert.NotNull(obsolete);
+			Assert.False(obsolete.IsError);
+			Assert.Contains(nameof(SKFrontBufferedManagedStream), obsolete.Message);
+			Assert.Contains(nameof(SKCodec.Create), obsolete.Message);
+			Assert.True(typeof(Stream).IsAssignableFrom(typeof(SKFrontBufferedStream)));
+			Assert.False(typeof(Stream).IsAssignableFrom(typeof(SKFrontBufferedManagedStream)));
+		}
+
+		[Fact]
+		public void UnknownLengthAndBufferedRewindRemainCompatible()
+		{
+			using var source = new MemoryStream(TwentyBytes);
+			using var buffered = CreateNonSeekableReadOnlyStream(source, 10);
+			var bytes = new byte[3];
+
+			Assert.True(buffered.CanSeek);
+			Assert.Equal(-1, buffered.Length);
+			Assert.Equal(3, buffered.Read(bytes, 0, bytes.Length));
+			Assert.Equal(new byte[] { 1, 2, 3 }, bytes);
+			Assert.Equal(0, buffered.Seek(0, SeekOrigin.Begin));
+			Assert.Equal(3, buffered.Read(bytes, 0, bytes.Length));
+			Assert.Equal(new byte[] { 1, 2, 3 }, bytes);
+			Assert.Equal(-1, buffered.Length);
+		}
+
+		[Fact]
 		public void ImageCanBeDecoded()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
