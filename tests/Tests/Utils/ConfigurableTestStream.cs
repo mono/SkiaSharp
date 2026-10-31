@@ -13,6 +13,7 @@ namespace SkiaSharp.Tests
 		private readonly int maxZeroReadsAfterEof;
 		private long position;
 		private int consecutiveZeroReads;
+		private bool disposed;
 
 		public ConfigurableTestStream(
 			byte[] data,
@@ -36,8 +37,8 @@ namespace SkiaSharp.Tests
 		public bool InfiniteLoopDetected { get; private set; }
 		public bool NegativePositionAttempted { get; private set; }
 
-		public override bool CanRead => true;
-		public override bool CanSeek => canSeek;
+		public override bool CanRead => !disposed;
+		public override bool CanSeek => !disposed && canSeek;
 		public override bool CanWrite => false;
 
 		public override long Length =>
@@ -122,5 +123,11 @@ namespace SkiaSharp.Tests
 
 		public override void Write(byte[] buffer, int offset, int count) =>
 			throw new NotSupportedException();
+
+		protected override void Dispose(bool disposing)
+		{
+			disposed = true;
+			base.Dispose(disposing);
+		}
 	}
 }

@@ -203,6 +203,70 @@ namespace SkiaSharp.Tests
 		}
 
 		[Theory]
+		[InlineData(-1L)]
+		[InlineData(long.MinValue)]
+		public void ManagedStreamReportsNegativeLengthAsUnavailable(long length)
+		{
+			using var source = new ConfigurableTestStream(new byte[] { 10, 20, 30 }, reportedLength: length);
+			using var stream = new SKManagedStream(source);
+
+			Assert.Equal(IntPtr.Zero, stream.OnGetLength());
+			Assert.False(stream.OnHasLength());
+			Assert.False(stream.HasLength);
+			Assert.Equal(0L, stream.Length64);
+			Assert.True(stream.HasPosition);
+			Assert.Equal(0L, stream.Position64);
+			Assert.False(stream.IsAtEnd);
+		}
+
+		[Fact]
+		public void ManagedUnknownLengthEofFollowsReadsAndSuccessfulSeeks()
+		{
+			using var source = new ConfigurableTestStream(new byte[] { 10, 20, 30 }, reportedLength: -1);
+			using var stream = new SKManagedStream(source);
+
+			Assert.False(stream.IsAtEnd);
+			Assert.Equal(3, stream.Read(new byte[8], 8));
+			Assert.False(stream.IsAtEnd);
+			Assert.Equal(0, stream.Read(new byte[1], 1));
+			Assert.True(stream.IsAtEnd);
+
+			Assert.True(stream.Rewind());
+			Assert.False(stream.IsAtEnd);
+			Assert.Equal(10, stream.ReadByte());
+			Assert.True(stream.Seek(3L));
+			Assert.Equal(0, stream.Read(new byte[1], 1));
+			Assert.True(stream.IsAtEnd);
+
+			Assert.True(stream.Seek(1L));
+			Assert.False(stream.IsAtEnd);
+			Assert.Equal(20, stream.ReadByte());
+			Assert.True(stream.Seek(3L));
+			Assert.Equal(0, stream.Read(new byte[1], 1));
+			Assert.True(stream.IsAtEnd);
+
+			Assert.True(stream.Move(-1));
+			Assert.False(stream.IsAtEnd);
+			Assert.Equal(30, stream.ReadByte());
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void ReadFixturesReportUnreadableAfterDisposal(bool throwing)
+		{
+			using Stream source = throwing
+				? new ThrowingReadStream()
+				: new ConfigurableTestStream(new byte[] { 1, 2, 3 });
+
+			Assert.True(source.CanRead);
+			Assert.True(source.CanSeek);
+			source.Dispose();
+			Assert.False(source.CanRead);
+			Assert.False(source.CanSeek);
+		}
+
+		[Theory]
 		[InlineData((long)int.MaxValue + 1)]
 		[InlineData((long)uint.MaxValue)]
 		public void ManagedStream64MembersPreserveUnsignedNativePositions(long position)
