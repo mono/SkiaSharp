@@ -17,7 +17,7 @@
   "tallies": {
     "product": 18,
     "mixed": 3,
-    "internal": 47
+    "internal": 49
   },
   "breaking_candidates": [],
   "contributors": [
@@ -70,6 +70,22 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5517": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5517",
+      "title": "[Skia] Sync m156 upstream correctness fixes",
+      "body": "[Skia] Sync m156 upstream correctness fixes (#5517)\n\nContext: https://github.com/mono/skia/pull/415\nContext: https://github.com/mono/SkiaSharp/pull/5544\nChanges: https://github.com/mono/skia/compare/748bc0c0116c3952f0a0089f5cc53edc55ae08de...9b49fbb09b83b4b036290d28834856e18994cdf6\n\nAdvance externals/skia and its Component Governance registration to native\nmerge 9b49fbb09b83b4b036290d28834856e18994cdf6, incorporating chrome/m156 at\n78a55b4b9e628bdf74105aa2364509bc8cff6ef1. Keep this a same-milestone sync:\npackage and native ABI versions remain unchanged.\n\n~~ Budget region storage for subdivided conics ~~\n\nConic-to-quad approximation can produce more scanline crossings than the\ntwo crossings of an ideal conic. Budget edges using the subdivision limit\nand check accumulation for overflow, preventing an undersized region run\nbuffer. Include the upstream conic-region regression test.\n\n~~ Contain partially constructed runtime-shader pipelines ~~\n\nAn early appendStages failure could leave branch contexts holding absolute\nindices before their relative-offset fixup. Neutralize pending branches\nto fall through on failure, and propagate child failure through\nSkTransformShader instead of executing a partial pipeline. Include\nregressions for branch neutralization and transformed child failure.\n\n~~ Preserve Graphite hairline and subpixel stroke bounds ~~\n\nAccount for cap and join inflation when calculating local bounds for\nhairlines and subpixel strokes. Use the local antialiasing radius as the\nminimum effective stroke width so clip queries retain the styled geometry.\n\n~~ Compare complete Graphite paint keys ~~\n\nPaintParamsKey equality passed its element count to memcmp, comparing\nonly a prefix of the key. Compare size_bytes() after checking equal\nlengths so keys differing beyond that prefix remain distinct.\n\n~~ Record the actual native merge without changing reviewed sources ~~\n\nRepin both the gitlink and mono/skia manifest hash to the completed native\nmerge rather than the temporary PR head. Verify that the merge has two\nparents, directly contains reviewed head\n1dd936c80438ff28f19aff8fdd425e7427f41e4e, and has the identical source tree.\nRecord the incorporated upstream commit in the manifest.\n\nThe sync workflow reported a passing Linux x64 source build, binding\nregeneration without generated changes, managed build, and unfiltered\nconsole solution. The repin changes commit identity, not native contents;\nit does not alter C API signatures, managed wrappers, or dependency pins.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5541": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5541",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5537": {
       "url": "https://github.com/mono/SkiaSharp/pull/5537",
       "title": "[Build] Use Windows SDK rc.exe instead of downloading Chromium rc.exe in ANGLE build",
