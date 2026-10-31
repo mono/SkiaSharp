@@ -18,6 +18,8 @@ internal abstract class AppiumOperations
 	private AppiumRunningApp App =>
 		app ?? throw new InvalidOperationException("Appium operations have not been attached to an app.");
 
+	protected AppiumRunningApp Owner => App;
+
 	protected AppiumDriver Driver => App.Driver;
 
 	internal GoldenCase Reference(string caseName) => App.Reference(caseName);
@@ -56,7 +58,7 @@ internal abstract class AppiumOperations
 
 	internal void Click(string id) => Click(Locator(id));
 
-	internal void Click(By selector) =>
+	internal virtual void Click(By selector) =>
 		ClickElement(() => Driver.FindElement(selector), selector.ToString(),
 			TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
@@ -75,6 +77,8 @@ internal abstract class AppiumOperations
 		}, description, limit, cancellationToken);
 
 	internal abstract void SubmitSearch();
+
+	internal virtual void SetSliderToMinimum(IWebElement slider) => Drag(slider, 0.2, 0.5, 0.0, 0.5);
 
 	// Waiting
 
@@ -127,11 +131,11 @@ internal abstract class AppiumOperations
 		var location = element.Location;
 		var size = element.Size;
 
-		Drag(new Point(location.X + (int)(size.Width * fromX), location.Y + (int)(size.Height * fromY)),
+		DragPoints(new Point(location.X + (int)(size.Width * fromX), location.Y + (int)(size.Height * fromY)),
 			new Point(location.X + (int)(size.Width * toX), location.Y + (int)(size.Height * toY)));
 	}
 
-	private void Drag(Point start, Point end)
+	protected virtual void DragPoints(Point start, Point end)
 	{
 		var pointer = new PointerInputDevice(PointerKind.Touch, "sample-pointer");
 		var button = MouseButton.Touch;
@@ -180,7 +184,7 @@ internal abstract class AppiumOperations
 	private void Scroll(Rectangle container, int amount)
 	{
 		var (start, end) = ScrollGesture(container, amount);
-		Drag(start, end);
+		DragPoints(start, end);
 	}
 
 	internal static (Point Start, Point End) ScrollGesture(Rectangle container, int amount)
@@ -357,7 +361,7 @@ internal abstract class AppiumOperations
 
 	// Captures
 
-	internal string Capture(string id, string name)
+	internal virtual string Capture(string id, string name)
 	{
 		var png = ((ITakesScreenshot)Find(id)).GetScreenshot().AsByteArray;
 		return SaveCapture(png, name);
