@@ -17,6 +17,18 @@ complexity rubric and [../measuring.md](../measuring.md) to verify.
 - SkiaSharp: `SKColor.Parse`, `SKFourByteTag.Parse`, `HarfBuzzSharp.Tag/Feature/Script` (see
   [../hot-paths/color.md](../hot-paths/color.md)).
 
+## Encoding into a caller-provided byte buffer
+- **Do:** when the final byte count is known and a destination already exists, use
+  `Encoding.GetByteCount(ReadOnlySpan<char>)` and
+  `Encoding.GetBytes(ReadOnlySpan<char>, Span<byte>)`.
+- **Instead of:** allocating an encoded array from `Encoding.GetBytes(string)` or concatenating a
+  terminator onto the source string before encoding.
+- **Why:** caller-owned output avoids the intermediate encoded-array allocation.
+- **Complexity:** low · **TFM:** all TFMs through the `Util.cs` extension-method polyfills ·
+  **ABI:** internal body.
+- **Watch out:** allocate room for terminators but encode only source characters, then explicitly
+  initialize the terminator. See [../repo-helpers.md](../repo-helpers.md) for the `SKData` pattern.
+
 ## Allocation-free manual parse
 - **Do:** parse hex/number spans char-by-char with a small `[MethodImpl(AggressiveInlining)]` nibble
   helper straight into the target `uint`/`int`.

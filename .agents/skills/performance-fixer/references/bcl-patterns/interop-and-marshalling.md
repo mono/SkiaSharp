@@ -16,16 +16,16 @@ parity for anything that reaches native ([../measuring.md](../measuring.md)).
   `bool` is 1 byte; default .NET `bool` marshals as 4.
 
 ## Avoid temp strings/byte[] in text-encoding interop
-- **Do:** on modern TFMs, `encoding.GetByteCount(ReadOnlySpan<char>)` then encode into a
-  `stackalloc`/pooled `Span<byte>`.
-- **Instead of:** appending a NUL by string concatenation and allocating an encoded `byte[]` per
-  call (`Util.GetEncodedText`).
-- **Why:** removes both the temp string and the array on per-text-call paths.
-- **Complexity:** low–medium · **TFM:** better on net-modern; keep the `byte[]` path as old-TFM
-  fallback · **ABI:** internal (don't change the return type unless all callers are updated).
-- **Watch out:** `GetEncodedText` is **not** UTF-8-only — it switches on `SKTextEncoding`
-  (`Utf8`→UTF8, `Utf16`→Unicode, `Utf32`→UTF32) with an `addNull` variant. Prove parity for **every
-  encoding AND both `addNull` cases** — the NUL terminator is 1/2/4 bytes.
+- **Do:** compute the encoded size first, then write into the final destination when it exposes a
+  writable buffer. Otherwise use bounded `stackalloc` or `Utils.RentArray<byte>` for transient
+  interop buffers. Reuse the `Util.cs` span polyfills rather than adding call-site `#if` blocks.
+- **Instead of:** concatenating a terminator onto the source string or allocating an intermediate
+  encoded array that is immediately copied again.
+- **Why:** removes temporary strings, managed arrays, and redundant copies/P/Invokes.
+- **Complexity:** low–medium · **TFM:** all TFMs via `Util.cs` polyfills · **ABI:** internal.
+- **Watch out:** the destination may be uninitialized, so write every sentinel/terminator byte.
+  `GetEncodedText` supports UTF-8/16/32; prove parity for every encoding and `addNull` value.
+  See [../repo-helpers.md](../repo-helpers.md) for the concrete `SKData` pattern.
 
 ## Cache delegates / prefer static callbacks
 - **Do:** cache a `static` delegate for a native callback, or use `delegate* unmanaged` /
