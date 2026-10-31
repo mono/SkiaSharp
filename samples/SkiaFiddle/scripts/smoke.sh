@@ -7,7 +7,7 @@
 #   bash samples/SkiaFiddle/scripts/smoke.sh <publish-wwwroot-dir> [--port N] [--screenshot PATH]
 #
 # Checks, in order:
-#   1. Inputs present (index.html, _framework/, package_*/uno-config.js)
+#   1. Inputs present (index.html, _framework/, uno-config.js)
 #   2. Static server (python3 http.server) serves 200 on /
 #   3. Headless Chromium (bundled via Playwright in this script's node_modules)
 #      boots the page without unignored console errors
@@ -46,14 +46,10 @@ fi
 for path in \
     "$WWWROOT/index.html" \
     "$WWWROOT/_framework" \
+    "$WWWROOT/uno-config.js" \
 ; do
     [[ -e "$path" ]] || { echo "smoke.sh: expected path missing: $path" >&2; exit 1; }
 done
-if ! compgen -G "$WWWROOT/package_*/uno-config.js" >/dev/null; then
-    echo "smoke.sh: expected path missing: $WWWROOT/package_*/uno-config.js" >&2
-    exit 1
-fi
-
 # Dependencies
 command -v python3 >/dev/null 2>&1 || { echo "smoke.sh: python3 not found" >&2; exit 1; }
 command -v node    >/dev/null 2>&1 || { echo "smoke.sh: node not found" >&2; exit 1; }

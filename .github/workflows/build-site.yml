@@ -227,6 +227,15 @@ jobs:
           path: output/skia-fiddle-publish/smoke.png
           if-no-files-found: ignore
 
+      - name: Retain SkiaFiddle publish output for maintenance diagnosis
+        if: always() && inputs.dry_run
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue-5545-fiddle-publish
+          path: output/skia-fiddle-publish/wwwroot
+          retention-days: 7
+          if-no-files-found: error
+
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
         env:
@@ -296,7 +305,7 @@ jobs:
 
           # Rewrite absolute asset paths in the Uno gallery for the deployment prefix.
           # Uno.Wasm.Bootstrap uses absolute "/package_<hash>/..." references in
-          # index.html and duplicates the root in package_<hash>/uno-config.js
+          # index.html and duplicates the root in wwwroot/uno-config.js
           # (config.uno_app_base, offline_files). Unlike Blazor there is no
           # single <base href> to rewrite — we prefix each absolute asset path.
           uno_rewrite_file() {
@@ -312,6 +321,7 @@ jobs:
             sed -i \
               -e "s|\"/package_|\"${prefix}/package_|g" \
               -e "s|\"/_framework/|\"${prefix}/_framework/|g" \
+              -e "s|\"/uno-config\.js\"|\"${prefix}/uno-config.js\"|g" \
               -e "s|\"/manifest\.webmanifest\"|\"${prefix}/manifest.webmanifest\"|g" \
               -e "s|\"/service-worker\.js\"|\"${prefix}/service-worker.js\"|g" \
               -e "s|\"/favicon\.ico\"|\"${prefix}/favicon.ico\"|g" \
@@ -328,26 +338,25 @@ jobs:
             local dir="$1"
             local prefix="$2"
             uno_rewrite_file "$dir/index.html" "$prefix"
-            for cfg in "$dir"/package_*/uno-config.js; do
-              uno_rewrite_file "$cfg" "$prefix"
-              # UNO_BOOTSTRAP_WEBAPP_BASE_PATH governs the service-worker scope.
-              # The rewrite above doesn't touch it because the value is the bare
-              # "/" string, not a path under our prefix.
-              sed -i \
-                -e "s|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"\\] = \"/\"|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"] = \"${prefix}/\"|g" \
-                "$cfg"
-            done
-            # service-worker.js contains an absolute `import from
-            # "/package_XXX/uno-config.js"` that also needs the deployment prefix.
+            uno_rewrite_file "$dir/uno-config.js" "$prefix"
+            # The web-app root controls service-worker scope and offline navigation.
+            sed -i \
+              -e "s|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"\\] = \"/\"|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"] = \"${prefix}/\"|g" \
+              -e "s|offline_files = \\['/',|offline_files = ['${prefix}/',|g" \
+              "$dir/uno-config.js"
+            # The worker imports the root config and has its own application root.
             if [ -f "$dir/service-worker.js" ]; then
               uno_rewrite_file "$dir/service-worker.js" "$prefix"
+              sed -i "s|const WEBAPP_PATH = '/';|const WEBAPP_PATH = '${prefix}/';|" \
+                "$dir/service-worker.js"
             fi
             # Pre-compressed .br / .gz copies of the rewritten files are stale —
             # delete so the server falls back to the freshly rewritten plain ones.
-            find "$dir" -maxdepth 1 -name 'index.html.br' -delete
-            find "$dir" -maxdepth 1 -name 'index.html.gz' -delete
-            find "$dir" -path '*/package_*/uno-config.js.br' -delete
-            find "$dir" -path '*/package_*/uno-config.js.gz' -delete
+            find "$dir" -maxdepth 1 \( \
+              -name 'index.html.br' -o -name 'index.html.gz' -o \
+              -name 'uno-config.js.br' -o -name 'uno-config.js.gz' -o \
+              -name 'service-worker.js.br' -o -name 'service-worker.js.gz' \
+            \) -delete
           }
           uno_rewrite_dir site/gallery-uno "${UNO_GALLERY_BASE_HREF%/}"
 
