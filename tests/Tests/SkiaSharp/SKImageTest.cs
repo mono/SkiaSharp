@@ -6,6 +6,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class SKImageTest : SKTest
 	{
 		[Fact]

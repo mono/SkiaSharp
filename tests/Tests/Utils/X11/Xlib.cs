@@ -6,12 +6,19 @@ namespace SkiaSharp.Tests
 {
 	internal class Xlib
 	{
-		private const string libX11 = "libX11";
+		private const string libX11 = "libX11.so.6";
 
 		public const int None = 0;
 		public const int True = 1;
 		public const int False = 0;
 
+		static Xlib()
+		{
+			XInitThreads();
+		}
+
+		[DllImport(libX11)]
+		public extern static int XInitThreads();
 		[DllImport(libX11)]
 		public extern static IntPtr XOpenDisplay(string display_name);
 		[DllImport(libX11)]
