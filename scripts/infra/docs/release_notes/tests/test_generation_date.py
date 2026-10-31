@@ -18,7 +18,7 @@ class GenerationDateTests(unittest.TestCase):
 
     def stamp(self, text, previous_text="", day=31):
         with patch.object(self.renderer, "datetime") as clock:
-            clock.now.return_value = datetime(2026, 10, day, tzinfo=timezone.utc)
+            clock.now.return_value = datetime(2026, 10, day, 3, 38, tzinfo=timezone.utc)
             result = self.renderer.with_generation_date(text, previous_text)
             clock.now.assert_called_once_with(timezone.utc)
             return result
@@ -31,7 +31,7 @@ class GenerationDateTests(unittest.TestCase):
                 self.assertEqual(
                     result,
                     text + '\n---\n\n<small class="text-body-secondary">'
-                    'Release notes generated on 2026-10-31 (UTC).</small>\n',
+                    'Release notes generated on 2026-10-31 at 03:38 UTC.</small>\n',
                 )
 
     def test_unchanged_page_keeps_date_without_reading_clock(self):
@@ -48,6 +48,17 @@ class GenerationDateTests(unittest.TestCase):
         result = self.stamp("# Updated notes\n", previous)
         self.assertTrue(result.startswith("# Updated notes\n"))
         self.assertNotIn("2026-10-30", result)
+        self.assertEqual(result.count("Release notes generated on"), 1)
+
+    def test_date_only_footer_is_replaced_with_timestamp(self):
+        text = "# Notes\n"
+        previous = (
+            text + '\n---\n\n<small class="text-body-secondary">'
+            'Release notes generated on 2026-10-31 (UTC).</small>\n'
+        )
+        result = self.stamp(text, previous)
+        self.assertIn("2026-10-31 at 03:38 UTC", result)
+        self.assertNotIn("(UTC)", result)
         self.assertEqual(result.count("Release notes generated on"), 1)
 
     def test_writing_page_preserves_date_on_unchanged_rerun(self):

@@ -297,15 +297,15 @@ def with_generation_date(text, previous_text=""):
     """Keep the previous generation date until the rendered content changes."""
     footer = re.search(
         r'\n---\n\n<small class="text-body-secondary">Release notes generated on '
-        r'\d{4}-\d{2}-\d{2} \(UTC\)\.</small>\n\Z',
+        r'\d{4}-\d{2}-\d{2} at \d{2}:\d{2} UTC\.</small>\n\Z',
         previous_text,
     )
     if footer and previous_text[:footer.start()] == text:
         return previous_text
-    date = datetime.now(timezone.utc).date().isoformat()
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d at %H:%M")
     return text + (
         '\n---\n\n<small class="text-body-secondary">Release notes generated on '
-        '{} (UTC).</small>\n'.format(date)
+        '{} UTC.</small>\n'.format(timestamp)
     )
 
 

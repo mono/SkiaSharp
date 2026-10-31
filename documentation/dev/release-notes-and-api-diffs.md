@@ -667,9 +667,9 @@ There are no HarfBuzzSharp human page paths. `releases/harfbuzzsharp/` is reserv
 Cake-generated API-diff folders (§3.4).
 
 Each released or unreleased page ends with a small, muted "Release notes generated
-on YYYY-MM-DD (UTC)" footer, separate from the release date in the banner. The
+on YYYY-MM-DD at HH:MM UTC" footer, separate from the release date in the banner. The
 renderer stamps new pages and pages whose rendered content changes; an unchanged
-rerun preserves the existing date. The date is stored only in the rendered page,
+rerun preserves the existing timestamp. The timestamp is stored only in the rendered page,
 not in the timestamp-free JSON inputs, and does not apply to the index or API diffs.
 
 ### 3.3 API-diff folders (API-diff engine owns)
