@@ -204,14 +204,32 @@ stages:
                   $ErrorActionPreference = 'Stop'
                   $dumpFolder = Join-Path "$(Build.SourcesDirectory)" 'output\windows-device-crashes'
                   New-Item -ItemType Directory -Path $dumpFolder -Force | Out-Null
-                  $key = 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\SkiaSharp.Tests.Devices.exe'
-                  New-Item -Path $key -Force | Out-Null
-                  New-ItemProperty -Path $key -Name DumpFolder -PropertyType ExpandString -Value $dumpFolder -Force | Out-Null
-                  New-ItemProperty -Path $key -Name DumpType -PropertyType DWord -Value 1 -Force | Out-Null
+                  $tools = Join-Path "$(Build.SourcesDirectory)" 'output\procdump'
+                  New-Item -ItemType Directory -Path $tools -Force | Out-Null
+                  $archive = Join-Path $tools 'Procdump.zip'
+                  Invoke-WebRequest 'https://download.sysinternals.com/files/Procdump.zip' -OutFile $archive
+                  Expand-Archive -LiteralPath $archive -DestinationPath $tools -Force
+                  $exe = Join-Path $tools 'procdump64.exe'
+                  $signature = Get-AuthenticodeSignature -FilePath $exe
+                  if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+                    throw 'ProcDump must have a valid Microsoft signature.'
+                  }
+                  $monitor = Start-Process -FilePath $exe -ArgumentList "-accepteula -ma -e -w SkiaSharp.Tests.Devices.exe `"$dumpFolder`"" -PassThru `
+                    -RedirectStandardOutput (Join-Path $dumpFolder 'procdump.stdout.txt') `
+                    -RedirectStandardError (Join-Path $dumpFolder 'procdump.stderr.txt')
+                  Start-Sleep -Seconds 2
+                  if ($monitor.HasExited) {
+                    throw "ProcDump exited before the test app launched (exit code $($monitor.ExitCode))."
+                  }
+                  Write-Host "##vso[task.setvariable variable=WindowsDeviceProcDumpId]$($monitor.Id)"
                 displayName: Capture Windows device app crash dumps
             postBuildSteps:
               - pwsh: |
                   $ErrorActionPreference = 'Stop'
+                  $monitor = Get-Process -Id $(WindowsDeviceProcDumpId) -ErrorAction Ignore
+                  if ($monitor) {
+                    Stop-Process -Id $monitor.Id
+                  }
                   $logs = Join-Path "$(Build.SourcesDirectory)" 'output\logs\testlogs'
                   New-Item -ItemType Directory -Path $logs -Force | Out-Null
                   Copy-Item -LiteralPath (Join-Path "$(Build.SourcesDirectory)" 'output\windows-device-crashes') -Destination $logs -Recurse -Force
@@ -222,7 +240,7 @@ stages:
                     throw "Windows Application event collection failed with exit code $LASTEXITCODE."
                   }
                 displayName: Collect Windows device app failure events
-                condition: failed()
+                condition: and(always(), ne(variables['WindowsDeviceProcDumpId'], ''))
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
