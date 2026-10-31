@@ -200,6 +200,29 @@ stages:
                   New-Item -Path $key -Force | Out-Null
                   New-ItemProperty -Path $key -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
                 displayName: Enable Windows Developer Mode for MSIX registration
+              - pwsh: |
+                  $ErrorActionPreference = 'Stop'
+                  $dumpFolder = Join-Path "$(Build.SourcesDirectory)" 'output\windows-device-crashes'
+                  New-Item -ItemType Directory -Path $dumpFolder -Force | Out-Null
+                  $key = 'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps\SkiaSharp.Tests.Devices.exe'
+                  New-Item -Path $key -Force | Out-Null
+                  New-ItemProperty -Path $key -Name DumpFolder -PropertyType ExpandString -Value $dumpFolder -Force | Out-Null
+                  New-ItemProperty -Path $key -Name DumpType -PropertyType DWord -Value 1 -Force | Out-Null
+                displayName: Capture Windows device app crash dumps
+            postBuildSteps:
+              - pwsh: |
+                  $ErrorActionPreference = 'Stop'
+                  $logs = Join-Path "$(Build.SourcesDirectory)" 'output\logs\testlogs'
+                  New-Item -ItemType Directory -Path $logs -Force | Out-Null
+                  Copy-Item -LiteralPath (Join-Path "$(Build.SourcesDirectory)" 'output\windows-device-crashes') -Destination $logs -Recurse -Force
+                  $folder = Join-Path $logs 'windows-device-crashes'
+                  & wevtutil qe Application /q:"*[System[(Level=1 or Level=2 or Level=3) and TimeCreated[timediff(@SystemTime) <= 10800000]]]" /f:text /c:100 /rd:true |
+                    Tee-Object -FilePath (Join-Path $folder 'application-events.txt')
+                  if ($LASTEXITCODE -ne 0) {
+                    throw "Windows Application event collection failed with exit code $LASTEXITCODE."
+                  }
+                displayName: Collect Windows device app failure events
+                condition: failed()
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
