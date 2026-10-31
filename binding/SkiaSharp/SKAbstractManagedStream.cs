@@ -6,12 +6,20 @@ using System.Threading;
 namespace SkiaSharp
 {
 	/// <summary>Represents a <see cref="T:SkiaSharp.SKStreamAsset" /> (a seekable, rewindable Skia stream).</summary>
-	/// <remarks />
+	/// <remarks>
+	/// <para>Instances are not thread-safe. Callers must serialize access to each instance.</para>
+	/// <para>Exceptions from managed read, peek, or positioning overrides invoked through native callbacks
+	/// are contained and reported as native failures. After such an exception, native end-of-stream queries
+	/// return <see langword="true" /> until a native rewind, seek, or move succeeds. Metadata and duplicate/fork
+	/// callback failures report their own failure results without setting this state.</para>
+	/// </remarks>
 	public unsafe abstract class SKAbstractManagedStream : SKStreamAsset
 	{
 		private static readonly SKManagedStreamDelegates delegates;
 
 		internal int fromNative;
+		// Native callback failure latch, separate from ordinary EOF; callers serialize access with stream operations.
+		internal bool hasError;
 
 		static SKAbstractManagedStream ()
 		{
@@ -63,6 +71,9 @@ namespace SkiaSharp
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0)
 				SkiaApi.sk_managedstream_destroy (Handle);
 		}
+
+		internal void CloseFromNative () =>
+			Handle = IntPtr.Zero;
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
 		/// <param name="buffer">The buffer to read into.</param>
@@ -131,7 +142,14 @@ namespace SkiaSharp
 		protected internal virtual IntPtr OnFork ()
 		{
 			var stream = OnCreateNew ();
-			SkiaApi.sk_stream_seek (stream, SkiaApi.sk_stream_get_position (Handle));
+			if (stream != IntPtr.Zero) {
+				try {
+					SkiaApi.sk_stream_seek (stream, OnGetPosition ());
+				} catch {
+					SkiaApi.sk_stream_destroy (stream);
+					throw;
+				}
+			}
 			return stream;
 		}
 

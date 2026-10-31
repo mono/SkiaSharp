@@ -58,6 +58,9 @@ namespace SkiaSharp
 				SkiaApi.sk_managedwstream_destroy (Handle);
 		}
 
+		internal void CloseFromNative () =>
+			Handle = IntPtr.Zero;
+
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedWStream" /> types to copy the specified number of bytes from the specified buffer into the underlying stream.</summary>
 		/// <param name="buffer">The buffer to copy into the underlying stream.</param>
 		/// <param name="size">The number of bytes to copy from the buffer.</param>

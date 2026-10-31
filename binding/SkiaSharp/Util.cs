@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.ComponentModel;
 using System.Text;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -126,6 +127,12 @@ namespace SkiaSharp
 			public static implicit operator ReadOnlySpan<T> (RentedArray<T> scope) =>
 				scope.Span;
 		}
+
+		internal static ulong FromNativeSize (IntPtr value) =>
+			PlatformConfiguration.Is64Bit ? (ulong)value.ToInt64 () : (uint)value.ToInt32 ();
+
+		internal static IntPtr ToNativeSize (ulong value) =>
+			PlatformConfiguration.Is64Bit ? (IntPtr)(long)value : (IntPtr)(int)(uint)value;
 	}
 
 	/// <summary>Various utility methods for when working with strings and text.</summary>
