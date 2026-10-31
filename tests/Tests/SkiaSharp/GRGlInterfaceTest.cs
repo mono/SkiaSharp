@@ -5,6 +5,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class GRGlInterfaceTest : SKTest
 	{
 		[Fact]
@@ -66,12 +67,16 @@ namespace SkiaSharp.Tests
 
 					LibraryLoader.FreeLibrary(lib);
 				} else if (IsLinux) {
+					var lib = LibraryLoader.LoadLibrary("libGL.so.1");
+
 					var glInterface = GRGlInterface.Create(name => {
-						return glXGetProcAddress(name);
+						return LibraryLoader.GetSymbol(lib, name);
 					});
 
 					Assert.NotNull(glInterface);
 					Assert.True(glInterface.Validate());
+
+					LibraryLoader.FreeLibrary(lib);
 				} else {
 					// more platforms !!!
 					throw new Exception("Some strange platform that is not Windows, macOS nor Linux...");
@@ -82,7 +87,5 @@ namespace SkiaSharp.Tests
 		[DllImport("opengl32.dll", CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string lpszProc);
 
-		[DllImport("libGL.so.1")]
-		public static extern IntPtr glXGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string lpszProc);
 	}
 }

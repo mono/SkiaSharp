@@ -33,7 +33,10 @@ namespace SkiaSharp.Tests
 			// set the test fields
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
 			UnicodeFontFamilies =
-				IsLinux ? new[] { "Symbola" } :
+				IsLinux ? (SkiaSharp.Internals.PlatformConfiguration.IsGlibc
+					// Linux hosts may provide any of the common emoji font packages.
+					? new[] { "Symbola", "Noto Emoji", "Noto Color Emoji" }
+					: new[] { "Noto Color Emoji" }) :
 				IsMac ? new[] { "Apple Color Emoji" } :
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };
 		}

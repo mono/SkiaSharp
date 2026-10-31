@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	internal class Glx
 	{
-		private const string libGL = "libGL";
+		private const string libGL = "libGL.so.1";
 
 		public const int GL_TEXTURE_2D = 0x0DE1;
 		public const int GL_UNSIGNED_BYTE = 0x1401;
