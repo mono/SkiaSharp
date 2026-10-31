@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
     "internal": 1
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5543": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5543",
+      "title": "[Skia] Sync m150 region and texture fixes",
+      "body": "[Skia] Sync m150 region and texture fixes (#5543)\n\nContext: https://github.com/mono/skia/pull/417\nContext: https://github.com/mono/SkiaSharp/pull/5546\nContext: https://github.com/mono/SkiaSharp/pull/4605\n\nUpdate release/4.150.x to native merge\n95bed8d58d692e6268f05682f0a4926f41aaf5fb, incorporating chrome/m150 through\nf05f0f5f8f3a2cbbcc3f48d887695398bf2584cf. Keep release-line versions and\nmanaged API declarations unchanged.\n\n~~ Prevent conic-region buffer underallocation ~~\n\nBring in the upstream correction for SkRegion::setPath allocating too few\nscanline transitions for subdivided conics. Budget edges using the shared\nconic subdivision limit and reject accumulation overflow before building\nthe region, preventing a heap out-of-bounds write.\n\n~~ Correct BGRA-as-RGBx upload capabilities ~~\n\nDisable the RGBA upload format for BGRA textures interpreted as RGBx,\nmatching the existing BGRA-as-RGBA restriction. The old capability was\npermitted by desktop GL but unsupported by GLES.\n\n~~ Preserve texture subset boundaries under nearest filtering ~~\n\nRetain shader clamps when magnification or fractional mappings can round\nsample coordinates into neighboring texels. Keep the touching-edge fast\npath for one-to-one integer-relative mappings, including rotations and\nflips, and account for sampling precision at approximate-proxy boundaries.\n\n~~ Make Linux GL validation execute reliably ~~\n\nBackport the Linux test-harness subset of #4605 rather than skipping\nGanesh GL on the validation host. Load versioned X11/GL libraries,\ninitialize Xlib threading, share the process GLX display and place the\naffected GPU test classes in a nonparallel collection.\n\nResolve assembled-interface symbols from libGL.so.1 rather than relying\non glXGetProcAddress: GLVND can return non-null dispatch stubs for names\nthat are not real functions. Serialization is a separate context-lifetime\nprecaution, not the correction for that symbol-resolution failure.\n\nThe workflow reports that Ganesh GL executed with Mesa softpipe during\nthe unfiltered release-branch console solution run.\n\n~~ Accept installed Linux emoji fallback families ~~\n\nAllow Symbola, Noto Emoji and Noto Color Emoji on glibc Linux hosts, and\nNoto Color Emoji on non-glibc hosts, instead of requiring Symbola for\nevery Linux environment. This changes test expectations, not product font\nselection.\n\n~~ Record the completed native merge consistently ~~\n\nUpdate both externals/skia and the mono/skia Component Governance hash to\nthe actual native merge, and record the incorporated upstream commit.\nVerify the two-parent merge directly contains reviewed head\n49a7ef98174b2aa4d98de24e17d04d6b3018e9a9 and has the identical source tree.\n\nThe sync workflow reports a passing Linux x64 source build, unchanged\ngenerated declarations, managed build and unfiltered console solution:\n5,748 core tests, one singleton test, two Vulkan-host tests and two\nDirect3D-host tests passed. Platform-policy skips remain; Linux execution\ndoes not establish Windows Vulkan, Direct3D or Metal runtime coverage.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5498": {
       "url": "https://github.com/mono/SkiaSharp/pull/5498",
       "title": "Bump to the next version (4.150.8) after release",
