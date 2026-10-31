@@ -526,6 +526,153 @@ namespace SkiaSharp.Tests
 			Assert.False (buffered.Rewind ());
 		}
 
+		[Theory]
+		[InlineData (0x8000000000000080UL)]
+		[InlineData (ulong.MaxValue)]
+		public void NativeSkipPreservesFullUnsignedCount (ulong requested)
+		{
+			using var source = new ConfigurableTestStream (gAbcs, canSeek: false, maxBytesPerRead: 7);
+			using var buffered = new SKFrontBufferedManagedStream (source, 16);
+			var size = Utils.ToNativeSize (IntPtr.Size == 8 ? requested : uint.MaxValue);
+
+			var skipped = SkiaApi.sk_stream_skip (buffered.Handle, size);
+
+			Assert.Equal ((ulong)gAbcs.Length, Utils.FromNativeSize (skipped));
+			Assert.InRange (source.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+			Assert.True (buffered.IsAtEnd);
+			Assert.False (buffered.Rewind ());
+		}
+
+		[Fact]
+		public void NativeLengthPreservesFullUnsignedRemainingLength ()
+		{
+			var length = IntPtr.Size == 8 ? -1L : uint.MaxValue;
+			var expected = IntPtr.Size == 8 ? ulong.MaxValue - 100 : (ulong)uint.MaxValue - 100;
+			using var source = new LargeLengthSKStream (length, 100);
+			using var buffered = new SKFrontBufferedManagedStream (source, 16);
+
+			Assert.True (buffered.HasLength);
+			Assert.Equal (expected, Utils.FromNativeSize (SkiaApi.sk_stream_get_length (buffered.Handle)));
+		}
+
+		[Theory]
+		[InlineData (0)]
+		[InlineData (2)]
+		[InlineData (8)]
+		public void ExplicitReadResumesAfterBackingMemoryStreamGrows (int bufferSize)
+		{
+			using var source = new MemoryStream ();
+			source.Write (new byte[] { 1, 2, 3 }, 0, 3);
+			source.Position = 0;
+			using var buffered = new SKFrontBufferedManagedStream (source, bufferSize);
+			var bytes = new byte[4];
+			Assert.Equal (3, buffered.Read (bytes, bytes.Length));
+			Assert.True (buffered.IsAtEnd);
+
+			source.SetLength (5);
+			source.GetBuffer ()[3] = 4;
+			source.GetBuffer ()[4] = 5;
+			Assert.Equal (3, source.Position);
+
+			Assert.Equal (2, buffered.Read (bytes, 2));
+			Assert.Equal (new byte[] { 4, 5 }, bytes.Take (2));
+			Assert.Equal (5, source.Position);
+			Assert.True (buffered.IsAtEnd);
+		}
+
+		[Theory]
+		[InlineData (false)]
+		[InlineData (true)]
+		public void ShortReadThenExceptionPreservesBufferedPrefix (bool callerWrapped)
+		{
+			using var source = new PartialFailureStream (gAbcs.Take (8).ToArray (), failOnCall: 2);
+			using var managed = new OverrideTrackingManagedStream (source);
+			using var buffered = callerWrapped
+				? new SKFrontBufferedManagedStream (managed, 10)
+				: new SKFrontBufferedManagedStream (source, 10);
+			var bytes = new byte[4];
+
+			Assert.Equal (0, buffered.Read (bytes, bytes.Length));
+			Assert.Equal (2, source.ConsumedBytes);
+			source.FailReads = false;
+			Assert.True (buffered.Rewind ());
+			Assert.Equal (bytes.Length, buffered.Read (bytes, bytes.Length));
+			Assert.Equal (gAbcs.Take (4), bytes);
+			if (callerWrapped)
+				Assert.Equal (2, managed.ReadCalls);
+		}
+
+		[Theory]
+		[InlineData (false)]
+		[InlineData (true)]
+		public void ShortDirectReadThenExceptionInvalidatesRewind (bool callerWrapped)
+		{
+			using var source = new PartialFailureStream (gAbcs.Take (8).ToArray (), failOnCall: 3);
+			using var managed = new OverrideTrackingManagedStream (source);
+			using var buffered = callerWrapped
+				? new SKFrontBufferedManagedStream (managed, 1)
+				: new SKFrontBufferedManagedStream (source, 1);
+
+			Assert.Equal (0, buffered.Read (new byte[8], 8));
+			Assert.Equal (3, source.ConsumedBytes);
+			Assert.False (buffered.Rewind ());
+			if (callerWrapped)
+				Assert.Equal (2, managed.ReadCalls);
+		}
+
+		private sealed class OverrideTrackingManagedStream : SKManagedStream
+		{
+			public OverrideTrackingManagedStream (Stream source) : base (source) { }
+
+			public int ReadCalls { get; private set; }
+
+			protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
+			{
+				ReadCalls++;
+				return base.OnRead (buffer, size);
+			}
+		}
+
+		private sealed class PartialFailureStream : Stream
+		{
+			private readonly byte[] data;
+			private readonly int failOnCall;
+			private int readCalls;
+			private int position;
+
+			public PartialFailureStream (byte[] data, int failOnCall)
+			{
+				this.data = data;
+				this.failOnCall = failOnCall;
+			}
+
+			public bool FailReads { get; set; } = true;
+			public int ConsumedBytes => position;
+			public override bool CanRead => true;
+			public override bool CanSeek => false;
+			public override bool CanWrite => false;
+			public override long Length => throw new NotSupportedException ();
+			public override long Position {
+				get => throw new NotSupportedException ();
+				set => throw new NotSupportedException ();
+			}
+
+			public override int Read (byte[] buffer, int offset, int count)
+			{
+				if (++readCalls == failOnCall && FailReads)
+					throw new IOException ("Read failed after partial progress.");
+				var read = Math.Min (Math.Min (count, 2), data.Length - position);
+				Array.Copy (data, position, buffer, offset, read);
+				position += read;
+				return read;
+			}
+
+			public override void Flush () => throw new NotSupportedException ();
+			public override long Seek (long offset, SeekOrigin origin) => throw new NotSupportedException ();
+			public override void SetLength (long value) => throw new NotSupportedException ();
+			public override void Write (byte[] buffer, int offset, int count) => throw new NotSupportedException ();
+		}
+
 		[Fact]
 		public void StreamPeek ()
 		{

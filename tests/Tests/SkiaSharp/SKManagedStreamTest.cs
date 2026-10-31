@@ -1599,9 +1599,20 @@ namespace SkiaSharp.Tests
 		[InlineData(false, SKData.CopyBufferSize)]
 		[InlineData(true, SKData.CopyBufferSize)]
 		public void UnknownLengthSnapshotReadFailureDoesNotPublishAndCanRetry(bool fork, int failAtPosition)
+			=> AssertSnapshotReadFailureDoesNotPublishAndCanRetry(fork, failAtPosition, knownLength: false);
+
+		[Theory]
+		[InlineData(false, 0)]
+		[InlineData(true, 0)]
+		[InlineData(false, SKData.CopyBufferSize)]
+		[InlineData(true, SKData.CopyBufferSize)]
+		public void KnownLengthSnapshotReadFailureDoesNotPublishAndCanRetry(bool fork, int failAtPosition)
+			=> AssertSnapshotReadFailureDoesNotPublishAndCanRetry(fork, failAtPosition, knownLength: true);
+
+		private void AssertSnapshotReadFailureDoesNotPublishAndCanRetry(bool fork, int failAtPosition, bool knownLength)
 		{
 			var bytes = CreateSequentialBytes(SKData.CopyBufferSize + 17);
-			using var inner = new SnapshotReadFailureStream(bytes, failAtPosition);
+			using var inner = new SnapshotReadFailureStream(bytes, failAtPosition, knownLength);
 			inner.Position = 5;
 			using var managed = new SKManagedStream(inner);
 
@@ -1629,12 +1640,16 @@ namespace SkiaSharp.Tests
 		private sealed class SnapshotReadFailureStream : MemoryStream
 		{
 			private readonly int failAtPosition;
+			private readonly bool knownLength;
 
-			public SnapshotReadFailureStream(byte[] bytes, int failAtPosition) : base(bytes, writable: false) =>
+			public SnapshotReadFailureStream(byte[] bytes, int failAtPosition, bool knownLength) : base(bytes, writable: false)
+			{
 				this.failAtPosition = failAtPosition;
+				this.knownLength = knownLength;
+			}
 
 			public bool FailReads { get; set; } = true;
-			public override long Length => -1;
+			public override long Length => knownLength ? base.Length : -1;
 
 			public override int Read(byte[] buffer, int offset, int count) =>
 				FailReads && Position >= failAtPosition
@@ -1647,6 +1662,25 @@ namespace SkiaSharp.Tests
 					? throw new IOException("Snapshot read failed.")
 					: base.Read(buffer);
 #endif
+		}
+
+		[Fact]
+		public void ForkRejectsUnrepresentablePositionWithoutLeakingCachedSnapshotReference()
+		{
+			using var inner = new ConfigurableTestStream(CreateSequentialBytes(16));
+			using var managed = new SKManagedStream(inner);
+			using (var duplicate = managed.Duplicate())
+				Assert.NotNull(duplicate);
+
+			var snapshot = managed.snapshotData;
+			Assert.Equal(1, ((ISKReferenceCounted)snapshot).GetReferenceCount());
+
+			var position = (long)uint.MaxValue + 6;
+			inner.Position = position;
+			Assert.Null(managed.Fork());
+			Assert.Equal(position, inner.Position);
+			Assert.Equal(1, ((ISKReferenceCounted)snapshot).GetReferenceCount());
+			Assert.False(managed.hasError);
 		}
 
 		[Theory]

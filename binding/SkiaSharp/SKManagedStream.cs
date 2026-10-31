@@ -53,6 +53,7 @@ namespace SkiaSharp
 		private Stream stream;
 		private EofState eofState;
 		private bool disposeStream;
+		private ulong readProgress;
 
 		// Lazily-created snapshot for duplicate/fork. Stored in native memory
 		// via SKData (ref-counted), so multiple duplicates share one native
@@ -149,15 +150,15 @@ namespace SkiaSharp
 		private void ClearEof () =>
 			eofState = default;
 
-		private unsafe IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
+		private unsafe IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size, out ulong totalRead)
 		{
+			totalRead = 0;
 			var count = Utils.FromNativeSize (size);
 			if (count == 0)
 				return IntPtr.Zero;
 
 			using var scratch = RentScratchBuffer (buffer, count);
 
-			ulong totalRead = 0;
 			while (totalRead < count) {
 				var toRead = (int)Math.Min (count - totalRead, (ulong)SKData.CopyBufferSize);
 				var len = ReadChunk (buffer, totalRead, toRead, scratch);
@@ -209,7 +210,23 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
-			return OnReadManagedStream (buffer, size);
+			ulong completed = 0;
+			try {
+				return OnReadManagedStream (buffer, size, out completed);
+			} finally {
+				readProgress = unchecked (readProgress + completed);
+			}
+		}
+
+		// Nested adapters need completed reads even when a later read throws; keep virtual dispatch intact.
+		internal IntPtr ReadWithProgress (IntPtr buffer, IntPtr size, out ulong completed)
+		{
+			var start = readProgress;
+			try {
+				return OnRead (buffer, size);
+			} finally {
+				completed = unchecked (readProgress - start);
+			}
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
@@ -225,7 +242,7 @@ namespace SkiaSharp
 			var oldPos = stream.Position;
 			var oldEof = eofState;
 			try {
-				return OnReadManagedStream (buffer, size);
+				return OnReadManagedStream (buffer, size, out _);
 			} finally {
 				stream.Position = oldPos;
 				eofState = oldEof;
@@ -289,6 +306,11 @@ namespace SkiaSharp
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
+			return GetNativePosition ();
+		}
+
+		private IntPtr GetNativePosition ()
+		{
 			var position = stream.Position;
 			if (!PlatformConfiguration.Is64Bit && position > UInt32.MaxValue)
 				throw new OverflowException ("The position exceeds the size of native stream positions.");
@@ -380,12 +402,14 @@ namespace SkiaSharp
 
 			var pos = stream.Position;
 			var oldEof = eofState;
+			var oldProgress = readProgress;
 			try {
 				stream.Position = 0;
 				ClearEof ();
 				var length = stream.Length;
 				if (length >= 0) {
-					snapshotData = SKData.Create (this, length);
+					// Preserve strict snapshot short-read failure without another EOF probe.
+					snapshotData = SKData.CreateFromManagedStream (this, (ulong)length, allowShortReads: false);
 				} else {
 					using var native = new SKDynamicMemoryWStream ();
 					using var buffer = Utils.RentArray<byte> (SKData.CopyBufferSize);
@@ -406,6 +430,7 @@ namespace SkiaSharp
 			} finally {
 				stream.Position = pos;
 				eofState = oldEof;
+				readProgress = oldProgress;
 			}
 
 			return snapshotData;
@@ -431,7 +456,7 @@ namespace SkiaSharp
 			var duplicate = OnDuplicate ();
 			if (duplicate != IntPtr.Zero) {
 				try {
-					var target = Utils.ToNativeSize ((ulong)stream.Position);
+					var target = GetNativePosition ();
 					if (!SkiaApi.sk_stream_seek (duplicate, target) ||
 						SkiaApi.sk_stream_get_position (duplicate) != target) {
 						SkiaApi.sk_stream_destroy (duplicate);

@@ -13,11 +13,11 @@ namespace SkiaSharp
 		private bool disposeStream;
 
 		private readonly bool hasLength;
-		private readonly long streamLength;
+		private readonly ulong streamLength;
 		private readonly int bufferLength;
 		private byte[] frontBuffer;
 		private int bufferedSoFar;
-		private long offset;
+		private ulong offset;
 		private bool isUnderlyingAtEnd;
 
 		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> that wraps the specified stream.</summary>
@@ -86,8 +86,8 @@ namespace SkiaSharp
 		{
 			var hasPos = nativeStream.HasPosition;
 			var hasLen = nativeStream.HasLength;
-			var length = hasLen ? GetNativeSize (SkiaApi.sk_stream_get_length (nativeStream.Handle)) : 0;
-			var position = hasPos ? GetNativeSize (SkiaApi.sk_stream_get_position (nativeStream.Handle)) : 0;
+			var length = hasLen ? Utils.FromNativeSize (SkiaApi.sk_stream_get_length (nativeStream.Handle)) : 0;
+			var position = hasPos ? Utils.FromNativeSize (SkiaApi.sk_stream_get_position (nativeStream.Handle)) : 0;
 			GC.KeepAlive (nativeStream);
 
 			disposeStream = disposeUnderlyingStream;
@@ -99,12 +99,6 @@ namespace SkiaSharp
 			bufferLength = frontBuffer.Length;
 			this.frontBuffer = frontBuffer;
 		}
-
-		private static long GetNativeSize (IntPtr value) =>
-			IntPtr.Size == 4 ? (uint)(int)value : (long)value;
-
-		private static IntPtr ToNativeSize (long value) =>
-			IntPtr.Size == 4 ? (IntPtr)unchecked((int)value) : (IntPtr)value;
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
@@ -131,18 +125,18 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override unsafe IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
-			var remaining = GetNativeSize (size);
-			if (remaining <= 0)
+			var remaining = Utils.FromNativeSize (size);
+			if (remaining == 0)
 				return IntPtr.Zero;
 
 			var start = offset;
 
 			// Read managed children directly so this adapter does not add a nested native callback boundary.
 			// 1. read any data that was previously buffered
-			if (remaining > 0 && offset < bufferedSoFar)
+			if (remaining > 0 && offset < (ulong)bufferedSoFar)
 			{
 				var currentOffset = (int)offset;
-				var copied = (int)Math.Min (remaining, bufferedSoFar - currentOffset);
+				var copied = (int)Math.Min (remaining, (ulong)(bufferedSoFar - currentOffset));
 
 				if (buffer != IntPtr.Zero)
 				{
@@ -150,26 +144,40 @@ namespace SkiaSharp
 					buffer += copied;
 				}
 
-				offset += copied;
-				remaining -= copied;
+				offset += (ulong)copied;
+				remaining -= (ulong)copied;
 			}
+
+			// A seekable source may have grown or been repositioned since the last observed EOF.
+			if (remaining > 0 && isUnderlyingAtEnd && !stream.IsAtEnd)
+				isUnderlyingAtEnd = false;
 
 			// 2. buffer any more data, and then read it
 			while (remaining > 0 && bufferedSoFar < bufferLength && !isUnderlyingAtEnd)
 			{
 				var currentOffset = (int)offset;
-				var bytesToBuffer = (int)Math.Min (remaining, bufferLength - bufferedSoFar);
+				var bytesToBuffer = (int)Math.Min (remaining, (ulong)(bufferLength - bufferedSoFar));
 
 				int bytesRead;
+				ulong completed = 0;
 				fixed (byte* p = &frontBuffer[currentOffset])
 				{
-					var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
-						? managed.OnRead ((IntPtr)p, (IntPtr)bytesToBuffer)
-						: (IntPtr)stream.Read ((IntPtr)p, bytesToBuffer));
-					GC.KeepAlive (stream);
-					if (read > (ulong)bytesToBuffer)
-						throw new IOException ("The stream returned an invalid byte count.");
-					bytesRead = (int)read;
+					try {
+						var read = Utils.FromNativeSize (stream is SKManagedStream managedStream
+							? managedStream.ReadWithProgress ((IntPtr)p, (IntPtr)bytesToBuffer, out completed)
+							: stream is SKAbstractManagedStream managed
+								? managed.OnRead ((IntPtr)p, (IntPtr)bytesToBuffer)
+								: (IntPtr)stream.Read ((IntPtr)p, bytesToBuffer));
+						if (read > (ulong)bytesToBuffer)
+							throw new IOException ("The stream returned an invalid byte count.");
+						bytesRead = (int)read;
+					} catch {
+						bufferedSoFar += checked ((int)completed);
+						offset += completed;
+						throw;
+					} finally {
+						GC.KeepAlive (stream);
+					}
 				}
 
 				if (bytesRead <= 0)
@@ -185,21 +193,34 @@ namespace SkiaSharp
 					buffer += bytesRead;
 				}
 
-				offset += bytesRead;
-				remaining -= bytesRead;
+				offset += (ulong)bytesRead;
+				remaining -= (ulong)bytesRead;
 			}
 
 			// 3. read the rest directly once the front buffer is full
 			while (remaining > 0 && bufferedSoFar >= bufferLength && !isUnderlyingAtEnd)
 			{
-				var bytesToRead = (int)Math.Min (remaining, int.MaxValue);
-				var read = Utils.FromNativeSize (stream is SKAbstractManagedStream managed
-					? managed.OnRead (buffer, (IntPtr)bytesToRead)
-					: (IntPtr)stream.Read (buffer, bytesToRead));
-				GC.KeepAlive (stream);
-				if (read > (ulong)bytesToRead)
-					throw new IOException ("The stream returned an invalid byte count.");
-				var bytesRead = (int)read;
+				var bytesToRead = (int)Math.Min (remaining, (ulong)int.MaxValue);
+				int bytesRead;
+				ulong completed = 0;
+				try {
+					var read = Utils.FromNativeSize (stream is SKManagedStream managedStream
+						? managedStream.ReadWithProgress (buffer, (IntPtr)bytesToRead, out completed)
+						: stream is SKAbstractManagedStream managed
+							? managed.OnRead (buffer, (IntPtr)bytesToRead)
+							: (IntPtr)stream.Read (buffer, bytesToRead));
+					if (read > (ulong)bytesToRead)
+						throw new IOException ("The stream returned an invalid byte count.");
+					bytesRead = (int)read;
+				} catch {
+					if (completed > 0) {
+						frontBuffer = null;
+						offset += completed;
+					}
+					throw;
+				} finally {
+					GC.KeepAlive (stream);
+				}
 
 				if (bytesRead <= 0)
 				{
@@ -213,11 +234,11 @@ namespace SkiaSharp
 				if (buffer != IntPtr.Zero)
 					buffer += bytesRead;
 
-				offset += bytesRead;
-				remaining -= bytesRead;
+				offset += (ulong)bytesRead;
+				remaining -= (ulong)bytesRead;
 			}
 
-			return ToNativeSize (offset - start);
+			return Utils.ToNativeSize (offset - start);
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
@@ -227,8 +248,8 @@ namespace SkiaSharp
 		/// <remarks>The stream's cursor must be returned to the position before this method was called.</remarks>
 		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			var count = GetNativeSize (size);
-			if (count <= 0 || frontBuffer == null || offset >= bufferLength)
+			var count = Utils.FromNativeSize (size);
+			if (count == 0 || frontBuffer == null || offset >= (ulong)bufferLength)
 			{
 				// this stream is not able to buffer.
 				return (IntPtr)0;
@@ -238,7 +259,7 @@ namespace SkiaSharp
 			var start = offset;
 			try
 			{
-				var bytesToCopy = (int)Math.Min (count, bufferLength - offset);
+				var bytesToCopy = (int)Math.Min (count, (ulong)bufferLength - offset);
 				return OnRead (buffer, (IntPtr)bytesToCopy);
 			}
 			finally
@@ -253,7 +274,7 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override bool OnIsAtEnd ()
 		{
-			if (offset < bufferedSoFar)
+			if (offset < (ulong)bufferedSoFar)
 			{
 				// even if the underlying stream is at the end, this stream has been
 				// rewound after buffering, so it is not at the end.
@@ -272,7 +293,7 @@ namespace SkiaSharp
 		protected internal override bool OnRewind ()
 		{
 			// only allow a rewind if we have not exceeded the buffer.
-			if (frontBuffer != null && offset <= bufferLength)
+			if (frontBuffer != null && offset <= (ulong)bufferLength)
 			{
 				offset = 0;
 				return true;
@@ -289,7 +310,7 @@ namespace SkiaSharp
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to return the total length of the stream.</summary>
 		/// <returns>Returns the total length of the stream.</returns>
 		/// <remarks />
-		protected internal override IntPtr OnGetLength () => ToNativeSize (streamLength);
+		protected internal override IntPtr OnGetLength () => Utils.ToNativeSize (streamLength);
 
 		// seeking is not supported
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its current position.</summary>

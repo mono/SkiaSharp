@@ -341,7 +341,7 @@ namespace SkiaSharp
 							return Empty;
 
 						var remaining = len - pos;
-						return CreateFromManagedStream (managed, remaining);
+						return CreateFromManagedStream (managed, remaining, allowShortReads: true);
 					}
 
 					return CreateFromUnknownLengthManagedStream (managed);
@@ -365,7 +365,7 @@ namespace SkiaSharp
 			}
 		}
 
-		private static SKData CreateFromManagedStream (SKAbstractManagedStream stream, ulong length)
+		internal static SKData CreateFromManagedStream (SKAbstractManagedStream stream, ulong length, bool allowShortReads)
 		{
 			// Fill one final allocation exactly; early EOF is failure rather than a partial result.
 			var data = Create (length);
@@ -383,6 +383,8 @@ namespace SkiaSharp
 					if (read == 0)
 						break;
 					totalRead += read;
+					if (!allowShortReads && read < (ulong)toRead)
+						break;
 				}
 
 				if (totalRead == length)
