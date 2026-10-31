@@ -4,6 +4,7 @@
     <TargetFrameworks>$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
+    <ValidateXcodeVersion>true</ValidateXcodeVersion>
     <SingleProject>true</SingleProject>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
     <AssemblyName>SkiaSharp.Tests.Devices</AssemblyName>
@@ -24,8 +25,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">10.0</SupportedOSPlatformVersion>

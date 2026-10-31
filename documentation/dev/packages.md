@@ -76,6 +76,13 @@ Each platform has a pair of NativeAssets packages containing pre-built native bi
 
 Both follow the same platform matrix and architectures. HarfBuzzSharp does **not** have Linux.NoDependencies, NanoServer, or WinUI variants.
 
+Apple native assets built from this source require macOS 12+, iOS 15+, tvOS 15+
+or Mac Catalyst 15+. This raises the previous macOS 11 and iOS/tvOS/Catalyst 14
+native minimums for Xcode 27 compatibility.
+The application's .NET/Apple workload may require a higher OS version; see
+[Xcode 27 build requirements](building.md#xcode-27). These native minimums also
+apply when consuming the assets from older or platform-neutral managed TFMs.
+
 > **Important:** Library projects should depend on `SkiaSharp` only. NativeAssets packages belong in the **application** (executable) project so the correct binary is deployed. See [Deployment & Containers](#deployment--containers).
 
 ### Platform Packages
