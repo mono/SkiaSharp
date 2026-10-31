@@ -193,6 +193,13 @@ stages:
                 workloads: [maui-windows]
             resultLabel: Windows MAUI
             logArtifact: testlogs_windows
+            preBuildSteps:
+              - pwsh: |
+                  $ErrorActionPreference = 'Stop'
+                  $key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+                  New-Item -Path $key -Force | Out-Null
+                  New-ItemProperty -Path $key -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
+                displayName: Enable Windows Developer Mode for MSIX registration
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:

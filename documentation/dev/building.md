@@ -109,7 +109,9 @@ This builds and runs `SkiaSharp.Tests.Devices` for
 `net10.0-windows10.0.19041.0` as an MSIX x64 app with a self-contained
 Windows App SDK runtime. `dotnet test` uses DeviceRunners and its bundled
 winapp tool to register and launch the loose MSIX build output; no separate
-publish or certificate-signing step is required. It writes TRX results under
+publish or certificate-signing step is required. Enable Windows Developer Mode
+before running locally; the CI job enables it before registration.
+It writes TRX results under
 `output/logs/testlogs/SkiaSharp.Tests.Devices.windows/`.
 The **Windows (MAUI)** CI job runs the same target and publishes test results
 and visual-regression images.
