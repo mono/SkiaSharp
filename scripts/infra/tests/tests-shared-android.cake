@@ -6,7 +6,7 @@ var TEST_ANDROID_DEVICE = Argument("androidDevice", EnvironmentVariable("TEST_AN
 var TEST_ANDROID_IMAGE = Argument("androidImage", EnvironmentVariable("TEST_ANDROID_IMAGE") ?? "android-36;google_apis");
 var TEST_ANDROID_MODEL = Argument("androidModel", EnvironmentVariable("TEST_ANDROID_MODEL") ?? "Nexus 5X");
 
-void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
+void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial, bool installAppiumArtifacts = true)
 {
     if (IsCakeListingCommand())
         return;
@@ -41,7 +41,7 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         "--sdk", $"system-images;{TEST_ANDROID_IMAGE};{abi}",
         "--device", TEST_ANDROID_MODEL,
         "--force");
-    RunAndroidCli(logs.CombineWithFilePath("android-start.log"), "avd", "start",
+    var arguments = new List<string> { "avd", "start",
         "--name", ownedAvd,
         "--port", port.ToString(),
         "--gpu", IsRunningOnLinux() ? "swiftshader_indirect" : "guest",
@@ -49,10 +49,61 @@ void SetupAndroidEmulator(ref string ownedAvd, ref string ownedSerial)
         "--wait", "--timeout", "300",
         "--cpu-threshold", "3", "--response-threshold", "5",
         "--partition-size", "4096",
-        "--camera-back", "none", "--camera-front", "none");
+        "--camera-back", "none", "--camera-front", "none" };
+    if (EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1")
+        arguments.AddRange(new[] { "--cores", "2", "--memory", "4096" });
+    RunProcess("dotnet", AndroidCliSettings(logs.CombineWithFilePath("android-start.log"), 330000, arguments.ToArray()));
+
+    if (BuildSystem.IsLocalBuild || EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1") {
+        RunProcess("dotnet", AndroidCliSettings(logs.CombineWithFilePath("android-devices.log"), 30000,
+            "device", "list", "--format", "json"), out var output);
+        using var devices = System.Text.Json.JsonDocument.Parse(string.Join("\n", output));
+        var expectedSerial = ownedSerial;
+        if (!devices.RootElement.EnumerateArray().Any(device =>
+            device.GetProperty("serial").GetString() == expectedSerial))
+            throw new Exception($"Android startup did not list the expected owned emulator: {ownedSerial} ({ownedAvd}).");
+    }
+    if (installAppiumArtifacts && EnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER") == "1")
+        InstallAndroidAppiumArtifacts(ownedSerial);
+}
+
+void InstallAndroidAppiumArtifacts(string ownedSerial)
+{
+    var home = EnvironmentVariable("APPIUM_HOME");
+    if (string.IsNullOrWhiteSpace(home))
+        home = System.IO.Path.Combine(EnvironmentVariable("HOME"), ".appium");
+    if (!System.IO.Directory.Exists(home))
+        throw new Exception($"The installed Appium home does not exist: {home}");
+
+    var server = System.IO.Directory.GetFiles(home, "appium-uiautomator2-server-v*.apk",
+        System.IO.SearchOption.AllDirectories).Single();
+    var testServer = System.IO.Directory.GetFiles(home, "appium-uiautomator2-server-debug-androidTest.apk",
+        System.IO.SearchOption.AllDirectories).Single();
+
+    var architecture = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture switch {
+        System.Runtime.InteropServices.Architecture.X64 => "x64",
+        System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
+        _ => throw new InvalidOperationException("Android Appium apps require an arm64 or x64 host."),
+    };
+    var appsRoot = System.IO.Path.Combine(ROOT_OUTPUT_PATH.FullPath, "sample-apps", "android", architecture);
+    var apps = System.IO.Directory.Exists(appsRoot)
+        ? System.IO.Directory.GetFiles(appsRoot, "*-Signed.apk", System.IO.SearchOption.AllDirectories)
+        : Array.Empty<string>();
+    if (apps.Length != 3)
+        throw new Exception($"Expected three prepared Android Appium applications before booting the emulator: {appsRoot} (found {apps.Length}).");
+
+    var packages = new[] { server, testServer }.Concat(apps).ToArray();
+    for (var index = 0; index < packages.Length; index++)
+        RunAndroidCli(ROOT_OUTPUT_PATH.Combine($"logs/testlogs/android/{ownedSerial}").CombineWithFilePath($"appium-install-{index}.log"),
+            "device", "install", "--id", "^" + System.Text.RegularExpressions.Regex.Escape(ownedSerial) + "$",
+            "--package", packages[index]);
+    Environment.SetEnvironmentVariable("TEST_ANDROID_APPIUM_SERVER_PREINSTALLED", "1");
 }
 
 void RunAndroidCli(FilePath logFile, params string[] arguments)
+    => RunProcess("dotnet", AndroidCliSettings(logFile, null, arguments));
+
+ProcessSettings AndroidCliSettings(FilePath logFile, int? timeout, params string[] arguments)
 {
     var builder = new ProcessArgumentBuilder().Append("android");
     foreach (var argument in arguments)
@@ -61,13 +112,14 @@ void RunAndroidCli(FilePath logFile, params string[] arguments)
     if (!string.IsNullOrWhiteSpace(sdk))
         builder.Append("--home").AppendQuoted(sdk);
     EnsureDirectoryExists(logFile.GetDirectory());
-    RunProcess("dotnet", new ProcessSettings {
+    return new ProcessSettings {
         Arguments = builder,
         WorkingDirectory = ROOT_PATH,
+        Timeout = timeout,
         EnvironmentVariables = new Dictionary<string, string> {
             ["ANDROID_TOOL_PROCESS_RUNNER_LOG_PATH"] = logFile.FullPath,
         },
-    });
+    };
 }
 
 void StopCIAndroidEmulators()

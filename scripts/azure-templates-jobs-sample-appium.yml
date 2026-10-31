@@ -23,8 +23,11 @@ jobs:
         - sdkVersion: $(DOTNET_VERSION)
           ${{ if eq(parameters.phase, 'build') }}:
             workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
-            workloads: [ios, maui]
-      installAndroidSdk: false
+            ${{ if eq(parameters.platform, 'android') }}:
+              workloads: [android, maui-android]
+            ${{ else }}:
+              workloads: [ios, maui]
+      installAndroidSdk: ${{ and(eq(parameters.phase, 'build'), eq(parameters.platform, 'android')) }}
       installAndroidNdk: false
       retryCount: 0
       shouldPublish: false
