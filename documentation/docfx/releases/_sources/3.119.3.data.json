@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "3.119.3",
   "family": "skiasharp",
   "status": "preview",
@@ -160,6 +160,7 @@
     "3507": {
       "url": "https://github.com/mono/SkiaSharp/pull/3507",
       "title": "Bump to the next version (3.119.3) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -167,6 +168,7 @@
     "3506": {
       "url": "https://github.com/mono/SkiaSharp/pull/3506",
       "title": "Add Linux Docker integration tests for release testing",
+      "body": "- Add LinuxConsoleTests.cs that runs SkiaSharp and HarfBuzzSharp in\n  Docker Linux containers (mcr.microsoft.com/dotnet/sdk:8.0)\n- Uses SkiaSharp.NativeAssets.Linux.NoDependencies to avoid system\n  dependency issues in minimal containers\n- Tests are skipped when Docker is not available\n- Update release-testing skill docs (SKILL.md, setup.md, monitoring.md,\n  troubleshooting.md) to include Linux Docker tests in the test matrix",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -174,6 +176,7 @@
     "3505": {
       "url": "https://github.com/mono/SkiaSharp/pull/3505",
       "title": "Fix stable version handling in release skills",
+      "body": "Update all 3 release skills to correctly document stable version\nnumbering: stable NuGet versions are just the base (e.g., 3.119.2)\nwith no build number appended. The build number only appears in the\ninternal feed as a prerelease tag (e.g., 3.119.2-stable.3).\n\n- release-testing: Split version resolution into preview vs stable\n  paths, add stable examples for CI version extraction and reporting\n- release-publish: Add NuGet version row to preview/stable table,\n  split version confirmation into preview vs stable formats\n- release-branch: Add NuGet version format note after release type\n  table",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -181,6 +184,7 @@
     "3504": {
       "url": "https://github.com/mono/SkiaSharp/pull/3504",
       "title": "Add semver ordering guidance to release skills",
+      "body": "Prevents selecting the wrong release branch when both preview and\nstable branches exist (e.g., picking 3.119.2-preview.3 instead of\n3.119.2). In semver, bare versions are always newer than prerelease\nvariants of the same version.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -188,6 +192,7 @@
     "3502": {
       "url": "https://github.com/mono/SkiaSharp/pull/3502",
       "title": "Add Spectre mitigation flag for libSkiaSharp.so.",
+      "body": "* Add Spectre mitigation flag for libSkiaSharp.so.\n\n* Use -mretpoline for x86/x64 and -mharden-sls=all for arm/arm64\n\n* Use same approach in spectreFlags as in wordSizeDefine - append leading comma.\n\n---------\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "sshumakov",
       "community": true,
       "tag": "mixed"
@@ -195,6 +200,7 @@
     "3501": {
       "url": "https://github.com/mono/SkiaSharp/pull/3501",
       "title": "Fix release-testing skill consistency issues",
+      "body": "* Fix release-testing skill consistency issues\n\n- Require -wipe-data for Android emulators (CRITICAL for test reliability)\n- Add boot time note (60-120s for fresh wipe)\n- Standardize adb/emulator paths (use PATH, not full paths)\n- Add PATH fallback note in setup.md\n- Remove redundant 'Start Emulators First' section\n- Fix net9.0 \u2192 net8.0 to match actual project\n\n* fixes",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -202,6 +208,7 @@
     "3496": {
       "url": "https://github.com/mono/SkiaSharp/pull/3496",
       "title": "Add Spectre mitigation flag for libSkiaSharp.dll.",
+      "body": "",
       "author": "sshumakov",
       "community": true,
       "tag": "mixed"
@@ -209,6 +216,7 @@
     "3494": {
       "url": "https://github.com/mono/SkiaSharp/pull/3494",
       "title": "Fix Linux ARM64 crash: add fontconfig runtime library to cross-compile sysroot",
+      "body": "## Summary\n\nFixes hard crash on Linux ARM64 with `undefined symbol: uuid_generate_random` by adding the fontconfig runtime library to all cross-compile Docker sysroots.\n\n## Root Cause\n\nThe ARM64 cross-compile Docker only downloaded `libfontconfig1-dev` which provides:\n- Headers and static library\n- **Broken symlink**: `libfontconfig.so -> libfontconfig.so.1.12.0` (target doesn't exist!)\n\nThe actual shared library is in the **runtime package** (`libfontconfig1`). The linker silently skipped `-lfontconfig` when the symlink target was missing, resulting in:\n- `libSkiaSharp.so` missing `libfontconfig.so.1` from DT_NEEDED\n- Runtime crash when fontconfig (loaded via freetype) called `uuid_generate_random()`\n\n## Changes\n\n- **Dockerfiles 10, 11, 12, 13**: Download both `libfontconfig1-dev` AND `libfontconfig1`\n- **native/linux/build.cake**: Add `--verifyIncluded` parameter (inverse of `verifyExcluded`)\n- **CI YAML**: Add `--verifyIncluded=fontconfig` to verify fontconfig is linked in regular builds\n- **Build scripts**: Pass through extra arguments to cake\n\n## Testing\n\n- \u2705 Local: Built arm64, arm, x86, loongarch64 with verifyIncluded=fontconfig\n- \u2705 CI: All native Linux builds passed with fontconfig verification\n\nFixes #3369\nFixes #3272  \nFixes #3436",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed",
@@ -221,6 +229,7 @@
     "3495": {
       "url": "https://github.com/mono/SkiaSharp/pull/3495",
       "title": "Add 'copilot' label step to bug-fix skill PR workflow",
+      "body": "* Add 'copilot' label step to bug-fix PR creation\n\n* the copilot/ branch prevents other copilot things",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -228,6 +237,7 @@
     "3485": {
       "url": "https://github.com/mono/SkiaSharp/pull/3485",
       "title": "Fix AoT crash when IlcDisableReflection=true",
+      "body": "Replace Enum.GetValues() with explicit array in SKBlender static constructor to support AoT builds with reflection disabled.\n\nThe static constructor was using Enum.GetValues(typeof(SKBlendMode)) which requires reflection. This caused TypeInitializationException in .NET AoT builds when IlcDisableReflection=true.\n\nChanges:\n- Replace reflection-based enum iteration with explicit array of all 29 SKBlendMode values\n- Add test to verify all blend modes are properly initialized (test uses Enum.GetValues to catch future enum additions)\n\nFixes #3238",
       "author": "Copilot",
       "community": false,
       "tag": "product",
@@ -238,6 +248,7 @@
     "3488": {
       "url": "https://github.com/mono/SkiaSharp/pull/3488",
       "title": "Improve AI instructions and skills",
+      "body": "* Branch protection and compliance\n* Build and test workflow improvements\n* Bug fix workflow separation\n* Checklist and documentation updates",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -245,6 +256,7 @@
     "3483": {
       "url": "https://github.com/mono/SkiaSharp/pull/3483",
       "title": "Add structured workflow for adding APIs to SkiaSharp",
+      "body": "Introduces the `add-api` skill with a 6-phase workflow for exposing\nSkia C++ functionality in C#, and updates documentation to prevent\ncommon mistakes with the git submodule workflow.\n\nChanges:\n- Add `.github/skills/add-api/` skill with checklists and\n  troubleshooting guides\n- Update `copilot-instructions.md` with submodule workflow and new\n  rules for generated files and mandatory testing\n- Expand `documentation/adding-apis.md` with complete git submodule\n  steps and common mistakes table\n- Add pointer type decision tree to `documentation/memory-management.md`\n- Standardize generator command to `pwsh ./utils/generate.ps1`\n- Convert security-audit Mermaid diagram to ASCII for compatibility",
       "author": "Copilot",
       "community": false,
       "tag": "internal"
@@ -252,6 +264,7 @@
     "3486": {
       "url": "https://github.com/mono/SkiaSharp/pull/3486",
       "title": "Use the new CI feed to download the pre-built artifacts",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -259,6 +272,7 @@
     "3479": {
       "url": "https://github.com/mono/SkiaSharp/pull/3479",
       "title": "Add NuGet feed management tools and PR package download script",
+      "body": "* Adding a migration script\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\n\n* Add NuGet feed management script and GitHub Action\n\n- Script to move _* packages to archive feed and delete -pr versions\n- Supports phased migration (CopyOnly, DeleteOnly, All)\n- Local caching with integrity verification\n- Resumable with state file\n- GitHub Action with workflow_dispatch for manual runs\n- PAT read from AZURE_DEVOPS_PAT environment variable/secret\n\n* Add PR trigger to workflow for testing\n\n* Fix workflow inputs for PR triggers (use defaults when empty)\n\n* Add parallel matrix jobs for package processing\n\n- parallel-underscore: Run _NativeAssets, _NuGets, _NuGetsPreview, _Symbols, _SymbolsPreview in parallel\n- parallel-all: Also includes SkiaSharp, HarfBuzzSharp groups in parallel\n- single: Manual filter for specific packages\n- PR triggers run underscore packages in dry-run mode\n\n* GO!\n\n* LIVE!\n\n* Fix CI: handle non-interactive console and respect dry_run input\n\n- Wrap Console.KeyAvailable in try/catch for CI environments\n- Check IsInteractive before keyboard polling\n- Respect dry_run input in all parallel jobs (was hardcoded to Execute)\n\n* Always execute in CI - going live\n\n* Fix PadRight error when console width is 0 in CI\n\n* Check destination feed before downloading - skip if already exists\n\nThis saves significant time/bandwidth for large packages that were already copied.\n\n* Add _NativeAssets. prefixed packages to parallel matrix\n\n* Add PR package download script and update feed documentation\n\n- Add scripts/get-skiasharp-pr.ps1 for easy PR package downloads\n- Add nuget_preview artifact to pipeline (smaller, prerelease only)\n- Update versioning.md with simplified PR package instructions\n- Update releasing.md with CI feed documentation\n- No authentication required (public builds)\n\n* Remove package caching from feed management script\n\nSince we now check if packages exist in the destination feed before\ndownloading, caching is unnecessary. Packages are now downloaded to\na temp directory, pushed immediately, and cleaned up.\n\nThis fixes disk space issues on CI runners where caching thousands\nof large packages was filling up the runner.\n\n* Remove state file tracking from feed management script\n\nSince CI runs on fresh images, state file provides no value - packages\nare already checked against destination feed before download. Removed:\n\n- StateFile parameter\n- Get-State and Save-State functions\n- All state tracking (CopiedPackages, MovedPackages, DeletedVersions, etc.)\n- State artifact uploads from workflow\n\nThe script is now fully stateless and idempotent.\n\n* Allow PR script to find non-successful builds\n\nThe script now tries in order:\n1. Successful completed builds\n2. Any completed builds (failed tests but artifacts may be fine)\n3. In-progress builds (artifacts may already be published)\n\nThis allows downloading artifacts even when tests are still running\nor have failed, since the NuGet packages are typically ready earlier.\n\n* Simplify PR script: remove Filter param, add SuccessfulOnly flag\n\n- Remove -Filter parameter, always extract prerelease packages (*-*.nupkg)\n- Always find the latest build by default (regardless of status)\n- Add -SuccessfulOnly flag to restrict to successful builds only\n- Suggest -SuccessfulOnly when artifacts aren't available on latest build\n\n* Update PR packages docs with single-command iex usage\n\n* Add bash version of PR package download script\n\n- scripts/get-skiasharp-pr.sh - bash equivalent of the PowerShell script\n- Uses curl/jq/unzip (no gh cli or authentication needed)\n- Same options: --successful-only, --force, --list, --build-id\n- Updated docs with bash one-liner and options table\n\n* Split _NativeAssets.* into separate parallel jobs\n\nEach _NativeAssets.{platform} package now has its own job:\n- _NativeAssets.alpine, alpinenodeps, android, ios, iossimulator\n- _NativeAssets.linux, linuxnodeps, maccatalyst, nanoserver, osx\n- _NativeAssets.tizen, tvos, uwp, wasm, watchos, windows, winui\n\nThis prevents disk space exhaustion from processing all platforms in one job.\n\n---------\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -266,6 +280,7 @@
     "3478": {
       "url": "https://github.com/mono/SkiaSharp/pull/3478",
       "title": "Update libwebp to 1.6.0",
+      "body": "- Update externals/skia submodule with libwebp 1.6.0 changes\n- Update cgmanifest.json version for CVE tracking",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -273,6 +288,7 @@
     "3477": {
       "url": "https://github.com/mono/SkiaSharp/pull/3477",
       "title": "Improve native-dependency-update skill Phase 5 instructions",
+      "body": "- Add branch naming convention table for quick reference\n- Add numbered sub-steps for SkiaSharp PR creation\n- Add CRITICAL callout for submodule update requirement\n- Add Phase 5 completion checklist\n- Use natural language instead of rigid bash scripts",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -280,6 +296,7 @@
     "3468": {
       "url": "https://github.com/mono/SkiaSharp/pull/3468",
       "title": "Add debugging methodology documentation",
+      "body": "Based on lessons learned from libwebp AVX2 debugging session.\n\nKey principles:\n- Establish baseline before investigating\n- Track changes and effects systematically\n- Trace conditional code completely for each platform\n- Use platform differences as diagnostic signals\n- One change at a time, verify, then proceed\n- Verify claims with evidence\n- Revert immediately if fixes make things worse\n\nIncludes common pitfalls like #if defined(X) vs #if X preprocessor gotchas.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -287,6 +304,7 @@
     "3475": {
       "url": "https://github.com/mono/SkiaSharp/pull/3475",
       "title": "Strengthen skill guidance on submodule merge sequence",
+      "body": "Add explicit warning about squash-merge creating new commits and\nthe danger of orphaned submodule references. Include mandatory\nmerge sequence with exact commands to prevent this issue.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -294,6 +312,7 @@
     "3474": {
       "url": "https://github.com/mono/SkiaSharp/pull/3474",
       "title": "Fix skia submodule to point to squashed commit",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -301,6 +320,7 @@
     "3469": {
       "url": "https://github.com/mono/SkiaSharp/pull/3469",
       "title": "Update brotli to 1.2.0",
+      "body": "Fixes CVE-2025-6176 (HIGH 7.5) - DoS via decompression bomb.\n\nChanges:\n- Updated externals/skia submodule with brotli 1.2.0\n- Updated cgmanifest.json",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -308,6 +328,7 @@
     "3458": {
       "url": "https://github.com/mono/SkiaSharp/pull/3458",
       "title": "Bump libexpat from 2.6.4 to 2.7.3",
+      "body": "Fixes CVE-2025-59375 (CVSS 7.5 HIGH) - Memory exhaustion DoS\nFixes CVE-2024-50602 (CVSS 5.9 Medium) - Parser crash",
       "author": "mattleibow",
       "community": false,
       "tag": "internal",
@@ -319,6 +340,7 @@
     "3463": {
       "url": "https://github.com/mono/SkiaSharp/pull/3463",
       "title": "Remove unused deps and add deps docs",
+      "body": "Remove 18 unused native dependencies from Skia's DEPS file to reduce attack surface and sync time. Add comprehensive dependency documentation.\n\nChanges:\n- Comment out 18 unused deps in DEPS (abseil-cpp, highway, imgui, libavif, libjxl, etc.)\n- Add documentation/dependencies.md with security-relevant deps, platform usage, and cgmanifest mapping\n- Update cgmanifest.json to match active dependencies\n- Update skills to reference central documentation\n\nRetained dependencies (15): brotli, d3d12allocator, dng_sdk, expat, freetype, harfbuzz, libjpeg-turbo, libpng, libwebp, piex, spirv-cross, vulkan-headers, vulkanmemoryallocator, wuffs, zlib",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -326,6 +348,7 @@
     "3460": {
       "url": "https://github.com/mono/SkiaSharp/pull/3460",
       "title": "Update more skills",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -333,6 +356,7 @@
     "3457": {
       "url": "https://github.com/mono/SkiaSharp/pull/3457",
       "title": "Update native-dependency-update skill with guardrails",
+      "body": "* Update native-dependency-update skill: add guardrails\n\n- Add mandatory 'Follow Every Phase' section at top\n- Add pre-flight checklist to confirm proper process\n- Add 'NEVER Do These' table of common shortcuts\n- Add explicit warnings against pushing directly to skiasharp/main\n- Emphasize cgmanifest.json is required\n- Emphasize build/test phase is required\n- Clarify 'do everything' means 'follow every step'\n- Add 'Fixes #NNNNN' guidance for auto-closing issues\n\n* Update skill: never revert or force push shared branches\n\nPushed commits are permanent. Fix mistakes forward with new commits.\n\n* Update skill: native builds are mandatory, never defer to CI\n\nCI is too slow to be the first place to discover build failures.\nNative builds must succeed locally before creating any PR.\n\n* Update skill: require externals/skia submodule update in SkiaSharp PR\n\nThe submodule update is critical - without it, SkiaSharp will still\nuse the old dependency version even though cgmanifest.json is updated.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -340,6 +364,7 @@
     "3459": {
       "url": "https://github.com/mono/SkiaSharp/pull/3459",
       "title": "Update SkiaSharp package source URL in nuget.config",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -347,6 +372,7 @@
     "3455": {
       "url": "https://github.com/mono/SkiaSharp/pull/3455",
       "title": "Update the native dependency bump skills",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -354,6 +380,7 @@
     "3452": {
       "url": "https://github.com/mono/SkiaSharp/pull/3452",
       "title": "Update libpng to 1.6.54",
+      "body": "* Update libpng to 1.6.54\n\n* Update skia submodule for libpng 1.6.54",
       "author": "mattleibow",
       "community": false,
       "tag": "product",
@@ -364,6 +391,7 @@
     "3454": {
       "url": "https://github.com/mono/SkiaSharp/pull/3454",
       "title": "Update docs submodule",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -371,6 +399,7 @@
     "3453": {
       "url": "https://github.com/mono/SkiaSharp/pull/3453",
       "title": "Add native dependency update skill",
+      "body": "Add AI skill for updating native dependencies (libpng, zlib, harfbuzz, etc.)\nin SkiaSharp's Skia fork. Includes:\n\n- Step-by-step workflow for version bumps and security fixes\n- Breaking change analysis guidance\n- PR creation process with proper cross-linking\n- Common dependency reference table",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -378,6 +407,7 @@
     "3451": {
       "url": "https://github.com/mono/SkiaSharp/pull/3451",
       "title": "Add AI release skills and integration test suite",
+      "body": "Documentation:\n- Add comprehensive API design guidelines (api-design.md)\n- Restructure copilot-instructions.md with skills section, testing guide,\n  API patterns, and ABI safety rules\n- Modernize building.md and building-linux.md for .NET 8\n- Add prerequisites to CONTRIBUTING.md and documentation/README.md\n\nNew skill:\n- Add implement-issue skill for GitHub issue implementation workflow\n- Includes references for new-api, bug-fix, and context-checklist\n\nBuild improvements:\n- Simplify SkiaSharp.Build.props workload detection (~50 lines removed)\n- Document SkiaSharp.Build.Override.in.props customization options\n- Add download progress indicator to UtilsManaged.cake\n- Pin SDK to .NET 8 in global.json",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -385,6 +415,7 @@
     "3450": {
       "url": "https://github.com/mono/SkiaSharp/pull/3450",
       "title": "Fix the version processing",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -392,6 +423,7 @@
     "3445": {
       "url": "https://github.com/mono/SkiaSharp/pull/3445",
       "title": "Add API guidelines and implement-issue skill",
+      "body": "Documentation:\n- Add comprehensive API design guidelines (api-design.md)\n- Restructure copilot-instructions.md with skills section, testing guide,\n  API patterns, and ABI safety rules\n- Modernize building.md and building-linux.md for .NET 8\n- Add prerequisites to CONTRIBUTING.md and documentation/README.md\n\nNew skill:\n- Add implement-issue skill for GitHub issue implementation workflow\n- Includes references for new-api, bug-fix, and context-checklist\n\nBuild improvements:\n- Simplify SkiaSharp.Build.props workload detection (~50 lines removed)\n- Document SkiaSharp.Build.Override.in.props customization options\n- Add download progress indicator to UtilsManaged.cake\n- Pin SDK to .NET 8 in global.json",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -399,6 +431,7 @@
     "3447": {
       "url": "https://github.com/mono/SkiaSharp/pull/3447",
       "title": "Document HarfBuzzSharp versioning in release process",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -406,6 +439,7 @@
     "3446": {
       "url": "https://github.com/mono/SkiaSharp/pull/3446",
       "title": "Bump to the next version (3.119.3) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
