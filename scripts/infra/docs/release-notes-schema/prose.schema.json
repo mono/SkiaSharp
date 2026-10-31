@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "release-notes prose",
-  "description": "The ONLY output of the polish agent. Prose strings that fill the deterministic page template. The agent writes no headings, tables, banners, @handles, hearts or PR links \u2014 those are rendered from data.json.",
+  "description": "The polish agent's per-page prose output. The renderer owns the page's headings, tables, banners, handles and PR links from data.json. The hosted workflow separately asks the agent to write a template-based PR description; that body is not part of this JSON.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -28,7 +28,7 @@
         "string",
         "null"
       ],
-      "description": "Optional. <=60 WORDS (renderer enforces in words) naming 2-3 themes in prose. No PR links, no @handles, no comma-run enumeration of every change. Null when the headline says enough.",
+      "description": "Optional. <=60 WORDS (renderer enforces in words) introducing the biggest themes in prose or a short feature list, not the full changelog. No PR links or @handles. Null when the headline says enough.",
       "maxLength": 420
     },
     "breaking": {
@@ -61,7 +61,7 @@
     },
     "categories": {
       "type": "array",
-      "description": "Curated product-facing sections. Only headings from data.allowed_categories. Each bullet MERGES related PRs into one theme; the agent supplies lead+detail prose and the PR numbers, the template renders links and community \u2764\ufe0f credit. Aim 3-5 bullets per section \u2014 curate, don't enumerate.",
+      "description": "Curated product-facing sections using the heading enum below. Each bullet merges related PRs into one theme; the agent supplies lead+detail prose and PR numbers, while the renderer adds links and community credit. Prefer a few substantive bullets over enumerating every PR.",
       "items": {
         "type": "object",
         "additionalProperties": false,

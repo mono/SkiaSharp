@@ -325,12 +325,13 @@ The parent-owned API-diff and release-notes engines live together under
 The **release-notes engine** —
 its data builders, renderer and prose schema — sits **beside the API-diff engine and
 the shared Cake machinery** it runs with, rather than in the skill folder. The
-skill keeps only the thin, stable **entrypoints** (`prepare.sh`, `render.sh`) plus
-the AI's instructions (`SKILL.md`, `samples/`): the entrypoints *redirect* to the
+skill keeps thin **entrypoints** (`prepare.sh`, `render.sh`), the workflow's
+`prepare-pr-branch.sh` host helper, and the AI's instructions (`SKILL.md`, `samples/`).
+The generation entrypoints *redirect* to the
 real engine under `scripts/infra/docs/`, so the skill stays a simple, stable
 surface while the implementation can be edited underneath it. (The committed page
 inputs — `_sources/*.data.json`, `*.prose.json`, `co-release-map.json`, `index.json`,
-and the `pr-authors.json` / `pr-first-time-contributors.json` caches — live under
+and the `pr-authors.json`, `pr-fixed-issues.json`, and `pr-first-time-contributors.json` caches — live under
 `releases/_sources/`.)
 
 ```
@@ -359,6 +360,8 @@ scripts/infra/docs/                (all doc engines, together)
     prepare.sh                 Prepare entrypoint → docs-api-diff → release-notes-data.py →
                                release-notes-index.py; writes the Files-to-polish list (§2.2)
     render.sh                  Polish-Finalize entrypoint: offline release-notes-render.py --all (§2.2)
+    prepare-pr-branch.sh        Hosted pre-agent checkout: fixed output branch, main-rooted
+                               history with selected-source working files preserved (§2.3)
 ```
 
 The release-notes engine is split by phase and artifact, and the skill's two
@@ -366,10 +369,10 @@ entrypoints delegate to it. `prepare.sh` owns no generation logic of its own —
 delegates, in order, to the shared `docs-api-diff` Cake target (Path 1), then to
 `release-notes-data.py`, then to `release-notes-index.py`. The Docker `api-diffs`
 subcommand also invokes that Cake target directly. `render.sh` is the corresponding
-offline finalizer: it wraps `release-notes-render.py --all` under the same narrow flag
-surface so the skill, the update-release-notes workflow, the Docker wrapper, and a
-human running locally all execute the same phase commands. `release-notes-render.py`
-imports `release-notes-data.py` with `importlib` for shared version parsing and
+offline local finalizer: it wraps `release-notes-render.py --all`. The hosted Polish
+agent invokes that Python command directly; the host/local Prepare phase uses
+`prepare.sh`. Both render entrypoints use the same Python implementation, not separate
+generation logic. `release-notes-render.py` imports `release-notes-data.py` with `importlib` for shared version parsing and
 page-set helpers (`version_key`, `minor_group`, `get_version_files`,
 `cadence_milestones`, and the `versions.json` path); module load is offline-safe, and
 all network data it needs arrives through `_sources/index.json`. `versions.json` sits
@@ -430,12 +433,29 @@ network** and no permission to re-run Cake, `prepare.sh`, `release-notes-data.py
 page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 `_sources/<version>.notes.md` companions (§4.7), writes
 `_sources/<version>.prose.json` (schema: `release-notes-schema/prose.schema.json`, including
-`harfbuzz_summary` when required), and runs
-`release-notes-render.py <data.json> <prose.json> <out.md>` to validate the prose. A render
-that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
-never hand-edited.
+`harfbuzz_summary` when required). It then validates and renders the complete page set
+with `release-notes-render.py --all`. A batch that prints `PROSE VALIDATION FAILED`
+is fixed in prose and rerun; the `.md` page is never hand-edited. The positional
+`release-notes-render.py <data.json> <prose.json> <out.md>` form is available to diagnose
+a particular failure, not as a routine pre-pass for every page.
 
-After every changed page validates, Polish runs the offline finalizer once — either
+Identical complete PR bodies can be read once and reused across pages, while each
+page, preview and shipment keeps its own PR membership. Every rewritten page still
+receives a factual review against its supporting bodies and companions.
+
+Initial inventories show field names and counts rather than dumping whole documents.
+`data.prs` is an object keyed by string PR numbers, with classification in each value's
+`tag`; contributors, previews, shipments and breaking candidates are arrays. Metadata
+and complete-body reads are byte-bounded; long bodies are read in consecutive chunks,
+never replaced by a clipped preview.
+
+Before writing new prose, Polish reviews existing exact-tag `release_summaries` from
+previous on-disk or committed prose where available. A reviewed summary is retained
+only if shipment facts are unchanged and its text remains supported; otherwise it is
+re-authored or omitted until reviewed. This does not authorize retaining old website
+prose without re-authoring it against current facts.
+
+After writing and factual review, Polish runs the offline batch validator/finalizer — either
 `.agents/skills/release-notes/scripts/render.sh` or its core command,
 `release-notes-render.py --all`. `render.sh` accepts the same three flags as `prepare.sh` for
 a uniform interface; `--force` is a no-op because rendering is idempotent, and scoped
@@ -449,6 +469,12 @@ the finished page set and the committed Chrome schedule in `_sources/index.json`
 consumers see just two phases — **Prepare** (run one script) then **Polish** (write
 prose, render) — and never juggle the individual generators by hand.
 
+The batch applies the same prose validator as the single-page command to every page.
+Successful checks remain valid until their inputs change. Fix findings and rerun the
+batch after further prose edits; use individual-page calls only for diagnostics. Inspect the
+final diff for scope and unexpected changes; staging alone does not require repeating
+the factual review or successful validation.
+
 ### 2.3 One workflow, one PR
 
 A single GitHub workflow
@@ -456,6 +482,27 @@ A single GitHub workflow
 §2.2 sequence and opens **one** pull request with the regenerated `releases/` tree.
 There is no separate "api-diff" vs "release-notes" workflow — they are one pipeline
 producing one coherent update.
+
+All generated PRs use `bot/release-notes` and target `main`, including branch-source
+validation runs. A pre-agent step checks out that fixed output branch; the agent never
+chooses or checks out a branch. The output history starts at `origin/main`, while
+`git reset --mixed` preserves the selected source's working files, including its edited
+release-notes skill. It does not check out main's copies of those files.
+Only `documentation/docfx/releases/` is staged and allowed for publication, keeping
+workflow and skill changes out of the docs diff.
+
+To test edited workflow and skill sources, dispatch with both `--ref <feature-branch>`
+and `--raw-field source_branch=<feature-branch>`. All runs share a concurrency group
+without cancelling an active run. With `recreate-ref` enabled, replacing the existing
+bot branch closes its open PR and creates a replacement; the branch is fixed, not the
+PR number. A later production run can replace test-generated notes. PR publication
+failures are errors, not successful fallback issues.
+
+After successful rendering, the agent writes the PR description from the final generated
+diff using the contributor template's sections and checklists. It summarizes the affected
+releases and meaningful changes, and records the actual validation commands and results.
+Complete instructional HTML comment blocks are omitted before submission so safe-output
+sanitization cannot expose their placeholder examples as real API changes.
 
 **`main` is the only source of truth, on a daily schedule.** The workflow runs on
 pushes to `main` and on a **daily cron**, and is deliberately *not* triggered by
@@ -493,13 +540,18 @@ then runs the **Polish** phase (§2.2) offline: it writes only prose JSON for th
 listed pages, may read only the companion files those pages reference, runs
 `release-notes-render.py` to materialize Markdown, and never reruns the network producers.
 
-The `create-pull-request` safe-output captures the *combined* working-tree diff
+After validation and final diff inspection, the agent writes the template-based PR
+description, stages release-tree changes, and makes one commit.
+The `create-pull-request` safe-output publishes that
+*combined* committed release-tree diff
 (restored Prepare output + agent prose JSON + rendered pages + `TOC.yml` +
 `index.md`) into the single PR, so all artifacts always ship together. The agent job
 is **gated on Prepare having produced changes** (`prepare.outputs.has_changes`): on
 a no-op run the deterministic generators reproduce the existing tree byte-for-byte,
 Prepare's patch is empty, and the agent **and** the PR are skipped — so an unchanged
-daily run opens no PR (§4.6 idempotency).
+daily run opens no PR (§4.6 idempotency). This gate checks the Git patch, not the
+Files-to-polish list: a forced run that reproduces identical files can list pages for
+Polish yet still skip the hosted agent. A nonempty list alone does not force CI inference.
 
 
 ### 2.4 The rendering pipeline
@@ -511,7 +563,7 @@ the work is split by artifact:
 
 1. **`release-notes-data.py` emits `_sources/<version>.data.json`** — the deterministic facts
    a SkiaSharp page is built from: banner facts + links, the flat PR map (each with its
-   three-way tag and `community` flag), the authoritative contributor roster,
+   full merge-commit body, three-way tag and `community` flag), the authoritative contributor roster,
    per-preview buckets, breaking-change *sources* (`*.breaking.md` and
    `_sources/<version>.notes.md`), supersede/API links, tallies, family status, and —
    on released pages — the folded `harfbuzz` block (`version`, `api_diff_link`, and
@@ -526,15 +578,17 @@ the work is split by artifact:
 3. **The agent writes `_sources/<version>.prose.json`** — prose only, against
    `release-notes-schema/prose.schema.json`: `theme`, `highlights_headline`/`highlights_body`,
    `breaking`, `categories`, `contributor_summaries`, `preview_summaries`, and
-   `harfbuzz_summary` when `data.harfbuzz.prs` is non-empty. It never writes a
-   heading, table, banner, handle, ❤️, or PR link.
-4. **`release-notes-render.py` renders Markdown** — per-page validation with
-   `release-notes-render.py <data.json> <prose.json> [out.md]`, and the final
-   `release-notes-render.py --all` pass that prunes stale `-unreleased` pages (per
+   `harfbuzz_summary` when `data.harfbuzz.prs` is non-empty, and optional
+   `release_summaries` for exact shipments. Page headings, tables, banners, handles,
+   and PR links remain renderer-owned. The output PR description is separately AI-authored.
+4. **`release-notes-render.py` validates and renders Markdown** — the normal
+   `release-notes-render.py --all` batch applies the prose validator to every page,
+   prunes stale `-unreleased` pages (per
    `index.json`'s `live_unreleased`), retires old HarfBuzz hub pages, then rebuilds
    every SkiaSharp page plus `TOC.yml` and `index.md` from committed JSON. It is pure
    stdlib, dependency-free, and offline; the release-cadence timeline reads the
-   schedule from `_sources/index.json`.
+   schedule from `_sources/index.json`. The positional per-page form is available
+   for diagnosing a particular failure; a successful batch needs no per-page pre-pass.
 
 **Why the split.** Every failure mode that recurred under the single-agent path lived
 exactly where the agent owned structure: dropped `## Breaking Changes` headings, bare
@@ -863,8 +917,9 @@ sidecar does, because no engine ever writes it.
 
 It is **freeform Markdown, not a schema.** There is no JSON and no required structure:
 the maintainer writes natural-language notes and the Polish AI parses, understands, and
-weaves them into `prose.json` (§4.7). Not all of it is "breaking" — some is simply
-material to surface.
+weaves them into `prose.json` (§4.7). Reserve it for supplemental migration guidance or
+editorial decisions that cannot be gathered from the collected commit bodies and API diffs;
+do not duplicate the changelog here. Not all of it is "breaking" — some is simply material to surface.
 
 #### Ownership & lifecycle
 
@@ -904,7 +959,7 @@ This sidecar is a maintainer→engine input; it is distinct from the co-release 
 The release-notes pipeline has three script-owned producers, split by artifact:
 
 - **`release-notes-data.py` (Prepare, network-capable) — per-page facts.** Inputs are
-  `git log` over a diff range (merged-PR subjects `… (#1234)`), published `v*`
+  `git log` over a diff range (merged-PR subjects `… (#1234)` and full commit bodies), published `v*`
   release tags (for preview milestones + dates), `versions.json`, the §1.5
   co-release map sidecar (§3.6) written by Cake, and companion-file hashes
   (§4.7). It emits `_sources/<stem>.data.json` for each changed SkiaSharp page and
@@ -1003,8 +1058,12 @@ built from. It is timestamp-free and includes, at minimum:
   from `shipments`; it never synthesizes an `X.Y.Z-preview` package URL.
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
-- `prs` — the flat PR map, including title, URL, author, `community`, and the
-  deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
+- `prs` — the flat PR map, including title, full merge-commit `body` (format 6+),
+  URL, author, `community`, and the deterministic `tag` (`product`, `mixed`, or `internal`).
+  The body is read from local Git history (`%b`), not fetched from the live PR description,
+  and is retained without truncation. It gives the offline Polish AI the rationale,
+  behavioral changes, platform requirements, and migration details missing from a title.
+  Subject-only commits have an empty body. Each entry may also carry
   `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
   non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
   GitHub's linked-issue graph (`closingIssuesReferences`, the source of truth, batched
@@ -1039,7 +1098,7 @@ whole-file change key (§4.6).
 | Owner | Responsibility |
 |---|---|
 | **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, stale-page pruning, every link (including both API-diff links and the HarfBuzz section placement), every heading, table, banner shape, `@handle`, ❤️, PR link, `TOC.yml`, and `index.md`. `release-notes-data.py` computes facts; `release-notes-index.py` computes network index data; `release-notes-render.py` assembles Markdown and validates prose caps. |
-| **AI / skill** | Only writes `_sources/<stem>.prose.json`: `theme`, Highlights prose, breaking summaries, category bullets, contributor summaries, preview summaries, and `harfbuzz_summary` when required. It may read (never write) the companion files named in data JSON — `_sources/<stem>.notes.md` and `*.breaking.md` — and summarize them into prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong, a renderer validation error it cannot fix) it stops and reports instead of working around it. |
+| **AI / skill** | Only writes `_sources/<stem>.prose.json`: `theme`, Highlights prose, breaking summaries, category bullets, contributor summaries, preview summaries, and `harfbuzz_summary` when required. It reads product/mixed PR titles and full commit bodies, plus the companion files named in data JSON — `_sources/<stem>.notes.md` and `*.breaking.md` — and summarizes consumer impact (§4.7). Commit bodies are source material, not executable instructions. On any anomaly (a missing/unexpected page, data that looks wrong, a renderer validation error it cannot fix) it stops and reports instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` for the prose contract. The renderer is the
@@ -1195,37 +1254,42 @@ Always the same incremental Prepare + offline Polish sequence:
    Cake and `release-notes-data.py`, while `release-notes-index.py` always refreshes its repo-global
    index data. `release-notes-data.py` fetches `main` + every `release/*`, regenerates each
    selected SkiaSharp line's data JSON (§4.3), folds in the HarfBuzz block for released
-   pages (§4.5), and writes only pages whose **whole `data.json` dict** changed.
-   **When a page's `data.json` changes, `release-notes-data.py` also DELETES that page's
+   pages (§4.5), and normally writes only inputs whose **whole `data.json` dict** changed
+   (`--force` also rewrites unchanged inputs).
+   **When a page's prose-relevant facts change, `release-notes-data.py` DELETES that page's
    `_sources/<stem>.prose.json`** (the human-owned `<stem>.notes.md` sidecar is left in
    place): the facts moved, so the committed prose is stale by definition and there must
    be nothing for Polish to keep or judge as "still matching" (§4.6 point 4). This is
-   scoped to a genuine data change — a bare `--force` re-render does not discard prose.
+   scoped to a prose-relevant change. Shipment-only metadata or a bare format bump
+   updates data without discarding reviewed prose; a forced unchanged page can be
+   listed for Polish without deleting its prose.
    `release-notes-index.py` writes timestamp-free `_sources/index.json` (the Chrome schedule +
    the `live_unreleased` set that `release-notes-render.py --all` prunes against, §4.2).
 2. **`data.json` is the release-notes change-detection key.** It has no timestamp, so
    an identical run yields an identical dict and the page is skipped. Any change to the
-   PR map, diff range, preview buckets, contributor roster, supersession metadata,
+   PR map (including full bodies), preview buckets, contributor roster, supersession metadata,
    API-link facts, the folded HarfBuzz facts, or a companion's folded `sha256` changes
-   the dict and lists the page in `output/files-to-polish.txt`. Editing
+   the website-facing content and lists the page in `output/files-to-polish.txt`. Editing
    `_sources/<stem>.notes.md` or changing a `*.breaking.md` file flips the relevant
    `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full
    non-breaking API diff is deliberately **not** folder-hashed — its change signal is
    already carried by the PR set and the API-changes link.
-3. **The `format` field rolls out data-shape changes.** The content key detects data
-   changes but not a schema/instruction change that leaves the facts identical. The
+   Adding commit bodies to an older PR map, or changing a body, is a prose-relevant
+   change: it discards stale prose and schedules Polish even when PR titles are unchanged.
+3. **The `format` field records data-shape changes.** The content key detects data
+   changes, not a writing-instruction change that leaves the facts identical. The
    `format` field is a single integer stamped into every data sidecar and compared as
    part of the dict. Bump `_DATA_JSON_FORMAT_VERSION` in `release-notes-data.py` whenever the
-   data JSON shape or its Polish contract changes materially; a forced run rewrites the
-   pages to the new format, then the pipeline settles back to idempotent.
-4. **Polish writes prose and renders offline.** The Files-to-polish list names only
-   genuinely changed pages, and each of them has had its `prose.json` **deleted** by
-   Prepare (point 1), so the AI **re-authors that page from scratch** against the fresh
-   `data.json` — it never inspects an old prose file to decide whether it "still matches"
-   (that soft judgment silently dropped brand-new product PRs). After the AI writes each
-   `_sources/<stem>.prose.json` and validates the page with
-   `release-notes-render.py <data.json> <prose.json> [out.md]`, it runs `render.sh` (or the
-   equivalent `release-notes-render.py --all`) once to regenerate every SkiaSharp page, retire
+   data JSON shape changes materially. A bare format bump is metadata-only and does not
+   by itself invalidate prose; adding or changing PR bodies does. Do not rely on a
+   format bump alone to apply a changed writing instruction to otherwise unchanged pages.
+4. **Polish writes prose and renders offline.** The Files-to-polish list names pages
+   needing new prose, including explicitly forced unchanged pages. The AI **re-authors
+   each listed page from scratch** against its current `data.json` and companions,
+   whether an older prose file still exists or not. It does not keep prose merely because
+   it looks plausible. After the AI writes each
+   `_sources/<stem>.prose.json`, it runs `render.sh` (or the equivalent
+   `release-notes-render.py --all`) to validate the full batch and regenerate every SkiaSharp page, retire
    old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. **`--all`
    hard-fails** if any `data.json` has no matching `prose.json` — i.e. a changed/new page
    the AI forgot to author — so a changed page can never ship with stale (or missing)
@@ -1293,9 +1357,8 @@ it:
 1. **Manual notes (`_sources/*.notes.md`) — merge neatly.** Read it and fold its
    points into the prose: editorial "bring this out" notes into Highlights (kept
    close to the maintainer's wording where it matters), behavioral and interop
-   breaks under Breaking Changes. This sidecar is the **only** channel for breaks the
-   signature diff cannot see — behavioral changes (same signature, different runtime
-   behavior) and interop / native structs.
+   breaks under Breaking Changes. The sidecar supplements commit bodies with maintainer guidance
+   that cannot be gathered from those bodies or signature diffs; it is not a second changelog.
 2. **Breaking diff (`.breaking.md`) — summarize as a few bullets.** Open **every**
    file the data sidecar lists (one per broken assembly) and write a handful of
    `breaking` entries naming the affected types/areas, with a small migration example
@@ -1307,10 +1370,12 @@ it:
    `## Breaking Changes`; when `prose.breaking` is empty, it renders
    *"None in this release."* (or preview wording for preview/unreleased pages).
 
-The AI still writes **no links or structure** (§4.4), **never edits a companion**, and
-never touches git or the gh API. Richer highlights may draw on the full API-diff link
-for context, but the PR list and companion paths in `data.json` remain the primary
-sources for "what's new" and "what broke".
+Within release-page prose, the AI supplies no renderer-owned links or structure (§4.4)
+and never edits a companion. The hosted workflow separately requires the agent to
+commit release-tree changes and submit its own template-based PR description through
+the registered safe-output tool; it does not fetch live PR details during Polish.
+Richer highlights may draw on the linked API diff for context, but complete commit
+bodies and companion paths in `data.json` remain the primary sources for consumer impact.
 
 #### Idempotency
 
@@ -1431,7 +1496,7 @@ comparisons:
   pass. A website-content change writes the facts, discards stale prose, and
   requests polish. A fully unchanged page skips unless `--force`.
 
-The updater skips data below format 5 during broad convergence. It also reads
+The updater skips data not at the current format during broad convergence. It also reads
 `versions.json` and does not inspect or mutate pages below
 `history_floor.skiasharp`; an explicitly requested tag below that floor, or on
 older data, fails with an actionable error.
@@ -1695,5 +1760,6 @@ HarfBuzzSharp API diff.
     `_sources/*.notes.md` sidecar is a
     **maintainer-owned freeform-Markdown input**: never machine-written, renamed, or
     cleared; docfx-excluded; skipped by page discovery. The Polish AI may **read** the
-    referenced companions (a bounded allow-list) and summarize them, but writes only
-    prose JSON — never a companion, never git/gh (§2.2/§4.4).
+    referenced companions and summarize them into prose JSON, but never changes those
+    inputs. Committing rendered release files and writing the output PR description
+    are separate workflow duties (§2.3), not permission to rewrite companion content.
