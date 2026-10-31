@@ -136,6 +136,10 @@ namespace SkiaSharp.Views.GlesInterop
 		{
 			if (eglDisplay != Egl.EGL_NO_DISPLAY && eglSurface != Egl.EGL_NO_SURFACE)
 			{
+				// EGL defers destruction of a current surface, retaining its native window.
+				if (Egl.eglGetCurrentContext() == eglContext)
+					Egl.eglMakeCurrent(eglDisplay, Egl.EGL_NO_SURFACE, Egl.EGL_NO_SURFACE, Egl.EGL_NO_CONTEXT);
+
 				Egl.eglDestroySurface(eglDisplay, eglSurface);
 				eglSurface = Egl.EGL_NO_SURFACE;
 			}
