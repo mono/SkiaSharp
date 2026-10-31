@@ -227,8 +227,11 @@ namespace SkiaSharp.Tests
 
 			Assert.False(stream.IsAtEnd);
 			Assert.Equal(3, stream.Read(new byte[8], 8));
-			Assert.False(stream.IsAtEnd);
+			// Filling the larger native request already observed a zero after the three available bytes.
+			Assert.Equal(1, source.ZeroReadCount);
+			Assert.True(stream.IsAtEnd);
 			Assert.Equal(0, stream.Read(new byte[1], 1));
+			Assert.Equal(2, source.ZeroReadCount);
 			Assert.True(stream.IsAtEnd);
 
 			Assert.True(stream.Rewind());
