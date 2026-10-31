@@ -142,8 +142,12 @@ namespace SkiaSharp
 				src.CopyTo (dst);
 			}
 
-			if (!stream.CanSeek && (int)size > 0 && len <= (int)size)
-				isAsEnd = true;
+			if (!stream.CanSeek) {
+				if ((int)size > 0 && len <= (int)size)
+					isAsEnd = true;
+			} else if (stream.Length < 0) {
+				isAsEnd = len == 0;
+			}
 
 			return (IntPtr)len;
 		}
@@ -182,7 +186,8 @@ namespace SkiaSharp
 			if (!stream.CanSeek) {
 				return isAsEnd;
 			}
-			return stream.Position >= stream.Length;
+			var length = stream.Length;
+			return length < 0 ? isAsEnd : stream.Position >= length;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report its current position.</summary>
@@ -198,7 +203,8 @@ namespace SkiaSharp
 		/// <remarks />
 		protected internal override bool OnHasLength ()
 		{
-			return stream.CanSeek;
+			// Front-buffered streams can seek within their buffer without knowing the total length.
+			return stream.CanSeek && stream.Length >= 0;
 		}
 
 		/// <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to rewind the current stream.</summary>
@@ -210,6 +216,7 @@ namespace SkiaSharp
 				return false;
 			}
 			stream.Position = 0;
+			isAsEnd = false;
 			return true;
 		}
 
@@ -236,6 +243,8 @@ namespace SkiaSharp
 				return (IntPtr)0;
 			}
 			var length = stream.Length;
+			if (length < 0)
+				return IntPtr.Zero;
 			if (!PlatformConfiguration.Is64Bit && length > UInt32.MaxValue)
 				throw new OverflowException ("The length exceeds the size of native stream lengths.");
 			return Utils.ToNativeSize ((ulong)length);
@@ -254,6 +263,7 @@ namespace SkiaSharp
 			if (nativePosition > Int64.MaxValue)
 				return false;
 			stream.Position = (long)nativePosition;
+			isAsEnd = false;
 			return true;
 		}
 
@@ -267,6 +277,7 @@ namespace SkiaSharp
 				return false;
 			}
 			stream.Position += offset;
+			isAsEnd = false;
 			return true;
 		}
 

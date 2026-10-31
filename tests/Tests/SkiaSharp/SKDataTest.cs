@@ -472,16 +472,52 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, first.ToArray());
 		}
 
-		[Fact]
-		public void CreateFromUnknownLengthSeekableStreamReadsToEnd()
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void CreateFromUnknownLengthSeekableStreamReadsToEnd(bool managedWrapper)
 		{
 			var bytes = new byte[2 * 1024 * 1024 + 17];
 			new Random(42).NextBytes(bytes);
 			using var stream = new ConfigurableTestStream(bytes, maxBytesPerRead: 997, reportedLength: -1);
-			using var data = SKData.Create(stream);
+			using var managed = new SKManagedStream(stream);
+			// Guard the regression before invoking a factory that would otherwise use an unsigned-max size.
+			if (managedWrapper)
+				Assert.False(managed.HasLength);
+			using var data = managedWrapper ? SKData.Create((SKStream)managed) : SKData.Create(stream);
 
 			Assert.Equal(bytes, data.ToArray());
 			Assert.Equal(bytes.Length, stream.Position);
+		}
+
+		[Theory]
+		[InlineData(0, 0)]
+		[InlineData(5, 0)]
+		[InlineData(SKData.CopyBufferSize * 2 + 17, 1)]
+		public void CreateFromManagedFrontBufferedUnknownLengthReadsRemainingData(int size, int prefixLength)
+		{
+			var bytes = new byte[size];
+			new Random(42).NextBytes(bytes);
+			using var source = new ConfigurableTestStream(bytes, canSeek: false);
+			using var buffered = new SKFrontBufferedStream(source, 4096);
+			using var stream = new SKManagedStream(buffered);
+			if (prefixLength > 0)
+				Assert.Equal(bytes[0], stream.ReadByte());
+
+			// Fail safely on the capability bug before the factory could attempt an unsigned-max allocation.
+			Assert.False(stream.HasLength);
+			Assert.Equal(0L, stream.Length64);
+			Assert.Equal(prefixLength, stream.Position64);
+
+			using var data = SKData.Create((SKStream)stream);
+
+			Assert.NotNull(data);
+			Assert.Equal(bytes.AsSpan(prefixLength).ToArray(), data.ToArray());
+			Assert.Equal(size, stream.Position64);
+			Assert.True(stream.IsAtEnd);
+			Assert.True(source.CanRead);
+			Assert.InRange(source.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+			Assert.False(source.InfiniteLoopDetected);
 		}
 
 		[Theory]

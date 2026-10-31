@@ -6,15 +6,16 @@ namespace SkiaSharp.Tests
 	public sealed class ThrowingReadStream : Stream
 	{
 		private readonly long length;
+		private bool disposed;
 
 		public ThrowingReadStream(long length = 4096)
 		{
 			this.length = length;
 		}
 
-		public override bool CanRead => true;
+		public override bool CanRead => !disposed;
 
-		public override bool CanSeek => true;
+		public override bool CanSeek => !disposed;
 
 		public override bool CanWrite => false;
 
@@ -42,5 +43,11 @@ namespace SkiaSharp.Tests
 
 		public override void Write(byte[] buffer, int offset, int count) =>
 			throw new NotSupportedException();
+
+		protected override void Dispose(bool disposing)
+		{
+			disposed = true;
+			base.Dispose(disposing);
+		}
 	}
 }
