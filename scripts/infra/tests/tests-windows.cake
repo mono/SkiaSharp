@@ -20,7 +20,6 @@ Task ("Default")
         // Restrict restore too: --framework alone still restores the other platforms.
         { "TargetFramework", tfm },
         { "TargetFrameworks", tfm },
-        { "WindowsPackageType", "None" },
         { "Platform", "x64" },
     };
 
