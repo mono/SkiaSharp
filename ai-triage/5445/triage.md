@@ -1,0 +1,297 @@
+# Issue Triage Report — #5445
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-10-31T04:17:01Z |
+| Type | type/feature-request (0.96 (96%)) |
+| Area | area/Build (0.98 (98%)) |
+| Suggested action | needs-investigation (0.90 (90%)) |
+
+**Issue Summary:** The reporter requests an update to the native-package third-party notices so obsolete GIF and zlib licensing text is removed and the notices accurately reflect dependencies compiled into SkiaSharp packages.
+
+**Analysis:** The packaged THIRD-PARTY-NOTICES.txt is a direct pack-time copy of External-Dependency-Info.txt. The merged libmicrohttpd cleanup addressed one obsolete notice, but the current source still contains GIF and zlib text identified by the reporter. The repository dependency documentation identifies wuffs, rather than a legacy GIF library, as the active GIF codec and confirms that zlib remains active, so the remaining work requires a focused legal-notice audit rather than removing zlib itself.
+
+**Recommendations:** **needs-investigation** — The remaining request is valid and source-backed, but a package-by-package dependency and legal-text audit is needed before changing notices or deciding which additional attributions are required.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/feature-request |
+| Area | area/Build |
+| Platforms | — |
+| Backends | — |
+| Tenets | — |
+| Perf | — |
+| Partner | — |
+| Current labels | type/feature-request |
+
+## Evidence
+
+### Reproduction
+
+**Related issues:** #5401, #3511
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/pull/5403 — Merged cleanup that removes the obsolete libmicrohttpd notice.
+- https://github.com/mono/SkiaSharp/pull/3463 — Dependency audit that identifies microhttpd as unused and lists active dependencies.
+- https://github.com/mono/skia/commit/62799ef8091ae669152c046de92f3e0e0ba6e0ed — Reporter-provided upstream reference for the historical GIF codec removal.
+- https://chromium.googlesource.com/chromium/src/third_party/zlib/+/13dc246a58e4b72104d35f9b1809af95221ebda7 — Reporter-provided upstream reference for removal of mozzconf.h.
+
+### Fix Status
+
+| Field | Value |
+|-------|-------|
+| Likely fixed | False |
+| Confidence | 0.94 (94%) |
+| Reason | PR #5403 resolved only the libmicrohttpd portion; the current notice source still contains separate GIF and zlib sections, including the mozzconf.h tri-license statement. |
+| Related PRs | #5403, #3463 |
+| Related commits | — |
+| Fixed in version | — |
+
+## Analysis
+
+### Technical Summary
+
+The packaged THIRD-PARTY-NOTICES.txt is a direct pack-time copy of External-Dependency-Info.txt. The merged libmicrohttpd cleanup addressed one obsolete notice, but the current source still contains GIF and zlib text identified by the reporter. The repository dependency documentation identifies wuffs, rather than a legacy GIF library, as the active GIF codec and confirms that zlib remains active, so the remaining work requires a focused legal-notice audit rather than removing zlib itself.
+
+### Rationale
+
+This is a well-scoped request to correct package legal metadata, not a runtime defect or a request for a new rendering API. The packaging target directly establishes area/Build, while current source and dependency documentation confirm that the obsolete GIF notice and stale zlib wording require review after the independently merged libmicrohttpd removal.
+
+### Key Signals
+
+- "The native NuGet packages ship a THIRD-PARTY-NOTICES.txt file which comes from External-Dependency-Info.txt." — **issue body** (Identifies the package metadata and source notice file in scope.)
+- "The libSkiaSharp.pdb contains Wuffs, SPIRV-Cross, D3D12MemoryAllocator, and VulkanMemoryAllocator paths that are missing from the notices." — **issue comment** (The audit should consider both stale entries and potentially omitted active dependencies.)
+- "Remove the obsolete libmicrohttpd third-party license notice from External-Dependency-Info.txt." — **PR #5403** (One requested cleanup has already merged, but does not cover the remaining entries.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/NativeAssets.Build.targets` | 25 | direct | The native-assets packaging item includes External-Dependency-Info.txt at PackagePath THIRD-PARTY-NOTICES.txt, so editing the notice source changes the generated notice shipped by native packages. |
+| `External-Dependency-Info.txt` | 312-354 | direct | The current source still contains a distinct gif notice section. |
+| `External-Dependency-Info.txt` | 2167-2199 | direct | The current zlib section still includes the mozzconf.h MPL/GPL/LGPL tri-license statement at line 2196. |
+| `documentation/dev/dependencies.md` | Active Dependencies | related | The dependency inventory lists wuffs as the active GIF codec and lists zlib as an active compression dependency; zlib notice wording should be corrected without removing zlib's required notice. |
+| `documentation/docfx/releases/4.156.0-unreleased.md` | Community Contributors | context | The unreleased release notes record PR #5403 as removal of the obsolete libmicrohttpd notice. |
+
+### Workarounds
+
+- For immediate dependency due diligence, consult documentation/dev/dependencies.md together with the package-specific notice; it identifies active native dependencies, including wuffs for GIF support and zlib for compression.
+- The libmicrohttpd portion is already addressed by merged PR #5403 and is documented for the upcoming 4.156.0 release; consumers need the release containing that change for the updated packaged notice.
+
+### Next Questions
+
+- Which exact native package variants contain the additional Wuffs, SPIRV-Cross, D3D12MemoryAllocator, and VulkanMemoryAllocator binaries identified from the Windows PDB?
+- Do all platform-specific native packages receive the same complete notice file, or is package-specific notice generation needed?
+- What current upstream license text should replace the obsolete mozzconf.h statement while retaining the required zlib attribution?
+
+### Resolution Proposals
+
+**Hypothesis:** External-Dependency-Info.txt has drifted from the current native dependency set because it is packaged unchanged rather than being derived from the native build dependency inventory.
+
+1. **Audit and synchronize third-party notices** — fix, confidence 0.90 (90%), cost/m, validated=untested
+   - Compare the dependencies compiled into each native package with External-Dependency-Info.txt, remove obsolete GIF text, replace the obsolete mozzconf.h wording while retaining the required zlib notice, and add any verified missing active dependency notices.
+2. **Use the dependency inventory pending a release** — workaround, confidence 0.85 (85%), cost/xs, validated=untested
+   - Use documentation/dev/dependencies.md as the current implementation inventory for due diligence while the package notice audit is completed; it is not a substitute for shipping corrected notices.
+
+**Recommended proposal:** Audit and synchronize third-party notices
+
+**Why:** It resolves both categories of reported drift: obsolete license wording and potentially missing notices for compiled dependencies.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | needs-investigation |
+| Confidence | 0.90 (90%) |
+| Reason | The remaining request is valid and source-backed, but a package-by-package dependency and legal-text audit is needed before changing notices or deciding which additional attributions are required. |
+| Suggested repro platform | — |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.98 (98%) | Apply the feature-request and build-area labels. | labels=type/feature-request, area/Build |
+| link-related | low | 0.93 (93%) | Cross-reference the completed libmicrohttpd notice cleanup in #5401. | linkedIssue=#5401 |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 5445,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-10-31T04:17:01Z",
+    "currentLabels": [
+      "type/feature-request"
+    ]
+  },
+  "summary": "The reporter requests an update to the native-package third-party notices so obsolete GIF and zlib licensing text is removed and the notices accurately reflect dependencies compiled into SkiaSharp packages.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.96
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.98
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        5401,
+        3511
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/5403",
+          "description": "Merged cleanup that removes the obsolete libmicrohttpd notice."
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3463",
+          "description": "Dependency audit that identifies microhttpd as unused and lists active dependencies."
+        },
+        {
+          "url": "https://github.com/mono/skia/commit/62799ef8091ae669152c046de92f3e0e0ba6e0ed",
+          "description": "Reporter-provided upstream reference for the historical GIF codec removal."
+        },
+        {
+          "url": "https://chromium.googlesource.com/chromium/src/third_party/zlib/+/13dc246a58e4b72104d35f9b1809af95221ebda7",
+          "description": "Reporter-provided upstream reference for removal of mozzconf.h."
+        }
+      ]
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.94,
+      "reason": "PR #5403 resolved only the libmicrohttpd portion; the current notice source still contains separate GIF and zlib sections, including the mozzconf.h tri-license statement.",
+      "relatedPRs": [
+        5403,
+        3463
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The packaged THIRD-PARTY-NOTICES.txt is a direct pack-time copy of External-Dependency-Info.txt. The merged libmicrohttpd cleanup addressed one obsolete notice, but the current source still contains GIF and zlib text identified by the reporter. The repository dependency documentation identifies wuffs, rather than a legacy GIF library, as the active GIF codec and confirms that zlib remains active, so the remaining work requires a focused legal-notice audit rather than removing zlib itself.",
+    "rationale": "This is a well-scoped request to correct package legal metadata, not a runtime defect or a request for a new rendering API. The packaging target directly establishes area/Build, while current source and dependency documentation confirm that the obsolete GIF notice and stale zlib wording require review after the independently merged libmicrohttpd removal.",
+    "keySignals": [
+      {
+        "text": "The native NuGet packages ship a THIRD-PARTY-NOTICES.txt file which comes from External-Dependency-Info.txt.",
+        "source": "issue body",
+        "interpretation": "Identifies the package metadata and source notice file in scope."
+      },
+      {
+        "text": "The libSkiaSharp.pdb contains Wuffs, SPIRV-Cross, D3D12MemoryAllocator, and VulkanMemoryAllocator paths that are missing from the notices.",
+        "source": "issue comment",
+        "interpretation": "The audit should consider both stale entries and potentially omitted active dependencies."
+      },
+      {
+        "text": "Remove the obsolete libmicrohttpd third-party license notice from External-Dependency-Info.txt.",
+        "source": "PR #5403",
+        "interpretation": "One requested cleanup has already merged, but does not cover the remaining entries."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/NativeAssets.Build.targets",
+        "lines": "25",
+        "finding": "The native-assets packaging item includes External-Dependency-Info.txt at PackagePath THIRD-PARTY-NOTICES.txt, so editing the notice source changes the generated notice shipped by native packages.",
+        "relevance": "direct"
+      },
+      {
+        "file": "External-Dependency-Info.txt",
+        "lines": "312-354",
+        "finding": "The current source still contains a distinct gif notice section.",
+        "relevance": "direct"
+      },
+      {
+        "file": "External-Dependency-Info.txt",
+        "lines": "2167-2199",
+        "finding": "The current zlib section still includes the mozzconf.h MPL/GPL/LGPL tri-license statement at line 2196.",
+        "relevance": "direct"
+      },
+      {
+        "file": "documentation/dev/dependencies.md",
+        "lines": "Active Dependencies",
+        "finding": "The dependency inventory lists wuffs as the active GIF codec and lists zlib as an active compression dependency; zlib notice wording should be corrected without removing zlib's required notice.",
+        "relevance": "related"
+      },
+      {
+        "file": "documentation/docfx/releases/4.156.0-unreleased.md",
+        "lines": "Community Contributors",
+        "finding": "The unreleased release notes record PR #5403 as removal of the obsolete libmicrohttpd notice.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "For immediate dependency due diligence, consult documentation/dev/dependencies.md together with the package-specific notice; it identifies active native dependencies, including wuffs for GIF support and zlib for compression.",
+      "The libmicrohttpd portion is already addressed by merged PR #5403 and is documented for the upcoming 4.156.0 release; consumers need the release containing that change for the updated packaged notice."
+    ],
+    "nextQuestions": [
+      "Which exact native package variants contain the additional Wuffs, SPIRV-Cross, D3D12MemoryAllocator, and VulkanMemoryAllocator binaries identified from the Windows PDB?",
+      "Do all platform-specific native packages receive the same complete notice file, or is package-specific notice generation needed?",
+      "What current upstream license text should replace the obsolete mozzconf.h statement while retaining the required zlib attribution?"
+    ],
+    "resolution": {
+      "hypothesis": "External-Dependency-Info.txt has drifted from the current native dependency set because it is packaged unchanged rather than being derived from the native build dependency inventory.",
+      "proposals": [
+        {
+          "title": "Audit and synchronize third-party notices",
+          "description": "Compare the dependencies compiled into each native package with External-Dependency-Info.txt, remove obsolete GIF text, replace the obsolete mozzconf.h wording while retaining the required zlib notice, and add any verified missing active dependency notices.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "cost/m"
+        },
+        {
+          "title": "Use the dependency inventory pending a release",
+          "description": "Use documentation/dev/dependencies.md as the current implementation inventory for due diligence while the package notice audit is completed; it is not a substitute for shipping corrected notices.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Audit and synchronize third-party notices",
+      "recommendedReason": "It resolves both categories of reported drift: obsolete license wording and potentially missing notices for compiled dependencies."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "The remaining request is valid and source-backed, but a package-by-package dependency and legal-text audit is needed before changing notices or deciding which additional attributions are required."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply the feature-request and build-area labels.",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/feature-request",
+          "area/Build"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the completed libmicrohttpd notice cleanup in #5401.",
+        "risk": "low",
+        "confidence": 0.93,
+        "linkedIssue": 5401
+      }
+    ]
+  }
+}
+```
+
+</details>
