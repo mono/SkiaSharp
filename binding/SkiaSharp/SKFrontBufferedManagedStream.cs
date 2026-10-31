@@ -6,7 +6,7 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
-	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
+	/// <remarks>This Skia stream adapter buffers the prefix needed to identify an image format. It derives from <see cref="SKStream" />, not <see cref="Stream" />. <see cref="SKCodec.Create(Stream)" /> automatically uses this adapter for non-seekable input. Check <see cref="SKStream.HasLength" /> before using the reported length.</remarks>
 	public class SKFrontBufferedManagedStream : SKAbstractManagedStream
 	{
 		private SKStream stream;
@@ -20,7 +20,7 @@ namespace SkiaSharp
 		private long offset;
 		private bool isUnderlyingAtEnd;
 
-		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> that wraps the specified stream.</summary>
 		/// <param name="managedStream">The stream to buffer.</param>
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		/// <remarks />
@@ -29,7 +29,7 @@ namespace SkiaSharp
 		{
 		}
 
-		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> that wraps the specified stream.</summary>
 		/// <param name="managedStream">The stream to buffer.</param>
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
@@ -51,7 +51,7 @@ namespace SkiaSharp
 			return new SKManagedStream (managedStream, disposeUnderlyingStream);
 		}
 
-		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> that wraps the specified stream.</summary>
 		/// <param name="nativeStream">The stream to buffer.</param>
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		/// <remarks />
@@ -60,7 +60,7 @@ namespace SkiaSharp
 		{
 		}
 
-		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedManagedStream" /> that wraps the specified stream.</summary>
 		/// <param name="nativeStream">The stream to buffer.</param>
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>

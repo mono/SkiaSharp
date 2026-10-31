@@ -6,7 +6,12 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
-	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
+	/// <remarks>
+	/// <para>For image decoding, pass the original stream directly to <see cref="SKCodec.Create(Stream)" /> or <see cref="SKBitmap.Decode(Stream)" />; these methods handle front buffering for non-seekable input.</para>
+	/// <para>For explicit Skia stream buffering, use <see cref="SKFrontBufferedManagedStream" />. That adapter derives from <see cref="SKStream" />, not <see cref="Stream" />, and is not a general-purpose .NET stream replacement.</para>
+	/// <para>This class is retained for compatibility. It reports <see cref="CanSeek" /> as <see langword="true" /> for limited buffered seeking and returns -1 from <see cref="Length" /> when the length is unknown.</para>
+	/// </remarks>
+	[Obsolete ("Use SKFrontBufferedManagedStream for Skia stream buffering, or pass the original Stream directly to SKCodec.Create or SKBitmap.Decode.")]
 	public class SKFrontBufferedStream : Stream
 	{
 		/// <summary>The default number of bytes to buffer (4096 bytes).</summary>
@@ -76,8 +81,8 @@ namespace SkiaSharp
 		public override bool CanRead => true;
 
 		/// <summary>Gets a value indicating whether the current stream supports seeking.</summary>
-		/// <value><see langword="true" /> if the stream supports seeking; otherwise, <see langword="false" />.</value>
-		/// <remarks />
+		/// <value>Always <see langword="true" />, for compatibility.</value>
+		/// <remarks>Seeking is limited to the buffered prefix. Once reading advances past that prefix, attempts to seek throw <see cref="InvalidOperationException" />.</remarks>
 		public override bool CanSeek => true; // we can seek if we are in the buffer
 
 		/// <summary>Gets a value indicating whether the current stream supports writing.</summary>
@@ -86,8 +91,8 @@ namespace SkiaSharp
 		public override bool CanWrite => false; // we don't write
 
 		/// <summary>Gets the stream length in bytes.</summary>
-		/// <value>The length of the stream in bytes.</value>
-		/// <remarks />
+		/// <value>The recorded stream length in bytes, or -1 when the length is unknown.</value>
+		/// <remarks>The negative unknown-length value is retained for compatibility; it is not a standard <see cref="Stream.Length" /> convention.</remarks>
 		public override long Length => totalLength;
 
 		/// <summary>Gets or sets the position within the current stream.</summary>
