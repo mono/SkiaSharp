@@ -27,6 +27,10 @@ python3 -m http.server 5050 --directory output/gallery/wwwroot
 
 Open <http://localhost:5050/>. The local server command requires Python 3.
 
+Run the CI browser smoke test with `bash scripts/smoke.sh output/gallery/wwwroot`.
+The publish directory must contain `index.html`, `_framework/`, and
+`uno-config.js` at its root.
+
 ## Other platforms
 
 | Platform | Framework | Requirements |
