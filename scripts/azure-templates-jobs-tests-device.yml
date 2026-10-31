@@ -7,6 +7,7 @@ parameters:
   packages: ''
   env: {}
   preBuildSteps: []
+  postBuildSteps: []
   installAndroidSdk: false
   installXcode: true
   installEmsdk: false
@@ -43,6 +44,8 @@ jobs:
       requiredArtifacts:
         - name: native
       postBuildSteps:
+        - ${{ each step in parameters.postBuildSteps }}:
+          - ${{ step }}
         - ${{ if eq(parameters.extractVisualImages, true) }}:
           - pwsh: '& "$(PYTHON_EXE)" scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images'
             displayName: Extract visual-regression images for triage
