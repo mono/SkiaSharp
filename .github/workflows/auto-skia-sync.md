@@ -111,11 +111,7 @@ network:
     - "gn.googlesource.com"
     - dart
 
-# -- Environment -----------------------------------------------------
-# Clang is required for the Linux native build (retpoline flag).
 env:
-  CC: clang
-  CXX: clang++
   SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
 permissions:
   contents: read
@@ -206,79 +202,11 @@ steps:
       chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
-# Run on the host before the agent starts. Packages installed here are visible
-# in the AWF chroot (shared host filesystem), but dotnet tool restore does NOT
-# carry into the chroot — the agent must run it itself.
+# Host packages, long-lived processes, GITHUB_ENV values, and the repo-local .NET
+# workload are visible in the AWF chroot. User-scoped dotnet tools are not.
 pre-agent-steps:
-  - name: Install native build dependencies
-    # These run on the HOST and are visible to the agent's AWF chroot via the shared
-    # filesystem. The agent itself CANNOT apt-install anything (no apt inside the chroot,
-    # and the firewall blocks the Ubuntu archives), so every native build dependency must
-    # be installed here.
-    #
-    # libc++: native/linux/build.cake builds libSkiaSharp/libHarfBuzzSharp with
-    # `-stdlib=libc++` (clang's LLVM C++ runtime). On the real CI this comes from the
-    # .NET cross-compilation image; for this host build we must install libc++-dev +
-    # libc++abi-dev or the compile fails with "cannot find <libc++ headers>". Keep this in
-    # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
-    run: |
-      sudo apt-get update -qq
-      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
-      LAVAPIPE_ICD=$(dpkg -L mesa-vulkan-drivers | grep -E '/lvp_icd(\.x86_64)?\.json$' | head -n 1)
-      if [ -z "$LAVAPIPE_ICD" ]; then
-        echo "::error::mesa-vulkan-drivers did not install a lavapipe ICD manifest."
-        exit 1
-      fi
-      export VK_ICD_FILENAMES="$LAVAPIPE_ICD"
-      export VK_DRIVER_FILES="$LAVAPIPE_ICD"
-      {
-        echo "VK_ICD_FILENAMES=$LAVAPIPE_ICD"
-        echo "VK_DRIVER_FILES=$LAVAPIPE_ICD"
-      } >> "$GITHUB_ENV"
-      fc-cache -f
-      ./eng/common/dotnet.sh workload install android --skip-sign-check
-    env:
-      DEBIAN_FRONTEND: noninteractive
-  - name: Verify Mesa lavapipe
-    run: |
-      set -euo pipefail
-      if [ ! -r "$VK_DRIVER_FILES" ]; then
-        echo "::error::Mesa lavapipe ICD manifest is missing or unreadable: $VK_DRIVER_FILES"
-        exit 1
-      fi
-
-      VULKANINFO_OUTPUT=$(mktemp)
-      if ! vulkaninfo --summary >"$VULKANINFO_OUTPUT" 2>&1; then
-        cat "$VULKANINFO_OUTPUT"
-        echo "::error::vulkaninfo could not initialize the pinned Mesa lavapipe ICD."
-        exit 1
-      fi
-      cat "$VULKANINFO_OUTPUT"
-
-      if ! grep -Eiq '(deviceName|driverName).*(llvmpipe|lavapipe)' "$VULKANINFO_OUTPUT"; then
-        echo "::error::The pinned Vulkan ICD did not expose Mesa lavapipe/llvmpipe."
-        exit 1
-      fi
-      echo "Verified deterministic software Vulkan through $VK_DRIVER_FILES"
-  - name: Verify Mesa software OpenGL
-    run: |
-      set -euo pipefail
-      nohup Xvfb :99 -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 &
-      sleep 3
-      {
-        echo "DISPLAY=:99"
-        echo "LIBGL_ALWAYS_SOFTWARE=1"
-        echo "GALLIUM_DRIVER=softpipe"
-      } >> "$GITHUB_ENV"
-
-      DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=softpipe \
-        glxinfo -B | tee /tmp/glxinfo.txt
-      if ! grep -Eiq 'renderer string:.*softpipe' /tmp/glxinfo.txt; then
-        cat /tmp/xvfb.log
-        echo "::error::Mesa software OpenGL did not initialize with softpipe."
-        exit 1
-      fi
-      echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
+  - name: Set up Linux cloud agent
+    run: bash scripts/infra/cloud/setup.sh --install-android-workload
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
 # then push branches and create/update PRs with the write credential.
@@ -356,9 +284,8 @@ the supplied values.
 - No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
   takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
   cancel it, or restart it solely because of its duration.
-- Clang, libc++, fontconfig/fonts, Ninja, Android workload, Xvfb, and Mesa software GL/Vulkan are
-  installed. Mesa softpipe and the lavapipe ICD are pinned so every Linux backend required by
-  `GpuPolicy` executes deterministically.
+- The shared Linux setup installed source-build and test prerequisites plus the Android workload.
+  No native tree was downloaded; required GL/Vulkan backends use deterministic Mesa software drivers.
 - The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
   durable repository configuration; do not alter flags to mask a missing prerequisite.
 

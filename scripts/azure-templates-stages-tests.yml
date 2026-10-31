@@ -111,8 +111,8 @@ stages:
             # graphite-vulkan are required here, so missing provisioning fails.
             packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
             preBuildSteps:
-              - bash: bash ./scripts/infra/tests/start-xvfb.sh
-                displayName: Start Xvfb and select software GPU (visual tests)
+              - bash: bash ./scripts/infra/tests/setup-software-gpu.sh
+                displayName: Set up software GPU (visual tests)
 
         - ${{ each android in parameters.androidDevices }}:
           - template: /scripts/azure-templates-jobs-tests-device.yml@self

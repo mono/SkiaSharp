@@ -1,0 +1,37 @@
+name: "Copilot Code Review Setup"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-code-review.yml
+      - scripts/infra/cloud/**
+      - scripts/infra/tests/setup-software-gpu.sh
+  pull_request:
+    paths:
+      - .github/workflows/copilot-code-review.yml
+      - scripts/infra/cloud/**
+      - scripts/infra/tests/setup-software-gpu.sh
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Install gh-aw extension
+        uses: github/gh-aw-actions/setup-cli@9271a1804551c0dc4fb0085a97979950aa2f8489 # v0.88.2
+        with:
+          version: v0.88.2
+      - name: Set up Linux code review
+        run: bash scripts/infra/cloud/setup.sh --restore-tools --install-android-workload

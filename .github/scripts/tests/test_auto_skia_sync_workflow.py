@@ -12,6 +12,10 @@ WORKFLOW = (
     Path(__file__).resolve().parents[2] / "workflows" / "auto-skia-sync.md"
 )
 COMPILED_WORKFLOW = WORKFLOW.with_suffix(".lock.yml")
+CLOUD_SETUP = (
+    Path(__file__).resolve().parents[3] / "scripts" / "infra" / "cloud" / "setup.sh"
+)
+ANDROID_WORKLOAD_SETUP = CLOUD_SETUP.with_name("install-android-workload.sh")
 
 
 class AutoSkiaSyncWorkflowTests(unittest.TestCase):
@@ -73,13 +77,31 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
 
     def test_android_workload_uses_repository_sdk_bootstrap(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
+        cloud_setup = CLOUD_SETUP.read_text(encoding="utf-8")
+        android_workload_setup = ANDROID_WORKLOAD_SETUP.read_text(encoding="utf-8")
 
         self.assertIn(
-            "./eng/common/dotnet.sh workload install android --skip-sign-check",
+            "bash scripts/infra/cloud/setup.sh --install-android-workload",
             workflow,
         )
+        self.assertIn(
+            "run: bash scripts/infra/cloud/setup.sh --install-android-workload",
+            COMPILED_WORKFLOW.read_text(encoding="utf-8"),
+        )
+        self.assertIn(
+            'if [[ "$install_android_workload" == true ]]',
+            cloud_setup,
+        )
+        self.assertIn(
+            'bash "$script_dir/install-android-workload.sh"',
+            cloud_setup,
+        )
+        self.assertIn(
+            "./eng/common/dotnet.sh workload install android --skip-sign-check",
+            android_workload_setup,
+        )
         self.assertNotRegex(
-            workflow,
+            android_workload_setup,
             re.compile(
                 r"(?m)^\s*dotnet workload install android --skip-sign-check\s*$"
             ),
