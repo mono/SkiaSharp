@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests
 {
@@ -32,7 +34,10 @@ namespace SkiaSharp.Tests
 
 			classRegistration = User32.RegisterClass(ref wc);
 			if (classRegistration == 0)
-				throw new Exception($"Could not register window class: {className}");
+			{
+				var error = Marshal.GetLastWin32Error();
+				throw new Win32Exception(error, $"Could not register window class: {className} (Win32 error {error}).");
+			}
 
 			WindowHandle = User32.CreateWindow(
 				WindowClassName,

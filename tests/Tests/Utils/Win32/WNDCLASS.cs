@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
 	public struct WNDCLASS
 	{
 		public uint style;
