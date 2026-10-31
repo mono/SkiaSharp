@@ -222,7 +222,7 @@ function Get-NativeArtifactInventory([string] $NativeRoot) {
     }
 
     # Keep these exact aliases aligned with scripts/VERSIONS.txt; a changed SONAME needs review.
-    $sonames = @{ libSkiaSharp = '156.0.0'; libHarfBuzzSharp = '0.61440.0' }
+    $sonames = @{ libSkiaSharp = '157.0.0'; libHarfBuzzSharp = '0.61440.0' }
     foreach ($artifact in Get-LinuxArtifacts $NativeRoot) {
         $relative = [IO.Path]::GetRelativePath($NativeRoot, $artifact.Path).Replace('\', '/')
         New-NativeArtifact $NativeRoot $relative LinuxDependencies Elf
