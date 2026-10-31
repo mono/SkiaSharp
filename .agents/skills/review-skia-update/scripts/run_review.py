@@ -88,6 +88,28 @@ def load_json_at_git_ref(cwd: str, git_ref: str, path: str) -> dict:
         ) from ex
 
 
+def ensure_commit_available(cwd: str, remote: str, sha: str):
+    """Fetch an exact review commit when branch fetches leave it unavailable."""
+    present = subprocess.run(
+        ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    if present.returncode != 0:
+        run_git(["fetch", "--no-tags", remote, sha], cwd=cwd)
+        run_git(["cat-file", "-e", f"{sha}^{{commit}}"], cwd=cwd)
+
+
+def resolve_skia_base(repo_root: str, companion_base_sha: str) -> str:
+    """Pair the old upstream metadata with its recorded native source tree."""
+    result = run_git(
+        ["rev-parse", "--verify", f"{companion_base_sha}:externals/skia"],
+        cwd=repo_root,
+    )
+    return result.stdout.strip()
+
+
 def extract_skia_milestone_from_cgmanifest(cgmanifest: dict):
     """Extract the chrome/mNNN milestone from cgmanifest.json."""
     for reg in cgmanifest.get("registrations", []):
@@ -279,6 +301,7 @@ def main():
             f"baseRefName={companion_pr.get('baseRefName', '')!r}"
         )
 
+    ensure_commit_available(repo_root, "origin", companion_base_sha)
     old_cgmanifest = load_json_at_git_ref(repo_root, companion_base_sha, "cgmanifest.json")
     old_milestone = extract_skia_milestone_from_cgmanifest(old_cgmanifest)
     old_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(old_cgmanifest)
@@ -322,6 +345,7 @@ def main():
     new_upstream_ref = None
     new_upstream_sha = None
     if companion_head_sha and len(companion_head_sha) >= 7:
+        ensure_commit_available(repo_root, "origin", companion_head_sha)
         new_cgmanifest = load_json_at_git_ref(repo_root, companion_head_sha, "cgmanifest.json")
         cgmanifest_milestone = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
         new_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(new_cgmanifest)
@@ -361,25 +385,7 @@ def main():
     # Milestone branches can advance after an update. The exact commits recorded by
     # the companion base/head are authoritative for the diff-of-diffs review.
     for label, sha in (("old", old_upstream_sha), ("new", new_upstream_sha)):
-        present = subprocess.run(
-            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
-            cwd=skia_root,
-            capture_output=True,
-            text=True,
-        )
-        if present.returncode != 0:
-            run_git(["fetch", "--no-tags", "upstream", sha], cwd=skia_root)
-        verify = subprocess.run(
-            ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
-            cwd=skia_root,
-            capture_output=True,
-            text=True,
-        )
-        if verify.returncode != 0:
-            raise RuntimeError(
-                f"Recorded {label} upstream commit {sha!r} is unavailable: "
-                f"{verify.stderr.strip()}"
-            )
+        ensure_commit_available(skia_root, "upstream", sha)
 
     for label, sha, upstream_ref in (
         ("old", old_upstream_sha, f"upstream/{old_upstream_ref}"),
@@ -392,31 +398,17 @@ def main():
                 "instead of the exact upstream commit."
             )
 
-    # Use PR metadata for base SHA; fall back to resolving the ref
-    base_sha = pr.get("baseRefOid", "").strip()
-    if not base_sha or len(base_sha) < 7:
-        base_ref_name = pr.get("baseRefName", "skiasharp")
-        result = subprocess.run(
-            ["git", "rev-parse", f"origin/{base_ref_name}"],
-            cwd=skia_root, capture_output=True, text=True,
-        )
-        if result.returncode == 0:
-            base_sha = result.stdout.strip()
-        if not base_sha or len(base_sha) < 7:
-            result = subprocess.run(
-                ["git", "rev-parse", "origin/skiasharp"],
-                cwd=skia_root, capture_output=True, text=True,
-            )
-            if result.returncode == 0:
-                base_sha = result.stdout.strip()
-    if not base_sha or len(base_sha) < 7:
-        raise RuntimeError(
-            f"Could not resolve base SHA from PR metadata or branch refs. "
-            f"baseRefOid={pr.get('baseRefOid', '')!r}, baseRefName={pr.get('baseRefName', '')!r}"
+    base_sha = resolve_skia_base(repo_root, companion_base_sha)
+    if base_sha != pr.get("baseRefOid", "").strip():
+        eprint(
+            "   Native PR metadata base differs from the companion base pin; "
+            "using the pin paired with the recorded old upstream commit."
         )
     pr_head_sha = pr["headRefOid"]
+    ensure_commit_available(skia_root, "origin", base_sha)
+    ensure_commit_available(skia_root, "origin", pr_head_sha)
 
-    eprint(f"   Base ({pr.get('baseRefName', 'skiasharp')}): {base_sha}")
+    eprint(f"   Base (companion submodule pin): {base_sha}")
     eprint(f"   PR head: {pr_head_sha}")
     eprint(f"   Old upstream: {old_upstream_sha}")
     eprint(f"   New upstream: {new_upstream_sha}")
@@ -610,8 +602,12 @@ def main():
     eprint(f"Raw results: {raw_results_path}")
     eprint(f"Generator log: {os.path.join(output_dir, 'generator-output.log')}")
     eprint()
+    if check_error:
+        eprint("Review incomplete: resolve the failed checks before building a report.")
+        return 1
     eprint("Next: Read raw-results.json and write summaries + build report.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -52,6 +52,11 @@ this against cgmanifest.json and the PR title for consistency.
 mechanically generated file lists and diffs for upstream integrity, interop integrity, DEPS,
 and companion PR files.
 
+The old native source and upstream metadata both come from the companion PR base:
+`externals/skia` supplies the native commit and `cgmanifest.json` supplies its upstream
+commit. The orchestrator fetches missing exact commits even in shallow checkouts.
+Check exceptions produce partial results and a nonzero exit status, not a completed review.
+
 After this runs, the working tree is checked out to the PR state — you can browse files locally.
 
 > **⚠️ If the orchestrator fails**, report the failure and stop. Do not attempt to
