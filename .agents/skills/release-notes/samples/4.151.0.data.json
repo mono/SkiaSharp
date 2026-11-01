@@ -1,5 +1,5 @@
 {
-  "format": 3,
+  "format": 6,
   "version": "4.151.0",
   "family": "skiasharp",
   "status": "preview",
@@ -7,7 +7,7 @@
     "kind": "preview",
     "date": null,
     "nuget_url": null,
-    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.151.0-preview",
+    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.151.0-preview.1.1",
     "github_release_url": null
   },
   "harfbuzz": {
@@ -44,10 +44,10 @@
   ],
   "previews": [
     {
-      "key": "4.151.0-p1",
+      "key": "v4.151.0-preview.1.1",
       "label": "Preview 1",
       "date": "July 2, 2026",
-      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.0...v4.151.0-preview.1.1",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.5...v4.151.0-preview.1.1",
       "prs": [
         4311,
         4306,
@@ -67,10 +67,64 @@
       ]
     }
   ],
+  "shipments": [
+    {
+      "tag": "v4.151.0-preview.1.1",
+      "core_version": "4.151.0",
+      "public_version": "4.151.0-preview.1.1",
+      "channel": "preview",
+      "label": "Preview 1 (Build 1)",
+      "previous_tag": "v4.150.5",
+      "target_sha": "578473cb0c07c1da8b8e2e1483a469973b57bf68",
+      "date": "2026-07-02",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.5...v4.151.0-preview.1.1",
+      "prs": [
+        3788,
+        4242,
+        4282,
+        4283,
+        4284,
+        4285,
+        4291,
+        4292,
+        4294,
+        4296,
+        4297,
+        4298,
+        4299,
+        4306,
+        4311
+      ],
+      "attributions": [
+        {
+          "display": "@ramezgerges",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "@mattleibow",
+          "kind": "human"
+        },
+        {
+          "display": "Claude",
+          "kind": "ai"
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        },
+        {
+          "display": "@github-actions[bot]",
+          "kind": "automation"
+        }
+      ]
+    }
+  ],
   "prs": {
     "4311": {
       "url": "https://github.com/mono/SkiaSharp/pull/4311",
       "title": "docs: regenerate API diffs and polish release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -78,6 +132,7 @@
     "4306": {
       "url": "https://github.com/mono/SkiaSharp/pull/4306",
       "title": "[skia-sync] Drive upstream sync from versions.json with a run-number rotation",
+      "body": "[skia-sync] Drive upstream sync from versions.json with a run-number rotation (#4306)\n\nContext: scripts/infra/docs/versions.json (support.stable / support.preview)\n\nThe daily Skia upstream sync tracked milestones off a fixed mode map \u2014 three\ncrons resolving to `current` (main's milestone), `next` (+1) and `latest`\n(highest upstream chrome/m*), plus dispatch-only `main`. That map never covered\nthe lines we actually ship: the supported stable maintenance lines (e.g.\nrelease/4.148.x and release/4.150.x) only received bug-fix syncs when a human\nmanually dispatched them by number, so they silently drifted from upstream.\n\nMake the sync self-describing instead. A single `0 */6 * * *` cron now ROTATES\nover the hand-maintained `support` block in versions.json: each run syncs one\nline \u2014 stables ascending, then previews ascending \u2014 plus a trailing `next`\n(highest supported milestone + 1), which becomes a real milestone bump into main\nwhen upstream has cut chrome/m<next>, or the upstream main tip (skia-sync/main)\nwhen it has not. Coverage now follows versions.json automatically as lines are\nadded or retired.\n\nThe trigger surface collapses to one dispatch input `target`: empty = rotate,\n`main` = upstream tip, or a milestone number (e.g. 151) = explicit sync. The old\n`mode`/`milestone` inputs and the current/next/latest modes are removed.\n\n~~ Keeping the two detector passes in agreement ~~\n\nThe detector (.github/scripts/skia-sync-detect.sh) runs twice per workflow run \u2014\nthe pre_activation `--gate` pass and the agent-job \"align submodule\" pass \u2014 in\nseparate jobs that cannot share outputs. A GPT-5.5 review flagged three ways\nthose passes could diverge and align a different branch/submodule than the gate\napproved. All three are closed:\n\n  * the round-robin index is GITHUB_RUN_NUMBER % len, which is identical across\n    every job of a run \u2014 no wall-clock read, so no chance of the two passes\n    landing on different targets near a time boundary;\n  * main's milestone and the support block are read at the immutable GITHUB_SHA\n    rather than the mutable branch ref, so a mid-run push to main cannot change\n    what the second pass sees;\n  * chrome_branch_exists fails hard on a git ls-remote error instead of treating\n    a transient failure as \"branch absent\" and silently falling back to main.\n\nA supported line older than main's milestone with no matching release/*.x branch\nis now skipped (nowhere valid to sync) rather than merged into main.\n\n~~ Fix update-versions.ps1 writing a literal ref in tip mode ~~\n\nSurfaced while validating the main-tip path: Phase 6's update-versions.ps1\nresolved the merged upstream commit with a hardcoded\n`git rev-parse \"upstream/chrome/m$Target\"`. On a main-tip sync the merged ref is\n`upstream/main`, so `upstream/chrome/m<Target>` does not exist \u2014 and plain\n`git rev-parse` on a missing ref echoes the literal argument to stdout and exits\nnon-zero. The guard was only an empty-string check, so the literal string\n`upstream/chrome/m151` was written into cgmanifest.json's upstream_merge_commit\nas if it were a SHA. Add an optional `-UpstreamRef` parameter (default\nchrome/m<Target>), resolve with `git rev-parse --verify --quiet\n\"upstream/<ref>^{commit}\"` + $LASTEXITCODE so a missing ref fails cleanly to\nUNKNOWN, and pass `-UpstreamRef \"${upstream_ref}\"` from the workflow.\n\n.github/workflows/auto-skia-sync.lock.yml is regenerated by `gh aw compile`; do\nnot edit it by hand. (gh-aw materializes the prompt body at runtime, so the\nmarkdown-body edits here don't change the lock \u2014 only frontmatter does.)\n\nValidated by dispatching the workflow against this branch: a rotate run\n(deterministically resolved to the main-tip line) and an explicit target=151 run.\nBoth passes agreed on the target, produced the correct skia-sync/main and\nskia-sync/m151 branch pairs, and finished green (native + C# build clean, tests\n5584 passed / 0 failed). Those throwaway validation PRs/branches have been closed\nand deleted.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -85,6 +140,7 @@
     "3788": {
       "url": "https://github.com/mono/SkiaSharp/pull/3788",
       "title": "[externals] Bump skia submodule to drop SK_BUILD_FOR_WASM redef",
+      "body": "[externals] Bump skia to drop redundant SK_BUILD_FOR_WASM define (#3788)\n\nChanges: https://github.com/mono/skia/compare/5209f4a49b55104de2c521fc6f605aee530e4cd8...b789e70ff69118e0aab20145ac295185342a2f2c\n\nBumps the `externals/skia` submodule from `5209f4a4` to `b789e70f`, picking\nup mono/skia#204. That change removes the redundant `SK_BUILD_FOR_WASM`\ndefine from the `is_wasm` block in `gn/skia/BUILD.gn`; `SkFeatures.h` already\ndefines the macro under `__EMSCRIPTEN__`, so the GN-side define produced a\n\"macro redefined\" warning on every wasm translation unit.\n\nThe new skia commit is the current `skiasharp` tip plus that one-line removal,\nso this is purely the submodule reference change \u2014 no SkiaSharp source or API\nis affected, and the wasm build behaves identically aside from the cleared\nwarnings.\n\nCo-authored-by: Ramez Gerges <ramezragaa@proton.me>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
       "author": "ramezgerges",
       "community": true,
       "tag": "product"
@@ -92,6 +148,7 @@
     "4299": {
       "url": "https://github.com/mono/SkiaSharp/pull/4299",
       "title": "Update README.md",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -99,6 +156,7 @@
     "4294": {
       "url": "https://github.com/mono/SkiaSharp/pull/4294",
       "title": "[skia-sync] Update Skia to milestone m151 (4.151.0)",
+      "body": "[skia-sync] Update Skia to milestone m151 (4.151.0) (#4294)\n\nChanges: https://github.com/mono/skia/compare/chrome/m150...chrome/m151\nCompanion: mono/skia#274 (merged into the skiasharp branch as 5209f4a49b55)\n\nAdvances the bundled Skia from chrome/m150 to chrome/m151, bumping the\nSkiaSharp native/managed version to 4.151.0. Bumps the externals/skia\nsubmodule, regenerates scripts/VERSIONS.txt (skia release m151, libSkiaSharp\nmilestone/soname 151, SkiaSharp assembly/file 4.151.0.0), updates\nSKIASHARP_VERSION in azure-templates-variables.yml, and refreshes\ncgmanifest.json (chrome_milestone 151, upstream_merge_commit 79e2e1538e,\nSkia repo ref 5209f4a49b55) for CVE/component tracking.\n\nUnlike the m150 sync, this is a clean milestone bump. The C API surface is\nunchanged (SK_C_INCREMENT stays 0; binding regeneration produces zero diffs in\nSkiaApi.generated.cs and friends), there are no managed source changes, and no\nnative source fixes had to be carried: all five M150 backports the fork was\nholding are now upstream in m151. Only two integration touch-ups were needed.\n\n~~ C API include path ~~\n\nm151 flattened include/private/base/* into include/private/* and removed the\nprivate/base/ subdirectory. The one affected C API file was fixed in the fork\n(SkTemplates.h include path), with no C function added, removed, or changed.\n\n~~ Native build config (partition_alloc) ~~\n\nm151 introduced src/partition_alloc/, whose BUILD.gn by default imports\n${skia_partition_alloc_dir}/partition_alloc.gni. Our DEPS does not vendor\npartition_alloc, so skia_use_partition_alloc=false is added to the gn args in\nevery clang platform's native/**/build.cake to opt into the bundled\nsrc/partition_alloc/noop/ fallback. The default is is_clang (true on every\nplatform we ship), so the override is required. linux and wasm set it on both\nthe libSkiaSharp and libHarfBuzzSharp GnNinja calls; macos/ios/tvos/windows/\ntizen/android set it on libSkiaSharp only (HarfBuzzSharp there builds via\nxcodebuild/msbuild/ndk-build/tizen, not gn). Per known-gotchas.md #23 the arg\nlives in build.cake, not --gnArgs.\n\n~~ Submodule pin ~~\n\nRe-pins externals/skia to 5209f4a49b55, the merge commit of fork PR #274 on the\nstable skiasharp branch (tree-identical to the integration tip 68e1c7fe3c90),\nand sets the cgmanifest Skia repo reference to match.\n\n~~ Release-notes support tiers ~~\n\nUpdates the hand-maintained support block in scripts/infra/docs/versions.json\nto stable [4.148, 4.150] / preview [4.151]: 4.148 stays Chrome Extended-stable\nfor a few more days, 4.150 (our RC line) goes stable imminently, and 4.151\nbecomes the in-flight preview. Drop 4.148 once Google retires extended-stable.\n\nFull CI is green: build 158573 succeeded across all native platforms\n(Windows/macOS/Linux/WASM/Tizen/Android/iOS/tvOS), managed build, API diff,\ntests, and samples.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -106,6 +164,7 @@
     "4298": {
       "url": "https://github.com/mono/SkiaSharp/pull/4298",
       "title": "docs: regenerate API diffs and polish release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -113,6 +172,7 @@
     "4297": {
       "url": "https://github.com/mono/SkiaSharp/pull/4297",
       "title": "docs: add release cadence section to releases index, driven by Chrome's schedule",
+      "body": "The release notes index (releases/index.md) is fully regenerated from a template\nin generate-release-notes.py, so the \"Release cadence\" section added manually in\n#4291 was wiped by the next doc-bot regeneration (#4296). Move the section into\nthe generator so it survives regeneration.\n\nThe section is also made self-maintaining:\n\n- Milestone numbers are derived from the version files on disk \u2014 the current\n  milestone is the highest 4.x line present, and the next is current + 1 \u2014 so\n  the \"Versioning\" examples and the timeline stay ahead of what has shipped\n  instead of being pinned to a fixed milestone.\n\n- The example timeline now shows the real schedule for the two milestones\n  currently in flight, pulled directly from Chrome's public release calendar\n  (Chromium Dash fetch_milestone_schedule). The four cadence phases map onto\n  earliest_beta / early_stable / stable_cut / stable_date, and the events are\n  sorted by actual date.\n\nThe schedule is required: if it cannot be fetched (offline, API/HTTP/JSON error,\nmissing milestone or phase date) the generator raises and fails loudly rather\nthan emitting placeholder dates, so a retry recreates the page once connectivity\nis back. Uses only stdlib urllib \u2014 no new dependencies.\n\nreleases/index.md is intentionally left for CI to regenerate.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -120,6 +180,7 @@
     "4296": {
       "url": "https://github.com/mono/SkiaSharp/pull/4296",
       "title": "docs: regenerate API diffs and polish release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -127,6 +188,7 @@
     "4292": {
       "url": "https://github.com/mono/SkiaSharp/pull/4292",
       "title": "docs: add \"AI in SkiaSharp\" site page",
+      "body": "docs: add \"AI in SkiaSharp\" automation & AI page (#4292)\n\nSkiaSharp keeps a large native binding current with a small team, so much\nof the upkeep - upstream Skia syncs, API diffing, release notes, reference\ndocs, and issue triage - runs as a mix of agentic AI workflows and plain\ndeterministic automation. There was no single place explaining how that\nmachinery fits together. This adds a static page at /ai/ that documents\nboth halves: how the processes are automated and where AI is used, with\nhumans owning API design and correctness while agents do the toil.\n\nThe centrepiece is a hand-built pipeline diagram that models the real\nlifecycle in two phases. Phase 1 syncs upstream Skia, builds and tests, and\nlands on main behind human review. Phase 2 then runs two genuinely\nindependent publish flows in parallel - release notes & API diffs to the\nwebsite, and API reference docs to Microsoft Learn. Each phase links out to\nwhere its output actually ships (nuget.org, the website, Microsoft Learn).\n\nAll content is verified against the actual workflow frontmatter and\nSKILL.md files in both mono/SkiaSharp and mono/SkiaSharp-API-docs rather\nthan a draft inventory, and a follow-up source review corrected several\ndetails:\n\n  * Go Live is a manual workflow that opens a main -> live PR for a\n    maintainer to merge; it does not auto-merge.\n  * Auto-merge docs gates on OpenPublishing.Build and PoliCheck Scan with\n    no new warnings, then squash-merges.\n  * Skia upstream sync opens two paired PRs (the mono/skia submodule and\n    mono/SkiaSharp).\n  * Lists 20 reusable skills; the meta skill-creator is intentionally\n    excluded.\n\nWires the page into the home nav, a resource card, and the footer, and adds\na copy step to build-site.yml so /ai/ ships to the deployed site and PR\nstaging. Docs-only: validated by serving the assembled site locally and\nrendering in light and dark themes and at mobile width, confirming all\nlinks resolve with zero console errors.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -134,6 +196,7 @@
     "4291": {
       "url": "https://github.com/mono/SkiaSharp/pull/4291",
       "title": "docs: add release cadence section to releases index",
+      "body": "Adds a Release Cadence section explaining SkiaSharp 4.x's alignment\nwith Chrome's release cycle, including:\n- Four-phase schedule (Preview 1, Preview 2, RC, Stable) mapped to\n  Chrome events (Beta Promotion, Early Stable, Stable Cut, Stable)\n- Note about Chrome's transition to 2-week cycles starting m153\n- Versioning scheme (4.{chrome_milestone}.{patch})\n- Automation scripts for milestone management\n- Link to the Chrome release calendar\n\nAlso adds a cross-reference from documentation/dev/versioning.md\nto the new release cadence section.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -141,6 +204,7 @@
     "4242": {
       "url": "https://github.com/mono/SkiaSharp/pull/4242",
       "title": "Rework the api-docs skill: router layout, direct-XML edits, Cake tooling",
+      "body": "Rework the api-docs skill: router layout, direct-XML edits, Cake tooling (#4242)\n\nContext: companion CI workflow is mono/SkiaSharp-API-docs#155\n\nRestructures the `api-docs` skill into a single dual-purpose tool that both adds\ndocs for new APIs and reviews/corrects existing docs, and moves its tooling off a\nstandalone PowerShell script onto a Cake target so the same checks run locally and\nin CI.\n\n~~ Skill layout ~~\nSKILL.md becomes a thin router (~410 lines removed) that points at focused\nreferences/ files (adding.md, reviewing.md, validation.md, patterns.md,\nskia-patterns.md, checklist.md, obsolete-api-map.md). The previous multi-agent\norchestration (writer + three reviewers + synthesizer, each with its own Model:\nheader) is folded into one single-pass procedure: the gh-aw CI sandbox does not\nhonor per-sub-agent model routing, so the fan-out was dead weight. The prompt and\nmethodology content is preserved, not dropped \u2014 it now lives in references/.\n\n~~ Direct-XML editing ~~\nDrops the old extract -> write -> merge JSON round-trip (scaffolding for a weaker\nmodel). A capable model edits the mdoc XML in place; safety comes from the\npost-edit formatter/validator rather than from regenerating files.\n\n~~ One Cake pass instead of PowerShell ~~\nRemoves scripts/docs-tool.ps1 (-452 lines) and folds format + content checks into a\nsingle `docs-format-docs` target in scripts/infra/docs/docs.cake (+213). It loads\neach type XML once (XDocument), formats it, and runs deterministic checks in the\nsame pass: warnings for missing/placeholder/quality issues, build-failing errors\nonly for broken XML/CDATA. build.cake wires the target in.\n\n~~ Obsolete handling ~~\nMakes references/obsolete-api-map.md the unambiguous, overload-aware authority and\nremoves the name-only obsolete-in-example linter. Name matching could not tell an\nobsolete overload from a modern one (DrawText/MeasureText exist on both the\ndeprecated SKPaint forms and the modern SKFont/SKCanvas(..,SKFont,..) forms), so it\nproduced false positives and a skill that contradicted its own reference. Obsolete\njudgement is now the reviewer's, guided by the map (the deprecated overload is the\none without an SKFont parameter).\n\nValidated by two CI runs of the companion workflow (PRs #168 and #169): consistent\nacross both \u2014 8 placeholders filled source-first, 23 lint findings fixed, 0 final\nfindings, no obsolete usage introduced, no valid modern SKFont/SKCanvas overloads\ndeleted, and MS Learn OpenPublishing Errors:0.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -148,6 +212,7 @@
     "4284": {
       "url": "https://github.com/mono/SkiaSharp/pull/4284",
       "title": "Add embedded image/font selectors to SkiaFiddle",
+      "body": "Add embedded image/font selectors to SkiaFiddle (#4284)\n\nContext: https://fiddle.skia.org/ (\"Optional source image\")\n\nThe in-browser SkiaFiddle playground had no way to draw real images or\ninteresting fonts: a snippet could only paint procedurally. This adds a\npreloaded asset library plus a toolbar so snippets can use a picked image\nand typeface directly, mirroring skia.org/fiddle's source-image feature.\n\nAssets are embedded, not downloaded. The trimmed Release WASM build strips\nHttpClient's download methods, so runtime fetching is impossible; instead\nsix canonical Skia fiddle source images (1.png-6.png, from the Skia\nbuildbot repo) and four fonts (Inter variable, Nabla COLR/CPAL color,\nDejaVu Serif, DejaVu Sans) are bundled and loaded at startup. Provenance\nand licenses are recorded in samples/SkiaFiddle/Media/README.md (BSD-3\nimages; OFL / Bitstream-Vera fonts).\n\nA new toolbar exposes a font ComboBox and a Skia-drawn image thumbnail\nstrip (ImageStripCanvas, wrapped in a transparent Border for pointer\nhit-testing). The current selection is injected into every snippet as the\n`image` and `typeface` variables, read live each frame so switching updates\nthe next frame without recompiling. Three demo samples exercise this:\nsource image, variable font (wght axis), and color font (palettes), each\ncarrying per-sample font/image hints.\n\nTrimming/build issues surfaced and fixed during validation:\n\n  * Formatted interpolation in snippets - preserve\n    System.Runtime.CompilerServices.DefaultInterpolatedStringHandler in\n    ILLink.Descriptors.xml. The in-browser Roslyn compiler binds against the\n    trimmed runtime assemblies, where the format-bearing AppendFormatted\n    overloads were removed, so any snippet using $\"{x:0}\" failed with CS1739.\n  * Asset double-publish - a build target strips embedded Media/ from\n    Content. Uno's default **\\*.png glob pulls them into Content, and Release\n    resets DefaultItemExcludes so a property-based exclude doesn't take.\n  * Obsolete DrawText - bundled samples use the non-obsolete SKTextAlign\n    overload (was CS0618).\n\nThe bundled samples were also tidied for readability: brief section\ncomments, snippet bodies wrapped to ~80 columns with inner constructions\n(gradient colour arrays, sampling options, text coordinates) hoisted into\nnamed locals to avoid horizontal scrolling, and the sample picker sorted\nalphabetically by category. Wrapping is confined to the snippet strings\nshown in the editor; the surrounding C# stays on normal single lines.\n\nValidated end-to-end against the trimmed Release WASM build (published\nlocally, driven with Playwright): the toolbar renders, image/typeface swap\nlive, the color font shows real COLR/CPAL palettes, the variable font\nanimates its wght axis, the dropdown is confirmed sorted, and all nine\nbundled samples compile warning-free and render. All changes are scoped to\nsamples/SkiaFiddle/ - no binding, native, or C-API changes.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -155,6 +220,7 @@
     "4285": {
       "url": "https://github.com/mono/SkiaSharp/pull/4285",
       "title": "ci(docs): stop the PR-author cache from re-triggering the docs pipeline",
+      "body": "The release-notes/API-diffs pipeline rewrites and commits\nscripts/infra/docs/pr-authors.json inside its own docs PR. That path sits\noutside the releases tree, so the push trigger's paths-ignore (which only\nexcluded documentation/docfx/releases/**) did not cover it: merging a docs PR\nthat touched the cache re-triggered the whole heavy pipeline on its own commit.\n\nAdd scripts/infra/docs/pr-authors.json to paths-ignore so a push that changes\nonly the cache (or the releases tree) is skipped, while pushes that also touch\nreal sources still trigger. Recompiled the gh-aw lock file.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -162,6 +228,7 @@
     "4283": {
       "url": "https://github.com/mono/SkiaSharp/pull/4283",
       "title": "docs: regenerate API diffs and polish release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -169,6 +236,7 @@
     "4282": {
       "url": "https://github.com/mono/SkiaSharp/pull/4282",
       "title": "[Infra] Add milestone sync and audit scripts for Chrome-aligned releases",
+      "body": "[Infra] Add milestone sync and audit scripts for Chrome-aligned releases (#4282)\n\nSkiaSharp's v4 release cadence is aligned 1:1 with Chrome milestones:\nChrome Beta \u2192 Preview.1, Early Stable \u2192 Preview.2, Stable Cut \u2192 RC,\nStable \u2192 Stable. Maintaining milestones manually across 4 releases per\nChrome version is error-prone and tedious.\n\nAdd two PowerShell scripts under scripts/infra/milestones/:\n\nsync-chrome-milestones.ps1 \u2014 fetches the Chromium release schedule from\nchromiumdash.appspot.com and creates/updates GitHub milestones with\ncorrect due dates and descriptions. Reads the current milestone number\nfrom scripts/VERSIONS.txt. Idempotent and safe to run on a schedule.\n\naudit-milestones.ps1 \u2014 verifies that merged PRs and their linked issues\nare assigned to the correct milestone by computing git merge-base ranges\nbetween consecutive release branches. Uses GraphQL\nclosingIssuesReferences for sidebar-linked issues and regex for body\nkeywords. Reports mismatches and optionally fixes them.\n\nBoth scripts support -DryRun, handle pagination (--paginate --slurp),\nuse UTC throughout, sort milestones in proper release order (not\nlexicographic), and check $LASTEXITCODE on all API calls.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

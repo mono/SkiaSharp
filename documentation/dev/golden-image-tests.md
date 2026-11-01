@@ -23,8 +23,8 @@ golden.Verify(GoldenInput.Pixels(pixels, imageInfo));
 
 await golden.VerifyAsync(
     GoldenInput.Capture(CaptureScreenshot),
-    TimeSpan.FromSeconds(10),
-    cancellationToken);
+    timeout: TimeSpan.FromSeconds(10),
+    cancellationToken: cancellationToken);
 ```
 
 Use the static form for a direct comparison without reference lookup:

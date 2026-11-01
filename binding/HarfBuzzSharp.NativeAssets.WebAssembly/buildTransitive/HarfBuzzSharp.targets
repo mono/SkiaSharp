@@ -5,11 +5,6 @@
     <ShouldIncludeNativeHarfBuzzSharp Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' == '' ">True</ShouldIncludeNativeHarfBuzzSharp>
   </PropertyGroup>
 
-  <!-- If this is an UNO Platform app -->
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
-    <Content Include="@(HarfBuzzSharpStaticLibrary)" Visible="false" />
-  </ItemGroup>
-
   <!-- If this is a .NET web assembly app -->
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
@@ -31,7 +26,7 @@
 
   <!-- Error when targeting unsupported WASM TFMs -->
   <Target Name="_HarfBuzzSharpCheckWasmTfm" BeforeTargets="PrepareForBuild"
-          Condition="(('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') or ('$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly')) and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '8.0'))">
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeHarfBuzzSharp)' == 'True' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '8.0'))">
     <Error Text="HarfBuzzSharp WebAssembly native assets require .NET 8.0 or later. Please update your project to target net8.0 or newer." />
   </Target>
 

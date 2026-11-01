@@ -77,5 +77,13 @@ namespace SkiaSharp.Tests
 				return (caching, new WeakReference(files));
 			}
 		}
+
+		[Fact]
+		public void FileResourceProviderMissingFileReturnsNull()
+		{
+			using var rp = new FileResourceProvider(PathToImages);
+
+			Assert.Null(rp.Load("does-not-exist.png"));
+		}
 	}
 }

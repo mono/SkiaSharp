@@ -1,13 +1,7 @@
 ﻿using System;
 using Android.Graphics;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
-namespace SkiaSharp.Views.UWP
-#else
 namespace SkiaSharp.Views.Android
-#endif
 {
 	internal class SurfaceFactory : IDisposable
 	{

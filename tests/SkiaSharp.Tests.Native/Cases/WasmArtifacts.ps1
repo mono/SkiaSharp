@@ -42,5 +42,15 @@ foreach ($artifact in Get-WasmArtifacts $NativeRoot | Where-Object Kind -eq Wasm
         }
     }
 
+    # .NET 11's Emscripten 6 runtime cannot link the legacy SjLj helpers from older archives (#5467).
+    if ($artifact.RelativePath -like 'wasm/*/6.0.2/*') {
+        $imports = (& llvm-nm --undefined-only --extern-only --format=just-symbols $artifact.Path) -join "`n"
+        foreach ($symbol in 'saveSetjmp', 'testSetjmp') {
+            if ($imports -cmatch "(?m)^$symbol`r?$") {
+                throw "Incompatible legacy WebAssembly symbol '$symbol' in .NET 11 archive: $($artifact.Path)"
+            }
+        }
+    }
+
     Write-Host "PASS: $($artifact.Path); $($members.Count) wasm32 objects and the expected public API."
 }
