@@ -141,7 +141,7 @@ alignment unless the runtime itself is also being updated.
 
 ### 11. .NET Tools and Packages
 
-- [ ] **`.config/dotnet-tools.json`** — Query stable tool releases and verify availability on the approved feeds before updating. ReportGenerator remains at 5.5.11 until 5.5.12 clears ingestion and is mirrored to `dotnet-public`.
+- [ ] **`.config/dotnet-tools.json`** — Query stable tool releases and verify availability on the approved feeds before updating.
 - [ ] **Cake addins** — Keep addins compatible with the selected Cake runtime and its bundled NuGet assemblies; compile the scripts, not just the tool manifest.
 - [ ] **MAUI** — Update the per-TFM versions in `source/SkiaSharp.Build.props` and standalone MAUI sample pins. MAUI NuGet servicing versions can be newer than the workload manifest.
 - [ ] **Blazor** — Update the library's conditional ASP.NET Core references within each supported major, plus WebAssembly/DevServer sample and test packages.

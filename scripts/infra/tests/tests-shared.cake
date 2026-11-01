@@ -188,12 +188,11 @@ void RunDotNetTest(
 void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
 {
     try {
-        DotNetTool(
-            $"reportgenerator" +
-            $"  -reports:{testResultsGlob}" +
-            $"  -targetdir:{output}" +
-            $"  -reporttypes:HtmlInline_AzurePipelines;Cobertura" +
-            $"  -assemblyfilters:-*.Tests");
+        DotNetToolRun("reportgenerator", new ProcessArgumentBuilder()
+            .AppendSwitchQuoted("-reports", ":", testResultsGlob)
+            .AppendSwitchQuoted("-targetdir", ":", output.FullPath)
+            .AppendSwitchQuoted("-reporttypes", ":", "HtmlInline_AzurePipelines;Cobertura")
+            .AppendSwitchQuoted("-assemblyfilters", ":", "-*.Tests"));
     } catch (Exception ex) {
         Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
         Error(ex);

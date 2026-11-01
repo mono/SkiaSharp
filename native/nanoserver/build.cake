@@ -16,7 +16,8 @@ Task("libSkiaSharp")
         { "useFreeType", "true" },
     });
 
-    DotNetTool("nano-api-scan " + OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libSkiaSharp.dll").FullPath);
+    DotNetToolRun("nano-api-scan", new ProcessArgumentBuilder()
+        .AppendQuoted(OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libSkiaSharp.dll").FullPath));
 });
 
 Task("libHarfBuzzSharp")
@@ -33,7 +34,8 @@ Task("libHarfBuzzSharp")
     CopyFileToDirectory(srcDir.CombineWithFilePath("libHarfBuzzSharp.dll"), outDir);
     CopyFileToDirectory(srcDir.CombineWithFilePath("libHarfBuzzSharp.pdb"), outDir);
 
-    DotNetTool("nano-api-scan " + OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libHarfBuzzSharp.dll").FullPath);
+    DotNetToolRun("nano-api-scan", new ProcessArgumentBuilder()
+        .AppendQuoted(OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libHarfBuzzSharp.dll").FullPath));
 });
 
 Task("Default")

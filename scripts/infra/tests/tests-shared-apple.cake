@@ -66,7 +66,8 @@ void SetupIosSimulator(ref string ownedSimulator)
 
         TEST_IOS_SIMULATOR_VERSION = version;
         Information("Booting owned iOS simulator: {0} (iOS {1})", ownedSimulator, version);
-        DotNetTool($"apple simulator boot \"{ownedSimulator}\" --wait");
+        DotNetToolRun("apple", new ProcessArgumentBuilder()
+            .Append("simulator").Append("boot").AppendQuoted(ownedSimulator).Append("--wait"));
     } catch (Exception error) {
         TeardownIosSimulator(ref ownedSimulator, error);
         throw;
@@ -81,14 +82,16 @@ void TeardownIosSimulator(ref string ownedSimulator, Exception originalError)
     var failures = new List<Exception>();
 
     try {
-        DotNetTool($"apple simulator shutdown \"{ownedSimulator}\"");
+        DotNetToolRun("apple", new ProcessArgumentBuilder()
+            .Append("simulator").Append("shutdown").AppendQuoted(ownedSimulator));
     } catch (Exception error) {
         failures.Add(error);
     }
 
     // Deletion must still run after a failed boot or shutdown, and only targets our UUID.
     try {
-        DotNetTool($"apple simulator delete \"{ownedSimulator}\"");
+        DotNetToolRun("apple", new ProcessArgumentBuilder()
+            .Append("simulator").Append("delete").AppendQuoted(ownedSimulator));
         ownedSimulator = null;
     } catch (Exception error) {
         failures.Add(error);
