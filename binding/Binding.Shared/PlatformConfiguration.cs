@@ -3,11 +3,6 @@
 using System;
 using System.Runtime.InteropServices;
 
-#if WINDOWS_UWP
-using Windows.ApplicationModel;
-using Windows.System;
-#endif
-
 #if HARFBUZZ
 namespace HarfBuzzSharp.Internals
 #else
@@ -29,9 +24,7 @@ namespace SkiaSharp.Internals
 		/// <value><see langword="true" /> if the operating system is Windows; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public static bool IsWindows {
-#if WINDOWS_UWP
-			get => true;
-#elif NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
 			get => OperatingSystem.IsWindows ();
 #else
 			get => RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
@@ -42,9 +35,7 @@ namespace SkiaSharp.Internals
 		/// <value><see langword="true" /> if the operating system is macOS; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public static bool IsMac {
-#if WINDOWS_UWP
-			get => false;
-#elif NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
 			get => OperatingSystem.IsMacOS ();
 #else
 			get => RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
@@ -55,9 +46,7 @@ namespace SkiaSharp.Internals
 		/// <value><see langword="true" /> if the operating system is Linux; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public static bool IsLinux {
-#if WINDOWS_UWP
-			get => false;
-#elif NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
 			get => OperatingSystem.IsLinux ();
 #else
 			get => RuntimeInformation.IsOSPlatform (OSPlatform.Linux);
@@ -68,15 +57,7 @@ namespace SkiaSharp.Internals
 		/// <value><see langword="true" /> if the architecture is ARM or ARM64; otherwise, <see langword="false" />.</value>
 		/// <remarks />
 		public static bool IsArm {
-#if WINDOWS_UWP
-			get {
-				var arch = Package.Current.Id.Architecture;
-				const ProcessorArchitecture arm64 = (ProcessorArchitecture)12;
-				return arch == ProcessorArchitecture.Arm || arch == arm64;
-			}
-#else
 			get => RuntimeInformation.ProcessArchitecture is Architecture.Arm or Architecture.Arm64;
-#endif
 		}
 
 		/// <summary>Gets a value indicating whether the current process is running as 64-bit.</summary>
@@ -108,7 +89,7 @@ namespace SkiaSharp.Internals
 			set => linuxFlavor = value;
 		}
 
-#if WINDOWS_UWP || __IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__
+#if __IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__
 		/// <summary>Gets a value indicating whether the current Linux system uses glibc.</summary>
 		/// <value><see langword="true" /> if running on a glibc-based Linux system; otherwise, <see langword="false" />.</value>
 		/// <remarks />

@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    # Keep this exact whitelist in sync with pull_request below. The generated
+    # Keep this exact allow list in sync with pull_request below. The generated
     # files are inputs because generation preserves their XML documentation.
     paths:
       - '.github/workflows/binding-generation-determinism.yml'
@@ -23,7 +23,7 @@ on:
       - 'utils/generate.ps1'
       - 'utils/SkiaSharpGenerator/**'
   pull_request:
-    # Same automatic-trigger whitelist as push.
+    # Same automatic-trigger allow list as push.
     paths:
       - '.github/workflows/binding-generation-determinism.yml'
       - 'binding/HarfBuzzSharp/Generated/**'

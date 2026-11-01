@@ -28,6 +28,7 @@ import json
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -290,6 +291,27 @@ def _finish_text(L):
     if not text.endswith("\n"):
         text += "\n"
     return text
+
+
+def with_generation_date(text, previous_text=""):
+    """Keep the previous generation date until the rendered content changes."""
+    footer = re.search(
+        r'\n---\n\n<small class="text-body-secondary">Release notes generated on '
+        r'\d{4}-\d{2}-\d{2} at \d{2}:\d{2} UTC\.</small>\n\Z',
+        previous_text,
+    )
+    if footer and previous_text[:footer.start()] == text:
+        return previous_text
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d at %H:%M")
+    return text + (
+        '\n---\n\n<small class="text-body-secondary">Release notes generated on '
+        '{} UTC.</small>\n'.format(timestamp)
+    )
+
+
+def write_page(page, text):
+    previous_text = page.read_text() if page.is_file() else ""
+    page.write_text(with_generation_date(text, previous_text))
 
 
 # ── enforcement ──────────────────────────────────────────────────────────────
@@ -983,7 +1005,7 @@ def render_all():
                 log("  ERROR: prose for {} failed validation: {}".format(
                     page, "; ".join(errs)))
                 continue
-            page.write_text(render(data, prose))
+            write_page(page, render(data, prose))
             rendered += 1
     log("Rendered {} pages".format(rendered))
 
@@ -1029,10 +1051,10 @@ def main(argv):
     text = render(data, prose)
     out = args[2] if len(args) >= 3 else None
     if out:
-        Path(out).write_text(text)
+        write_page(Path(out), text)
         print("wrote {} ({} words)".format(out, _words(text)))
     else:
-        sys.stdout.write(text)
+        sys.stdout.write(with_generation_date(text))
     return 0
 
 

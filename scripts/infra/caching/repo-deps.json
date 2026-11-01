@@ -14,6 +14,7 @@
   "exclude": [
     "documentation/**",
     "images/**",
+    ".azuredevops/**",
     ".github/**",
     ".devcontainer/**",
     ".vscode/**",
@@ -22,6 +23,7 @@
     ".gitattributes",
     ".gitignore",
     "es-metadata.yml",
+    "CodeQL.yml",
     "externals/.gitignore",
     "native/.gitignore",
     "scripts/get-skiasharp-pr.*",
@@ -77,13 +79,15 @@
         "windows": {
           "include": [
             "native/windows/**",
-            "scripts/infra/native/windows/**"
+            "scripts/infra/native/windows/**",
+            "source/.vsconfig"
           ]
         },
         "winui": {
           "include": [
             "native/winui/**",
-            "scripts/infra/native/windows/**"
+            "scripts/infra/native/windows/**",
+            "source/.vsconfig"
           ]
         },
         "uwp_angle": {
@@ -101,14 +105,16 @@
         "winui_angle": {
           "include": [
             "native/winui-angle/**",
-            "scripts/infra/native/windows/**"
+            "scripts/infra/native/windows/**",
+            "source/.vsconfig"
           ]
         },
         "nanoserver": {
           "include": [
             "native/nanoserver/**",
             "scripts/infra/native/windows/**",
-            "native/windows/**"
+            "native/windows/**",
+            "source/.vsconfig"
           ]
         },
         "linux": {
@@ -183,7 +189,8 @@
             "samples": {
               "include": [
                 "samples/**",
-                "scripts/infra/samples/**"
+                "scripts/infra/tests/tests-samples.cake",
+                "scripts/infra/tests/tests-shared*.cake"
               ]
             }
           }

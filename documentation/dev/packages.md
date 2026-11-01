@@ -53,7 +53,7 @@ Platform-specific UI controls for rendering SkiaSharp content. These provide rea
 | **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+ (WASM native assets require net8.0+). Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
 | **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
 | **SkiaSharp.Views.Maui.Controls** | .NET MAUI controls: `SKCanvasView`, `SKGLView`. net8.0+. Depends on SkiaSharp.Views.Maui.Core and Microsoft.Maui.Controls. |
-| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, `SKSwapChainPanel`. net8.0+. Depends on Uno.WinUI. Auto-includes SkiaSharp.NativeAssets.WebAssembly for WASM targets and SkiaSharp.Views.WinUI for Windows targets. |
+| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, and `SKSwapChainPanel`, which is GPU-accelerated on Windows and renders on the CPU elsewhere (Uno's own `SKCanvasElement` is the GPU-backed control there). net10.0+, Uno Platform 7+. Depends on Uno.WinUI; uses SkiaSharp.Views.WinUI on Windows targets. The Uno.Sdk supplies the native assets. |
 
 ---
 
@@ -77,6 +77,13 @@ Each platform has a pair of NativeAssets packages containing pre-built native bi
 
 Both follow the same platform matrix and architectures. HarfBuzzSharp does **not** have Linux.NoDependencies, NanoServer, or WinUI variants.
 
+Apple native assets built from this source require macOS 12+, iOS 15+, tvOS 15+
+or Mac Catalyst 15+. This raises the previous macOS 11 and iOS/tvOS/Catalyst 14
+native minimums for Xcode 27 compatibility.
+The application's .NET/Apple workload may require a higher OS version; see
+[Xcode 27 build requirements](building.md#xcode-27). These native minimums also
+apply when consuming the assets from older or platform-neutral managed TFMs.
+
 > **Important:** Library projects should depend on `SkiaSharp` only. NativeAssets packages belong in the **application** (executable) project so the correct binary is deployed. See [Deployment & Containers](#deployment--containers).
 
 ### Platform Packages
@@ -99,6 +106,12 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 
 > **⚠️ WASM is NOT dynamic loading.** Unlike all other platforms, WebAssembly uses static linking at compile time. The `.a` files are passed to the Emscripten linker which embeds them into the final `dotnet.wasm` binary. `DllImport("libSkiaSharp")` still works — the .NET WASM runtime resolves it to statically linked symbols.
 
+For .NET 11, use a package containing the Emscripten 6.0.2 assets and matching framework selection.
+SkiaSharp.Views.Blazor 4.153.1 selects older native assets and can fail to link with undefined
+`saveSetjmp` and `testSetjmp` symbols. Upgrade the SkiaSharp packages together, then delete the
+application's `bin` and `obj` directories before rebuilding to remove cached native WASM outputs.
+Do not suppress undefined-symbol errors.
+
 > **Unity WebGL:** Unity WebGL also uses Emscripten. While not officially supported, the same static linking principle applies. Unity-specific integration may require manual configuration beyond the standard NativeFileReference approach.
 
 ### Auto-Included NativeAssets
@@ -119,7 +132,7 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 
 - `SkiaSharp.NativeAssets.Linux` / `HarfBuzzSharp.NativeAssets.Linux` — for Linux server/desktop
 - `SkiaSharp.NativeAssets.Linux.NoDependencies` — for minimal Linux containers (SkiaSharp only)
-- `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor` and `SkiaSharp.Views.Uno.WinUI`; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
+- `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor`, and the Uno.Sdk adds it to Uno Platform apps; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
 - `SkiaSharp.NativeAssets.NanoServer` — for Windows Nano Server (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WinUI` — for WinUI 3 apps (SkiaSharp only; auto-included by `SkiaSharp.Views.WinUI`)
 - `SkiaSharp.NativeAssets.UWP` — for modern UWP (.NET) apps (SkiaSharp only; auto-included by `SkiaSharp.Views.UWP`)

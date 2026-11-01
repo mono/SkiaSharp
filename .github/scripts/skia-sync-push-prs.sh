@@ -20,6 +20,17 @@ required_file() {
   fi
 }
 
+required_validation() {
+  local log="$1"
+  local receipt="$2"
+  required_file "$ARTIFACT_DIR/$log"
+  required_file "$ARTIFACT_DIR/$receipt"
+  if [[ "$(tr -d '[:space:]' < "$ARTIFACT_DIR/$receipt")" != "0" ]]; then
+    echo "::error::Validation did not exit successfully: $receipt"
+    exit 1
+  fi
+}
+
 required_file "$SKIA_SUMMARY_FILE"
 required_file "$SS_SUMMARY_FILE"
 required_file "$ARTIFACT_DIR/skia-breaking-change-analysis.md"
@@ -27,8 +38,9 @@ required_file "$ARTIFACT_DIR/skia-validation-review.md"
 required_file "$ARTIFACT_DIR/skia-dependency-decisions.md"
 required_file "$ARTIFACT_DIR/skia-dependency-changes.json"
 required_file "$ARTIFACT_DIR/skia-fork-patch-audit.md"
-required_file "$ARTIFACT_DIR/test-output.txt"
-required_file "$ARTIFACT_DIR/test-exit-code.txt"
+required_validation native-build.log native-build-exit-code.txt
+required_validation managed-build.log managed-build-exit-code.txt
+required_validation test-output.txt test-exit-code.txt
 
 : "${SKIA_SYNC_TARGET:?SKIA_SYNC_TARGET is required}"
 : "${SKIA_SYNC_CURRENT:?SKIA_SYNC_CURRENT is required}"
@@ -100,11 +112,6 @@ assert_resolved CGMANIFEST_UPSTREAM_SHA "$MANIFEST_UPSTREAM_SHA" SKIA_SYNC_TARGE
 assert_resolved CGMANIFEST_UPSTREAM_REF "$MANIFEST_UPSTREAM_REF" SKIA_SYNC_UPSTREAM_REF "$UPSTREAM_REF"
 assert_resolved CGMANIFEST_MILESTONE "$MANIFEST_MILESTONE" SKIA_SYNC_TARGET "$TARGET"
 assert_resolved CGMANIFEST_UPSTREAM_VERSION "$MANIFEST_UPSTREAM_VERSION" EXPECTED_UPSTREAM_VERSION "chrome/m${TARGET}"
-
-if [[ "$(tr -d '[:space:]' < "$ARTIFACT_DIR/test-exit-code.txt")" != "0" ]]; then
-  echo "::error::The final unfiltered test command did not exit successfully."
-  exit 1
-fi
 
 BRANCH="$HEAD_BRANCH"
 SS_BASE="$BASE_BRANCH"

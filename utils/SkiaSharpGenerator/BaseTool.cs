@@ -298,21 +298,28 @@ namespace SkiaSharpGenerator
 				var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
 				var t = GetType(p.Type);
 				var cppT = GetCppType(p.Type);
-				if (t == "Boolean" || cppT == "bool")
-					t = "[MarshalAs (UnmanagedType.I1)] bool";
+				if (cppT == "bool")
+					t = nameof(Byte);
+				else if (t == "Boolean")
+					t = nameof(Int32);
 				if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
 					t = newT;
 				paramsList.Add($"{t} {n}");
 			}
 
 			var returnType = GetType(function.ReturnType);
+			var returnCppType = GetCppType(function.ReturnType);
 			if (map != null && map.Parameters.TryGetValue("-1", out var newR))
 			{
 				returnType = newR;
 			}
-			else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
+			else if (returnCppType == "bool")
 			{
-				returnType = "bool";
+				returnType = nameof(Byte);
+			}
+			else if (returnType == "Boolean")
+			{
+				returnType = nameof(Int32);
 			}
 			return (paramsList, returnType);
 		}
@@ -338,8 +345,10 @@ namespace SkiaSharpGenerator
 						var (cppType, i) = tuple;
 						var t = GetType(cppType);
 						var cppT = GetCppType(cppType);
-						if (t == "Boolean" || cppT == "bool")
-							t = "bool";
+						if (cppT == "bool")
+							t = nameof(Byte);
+						else if (t == "Boolean")
+							t = nameof(Int32);
 						if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
 							t = newT;
 						return t;

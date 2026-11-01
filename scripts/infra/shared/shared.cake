@@ -24,9 +24,7 @@ DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVa
 var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview").ToLowerInvariant ();
 var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
 var BUILD_COUNTER = Argument ("buildCounter", EnvironmentVariable ("BUILD_COUNTER") ?? BUILD_NUMBER);
-var DOTNET_FINAL_VERSION_KIND = Argument (
-    "dotNetFinalVersionKind",
-    EnvironmentVariable ("DOTNET_FINAL_VERSION_KIND") ?? "").ToLowerInvariant ();
+var DOTNET_FINAL_VERSION_KIND = Argument ("dotNetFinalVersionKind", EnvironmentVariable ("DOTNET_FINAL_VERSION_KIND") ?? "").ToLowerInvariant ();
 var GIT_SHA = Argument ("gitSha", EnvironmentVariable ("GIT_SHA") ?? "");
 var GIT_BRANCH_NAME = Argument ("gitBranch", EnvironmentVariable ("GIT_BRANCH_NAME") ?? ""). Replace ("refs/heads/", "");
 var GIT_URL = Argument ("gitUrl", EnvironmentVariable ("GIT_URL") ?? "");
@@ -224,10 +222,14 @@ void RunProcess(FilePath process, string args = "")
 
 void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
 {
-    var settings = new ProcessSettings {
-        RedirectStandardOutput = true,
+    RunProcess(process, new ProcessSettings {
         Arguments = args,
-    };
+    }, out stdout);
+}
+
+void RunProcess(FilePath process, ProcessSettings settings, out IEnumerable<string> stdout)
+{
+    settings.RedirectStandardOutput = true;
     var result = StartProcess(process, settings, out var stdoutActual);
     stdout = stdoutActual.ToArray();
     if (result != 0) {

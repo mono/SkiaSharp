@@ -58,15 +58,13 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 **Windows Dependencies:**
 - Windows 10/11
-- [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
-   - .NET desktop development
-   - .NET Multi-platform App UI development (MAUI)
-   - Universal Windows Platform development
-- Windows 10 SDK (latest)
+- [Visual Studio 2026](https://visualstudio.microsoft.com/vs/)
+   - Open `source/SkiaSharpSource.slnx` to install the components in `source/.vsconfig`
+   - The profile includes the .NET desktop, MAUI and UWP workloads, and the required Windows SDK
 
 **macOS Dependencies:**
-- macOS 12+ (Monterey or later)
-- [Xcode](https://developer.apple.com/xcode/) (latest stable)
+- macOS supported by the selected Xcode
+- [Xcode](https://developer.apple.com/xcode/) matching the installed Apple workloads; see [Xcode 27](#xcode-27)
 - Command Line Tools: `xcode-select --install`
 
 ### Preparation
@@ -108,24 +106,19 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
  - [Managed-Only build dependencies](#dependencies)
  - [Python 3](https://www.python.org/downloads/)
     - Make sure the path to `python` is in the `PATH` environment variable
- - [Visual Studio 2022 or 2026](https://visualstudio.microsoft.com/vs/)
-    - Desktop development with C++
-       - Windows 10/11 SDK (latest)
-       - MSVC v143 C++ build tools and matching Spectre-mitigated libraries for the architectures you build
-    - Individual components
-       - C++ compilers and libraries for ARM64
-       - For WinUI native builds, C++ (v143) Universal Windows Platform tools from VS 2022
-          - In VS 2022 Build Tools, select **WinUI application development build tools** and its optional C++ tools
-       - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
-          - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
- - [OpenJDK 17+](https://adoptium.net/)
- - Clang/LLVM
-    - Run `.\scripts\install-llvm.ps1`
-    - Set `LLVM_HOME` to the path of the install
+ - [Visual Studio 2026](https://visualstudio.microsoft.com/vs/)
+    - Open `source/SkiaSharpSource.slnx` to install the components in `source/.vsconfig`
+    - Or configure an existing installation from PowerShell:
 
-If you have multiple Visual Studio installations, use `--vsinstall` or set
-`VS_INSTALL` to select one with the v143 tools and matching Spectre libraries.
-Use `--windowsSdkVersion` if you need a specific installed Windows SDK.
+```powershell
+./scripts/infra/native/windows/select-vs.ps1
+./scripts/infra/native/windows/install-components.ps1
+```
+
+The profiles include MSVC v145 and matching Spectre libraries for x86, x64 and
+ARM64, LLVM, CMake, Ninja, and the required Windows SDK and managed workloads.
+Use `--vsinstall` or `VS_INSTALL` to select a specific installation. MSVC v145
+supports Windows 10 and Server 2016 or later.
 
 **macOS Dependencies:**
  - [Managed-Only build dependencies](#dependencies)
@@ -174,6 +167,62 @@ dotnet cake --target=externals-linux --arch=x64
 ```
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
+
+### Xcode 27
+
+Xcode 27.0 requires macOS 26.6 or later. For managed Apple applications, use
+.NET SDK 10.0.401, workload set **10.0.401.1** (Apple packs **27.0.10722**)
+and MAUI **10.0.110** or a compatible later servicing release. These are separate
+version pins; installing the SDK alone does not update workloads. See the
+[Apple workload release](https://github.com/dotnet/macios/releases/tag/dotnet-10.0.1xx-xcode27.0-10722).
+Xcode 27.1 is not interchangeable with 27.0.
+
+To keep the machine's shared SDK and workloads unchanged, provision a
+repository-local SDK, then install the required workloads into that SDK:
+
+```sh
+use_installed_dotnet_cli=false ./eng/common/dotnet.sh --info
+./.dotnet/dotnet workload install ios tvos macos maccatalyst maui \
+  --version 10.0.401.1 --configfile nuget.config
+```
+
+Allow sufficient free space for the SDK, workload packs, Skia checkout and native
+build outputs. Select Xcode per process rather than changing `xcode-select`:
+
+```sh
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+xcodebuild -version
+./.dotnet/dotnet workload --info
+./.dotnet/dotnet cake --target=externals-macos --arch=arm64
+./.dotnet/dotnet cake --target=externals-ios
+./.dotnet/dotnet cake --target=externals-tvos
+./.dotnet/dotnet cake --target=externals-maccatalyst --arch=arm64
+```
+
+The iOS and tvOS packaging targets require the complete device and simulator
+architecture set, including Intel simulators. Omit `--arch=arm64` from the
+macOS/Catalyst commands to include their Intel slices. Native deployment
+minimums are macOS 12, iOS 15, tvOS 15 and Mac Catalyst 15. Catalyst 14 maps to
+macOS 11, which Xcode 27 rejects; Catalyst 15 maps to macOS 12. These minimums apply
+to both native libraries and cannot be lowered by an application's managed TFM.
+The .NET 10 Apple 27 application runtime additionally requires macOS 14 and
+Catalyst 17; iOS/tvOS simulator applications require version 16 or later.
+An SDK version, a deployment minimum and the build host OS are different settings.
+
+After rebuilding natives, rebuild the test hosts and run the complete suite so
+their output directories contain the newly built libraries:
+
+```sh
+./.dotnet/dotnet test tests/SkiaSharp.Tests.Console.slnx \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+```
+
+Do not use `externals-download` for native changes or disable Xcode-version
+validation to work around an incompatible workload. Existing .NET 9 targets
+still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
+workload. The existing CI Xcode 26.3/workload 10.0.202 path is retained for that
+coverage; use the local pairing above to validate Xcode 27 without changing the
+CI pins. The current macOS 15/Sequoia CI images cannot run Xcode 27.
 
 ## GTK4 Tests
 

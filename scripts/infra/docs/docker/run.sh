@@ -147,8 +147,8 @@ case "$cmd" in
             .agents/skills/release-notes/scripts/prepare.sh "$@"
         ;;
     all)
-        # Full local run: the release-notes Prepare phase (prepare.sh): API diffs then
-        # the notes engine. Because it runs the notes path, 'all' requires a token
+        # All deterministic local preparation: API diffs, page facts and index data.
+        # Prose authoring and offline rendering still follow. 'all' requires a token
         # (override with ALLOW_NO_TOKEN=1).
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image

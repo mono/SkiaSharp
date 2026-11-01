@@ -1,16 +1,18 @@
 {
-  "theme": "Glyph data correction",
-  "highlights_headline": "SkiaSharp 4.152.1 incorporates the Chrome m152 GlyphData fix.",
+  "theme": "Glyph atlas correctness",
+  "highlights_headline": "SkiaSharp 4.152.1 prevents partial glyph-atlas updates from reusing evicted glyph locations.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Glyph data handling corrected",
-          "detail": "Adopts the upstream Chrome m152 fix for GlyphData handling in the bundled renderer.",
-          "prs": [5047]
+          "lead": "Glyph-atlas generation recorded only for complete updates",
+          "detail": "Ganesh and Graphite no longer treat a partial glyph-vector update as proof that all earlier atlas locations are current.",
+          "prs": [
+            5047
+          ]
         }
       ]
     }
@@ -20,7 +22,7 @@
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.152.1": {
-      "headline": "SkiaSharp 4.152.1 incorporates the Chrome m152 GlyphData fix.",
+      "headline": "SkiaSharp 4.152.1 prevents partial glyph-atlas updates from reusing evicted glyph locations.",
       "body": null
     }
   }

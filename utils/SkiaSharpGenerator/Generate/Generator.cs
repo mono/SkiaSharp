@@ -202,10 +202,6 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
 
 			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
-			if (returnType == "bool")
-			{
-				writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
-			}
 
 			writer.WriteLine($"\tinternal unsafe delegate {returnType} {name}({string.Join(", ", paramsList)});");
 			writer.WriteLine();
@@ -741,7 +737,6 @@ namespace SkiaSharpGenerator
 				writer.WriteLine($"\tpublic static readonly {name} {proxyName} = {implName};");
 				writer.WriteLine($"\t[MonoPInvokeCallback (typeof ({name}))]");
 				writer.WriteLine($"#endif");
-				if (returnType == "bool") writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
 				writer.WriteLine($"\tprivate static partial {returnType} {implName}({string.Join(",", paramsList)});");
 				writer.WriteLine();
 			}

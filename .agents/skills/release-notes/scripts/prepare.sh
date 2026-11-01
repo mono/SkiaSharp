@@ -27,7 +27,8 @@
 #                        single version.
 #
 # After this finishes, the AI writes _sources/<version>.prose.json for each page in
-# output/files-to-polish.txt, then render.sh builds the Markdown. See SKILL.md.
+# output/files-to-polish.txt, then the offline renderer builds the Markdown
+# (render.sh locally, Python directly in the hosted agent). See SKILL.md.
 #
 # Requires: dotnet (Cake), python3, git history, and gh (PR authors). Any missing
 # tool aborts with a clear message — do not work around it.

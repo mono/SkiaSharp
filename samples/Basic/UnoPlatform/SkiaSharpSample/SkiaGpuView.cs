@@ -1,4 +1,4 @@
-#if __UNO_SKIA__
+#if __UNO__
 using System;
 using Windows.Foundation;
 using SkiaSharp;

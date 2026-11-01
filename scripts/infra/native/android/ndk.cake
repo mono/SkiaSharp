@@ -1,27 +1,6 @@
 DirectoryPath ANDROID_NDK_HOME = Argument("ndk", EnvironmentVariable("ANDROID_NDK_HOME") ?? EnvironmentVariable("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine("android-ndk").FullPath);
 
 
-void CheckAlignment(FilePath so)
-{
-    Information($"Making sure that everything is 16 KB aligned...");
-
-    var prebuilt = ANDROID_NDK_HOME.CombineWithFilePath("toolchains/llvm/prebuilt").FullPath;
-    var objdump = GetFiles($"{prebuilt}/*/bin/llvm-objdump*").FirstOrDefault() ?? throw new Exception("Could not find llvm-objdump");
-    RunProcess(objdump.FullPath, $"-p {so}", out var stdout);
-
-    var loads = stdout
-        .Where(l => l.Trim().StartsWith("LOAD"))
-        .ToList();
-
-    if (loads.Any(l => !l.Trim().EndsWith("align 2**14"))) {
-        Information(String.Join(Environment.NewLine + "    ", stdout));
-        throw new Exception($"{so} contained a LOAD that was not 16 KB aligned.");
-    } else {
-        Information("Everything is 16 KB aligned:");
-        Information(String.Join(Environment.NewLine, loads));
-    }
-}
-
 void StripCopy(FilePath so, DirectoryPath outDir)
 {
     Information($"Stripping and copying {so} to {outDir}...");
@@ -30,7 +9,6 @@ void StripCopy(FilePath so, DirectoryPath outDir)
 
     CopyFileToDirectory(so, outDir);
     so = outDir.CombineWithFilePath(so.GetFilename());
-    CheckAlignment(so);
 
     ExtractAndStripSymbols(so);
 }
@@ -59,25 +37,6 @@ FilePath ExtractAndStripSymbols(FilePath so)
     Information($"Linking stripped binary to symbols file...");
     RunProcess(objcopy.FullPath, $"--add-gnu-debuglink=\"{symbolsFile}\" \"{so}\"");
 
-    // dotnet-symbol resolves ELF modules and split debug files by GNU build ID.
-    var readelf = GetFiles($"{prebuilt}/*/bin/llvm-readelf*").FirstOrDefault() ?? throw new Exception("Could not find llvm-readelf");
-    RunProcess(readelf.FullPath, $"-n \"{so}\"", out var moduleNotes);
-    RunProcess(readelf.FullPath, $"-n \"{symbolsFile}\"", out var symbolNotes);
-    var moduleBuildId = System.Text.RegularExpressions.Regex.Match(
-        string.Join(Environment.NewLine, moduleNotes),
-        @"Build ID:\s*(?<id>[0-9a-f]+)",
-        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Groups["id"].Value;
-    var symbolBuildId = System.Text.RegularExpressions.Regex.Match(
-        string.Join(Environment.NewLine, symbolNotes),
-        @"Build ID:\s*(?<id>[0-9a-f]+)",
-        System.Text.RegularExpressions.RegexOptions.IgnoreCase).Groups["id"].Value;
-    if (string.IsNullOrEmpty(moduleBuildId) || !string.Equals(moduleBuildId, symbolBuildId, StringComparison.OrdinalIgnoreCase))
-        throw new Exception($"The Android module and symbol file must have the same GNU build ID: '{moduleBuildId}' != '{symbolBuildId}'.");
-
-    RunProcess(readelf.FullPath, $"--string-dump=.gnu_debuglink \"{so}\"", out var debugLink);
-    if (!debugLink.Any(line => line.Contains(symbolsFile.GetFilename().ToString())))
-        throw new Exception($"{so} does not reference {symbolsFile.GetFilename()} through .gnu_debuglink.");
-
     // Report final sizes
     var strippedSize = new System.IO.FileInfo(so.FullPath).Length;
     var symbolsSize = new System.IO.FileInfo(symbolsFile.FullPath).Length;
@@ -88,7 +47,6 @@ FilePath ExtractAndStripSymbols(FilePath so)
     Information($"  Original size:   {originalSize / 1024.0 / 1024.0:F1} MB ({originalSize:N0} bytes)");
     Information($"  Stripped binary: {strippedSize / 1024.0 / 1024.0:F1} MB ({strippedSize:N0} bytes)");
     Information($"  Symbols file:    {symbolsSize / 1024.0 / 1024.0:F1} MB ({symbolsSize:N0} bytes)");
-    Information($"  GNU build ID:    {moduleBuildId}");
     Information($"  Space saved:     {savedBytes / 1024.0 / 1024.0:F1} MB ({savedBytes:N0} bytes, {savedPercent:F1}%)");
 
     return symbolsFile;

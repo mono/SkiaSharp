@@ -8,7 +8,7 @@ using System.Collections.Generic;
 //
 // NOTE: this file relies on helpers from native-shared.cake and
 // windows-shared.cake (RunProcess, RunPython, RunGn, RunNinja,
-// GetSpectreLibPath, CheckWindowsDependencies, VERIFY_EXCLUDED), so it must be
+// GetSpectreLibPath, LLVM_HOME, VS_INSTALL, TOOLSET_VERSION), so it must be
 // #load-ed by a script that also loads those. It deliberately does not #load
 // them itself so that the existing load order is left untouched.
 
@@ -18,24 +18,32 @@ using System.Collections.Generic;
 
 // Everything needed to get an ANGLE checkout that can be `gn gen`-ed.
 // Every step is idempotent, so this is safe to run on an incremental agent.
-void SyncAngle(DirectoryPath anglePath, string angleVersion)
+void SyncAngle(DirectoryPath anglePath, string angleVersion, string angleRevision)
 {
-    CloneAngle(anglePath, angleVersion);
+    CheckoutAngle(anglePath, angleVersion, angleRevision);
     SyncAngleSubmodules(anglePath);
+    LinkAngleClang(anglePath);
     PatchAngleToolchainOutputNames(anglePath);
     WriteAngleGclientArgs(anglePath);
     ApplyAngleSkiaSharpConfig(anglePath);
     WriteAngleLastChange(anglePath);
-    DownloadAngleRc(anglePath);
-    DownloadAngleClang(anglePath);
+    UseWindowsSdkResourceCompiler(anglePath);
 }
 
-void CloneAngle(DirectoryPath anglePath, string angleVersion)
+void CheckoutAngle(DirectoryPath anglePath, string angleVersion, string angleRevision)
 {
-    if (DirectoryExists(anglePath))
-        return;
+    if (!DirectoryExists(anglePath)) {
+        RunProcess("git", $"clone https://github.com/google/angle.git --branch {angleVersion} --depth 1 --single-branch --shallow-submodules {anglePath}");
+    }
 
-    RunProcess("git", $"clone https://github.com/google/angle.git --branch {angleVersion} --depth 1 --single-branch --shallow-submodules {anglePath}");
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"fetch --depth 1 origin {angleRevision}",
+        WorkingDirectory = anglePath.FullPath,
+    });
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"checkout --detach {angleRevision}",
+        WorkingDirectory = anglePath.FullPath,
+    });
 }
 
 void SyncAngleSubmodules(DirectoryPath anglePath)
@@ -45,32 +53,52 @@ void SyncAngleSubmodules(DirectoryPath anglePath)
         "testing",
         "third_party/zlib",
         "third_party/jsoncpp",
-        "third_party/vulkan-deps",
         "third_party/astc-encoder/src",
-        "tools/clang",
+        "third_party/depot_tools",
+        "third_party/spirv-headers/src",
+        "third_party/spirv-tools/src",
     };
 
-    foreach (var submodule in submodules) {
-        var sub = anglePath.Combine(submodule);
-        if (FileExists(sub.CombineWithFilePath("BUILD.gn")) || FileExists(sub.CombineWithFilePath(".gitignore")))
-            continue;
-
-        RunProcess("git", new ProcessSettings {
-            Arguments = $"submodule update --init --recursive --depth 1 --single-branch {submodule}",
-            WorkingDirectory = anglePath.FullPath,
-        });
-    }
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
+        WorkingDirectory = anglePath.FullPath,
+    });
 }
 
-// Emit the import lib and pdb next to the dll instead of into the root of the
-// output directory, so the per-arch copies below do not collide.
+// Chromium's resource compiler wrapper expects clang-cl at this path even for
+// MSVC builds.
+void LinkAngleClang(DirectoryPath anglePath)
+{
+    var llvmHome = MakeAbsolute(Directory(LLVM_HOME));
+    var clang = llvmHome.CombineWithFilePath("bin/clang-cl.exe");
+    if (!FileExists(clang))
+        throw new Exception($"Visual Studio LLVM was not installed: {clang}");
+
+    var chromiumLlvm = anglePath.Combine("third_party/llvm-build/Release+Asserts");
+    if (DirectoryExists(chromiumLlvm))
+        return;
+
+    EnsureDirectoryExists(chromiumLlvm.GetParent());
+    RunProcess("cmd.exe", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
+            .AppendQuoted($"mklink /J \"{chromiumLlvm}\" \"{llvmHome}\""),
+    });
+}
+
+// Use conventional import library and PDB names so the per-arch copies do not
+// collide.
 void PatchAngleToolchainOutputNames(DirectoryPath anglePath)
 {
     var toolchain = anglePath.CombineWithFilePath("build/toolchain/win/toolchain.gni");
     var contents = FileReadText(toolchain);
+    const string importLibrary = "\"{{output_dir}}/{{target_output_name}}.lib\"";
+    const string programDatabase = "\"{{output_dir}}/{{target_output_name}}.pdb\"";
     var newContents = contents
-        .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
-        .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
+        .Replace("\"${dllname}.lib\"", importLibrary)
+        .Replace("\"${dllname}.pdb\"", programDatabase);
+
+    if (!newContents.Contains(importLibrary) || !newContents.Contains(programDatabase))
+        throw new Exception($"Cannot apply conventional import library and PDB names at {toolchain}.");
 
     if (contents != newContents)
         FileWriteText(toolchain, newContents);
@@ -83,17 +111,16 @@ void WriteAngleGclientArgs(DirectoryPath anglePath)
     if (FileExists(gclientArgs))
         return;
 
-    var lines = new [] {
+    FileWriteLines(gclientArgs, new [] {
         "checkout_angle_internal = false",
         "checkout_angle_mesa = false",
         "checkout_angle_restricted_traces = false",
-        "generate_location_tags = false"
-    };
-    FileWriteLines(gclientArgs, lines);
+        "generate_location_tags = false",
+    });
 }
 
-// Hardening options live in a real GN config so Ninja tracks changes to them,
-// rather than in extra_cflags/extra_ldflags.
+// Hardening options live in a real GN config so Ninja also tracks
+// security-option changes.
 void ApplyAngleSkiaSharpConfig(DirectoryPath anglePath)
 {
     CopyDirectory(ROOT_PATH.Combine("scripts/infra/native/windows/angle-gn"), anglePath.Combine("build/config/skiasharp"));
@@ -114,32 +141,31 @@ void ApplyAngleSkiaSharpConfig(DirectoryPath anglePath)
 void WriteAngleLastChange(DirectoryPath anglePath)
 {
     var lastchange = anglePath.CombineWithFilePath("build/util/LASTCHANGE");
-    if (FileExists(lastchange))
+    var committime = anglePath.CombineWithFilePath("build/util/LASTCHANGE.committime");
+    if (FileExists(lastchange) && FileExists(committime))
         return;
 
     RunPython(anglePath, anglePath.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
 }
 
-void DownloadAngleRc(DirectoryPath anglePath)
+// Use the Windows SDK rc.exe instead of downloading Chromium's prebuilt one.
+void UseWindowsSdkResourceCompiler(DirectoryPath anglePath)
 {
-    const string rcExe = "build/toolchain/win/rc/win/rc.exe";
+    var rcPy = anglePath.CombineWithFilePath("build/toolchain/win/rc/rc.py");
+    var contents = FileReadText(rcPy);
+    const string msrcOutput = "msrc_out = flags.output";
+    const string skipChromiumRc = "rc_exe_exit_code = 0";
+    var newContents = contents
+        .Replace("msrc_out = flags.output + '_ms_rc'", msrcOutput)
+        .Replace("rc_exe_exit_code = RunRc(preprocessed_output, is_utf8, flags)", skipChromiumRc);
 
-    var rcPath = anglePath.CombineWithFilePath(rcExe);
-    if (FileExists(rcPath))
-        return;
+    if (newContents.Contains("flags.output + '_ms_rc'") ||
+        !newContents.Contains(msrcOutput) ||
+        !newContents.Contains(skipChromiumRc))
+        throw new Exception($"Cannot configure Windows SDK rc.exe at {rcPy}.");
 
-    var shaPath = anglePath.CombineWithFilePath($"{rcExe}.sha1");
-    var sha = FileReadText(shaPath);
-    var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-    DownloadFile(url, rcPath);
-}
-
-void DownloadAngleClang(DirectoryPath anglePath)
-{
-    if (FileExists(anglePath.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision")))
-        return;
-
-    RunPython(anglePath, anglePath.CombineWithFilePath("tools/clang/scripts/update.py"));
+    if (contents != newContents)
+        FileWriteText(rcPy, newContents);
 }
 
 // ---------------------------------------------------------------------------
@@ -159,11 +185,18 @@ string AngleGnArgs(string arch, string[] flavorArgs = null)
     args.Add("is_component_build=false");
     args.Add("is_debug=false");
     args.Add("is_clang=false");
+    args.Add("use_custom_libcxx=false");
+    args.Add("use_custom_libcxx_for_host=false");
+    args.Add("enable_rust=false");
+    args.Add("enable_rust_cxx=false");
+    args.Add("use_siso=false");
+    args.Add("angle_build_tests=false");
     args.Add("enable_precompiled_headers=false");
     args.Add("angle_enable_null=false");
     args.Add("angle_enable_wgpu=false");
     args.Add("angle_enable_gl_desktop_backend=false");
     args.Add("angle_enable_vulkan=false");
+    args.Add("angle_build_vulkan_system_info=false");
     args.Add($"spectre_lib_root='{System.IO.Path.GetDirectoryName(GetSpectreLibPath(arch))}'");
 
     return string.Join(" ", args);
@@ -177,8 +210,7 @@ void BuildAngle(
     string outName,
     string arch,
     string target,
-    string gnArgs,
-    bool verifyDependencies)
+    string gnArgs)
 {
     var outDir = $"out/{outName}/{arch}";
 
@@ -191,7 +223,7 @@ void BuildAngle(
 
         RunGn(anglePath, outDir, gnArgs, new Dictionary<string, string> {
             { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
-            { "vs2022_install", VS_INSTALL },
+            { "vs2026_install", VS_INSTALL },
             { "VCToolsVersion", TOOLSET_VERSION.Value },
         });
         RunNinja(anglePath, outDir, target);
@@ -205,7 +237,4 @@ void BuildAngle(
     EnsureDirectoryExists(destDir);
     CopyFileToDirectory(anglePath.CombineWithFilePath($"{outDir}/{target}.dll"), destDir);
     CopyFileToDirectory(anglePath.CombineWithFilePath($"{outDir}/{target}.pdb"), destDir);
-
-    if (verifyDependencies)
-        CheckWindowsDependencies($"{destDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
 }

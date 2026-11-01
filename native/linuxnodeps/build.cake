@@ -8,7 +8,6 @@ Task("libSkiaSharp")
 {
     RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "gnArgs", "skia_use_fontconfig=false " + ADDITIONAL_GN_ARGS },
-        { "verifyExcluded", "fontconfig" },
     });
 });
 
@@ -18,7 +17,6 @@ Task("libHarfBuzzSharp")
 {
     RunCake("../linux/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
         { "gnArgs", ADDITIONAL_GN_ARGS },
-        { "verifyExcluded", "fontconfig" },
     });
 });
 

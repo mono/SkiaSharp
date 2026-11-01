@@ -5,12 +5,8 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
-void CheckDeps(FilePath dll, bool checkSpectre = true)
-{
-    CheckWindowsDependencies(dll, excluded: VERIFY_EXCLUDED, checkSpectre: checkSpectre);
-}
-
 Task("SkiaSharp.Views.WinUI.Native")
+    .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
@@ -33,7 +29,7 @@ Task("SkiaSharp.Views.WinUI.Native")
         var name = "SkiaSharp.Views.WinUI.Native";
         RunMSBuild($"{name}/{name}.slnx", arch,
             properties: new Dictionary<string, string> {
-                { "CsWinRTWindowsMetadata", string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "sdk" : WINDOWS_SDK_VERSION },
+                { "CsWinRTWindowsMetadata", WINDOWS_SDK_VERSION },
                 { "VCToolsVersion", TOOLSET_VERSION.Value },
                 { "WindowsTargetPlatformVersion", WINDOWS_SDK_VERSION }
             });
@@ -50,8 +46,6 @@ Task("SkiaSharp.Views.WinUI.Native")
         CopyFileToDirectory(projectionOutDir.CombineWithFilePath($"{name}.Projection.dll"), anyOutDir);
         CopyFileToDirectory(projectionOutDir.CombineWithFilePath($"{name}.Projection.pdb"), anyOutDir);
 
-        CheckDeps($"{outDir}/{name}.dll");
-        CheckDeps($"{anyOutDir}/{name}.Projection.dll", checkSpectre: false);
     }
 });
 

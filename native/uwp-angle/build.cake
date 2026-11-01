@@ -6,6 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/uwp"))
 DirectoryPath PATCHES_PATH = MakeAbsolute(Directory("./patches"));
 
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
+string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
@@ -55,6 +56,7 @@ void ApplyPatches(DirectoryPath root, DirectoryPath patchesPath)
 // ---------------------------------------------------------------------------
 
 Task("sync-ANGLE")
+    .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
@@ -62,7 +64,7 @@ Task("sync-ANGLE")
     // the Windows App SDK. Modern .NET UWP apps use the in-box
     // Windows.UI.Xaml stack, so no WinAppSDK download or header generation is
     // needed here (angle_is_winappsdk stays false).
-    SyncAngle(ANGLE_PATH, ANGLE_VERSION);
+    SyncAngle(ANGLE_PATH, ANGLE_VERSION, ANGLE_REVISION);
 
     ApplyPatches(ANGLE_PATH, PATCHES_PATH);
 });
@@ -93,8 +95,7 @@ Task("ANGLE")
                 new [] {
                     "target_os='winuwp'",
                     "angle_is_winappsdk=false",
-                }),
-            verifyDependencies: false);
+                }));
     }
 });
 
