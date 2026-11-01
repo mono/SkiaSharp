@@ -118,8 +118,9 @@ It writes TRX results under
 `output/logs/testlogs/SkiaSharp.Tests.Devices.windows/`.
 The **Windows (MAUI)** CI job runs the same target and publishes test results
 and visual-regression images. Like the Windows console jobs, it provisions
-Mesa for the WGL tests because the hosted agent's default OpenGL implementation
-lacks the required WGL extensions; this is separate from WinUI's ANGLE renderer.
+Mesa for the WGL tests and SwiftShader for Vulkan tests: the hosted agent's
+default OpenGL implementation lacks the required WGL extensions, and it has no
+compatible Vulkan driver. These are separate from WinUI's ANGLE renderer.
 
 ## Native Building
 

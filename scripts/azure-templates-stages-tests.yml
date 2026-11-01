@@ -196,53 +196,14 @@ stages:
             preBuildSteps:
               - pwsh: .\scripts\infra\tests\windows\install-mesa-gl.ps1
                 displayName: Provision software OpenGL (Mesa) for the GL tests
+              - pwsh: .\scripts\infra\tests\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
               - pwsh: |
                   $ErrorActionPreference = 'Stop'
                   $key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
                   New-Item -Path $key -Force | Out-Null
                   New-ItemProperty -Path $key -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
                 displayName: Enable Windows Developer Mode for MSIX registration
-              - pwsh: |
-                  $ErrorActionPreference = 'Stop'
-                  $dumpFolder = Join-Path "$(Build.SourcesDirectory)" 'output\windows-device-crashes'
-                  New-Item -ItemType Directory -Path $dumpFolder -Force | Out-Null
-                  $tools = Join-Path "$(Build.SourcesDirectory)" 'output\procdump'
-                  New-Item -ItemType Directory -Path $tools -Force | Out-Null
-                  $archive = Join-Path $tools 'Procdump.zip'
-                  Invoke-WebRequest 'https://download.sysinternals.com/files/Procdump.zip' -OutFile $archive
-                  Expand-Archive -LiteralPath $archive -DestinationPath $tools -Force
-                  $exe = Join-Path $tools 'procdump64.exe'
-                  $signature = Get-AuthenticodeSignature -FilePath $exe
-                  if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
-                    throw 'ProcDump must have a valid Microsoft signature.'
-                  }
-                  $monitor = Start-Process -FilePath $exe -ArgumentList "-accepteula -ma -e -w SkiaSharp.Tests.Devices.exe `"$dumpFolder`"" -PassThru `
-                    -RedirectStandardOutput (Join-Path $dumpFolder 'procdump.stdout.txt') `
-                    -RedirectStandardError (Join-Path $dumpFolder 'procdump.stderr.txt')
-                  Start-Sleep -Seconds 2
-                  if ($monitor.HasExited) {
-                    throw "ProcDump exited before the test app launched (exit code $($monitor.ExitCode))."
-                  }
-                  Write-Host "##vso[task.setvariable variable=WindowsDeviceProcDumpId]$($monitor.Id)"
-                displayName: Capture Windows device app crash dumps
-            postBuildSteps:
-              - pwsh: |
-                  $ErrorActionPreference = 'Stop'
-                  $monitor = Get-Process -Id $(WindowsDeviceProcDumpId) -ErrorAction Ignore
-                  if ($monitor) {
-                    Stop-Process -Id $monitor.Id
-                  }
-                  $logs = Join-Path "$(Build.SourcesDirectory)" 'output\logs\testlogs'
-                  New-Item -ItemType Directory -Path $logs -Force | Out-Null
-                  Copy-Item -LiteralPath (Join-Path "$(Build.SourcesDirectory)" 'output\windows-device-crashes') -Destination $logs -Recurse -Force
-                  $folder = Join-Path $logs 'windows-device-crashes'
-                  & wevtutil qe Application /q:"*[System[(Level=1 or Level=2 or Level=3) and TimeCreated[timediff(@SystemTime) <= 10800000]]]" /f:text /c:100 /rd:true |
-                    Tee-Object -FilePath (Join-Path $folder 'application-events.txt')
-                  if ($LASTEXITCODE -ne 0) {
-                    throw "Windows Application event collection failed with exit code $LASTEXITCODE."
-                  }
-                displayName: Collect Windows device app failure events
-                condition: and(always(), ne(variables['WindowsDeviceProcDumpId'], ''))
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
