@@ -202,13 +202,13 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     }
 
     cake = MakeAbsolute(cake);
-    var cmd = $"cake {cake}";
+    var cmd = new ProcessArgumentBuilder().AppendQuoted(cake.FullPath);
 
     foreach (var arg in args) {
-        cmd += $@" --{arg.Key}=""{arg.Value}""";
+        cmd.AppendSwitchQuoted($"--{arg.Key}", "=", arg.Value ?? string.Empty);
     }
 
-    DotNetTool(cmd);
+    DotNetToolRun("dotnet-cake", cmd);
 }
 
 void RunProcess(FilePath process, string args = "")

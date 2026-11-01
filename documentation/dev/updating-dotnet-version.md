@@ -28,6 +28,11 @@ This checklist documents every file that needs updating when bumping the .NET SD
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
+`list-workload-packs.ps1` inventories every declared pack, including unused
+legacy entries. A missing inventory entry is not necessarily an installation
+dependency. Confirm that the exact version exists at the source and validate
+the actual workload installation with `--configfile nuget.config`.
+
 ### 2. Central Build Props
 
 - [ ] **`source/SkiaSharp.Build.props`** — This is the most critical file:
@@ -110,6 +115,9 @@ The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/pac
   - `scripts/infra/docs/docker/Dockerfile`
   - `scripts/infra/tests/docker/{alpine,alpine-nodeps,azurelinux,azurelinux-nodeps,nanoserver}/Dockerfile`
   - `tests/Dockerfile.linux`
+  - `scripts/infra/tests/docker/native/Dockerfile`
+  - `scripts/infra/security/fuzzing/docker/Dockerfile`
+  - `utils/NativeLibraryMiniTest/docker/Dockerfile` (build stage)
 - [ ] Update every native `DOTNET_SDK_VERSION` argument to the exact repository SDK patch:
   - `scripts/infra/native/android/docker/Dockerfile`
   - `scripts/infra/native/linux/docker/{alpine,bionic,glibc,glibc-x86}/Dockerfile`
@@ -124,13 +132,42 @@ The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/pac
 
 Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
-Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
+Keep each distro/OS suffix unchanged when the new SDK tag is published for it.
+SDK 10.0.403 is not published for Alpine 3.23, so the Alpine test images use the
+verified `10.0.403-alpine3.24` tag. Preserve other suffixes such as `-noble`,
+`-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are
+separate from the build SDK pin; do not change them as part of an SDK-only
+alignment unless the runtime itself is also being updated.
 
-### 11. NuGet & Feeds
+### 11. .NET Tools and Packages
+
+- [ ] **`.config/dotnet-tools.json`** — Query stable tool releases and verify availability on the approved feeds before updating. ReportGenerator remains at 5.5.11 until 5.5.12 clears ingestion and is mirrored to `dotnet-public`.
+- [ ] **Cake addins** — Keep addins compatible with the selected Cake runtime and its bundled NuGet assemblies; compile the scripts, not just the tool manifest.
+- [ ] **MAUI** — Update the per-TFM versions in `source/SkiaSharp.Build.props` and standalone MAUI sample pins. MAUI NuGet servicing versions can be newer than the workload manifest.
+- [ ] **Blazor** — Update the library's conditional ASP.NET Core references within each supported major, plus WebAssembly/DevServer sample and test packages.
+- [ ] **Roslyn and logging packages** — Review generator, analyzer, sample and device-test references.
+- [ ] **Test framework compatibility** — Keep xUnit and Microsoft.Testing.Platform on compatible major versions; a testing-platform migration is not a servicing-only update.
+
+Do not replace framework-specific or historical reference dependencies with a
+newer incompatible major. `scripts/VERSIONS.txt` supplies dependencies for API
+comparisons across old releases as well as native tooling; those entries are not
+a central package-management file for current managed projects.
+
+### 12. NuGet & Feeds
 
 - [ ] `nuget.config` — Remove old preview feeds, keep dotnet-public + dotnet-eng + test-device-runners
 
 > **Note:** `nuget.org` is a disallowed source in the SkiaSharp CI pipeline. If you encounter missing package restore errors during development, you can temporarily add nuget.org to work through issues, but it **must be removed before merging**. Request mirroring for any missing packages.
+
+For missing packages, follow the official
+[Arcade mirroring process](https://github.com/dotnet/arcade/blob/main/Documentation/MirroringPackages.md):
+queue the `dotnet-migrate-package` pipeline in `dnceng/internal` (definition
+931), select `New or non-Microsoft`, and provide the exact package ID and
+version. Its `PackageNames` parameter accepts comma-separated IDs sharing
+the same `PackageVersion`. Wait for the packages to appear on `dotnet-public`
+before validating restores with the committed `nuget.config`.
+If ingestion reports a supply-chain quarantine, wait and retry the supported
+pipeline; do not bypass the gate or add an unapproved source.
 
 ## Pre-Merge Checklist
 

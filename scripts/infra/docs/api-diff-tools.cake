@@ -12,9 +12,9 @@
 // CONSUMERS MUST #load "shared.cake" BEFORE this file: it relies on ROOT_PATH,
 // PACKAGE_CACHE_PATH, GetVersion, TRACKED_NUGETS, etc. defined there.
 
-#addin nuget:?package=Cake.FileHelpers&version=4.0.1
-#addin nuget:?package=Cake.Json&version=6.0.1
-#addin nuget:?package=NuGet.Packaging&version=6.9.1
+#addin nuget:?package=Cake.FileHelpers&version=9.0.0
+#addin nuget:?package=Cake.Json&version=11.0.0
+#addin nuget:?package=NuGet.Packaging&version=7.9.0
 #addin nuget:?package=SharpCompress&version=0.32.2
 #addin nuget:?package=Mono.Cecil&version=0.11.5
 #addin nuget:?package=Mono.ApiTools.ApiInfo&version=1.4.1

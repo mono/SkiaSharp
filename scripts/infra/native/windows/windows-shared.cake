@@ -1,4 +1,4 @@
-#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+#addin nuget:?package=Cake.FileHelpers&version=9.0.0
 
 string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "10.0.28000.0");
 

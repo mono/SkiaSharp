@@ -1,4 +1,4 @@
-#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+#addin nuget:?package=Cake.FileHelpers&version=9.0.0
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // GPU OPT-OUT — backends to skip on this host

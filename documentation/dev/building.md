@@ -170,12 +170,15 @@ dotnet cake --target=externals-linux --arch=x64
 
 ### Xcode 27
 
-Xcode 27.0 requires macOS 26.6 or later. For managed Apple applications, use
-.NET SDK 10.0.401, workload set **10.0.401.1** (Apple packs **27.0.10722**)
-and MAUI **10.0.110** or a compatible later servicing release. These are separate
+Xcode 27.1 requires macOS 26.6 or later. For managed Apple applications, use
+.NET SDK **10.0.403**, workload set **10.0.403** (iOS packs **27.1.10018**;
+MacCatalyst, macOS and tvOS packs **27.0.10742**)
+and MAUI **10.0.120** or a compatible later servicing release. These are separate
 version pins; installing the SDK alone does not update workloads. See the
-[Apple workload release](https://github.com/dotnet/macios/releases/tag/dotnet-10.0.1xx-xcode27.0-10722).
-Xcode 27.1 is not interchangeable with 27.0.
+[Apple workload releases](https://github.com/dotnet/macios/releases).
+This workload set requires Xcode 27.1; Xcode 27.0 is insufficient. Managed CI
+uses the Azure Pipelines `xcode-27` image. Native Apple CI retains Xcode 26.3
+on its existing macOS hosts.
 
 To keep the machine's shared SDK and workloads unchanged, provision a
 repository-local SDK, then install the required workloads into that SDK:
@@ -183,7 +186,7 @@ repository-local SDK, then install the required workloads into that SDK:
 ```sh
 use_installed_dotnet_cli=false ./eng/common/dotnet.sh --info
 ./.dotnet/dotnet workload install ios tvos macos maccatalyst maui \
-  --version 10.0.401.1 --configfile nuget.config
+  --version 10.0.403 --configfile nuget.config
 ```
 
 Allow sufficient free space for the SDK, workload packs, Skia checkout and native
