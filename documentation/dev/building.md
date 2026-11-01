@@ -111,6 +111,9 @@ Windows App SDK runtime. `dotnet test` uses DeviceRunners and its bundled
 winapp tool to register and launch the loose MSIX build output; no separate
 publish or certificate-signing step is required. Enable Windows Developer Mode
 before running locally; the CI job enables it before registration.
+Source builds include the WinUI native assets from
+`output/native/winui/x64/` in the MSIX layout, including ANGLE's
+`libEGL.dll` and `libGLESv2.dll`.
 It writes TRX results under
 `output/logs/testlogs/SkiaSharp.Tests.Devices.windows/`.
 The **Windows (MAUI)** CI job runs the same target and publishes test results
