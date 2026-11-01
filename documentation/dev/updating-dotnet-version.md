@@ -148,6 +148,11 @@ alignment unless the runtime itself is also being updated.
 - [ ] **Roslyn and logging packages** — Review generator, analyzer, sample and device-test references.
 - [ ] **Test framework compatibility** — Keep xUnit and Microsoft.Testing.Platform on compatible major versions; a testing-platform migration is not a servicing-only update.
 
+ReportGenerator remains at **5.5.11** until **5.5.12** is available on the approved
+feeds. Validate fresh tool restores with isolated `HOME`, `DOTNET_CLI_HOME`, and
+`NUGET_PACKAGES` directories plus `--no-cache`; otherwise an existing tool store
+can mask missing feed packages. Do not clear a shared machine's caches.
+
 Do not replace framework-specific or historical reference dependencies with a
 newer incompatible major. `scripts/VERSIONS.txt` supplies dependencies for API
 comparisons across old releases as well as native tooling; those entries are not
