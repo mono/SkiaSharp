@@ -7,10 +7,7 @@ using System.Diagnostics;
 namespace SkiaSharp
 {
 	/// <summary>Represents a font used for drawing and measuring text.</summary>
-	/// <remarks>
-	/// Methods accepting encoded text reject negative byte lengths and incomplete 16-bit
-	/// glyph IDs when the encoding is <see cref="SKTextEncoding.GlyphId" />.
-	/// </remarks>
+	/// <remarks>Byte lengths must be nonnegative; <see cref="SKTextEncoding.GlyphId" /> buffers must contain complete 16-bit glyph IDs.</remarks>
 	public unsafe class SKFont : SKObject
 	{
 		internal const float DefaultSize = 12f;
