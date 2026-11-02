@@ -709,7 +709,7 @@ namespace SkiaSharp
 		/// <param name="encoding">The <see cref="T:SkiaSharp.SKTextEncoding" /> of the text.</param>
 		/// <param name="maxWidth">The maximum width constraint.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
-		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <returns>The number of bytes that fit within the maximum width.</returns>
 		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
 		public int BreakText (ReadOnlySpan<byte> text, SKTextEncoding encoding, float maxWidth, SKPaint paint = null) =>
@@ -721,7 +721,7 @@ namespace SkiaSharp
 		/// <param name="maxWidth">The maximum width constraint.</param>
 		/// <param name="measuredWidth">When this method returns, contains the actual measured width of the text.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
-		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <returns>The number of bytes that fit within the maximum width.</returns>
 		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
 		public int BreakText (ReadOnlySpan<byte> text, SKTextEncoding encoding, float maxWidth, out float measuredWidth, SKPaint paint = null)
@@ -738,7 +738,7 @@ namespace SkiaSharp
 		/// <param name="encoding">The <see cref="T:SkiaSharp.SKTextEncoding" /> of the text.</param>
 		/// <param name="maxWidth">The maximum width constraint.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
-		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <returns>The number of bytes that fit within the maximum width.</returns>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="length" /> is negative.</exception>
 		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
@@ -752,7 +752,7 @@ namespace SkiaSharp
 		/// <param name="maxWidth">The maximum width constraint.</param>
 		/// <param name="measuredWidth">When this method returns, contains the actual measured width of the text.</param>
 		/// <param name="paint">An optional <see cref="T:SkiaSharp.SKPaint" /> for additional text effects.</param>
-		/// <returns>The number of characters that fit within the maximum width.</returns>
+		/// <returns>The number of bytes that fit within the maximum width.</returns>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="length" /> is negative.</exception>
 		/// <exception cref="ArgumentException">The encoding is <see cref="SKTextEncoding.GlyphId" /> and the text contains an incomplete 16-bit glyph ID.</exception>
 		/// <remarks />
