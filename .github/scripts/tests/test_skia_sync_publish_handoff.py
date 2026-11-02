@@ -123,6 +123,50 @@ class SyncPublishHandoffTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "HEAD_BRANCH"):
             self.run_handoff("restore", EXPECTED_HEAD_BRANCH="main")
 
+    def test_restore_does_not_fetch_unpublished_gitlinks_from_the_native_remote(self):
+        skia = self.source / "externals/skia"
+        git(skia, "checkout", "main")
+        git(self.source, "checkout", "main")
+        git(self.source, "-c", "protocol.file.allow=always", "submodule", "add",
+            str(self.root / "skia.git"), "externals/skia")
+        git(self.source, "commit", "-m", "Register native submodule")
+        self.environment["SKIA_SYNC_PARENT_BASE_SHA"] = git(self.source, "rev-parse", "HEAD")
+        git(self.source, "push", str(self.root / "parent.git"), "main")
+        git(self.source, "checkout", BRANCH)
+        git(self.source, "merge", "--no-ff", "main", "-m", "Track native submodule")
+        git(skia, "checkout", BRANCH)
+        git(self.source, "add", "externals/skia")
+        git(self.source, "commit", "-m", "Point to unpublished native merge")
+        native_head = git(skia, "rev-parse", BRANCH)
+        with self.assertRaises(subprocess.CalledProcessError):
+            git(self.root, "--git-dir", str(self.root / "skia.git"),
+                "cat-file", "-e", native_head)
+        self.run_handoff("pack")
+
+        restored = self.root / "restored"
+        git(self.root, "clone", str(self.root / "parent.git"), str(restored))
+        git(restored, "-c", "protocol.file.allow=always", "submodule", "update", "--init")
+        git(restored, "config", "fetch.recurseSubmodules", "true")
+        self.run_handoff(
+            "restore",
+            GITHUB_WORKSPACE=str(restored),
+            GITHUB_ENV=str(self.root / "github-env"),
+            GIT_ALLOW_PROTOCOL="file",
+            EXPECTED_HEAD_BRANCH=BRANCH,
+            EXPECTED_BASE_BRANCH="main",
+            EXPECTED_SKIA_BASE_BRANCH="main",
+        )
+        for source, destination in (
+            (self.source, restored),
+            (skia, restored / "externals/skia"),
+        ):
+            self.assertEqual(
+                git(source, "rev-list", "--parents", BRANCH),
+                git(destination, "rev-list", "--parents", BRANCH),
+            )
+        self.assertEqual(native_head, git(restored, "rev-parse", f"{BRANCH}:externals/skia"))
+        self.assertEqual(native_head, git(restored / "externals/skia", "rev-parse", BRANCH))
+
     def test_pack_rejects_environment_file_injection(self):
         with self.assertRaisesRegex(ValueError, "invalid value"):
             self.run_handoff("pack", SKIA_SYNC_TARGET="156\nGH_TOKEN=injected")

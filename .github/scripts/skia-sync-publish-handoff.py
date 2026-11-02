@@ -96,11 +96,12 @@ def main():
         ("skia", skia, "SKIA_SYNC_SKIA_BASE_BRANCH"),
     ):
         base = environment[base_key]
-        git(repo, "fetch", "--no-tags", "origin",
+        git(repo, "fetch", "--no-tags", "--no-recurse-submodules", "origin",
             f"+refs/heads/{base}:refs/remotes/origin/{base}")
         bundle = str(directory / f"{name}.bundle")
         git(repo, "bundle", "verify", bundle)
-        git(repo, "fetch", "--no-tags", bundle, f"refs/heads/{branch}:refs/heads/{branch}")
+        git(repo, "fetch", "--no-tags", "--no-recurse-submodules",
+            bundle, f"refs/heads/{branch}:refs/heads/{branch}")
     environment.update(
         SKIA_SYNC_ARTIFACT_DIR=str(directory / "reports"),
         SKIA_SYNC_SKILL_DIR=str(workspace / ".agents/skills/update-skia"),
