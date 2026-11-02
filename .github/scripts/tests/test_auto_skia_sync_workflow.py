@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import unittest
 
+import yaml
+
 
 WORKFLOW = (
     Path(__file__).resolve().parents[2] / "workflows" / "auto-skia-sync.md"
@@ -37,7 +39,7 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
             with self.subTest(workflow=path.name):
                 workflow = path.read_text(encoding="utf-8")
                 self.assertEqual(
-                    2,
+                    3,
                     len(re.findall(
                         r"(?m)^\s+SYNC_BASE_BRANCH: "
                         r"\$\{\{ github\.event\.inputs\.target_branch \}\}$",
@@ -51,25 +53,21 @@ class AutoSkiaSyncWorkflowTests(unittest.TestCase):
                 )
                 self.assertNotIn("github.event.inputs.base_branch", workflow)
 
-    def test_create_pull_request_allows_resolved_sync_base_branch(self):
-        workflow = WORKFLOW.read_text(encoding="utf-8")
-        compiled_workflow = COMPILED_WORKFLOW.read_text(encoding="utf-8")
-
-        self.assertIn(
-            'allowed-base-branches: "${{ github.event.inputs.target_branch || '
-            "'main,release/*' }}\"",
-            workflow,
-        )
-        self.assertEqual(
-            2,
-            compiled_workflow.count("allowed_base_branches"),
-        )
-        self.assertEqual(
-            2,
-            compiled_workflow.count(
-                "${{ github.event.inputs.target_branch || 'main,release/*' }}"
-            ),
-        )
+    def test_publication_preserves_history_and_isolates_the_write_token(self):
+        lines = WORKFLOW.read_text(encoding="utf-8").splitlines()
+        workflow = yaml.safe_load("\n".join(lines[1:lines.index("---", 1)]))
+        publisher = workflow["jobs"]["publish-sync"]
+        steps = publisher["steps"]
+        self.assertEqual("${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}", steps[-1]["env"]["GH_TOKEN"])
+        self.assertEqual("${{ github.sha }}", steps[0]["with"]["ref"])
+        self.assertFalse(steps[0]["with"]["persist-credentials"])
+        for key in ("env", "steps", "pre-agent-steps", "post-steps"):
+            self.assertNotIn("secrets.", str(workflow.get(key, {})))
+        self.assertNotIn("create-pull-request", workflow["safe-outputs"])
+        self.assertNotIn("jobs", workflow["safe-outputs"])
+        compiled = yaml.safe_load(COMPILED_WORKFLOW.read_text(encoding="utf-8"))
+        self.assertNotIn("SKIASHARP_AUTOBUMP_TOKEN", str(compiled["jobs"]["agent"]))
+        self.assertIn("publish-sync", compiled["jobs"])
 
     def test_android_workload_uses_repository_sdk_bootstrap(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")

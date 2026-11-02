@@ -36,8 +36,8 @@ try:
         p = ".".join(str(x) for x in e.absolute_path) or "(root)"
         errors.append(f"Schema: {p}: {e.message}")
 except ImportError:
-    print("⚠️  jsonschema not installed — run: pip install jsonschema")
-    print("   Falling back to JSON-only checks (no schema validation)")
+    print("❌ jsonschema not installed — install scripts/requirements.txt before validating")
+    sys.exit(2)
 
 # --- Extra checks beyond schema ---
 
