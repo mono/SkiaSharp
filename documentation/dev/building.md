@@ -177,10 +177,12 @@ and MAUI **10.0.120** or a compatible later servicing release. These are separat
 version pins; installing the SDK alone does not update workloads. See the
 [Apple workload releases](https://github.com/dotnet/macios/releases).
 This workload set requires Xcode 27.1; Xcode 27.0 is insufficient. Complete CI
-retains the `AcesShared` pool's `ACES_VM_SharedPool_Sequoia` image; Package and
-Tests retain the `Azure Pipelines` pool's `macos-15` image. Verify Xcode 27.1
-availability on these existing hosts before running managed Apple application
-builds. Native Apple CI retains Xcode 26.3 on its existing macOS hosts.
+uses the `AcesShared` pool's `ACES_VM_SharedPool_GoldenGate` image for managed
+Apple jobs, following the Xcode 27 image selection in MAUI and .NET for Apple CI.
+Native Apple jobs retain Sequoia and Xcode 26.3. Package and Tests retain the
+`Azure Pipelines` pool's `macos-15` image; its published software inventory does
+not include Xcode 27.1, so managed Apple application builds in those pipelines
+remain blocked until a suitable image is available in that pool.
 
 To keep the machine's shared SDK and workloads unchanged, provision a
 repository-local SDK, then install the required workloads into that SDK:
