@@ -584,6 +584,58 @@ namespace SkiaSharp.Tests
 			Assert.Equal(sourcePixels, pixels);
 		}
 
+		[Theory]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Rgb565, SKAlphaType.Opaque)]
+		[InlineData(SKColorType.Gray8, SKAlphaType.Opaque)]
+		public unsafe void OptimizedPixelWriteMatchesExistingPixelsSetter(SKColorType colorType, SKAlphaType alphaType)
+		{
+			var pixels = new[]
+			{
+				new SKColor(0, 0, 0, 0),
+				new SKColor(255, 255, 255, 255),
+				new SKColor(255, 0, 0, 1),
+				new SKColor(0, 255, 0, 127),
+				new SKColor(0, 0, 255, 128),
+				new SKColor(17, 89, 203, 254),
+			};
+			using var srgb = SKColorSpace.CreateSrgb();
+			using var linear = SKColorSpace.CreateSrgbLinear();
+			foreach (var colorSpace in new[] { null, srgb, linear })
+			{
+				var info = new SKImageInfo(3, 2, colorType, alphaType, colorSpace);
+
+				using var expected = new SKBitmap(info);
+				WritePixelsWithRenderingPath(expected, pixels);
+
+				using var actual = new SKBitmap(info);
+				actual.Pixels = pixels;
+
+				Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
+			}
+		}
+
+		private static unsafe void WritePixelsWithRenderingPath(SKBitmap bitmap, SKColor[] pixels)
+		{
+			var info = bitmap.Info;
+			var sourceInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+			fixed (SKColor* p = pixels)
+			{
+				using var temp = new SKBitmap();
+				temp.InstallPixels(sourceInfo, (IntPtr)p);
+				using var shader = temp.ToShader();
+				using var canvas = new SKCanvas(bitmap);
+				using var paint = new SKPaint
+				{
+					Shader = shader,
+					BlendMode = SKBlendMode.Src,
+				};
+				canvas.DrawPaint(paint);
+			}
+		}
+
 		[Fact]
 		public void IncorrectPixelLocationThrowsWhenWritingPixel()
 		{

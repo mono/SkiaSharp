@@ -573,6 +573,13 @@ namespace SkiaSharp
 
 				fixed (SKColor* v = value) {
 					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+					if (info.ColorType == SKColorType.Bgra8888 || info.ColorType == SKColorType.Rgba8888) {
+						using var source = new SKPixmap (tempInfo, (IntPtr)v);
+						using var target = PeekPixels ();
+						if (target != null && source.ReadPixels (target))
+							return;
+					}
+
 					using var temp = new SKBitmap ();
 					temp.InstallPixels (tempInfo, (IntPtr)v);
 
