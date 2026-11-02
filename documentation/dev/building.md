@@ -177,8 +177,12 @@ and MAUI **10.0.120** or a compatible later servicing release. These are separat
 version pins; installing the SDK alone does not update workloads. See the
 [Apple workload releases](https://github.com/dotnet/macios/releases).
 This workload set requires Xcode 27.1; Xcode 27.0 is insufficient. Managed CI
-uses the Azure Pipelines `xcode-27` image. Native Apple CI retains Xcode 26.3
-on its existing macOS hosts.
+uses `vmImage: xcode-27` in the `GitHub-hosted Agents` pool, which is already
+configured in the public and internal organizations. This image is not routed
+by the standard `Azure Pipelines` pool. GitHub-hosted agents use pay-as-you-go
+billing with no free minute allocation; see the
+[pool documentation](https://learn.microsoft.com/azure/devops/pipelines/agents/github-hosted).
+Native Apple CI retains Xcode 26.3 on its existing macOS hosts.
 
 To keep the machine's shared SDK and workloads unchanged, provision a
 repository-local SDK, then install the required workloads into that SDK:
