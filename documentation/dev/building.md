@@ -11,7 +11,6 @@ This guide covers building SkiaSharp on Windows and macOS.
     * [Preparation](#preparation-1)
     * [Making Changes](#making-changes)
     * [Building](#building)
- * [Windows Device Tests](#windows-device-tests)
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
  * [GTK4 Tests](#gtk4-tests)
@@ -96,31 +95,6 @@ Once you are finished making changes, you can run the `tests` target and make su
 ```
 > dotnet cake --target=Everything --skipExternals=all
 ```
-
-## Windows Device Tests
-
-On Windows, run the MAUI device test app after preparing the native libraries:
-
-```powershell
-dotnet cake --target=tests-windows --skipExternals=all
-```
-
-This builds and runs `SkiaSharp.Tests.Devices` for
-`net10.0-windows10.0.19041.0` as an MSIX x64 app with a self-contained
-Windows App SDK runtime. `dotnet test` uses DeviceRunners and its bundled
-winapp tool to register and launch the loose MSIX build output; no separate
-publish or certificate-signing step is required. Enable Windows Developer Mode
-before running locally; the CI job enables it before registration.
-Source builds include the WinUI native assets from
-`output/native/winui/x64/` in the MSIX layout, including ANGLE's
-`libEGL.dll` and `libGLESv2.dll`.
-It writes TRX results under
-`output/logs/testlogs/SkiaSharp.Tests.Devices.windows/`.
-The **Windows (MAUI)** CI job runs the same target and publishes test results
-and visual-regression images. Like the Windows console jobs, it provisions
-Mesa for the WGL tests and SwiftShader for Vulkan tests: the hosted agent's
-default OpenGL implementation lacks the required WGL extensions, and it has no
-compatible Vulkan driver. These are separate from WinUI's ANGLE renderer.
 
 ## Native Building
 

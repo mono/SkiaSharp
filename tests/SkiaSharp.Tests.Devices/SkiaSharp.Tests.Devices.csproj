@@ -94,9 +94,6 @@
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <Content Include="..\..\output\native\winui\$(Platform)\*"
-             CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
 
 </Project>
