@@ -30,9 +30,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-x64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-x86'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-arm64'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -72,15 +72,6 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-tvos')) and '$(RuntimeIdentifier)' != ''">
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvossimulator\libHarfBuzzSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
-  </ItemGroup>
-
-  <PropertyGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpNativeBinaryType>
-    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_HarfBuzzSharpNativeBinaryType>
-    <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_HarfBuzzSharpNativeBinaryType),simd</_HarfBuzzSharpNativeBinaryType>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\*\$(_HarfBuzzSharpNativeBinaryType)\*.a" Visible="false" />
   </ItemGroup>
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">

@@ -1,16 +1,40 @@
 {
-  "theme": "M155 preview line",
-  "highlights_headline": "SkiaSharp 4.155.0 brings the Skia M155 renderer and current HarfBuzz bindings to preview consumers.",
-  "highlights_body": "It also updates GLES interop and disables RAW and DNG decoding. Test applications that use these image formats or low-level OpenGL interop before adopting the preview.",
-  "breaking": [],
+  "theme": "Skia and HarfBuzz upgrades",
+  "highlights_headline": "SkiaSharp 4.155.0 previews Skia m155 with HarfBuzz 14.4.0.",
+  "highlights_body": "The bundled shaping engine changes cross-direction mark positioning and improves malformed-font handling. RAW/DNG decoding is retired; Ganesh failed-flush cleanup and Linux font-family matching are corrected.",
+  "breaking": [
+    {
+      "title": "Built-in RAW and DNG decoding removed",
+      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
+      "prs": [
+        5162
+      ]
+    },
+    {
+      "title": "HarfBuzz mark positioning can change",
+      "body": "HarfBuzz 14.4 intentionally changes cross-direction mark positioning for DirectWrite and Core Text compatibility. Review text layouts and rendering baselines that depend on the previous shaping output.",
+      "prs": [
+        5135
+      ]
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone M155",
-          "detail": "Aligns the bundled renderer with Skia M155 and includes the latest upstream servicing fixes.",
-          "prs": [5081, 5196, 5286]
+          "lead": "Skia updated to m155",
+          "detail": "Advances the renderer while preserving rotation-scale text-run bounds and the existing managed and C API surface.",
+          "prs": [
+            5081
+          ]
+        },
+        {
+          "lead": "HarfBuzz updated to 14.4.0",
+          "detail": "Includes glyph-position saturation, malformed-font crash and hang fixes, and shaping and subsetting performance work.",
+          "prs": [
+            5135
+          ]
         }
       ]
     },
@@ -18,9 +42,11 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "GLES interop uses pointer-based signatures",
-          "detail": "Updates the low-level GLES interop surface to pass native pointer values directly.",
-          "prs": [5155]
+          "lead": "OpenType tag enums",
+          "detail": "Adds OpenTypeBitsTag and OpenTypeNumberTag enum values. Raw OpenType fetch functions remain internal; no Face wrappers are introduced.",
+          "prs": [
+            5135
+          ]
         }
       ]
     },
@@ -28,27 +54,34 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "RAW and DNG decoding disabled",
-          "detail": "Prevents the bundled decoder from accepting RAW and DNG images in this release line.",
-          "prs": [5162]
+          "lead": "Failed-flush cache cleanup and Linux font ranking",
+          "detail": "Clears uniquely held cache entries after a failed Ganesh flush. Fontconfig checks family acceptability only on the first valid sorted candidate instead of accepting a lower-ranked substitute.",
+          "prs": [
+            5286
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.155.0-preview.1.26471.14": "Preview 1 opened the M155 line with the bundled Skia engine update.",
-    "v4.155.0-preview.2.26479.13": "Preview 2 adds upstream M155 fixes, updated HarfBuzz bindings, and low-level graphics interop changes."
+    "v4.155.0-preview.1.26471.14": "Preview 1 opened the Skia m155 line without changing the managed API surface.",
+    "v4.155.0-preview.2.26479.13": "Preview 2 updated HarfBuzz to 14.4.0 and removed built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+    "v4.155.0-rc.1.26512.8": "The release candidate corrected Ganesh cache cleanup after failed flushes and Linux fontconfig first-candidate matching."
   },
-  "harfbuzz_summary": "Updates the bundled HarfBuzz library and managed bindings to version 14.4.0.",
+  "harfbuzz_summary": "Updates the native shaping engine to HarfBuzz 14.4.0, including cross-direction mark-positioning changes, glyph-position saturation, malformed-font fixes, and performance work. Adds OpenTypeBitsTag and OpenTypeNumberTag enums without public raw-fetch wrappers.",
   "release_summaries": {
     "v4.155.0-preview.1.26471.14": {
-      "headline": "SkiaSharp 4.155.0 Preview 1 introduces the Skia M155 engine line.",
+      "headline": "Preview 1 opened the Skia m155 line without changing the managed API surface.",
       "body": null
     },
     "v4.155.0-preview.2.26479.13": {
-      "headline": "SkiaSharp 4.155.0 Preview 2 refreshes the M155 renderer and HarfBuzz bindings.",
-      "body": "It also updates low-level GLES interop and disables RAW and DNG image decoding."
+      "headline": "Preview 2 updated HarfBuzz to 14.4.0 and removed built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+      "body": null
+    },
+    "v4.155.0-rc.1.26512.8": {
+      "headline": "The release candidate corrected Ganesh cache cleanup after failed flushes and Linux fontconfig first-candidate matching.",
+      "body": null
     }
   }
 }

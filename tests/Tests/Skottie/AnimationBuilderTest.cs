@@ -137,5 +137,36 @@ namespace SkiaSharp.Tests
 				return (builder, new WeakReference(provider));
 			}
 		}
+
+		[Fact]
+		public void BuilderCanBeDisposedBeforeAnimationIsRendered()
+		{
+			Animation animation;
+			using (var provider = new DataUriResourceProvider())
+			using (var builder = Animation.CreateBuilder().SetResourceProvider(provider))
+			{
+				animation = builder.Build(Path.Combine(PathToImages, "lottie-base64_dotnet-bot.json"));
+			}
+
+			using (animation)
+			{
+				Assert.NotNull(animation);
+
+				using var ic = new InvalidationController();
+				ic.Begin();
+				animation.Seek(0.25, ic);
+				ic.End();
+
+				using var bmp = new SKBitmap(64, 64);
+				bmp.Erase(SKColors.Red);
+				var beforePixels = bmp.Pixels;
+
+				using var canvas = new SKCanvas(bmp);
+				animation.Render(canvas, SKRect.Create(64, 64));
+				var afterPixels = bmp.Pixels;
+
+				Assert.NotEqual(beforePixels, afterPixels);
+			}
+		}
 	}
 }

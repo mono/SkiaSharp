@@ -19,6 +19,8 @@ Setup(context =>
     if (!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) || IsCakeListingCommand())
         return;
 
+    StopCIAndroidEmulators();
+
     if (string.IsNullOrEmpty(TEST_RESULTS)) {
         TEST_RESULTS = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
     }
@@ -47,11 +49,12 @@ Setup(context =>
 
 Teardown(context =>
 {
-    if (OWNED_ANDROID_AVD == null)
+    if (!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) || IsCakeListingCommand())
         return;
 
     try {
-        TakeSnapshot(TEST_RESULTS, "teardown");
+        if (OWNED_ANDROID_AVD != null)
+            TakeSnapshot(TEST_RESULTS, "teardown");
     } finally {
         TeardownAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, context.ThrownException);
     }
@@ -63,8 +66,10 @@ Task("Default")
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
 
     var properties = new Dictionary<string, string>();
-    if (OWNED_ANDROID_SERIAL != null)
+    if (OWNED_ANDROID_SERIAL != null) {
         properties["DeviceRunnersDevice"] = OWNED_ANDROID_SERIAL;
+        properties["AdbTarget"] = "-s " + OWNED_ANDROID_SERIAL;
+    }
     RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android", noBuild: true, properties: properties);
 });
 

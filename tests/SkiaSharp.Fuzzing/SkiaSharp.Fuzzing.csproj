@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(TFMCurrent)</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SkiaSharp.Fuzzing</RootNamespace>
+    <AssemblyName>SkiaSharp.Fuzzing</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <DebugType>portable</DebugType>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpFuzz" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.Resources\SkiaSharp.Resources.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="assets\**\*"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="seeds\**\*"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>

@@ -21,21 +21,11 @@ using EGLContext = Javax.Microedition.Khronos.Egl.EGLContext;
 using EGLDisplay = Javax.Microedition.Khronos.Egl.EGLDisplay;
 using EGLSurface = Javax.Microedition.Khronos.Egl.EGLSurface;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
-namespace SkiaSharp.Views.UWP
-#else
 namespace SkiaSharp.Views.Android
-#endif
 {
-#if HAS_UNO
-	internal
-#else
 	/// <summary>An implementation of <see cref="T:Android.Views.TextureView" /> that uses the dedicated surface for displaying OpenGL rendering.</summary>
 	/// <remarks />
 	public
-#endif
 	partial class GLTextureView : TextureView, TextureView.ISurfaceTextureListener, View.IOnLayoutChangeListener
 	{
 		internal static bool EnableLogging = false;

@@ -8,7 +8,7 @@ string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 
 string GetDeploymentTarget(string arch)
 {
-    return "14.0";
+    return "15.0";
 }
 
 Task("libSkiaSharp")

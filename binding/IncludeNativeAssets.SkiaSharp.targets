@@ -30,9 +30,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-x64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-x86'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-arm64'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -72,17 +72,6 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-tvos')) and '$(RuntimeIdentifier)' != ''">
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvossimulator\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
-  </ItemGroup>
-
-  <PropertyGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
-    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
-    <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\*\$(_SkiaSharpNativeBinaryType)\*.a" Visible="false" />
-    <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
-    <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
   </ItemGroup>
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">

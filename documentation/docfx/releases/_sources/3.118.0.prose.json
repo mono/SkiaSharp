@@ -1,31 +1,16 @@
 {
-  "theme": "Skia m117/m118 preview",
-  "highlights_headline": "SkiaSharp 3.118.0 previews Skia milestones m117 and m118 with security and platform updates.",
-  "highlights_body": "Includes a new Metal API for GRBackendRenderTarget, .NET 9 Blazor fixes, updated freetype2, libexpat, libjpeg-turbo and HarfBuzz 8.3.1, plus Android NDK r27c and WASM improvements.",
+  "theme": "Engine refresh and WebAssembly compatibility",
+  "highlights_headline": "The 3.118 previews advance to Skia m118 and improve .NET 9 WebAssembly compatibility.",
+  "highlights_body": "Android native assets gain 16 KB alignment, and Metal backend render-target APIs become available across platforms.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestones m117 and m118",
-          "detail": "The bundled Skia engine advances through two milestones, bringing upstream rendering improvements and bug fixes.",
-          "prs": [
-            3047,
-            3048
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "Metal API added for GRBackendRenderTarget",
-          "detail": "New Metal-specific constructors and accessors on GRBackendRenderTarget are now available across all supported Apple platforms.",
-          "prs": [
-            3070
-          ]
+          "lead": "Skia m118 renderer",
+          "detail": "Updates the bundled engine through milestones 117 and 118, with matching managed and native bindings.",
+          "prs": [3047, 3048]
         }
       ]
     },
@@ -33,34 +18,14 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Blazor and WASM issues resolved",
-          "detail": ".NET 9 ASP.NET Blazor rendering issues are fixed, and Blazor workarounds have been moved into the WASM layer for cleaner behaviour.",
-          "prs": [
-            3064,
-            3082,
-            3088
-          ]
+          "lead": "WebAssembly imports and .NET 9 startup",
+          "detail": "Fixes .NET 9 Blazor issues, extends the WASM workaround to applications that do not reference Blazor views, and corrects imports when an application uses a base path.",
+          "prs": [3064, 3082, 3088, 3092]
         },
         {
-          "lead": "NuGet PackagePath attribute corrected",
-          "detail": "An incorrect PackagePath attribute in the NuGet packages has been fixed.",
-          "prs": [
-            3101
-          ]
-        },
-        {
-          "lead": "Windows SDK version pinned via project property",
-          "detail": "The Windows SDK version is now set via the WindowsSdkPackageVersion project property, avoiding version conflicts.",
-          "prs": [
-            3085
-          ]
-        },
-        {
-          "lead": "Base-path import fixed for Blazor apps",
-          "detail": "Blazor applications that configure a base path now correctly import SkiaSharp assets.",
-          "prs": [
-            3092
-          ]
+          "lead": "Native asset package paths",
+          "detail": "Corrects the PackagePath attribute used to place packaged assets.",
+          "prs": [3101]
         }
       ]
     },
@@ -68,11 +33,19 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Android NDK updated to r27c with 16 KB page alignment",
-          "detail": "The Android NDK is updated to r27c, supporting the 16 KB memory page size required by newer Android devices.",
-          "prs": [
-            3099
-          ]
+          "lead": "Android 16 KB alignment",
+          "detail": "Moves Android native builds to NDK r27c and 16 KB page alignment.",
+          "prs": [3099]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Cross-platform Metal render-target bindings",
+          "detail": "Makes the Metal API on GRBackendRenderTarget available across all platforms.",
+          "prs": [3070]
         }
       ]
     },
@@ -80,24 +53,19 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "Native dependencies updated",
-          "detail": "freetype2, libexpat, libjpeg-turbo, and HarfBuzz have all been updated to their latest versions.",
-          "prs": [
-            3061,
-            3056,
-            3060,
-            3052
-          ]
+          "lead": "Bundled dependency refresh",
+          "detail": "Updates libexpat to 2.6.4 and FreeType to the 2.13.3-based revision, and refreshes the libjpeg-turbo 2.1.5.1-based dependency.",
+          "prs": [3056, 3061, 3060]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "spouliot": "Added Metal API support for GRBackendRenderTarget across Apple platforms"
+    "spouliot": "Metal backend render-target APIs across platforms."
   },
   "preview_summaries": {
-    "v3.118.0-preview.2.3": "Preview 2 added the Metal GRBackendRenderTarget API, fixed .NET 9 Blazor rendering, updated the Android NDK to r27c, and resolved the NuGet PackagePath issue.",
-    "v3.118.0-preview.1.2": "Preview 1 advanced the bundled Skia engine through milestones m117 and m118 and updated HarfBuzz to 8.3.1."
+    "v3.118.0-preview.1.2": "Introduced the Skia m118 engine baseline and the HarfBuzz 8.3.1 dependency update.",
+    "v3.118.0-preview.2.3": "Added Android 16 KB alignment and cross-platform Metal render-target APIs, and fixed .NET 9 WebAssembly startup and base-path imports."
   },
-  "harfbuzz_summary": "Updates HarfBuzzSharp to 8.3.1 alongside the NDK and platform packaging fixes from this release."
+  "harfbuzz_summary": "HarfBuzzSharp receives Android 16 KB alignment and package-path corrections. WASM workaround changes also cover consumers outside the Blazor views package."
 }

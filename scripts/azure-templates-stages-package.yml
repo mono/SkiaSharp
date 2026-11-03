@@ -1,6 +1,8 @@
 parameters:
   - name: buildAgentWindows
     type: object
+  - name: use1ESPipelineTemplates
+    type: boolean
 
 stages:
 
@@ -19,6 +21,7 @@ stages:
                 manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
+          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           target: nuget
           additionalArgs: --skipExternals="all"
           checkoutSubmodules: false

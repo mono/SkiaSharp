@@ -91,7 +91,8 @@ Task ("tests")
     .IsDependentOn ("tests-netcore")
     .IsDependentOn ("tests-android")
     .IsDependentOn ("tests-ios")
-    .IsDependentOn ("tests-maccatalyst");
+    .IsDependentOn ("tests-maccatalyst")
+    .IsDependentOn ("tests-windows");
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
@@ -130,6 +131,11 @@ Task ("tests-maccatalyst")
     .IsDependentOn ("externals")
     .Does (() => RunCake ("./scripts/infra/tests/tests-maccatalyst.cake", "Default"));
 
+Task ("tests-windows")
+    .Description ("Run all Windows device tests.")
+    .IsDependentOn ("externals")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-windows.cake", "Default"));
+
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
     .IsDependentOn ("externals-wasm")
@@ -163,6 +169,14 @@ Task ("nuget-assemble-arcade-assets")
 Task ("docs-api-diff")
     .Description ("Generate the committed API diffs (incremental; --force/--minVersion/--maxVersion).")
     .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));
+
+Task ("fuzzing-prepare")
+    .Description ("Prepare the fuzzing drop in ./output/fuzzing/drop.")
+    .Does (() => RunCake ("./scripts/infra/security/fuzzing/fuzzing.cake", "fuzzing-prepare"));
+
+Task ("fuzzing")
+    .Description ("Fuzz a target locally: --fuzzerTarget=<name> [--fuzzerMaxTime=<sec>] [--fuzzerRuns=<count>] [--fuzzerTimeout=<sec>] [--fuzzerInput=<path>].")
+    .Does (() => RunCake ("./scripts/infra/security/fuzzing/fuzzing.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
