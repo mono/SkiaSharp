@@ -86,7 +86,7 @@ Linux.NoDependencies names remain ordinary compatibility packages; their
 exact-version dependencies restore every runtime pack in the selected family.
 For example, Win32 depends on all three Windows architectures. A modern
 RID-selected `SkiaSharp` application also restores the relevant
-`SkiaSharp.runtime.<rid>` pack through `runtime.json`. Its ordinary desktop
+`SkiaSharp.NativeAssets.{Platform}.<rid>` pack through `runtime.json`. Its ordinary desktop
 dependencies are still downloaded; the SDK filters native assets for deployment.
 
 Apple native assets built from this source require macOS 12+, iOS 15+, tvOS 15+
@@ -131,7 +131,11 @@ Do not suppress undefined-symbol errors.
 
 The core package retains its managed assemblies and ships a generated
 package-root `runtime.json`. For each supported desktop/server RID it adds an
-**exact-version** dependency on `SkiaSharp.runtime.<rid>`. The inventory is
+**exact-version** dependency on `SkiaSharp.NativeAssets.{Platform}.<rid>`,
+such as `SkiaSharp.NativeAssets.Win32.win-x64`,
+`SkiaSharp.NativeAssets.macOS.osx-arm64` or
+`SkiaSharp.NativeAssets.Linux.linux-x64`. The unsuffixed names remain the
+compatibility packages. The inventory is
 `binding/NativeAssets.Inventory.props`: Windows x86/x64/arm64, macOS x64/arm64,
 Linux glibc x86/x64/arm/arm64/riscv64/loongarch64, musl
 x64/arm/arm64/riscv64/loongarch64, and Bionic x64/arm64.
@@ -213,7 +217,7 @@ The following retain TFM-conditional dependencies:
 | App needs system font enumeration | `SkiaSharp.NativeAssets.Linux` | Fontconfig required for `SKFontManager` system fonts |
 
 For one known deployment RID, reference
-`SkiaSharp.runtime.linux-x64.NoDependencies` (or the corresponding musl/other RID)
+`SkiaSharp.NativeAssets.Linux.NoDependencies.linux-x64` (or the corresponding musl/other RID)
 instead of the all-Linux compatibility package. Both direct NoDependencies
 packs and `SkiaSharp.NativeAssets.Linux.NoDependencies` supply shared
 `buildTransitive` targets which remove **only default SkiaSharp Linux runtime

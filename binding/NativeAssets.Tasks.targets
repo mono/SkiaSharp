@@ -11,7 +11,7 @@
       <Using Namespace="System.Linq" />
       <Code Type="Fragment" Language="cs"><![CDATA[
         Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
-        var entries = Runtimes.Select(r => "    \"" + r.ItemSpec + "\": { \"SkiaSharp\": { \"SkiaSharp.runtime." + r.ItemSpec + "\": \"[" + Version + "]\" } }")
+        var entries = Runtimes.Select(r => "    \"" + r.ItemSpec + "\": { \"SkiaSharp\": { \"" + r.GetMetadata("PackageId") + "\": \"[" + Version + "]\" } }")
           .Concat(Boundaries.Select(r => "    \"" + r.ItemSpec + "\": { \"SkiaSharp\": {} }"));
         File.WriteAllText(OutputPath, "{\n  \"runtimes\": {\n" + string.Join(",\n", entries) + "\n  }\n}\n");
       ]]></Code>
@@ -48,7 +48,7 @@
         var version = Metadata.Single(m => m.ItemSpec == "version").GetMetadata("Value");
         metadata.Add(new XElement("dependencies", Frameworks.Select(f => new XElement("group",
           new XAttribute("targetFramework", f.ItemSpec), Runtimes.Select(r => new XElement("dependency",
-            new XAttribute("id", "SkiaSharp.runtime." + r.ItemSpec + (NoDependencies ? ".NoDependencies" : "")),
+            new XAttribute("id", r.GetMetadata(NoDependencies ? "NoDependenciesPackageId" : "PackageId")),
             new XAttribute("version", "[" + version + "]")))))));
         var id = Metadata.Single(m => m.ItemSpec == "id").GetMetadata("Value");
         var frameworkTargets = new System.Collections.Generic.Dictionary<string, string>();
@@ -60,7 +60,7 @@
             .Any(path => path.Replace('\\', '/') == templatePath));
           var project = XDocument.Load(template.GetMetadata("FullPath")).Root;
           foreach (var runtime in Runtimes) {
-            var runtimeId = "SkiaSharp.runtime." + runtime.ItemSpec + (NoDependencies ? ".NoDependencies" : "");
+            var runtimeId = runtime.GetMetadata(NoDependencies ? "NoDependenciesPackageId" : "PackageId");
             var guard = "$" + "(_SkiaSharpFrameworkNative_" + runtimeId.Replace('.', '_').Replace('-', '_') + ")";
             var target = "build\\" + framework.ItemSpec + "\\" + runtimeId + ".targets";
             var cached = "$" + "(NuGetPackageRoot)" + runtimeId.ToLowerInvariant() + "\\" + version + "\\" + target;

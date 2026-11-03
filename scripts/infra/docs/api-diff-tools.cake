@@ -288,15 +288,14 @@ void UnstageSearchPaths(NuGetDiff comparer, List<string> paths)
 
 // Our own MANAGED packages, identified by id prefix (SkiaSharp*, HarfBuzzSharp*). A package
 // never depends on itself, so this never stages the assembly being diffed (which would
-// shadow it). NativeAssets.* and SkiaSharp.runtime.* packages are EXCLUDED: they ship
+// shadow it). NativeAssets.* packages, including per-RID packs, are EXCLUDED: they ship
 // only native binaries (no managed assembly), contribute nothing to inherited-type resolution, and are by
 // far the largest packages to download, and a missing/preview native build would otherwise
 // abort the whole run for no benefit.
 bool IsSelfDependency(string id) =>
     (id.StartsWith("SkiaSharp", StringComparison.OrdinalIgnoreCase) ||
      id.StartsWith("HarfBuzzSharp", StringComparison.OrdinalIgnoreCase)) &&
-    id.IndexOf(".NativeAssets.", StringComparison.OrdinalIgnoreCase) < 0 &&
-    !id.StartsWith("SkiaSharp.runtime.", StringComparison.OrdinalIgnoreCase);
+    id.IndexOf(".NativeAssets.", StringComparison.OrdinalIgnoreCase) < 0;
 
 // Pick exactly one managed build folder of a self-dependency package to resolve inherited
 // types from. Deterministic ranking: prefer netstandard (newest — the most portable,

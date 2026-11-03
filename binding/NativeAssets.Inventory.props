@@ -1,5 +1,13 @@
 <Project>
   <!-- The single inventory for desktop runtime packs, compatibility dependencies and runtime.json. -->
+  <PropertyGroup>
+    <_SkiaSharpWindowsPackagePrefix>SkiaSharp.NativeAssets.Win32</_SkiaSharpWindowsPackagePrefix>
+    <_SkiaSharpMacOSPackagePrefix>SkiaSharp.NativeAssets.macOS</_SkiaSharpMacOSPackagePrefix>
+    <_SkiaSharpLinuxPackagePrefix>SkiaSharp.NativeAssets.Linux</_SkiaSharpLinuxPackagePrefix>
+    <_SkiaSharpRuntimePackagePrefix>$(_SkiaSharpLinuxPackagePrefix)</_SkiaSharpRuntimePackagePrefix>
+    <_SkiaSharpRuntimePackagePrefix Condition="$(NativeRuntimeRid.StartsWith('win-'))">$(_SkiaSharpWindowsPackagePrefix)</_SkiaSharpRuntimePackagePrefix>
+    <_SkiaSharpRuntimePackagePrefix Condition="$(NativeRuntimeRid.StartsWith('osx-'))">$(_SkiaSharpMacOSPackagePrefix)</_SkiaSharpRuntimePackagePrefix>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <SkiaSharpNativeRuntime>
       <NativeFile>libSkiaSharp.so</NativeFile>
@@ -28,5 +36,14 @@
     <SkiaSharpNativeRuntime Include="linux-musl-loongarch64" Family="Linux" Source="alpine\loongarch64" NoDependenciesSource="alpinenodeps\loongarch64" FrameworkDirectory="musl-loongarch64" />
     <SkiaSharpNativeRuntime Include="linux-bionic-x64" Family="Linux" Source="bionic\x64" NoDependenciesSource="bionic\x64" FrameworkDirectory="bionic-x64" />
     <SkiaSharpNativeRuntime Include="linux-bionic-arm64" Family="Linux" Source="bionic\arm64" NoDependenciesSource="bionic\arm64" FrameworkDirectory="bionic-arm64" />
+  </ItemGroup>
+  <ItemGroup>
+    <SkiaSharpNativeRuntime Update="@(SkiaSharpNativeRuntime)">
+      <PackagePrefix>$(_SkiaSharpLinuxPackagePrefix)</PackagePrefix>
+      <PackagePrefix Condition="'%(Family)' == 'Windows'">$(_SkiaSharpWindowsPackagePrefix)</PackagePrefix>
+      <PackagePrefix Condition="'%(Family)' == 'macOS'">$(_SkiaSharpMacOSPackagePrefix)</PackagePrefix>
+      <PackageId>%(PackagePrefix).%(Identity)</PackageId>
+      <NoDependenciesPackageId Condition="'%(NoDependenciesSource)' != ''">%(PackagePrefix).NoDependencies.%(Identity)</NoDependenciesPackageId>
+    </SkiaSharpNativeRuntime>
   </ItemGroup>
 </Project>

@@ -72,7 +72,7 @@ try {
     foreach ($runtime in @('win-x86', 'win-x64', 'win-arm64')) {
         $win32Files = [Collections.Generic.List[string]]::new()
         Add-NativePair $win32Files $runtime 'libSkiaSharp'
-        New-TestPackage "SkiaSharp.runtime.$runtime" $win32Files
+        New-TestPackage "SkiaSharp.NativeAssets.Win32.$runtime" $win32Files
     }
 
     $harfBuzzFiles = [Collections.Generic.List[string]]::new()

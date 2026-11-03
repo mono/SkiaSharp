@@ -13,7 +13,7 @@
     <ItemGroup>
       <_SkiaSharpCandidateReplacementAsset Include="@(NativeCopyLocalItems);@(RuntimeTargetsCopyLocalItems);@(None);@(Content)" />
       <_SkiaSharpReplacementAsset Include="@(_SkiaSharpCandidateReplacementAsset)"
-                                 Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_SkiaSharpCandidateReplacementAsset.NuGetPackageId)', '(?i)^SkiaSharp[.]runtime[.]linux-[a-z0-9-]+[.]NoDependencies$'))" />
+                                 Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_SkiaSharpCandidateReplacementAsset.NuGetPackageId)', '(?i)^SkiaSharp[.]NativeAssets[.]Linux[.]NoDependencies[.]linux-[a-z0-9-]+$'))" />
       <_SkiaSharpReplacementPackage Include="@(_SkiaSharpReplacementAsset->'%(NuGetPackageId)')" />
     </ItemGroup>
     <PropertyGroup>
