@@ -9,150 +9,15 @@ string ANGLE_REVISION = GetVersion("ANGLE", "revision");
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
+#load "../../scripts/infra/native/windows/angle-shared.cake"
 
 Task("sync-ANGLE")
     .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    // sync ANGLE
-    if (!DirectoryExists(ANGLE_PATH)) {
-        RunProcess("git", $"clone https://github.com/google/angle.git --branch {ANGLE_VERSION} --depth 1 --single-branch --shallow-submodules {ANGLE_PATH}");
-    }
-    RunProcess("git", new ProcessSettings {
-        Arguments = $"fetch --depth 1 origin {ANGLE_REVISION}",
-        WorkingDirectory = ANGLE_PATH.FullPath,
-    });
-    RunProcess("git", new ProcessSettings {
-        Arguments = $"checkout --detach {ANGLE_REVISION}",
-        WorkingDirectory = ANGLE_PATH.FullPath,
-    });
-
-    // sync submodules
-    var submodules = new[] {
-        "build",
-        "testing",
-        "third_party/zlib",
-        "third_party/jsoncpp",
-        "third_party/astc-encoder/src",
-        "third_party/depot_tools",
-        "third_party/spirv-headers/src",
-        "third_party/spirv-tools/src",
-    };
-    RunProcess("git", new ProcessSettings {
-        Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
-        WorkingDirectory = ANGLE_PATH.FullPath,
-    });
-
-    // Chromium's resource compiler wrapper expects clang-cl at this path even for MSVC builds.
-    var llvmHome = MakeAbsolute(Directory(LLVM_HOME));
-    var clang = llvmHome.CombineWithFilePath("bin/clang-cl.exe");
-    if (!FileExists(clang))
-        throw new Exception($"Visual Studio LLVM was not installed: {clang}");
-    var chromiumLlvm = ANGLE_PATH.Combine("third_party/llvm-build/Release+Asserts");
-    if (!DirectoryExists(chromiumLlvm)) {
-        EnsureDirectoryExists(chromiumLlvm.GetParent());
-        RunProcess("cmd.exe", new ProcessSettings {
-            Arguments = new ProcessArgumentBuilder().Append("/d").Append("/s").Append("/c")
-                .AppendQuoted($"mklink /J \"{chromiumLlvm}\" \"{llvmHome}\""),
-        });
-    }
-
-    // Use conventional import library and PDB names.
-    {
-        var toolchain = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/toolchain.gni");
-        var contents = FileReadText(toolchain);
-        const string importLibrary = "\"{{output_dir}}/{{target_output_name}}.lib\"";
-        const string programDatabase = "\"{{output_dir}}/{{target_output_name}}.pdb\"";
-        var newContents = contents
-            .Replace("\"${dllname}.lib\"", importLibrary)
-            .Replace("\"${dllname}.pdb\"", programDatabase);
-        if (!newContents.Contains(importLibrary) || !newContents.Contains(programDatabase))
-            throw new Exception($"Cannot apply conventional import library and PDB names at {toolchain}.");
-        if (contents != newContents)
-            FileWriteText(toolchain, newContents);
-    }
-
-    var gclientArgs = ANGLE_PATH.CombineWithFilePath("build/config/gclient_args.gni");
-    if (!FileExists(gclientArgs)) {
-        FileWriteLines(gclientArgs, new[] {
-            "checkout_angle_internal = false",
-            "checkout_angle_mesa = false",
-            "checkout_angle_restricted_traces = false",
-            "generate_location_tags = false",
-        });
-    }
-
-    // Apply a real GN config so Ninja also tracks security-option changes.
-    {
-        CopyDirectory(ROOT_PATH.Combine("native/winui-angle/gn"), ANGLE_PATH.Combine("build/config/skiasharp"));
-
-        var buildConfig = ANGLE_PATH.CombineWithFilePath("build/config/BUILDCONFIG.gn");
-        var contents = FileReadText(buildConfig);
-        const string config = "  \"//build/config/skiasharp:skiasharp\",";
-        if (!contents.Contains(config)) {
-            const string anchor = "default_compiler_configs = [";
-            if (!contents.Contains(anchor))
-                throw new Exception($"Cannot apply the SkiaSharp config to ANGLE targets at {buildConfig}.");
-            FileWriteText(buildConfig, contents.Replace(anchor, $"{anchor}\n{config}"));
-        }
-    }
-
-    // set version numbers
-    var lastchange = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE");
-    var committime = ANGLE_PATH.CombineWithFilePath("build/util/LASTCHANGE.committime");
-    if (!FileExists(lastchange) || !FileExists(committime)) {
-        RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
-    }
-
-    // Use the Windows SDK rc.exe instead of downloading Chromium's prebuilt rc.exe.
-    {
-        var rcPy = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/rc/rc.py");
-        var contents = FileReadText(rcPy);
-        const string msrcOutput = "msrc_out = flags.output";
-        const string skipChromiumRc = "rc_exe_exit_code = 0";
-        var newContents = contents
-            .Replace("msrc_out = flags.output + '_ms_rc'", msrcOutput)
-            .Replace("rc_exe_exit_code = RunRc(preprocessed_output, is_utf8, flags)", skipChromiumRc);
-        if (newContents.Contains("flags.output + '_ms_rc'") ||
-            !newContents.Contains(msrcOutput) ||
-            !newContents.Contains(skipChromiumRc))
-            throw new Exception($"Cannot configure Windows SDK rc.exe at {rcPy}.");
-        if (contents != newContents)
-            FileWriteText(rcPy, newContents);
-    }
-
-    var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
-    var webview2Version = GetVersion("Microsoft.Web.WebView2", "release");
-    var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{webview2Version}-{WINDOWS_SDK_VERSION}.stamp");
-    if (!FileExists(stamp)) {
-        CleanDirectory(WINAPPSDK_PATH);
-        CleanDirectory(WEBVIEW2_PATH);
-        var packages = new[] {
-            new { Id = "Microsoft.WindowsAppSDK", Version = winappsdkVersion, Path = WINAPPSDK_PATH },
-            new { Id = "Microsoft.Web.WebView2", Version = webview2Version, Path = WEBVIEW2_PATH },
-        };
-        foreach (var package in packages) {
-            var packageId = package.Id.ToLowerInvariant();
-            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
-            var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/{packageId}.{package.Version}.nupkg");
-            DownloadFile(nugetUrl, nupkgPath);
-            EnsureDirectoryExists(package.Path);
-            Unzip(nupkgPath, package.Path);
-            DeleteFile(nupkgPath);
-        }
-        CopyDirectory(WEBVIEW2_PATH.Combine("lib"), WINAPPSDK_PATH.Combine("lib"));
-        CopyDirectory(WEBVIEW2_PATH.Combine("build/native/include"), WINAPPSDK_PATH.Combine("include"));
-        DeleteDirectory(WEBVIEW2_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
-
-        var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
-        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
-        RunProcess(vcvarsall,
-            $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
-            $"-File \"{generateScript}\" " +
-            $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
-        FileWriteText(stamp, "");
-    }
+    SyncAngle(ANGLE_PATH, ANGLE_VERSION, ANGLE_REVISION);
+    SyncWindowsAppSdk();
 });
 
 Task("ANGLE")
@@ -171,53 +36,60 @@ Task("ANGLE")
     {
         if (Skip(arch)) return;
 
-        var suffix = wasdk ? "_wasdk" : "";
-        var spectreLibPath = GetSpectreLibPath(arch);
-        var previousDepotToolsWinToolchain = EnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN");
-
-        try
-        {
-            System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", "0");
-
-            RunGn(ANGLE_PATH, $"out/winui{suffix}/{arch}",
-                $"target_cpu='{arch}' " +
-                $"is_component_build=false " +
-                $"is_debug=false " +
-                $"is_clang=false " +
-                $"use_custom_libcxx=false " +
-                $"use_custom_libcxx_for_host=false " +
-                $"enable_rust=false " +
-                $"enable_rust_cxx=false " +
-                $"use_siso=false " +
-                $"angle_build_tests=false " +
-                $"angle_is_winappsdk={wasdk} ".ToLower() +
-                $"winappsdk_dir='{WINAPPSDK_PATH}' " +
-                $"enable_precompiled_headers=false " +
-                $"angle_enable_null=false " +
-                $"angle_enable_wgpu=false " +
-                $"angle_enable_gl_desktop_backend=false " +
-                $"angle_enable_vulkan=false " +
-                $"angle_build_vulkan_system_info=false " +
-                $"spectre_lib_root='{System.IO.Path.GetDirectoryName(spectreLibPath)}'",
-                new Dictionary<string, string> {
-                    { "GYP_MSVS_OVERRIDE_PATH", VS_INSTALL },
-                    { "vs2026_install", VS_INSTALL },
-                    { "VCToolsVersion", TOOLSET_VERSION.Value },
-                });
-
-            RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
-        }
-        finally
-        {
-            System.Environment.SetEnvironmentVariable("DEPOT_TOOLS_WIN_TOOLCHAIN", previousDepotToolsWinToolchain);
-        }
-
-        var outDir = OUTPUT_PATH.Combine(arch);
-        EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
-        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
+        BuildAngle(
+            anglePath: ANGLE_PATH,
+            outputPath: OUTPUT_PATH,
+            outName: wasdk ? "winui_wasdk" : "winui",
+            arch: arch,
+            target: target,
+            gnArgs: AngleGnArgs(arch, new [] {
+                $"angle_is_winappsdk={wasdk}".ToLower(),
+                $"winappsdk_dir='{WINAPPSDK_PATH}'",
+            }));
     }
 });
+
+// Generate the Windows App SDK headers from the winmd files shipped in the
+// NuGet package. Unlike the UWP build, WinUI 3 needs these to compile against
+// Microsoft.UI.*.
+void SyncWindowsAppSdk()
+{
+    var winappsdkVersion = GetVersion("Microsoft.WindowsAppSDK", "release");
+    var webview2Version = GetVersion("Microsoft.Web.WebView2", "release");
+    var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdkVersion}-{webview2Version}-{WINDOWS_SDK_VERSION}.stamp");
+    if (FileExists(stamp))
+        return;
+
+    CleanDirectory(WINAPPSDK_PATH);
+    CleanDirectory(WEBVIEW2_PATH);
+
+    var packages = new[] {
+        new { Id = "Microsoft.WindowsAppSDK", Version = winappsdkVersion, Path = WINAPPSDK_PATH },
+        new { Id = "Microsoft.Web.WebView2", Version = webview2Version, Path = WEBVIEW2_PATH },
+    };
+    foreach (var package in packages) {
+        var packageId = package.Id.ToLowerInvariant();
+        var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/{packageId}/{package.Version}/{packageId}.{package.Version}.nupkg";
+        var nupkgPath = ROOT_PATH.CombineWithFilePath($"externals/{packageId}.{package.Version}.nupkg");
+        DownloadFile(nugetUrl, nupkgPath);
+        EnsureDirectoryExists(package.Path);
+        Unzip(nupkgPath, package.Path);
+        DeleteFile(nupkgPath);
+    }
+
+    CopyDirectory(WEBVIEW2_PATH.Combine("lib"), WINAPPSDK_PATH.Combine("lib"));
+    CopyDirectory(WEBVIEW2_PATH.Combine("build/native/include"), WINAPPSDK_PATH.Combine("include"));
+    DeleteDirectory(WEBVIEW2_PATH, new DeleteDirectorySettings { Recursive = true, Force = true });
+
+    var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
+    var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
+    RunProcess(vcvarsall,
+        $"\"{VS_INSTALL}\" \"x64 {WINDOWS_SDK_VERSION}\" pwsh -NoProfile -ExecutionPolicy Bypass " +
+        $"-File \"{generateScript}\" " +
+        $"-Path \"{WINAPPSDK_PATH}\" -WindowsSdkVersion \"{WINDOWS_SDK_VERSION}\"");
+
+    FileWriteText(stamp, "");
+}
 
 Task("Default")
     .IsDependentOn("sync-ANGLE")
