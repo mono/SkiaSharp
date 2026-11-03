@@ -13,7 +13,10 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     private static readonly string[] Families = ["SkiaSharp", "HarfBuzzSharp"];
     private static readonly string[] Platforms = ["Win32", "macOS", "Linux"];
     private static readonly string[] TargetFrameworks = ["net10.0", "net11.0"];
+    private static readonly string[] DefaultRuntimeIds = ["win-x86", "win-x64", "win-arm64", "osx-x64", "osx-arm64"];
     private readonly Dictionary<string, string> packagePaths = new(StringComparer.OrdinalIgnoreCase);
+
+    public static bool IsWindowsOrMacOS => OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
 
     public static TheoryData<string, string, string> DefaultCases
     {
@@ -54,14 +57,9 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     public async Task PortablePackagePreservesItsNativeDependencyPolicy(string family, string command, string targetFramework)
     {
         var core = ReadPackage(family);
-        var expected = family == "SkiaSharp" ? [] : ReadPackage(family + ".NativeAssets.Win32").NativeFiles
-            .Concat(ReadPackage(family + ".NativeAssets.macOS").NativeFiles)
-            .ToDictionary(p => p.Key, p => p.Value);
-        if (family == "HarfBuzzSharp")
-        {
-            Assert.Contains(expected.Keys, path => path.StartsWith("runtimes/win-", StringComparison.Ordinal));
-            Assert.Contains(expected.Keys, path => path.StartsWith("runtimes/osx", StringComparison.Ordinal));
-        }
+        var expected = ReadDefaultNativeFiles(family);
+        Assert.Contains(expected.Keys, path => path.StartsWith("runtimes/win-", StringComparison.Ordinal));
+        Assert.Contains(expected.Keys, path => path.StartsWith("runtimes/osx", StringComparison.Ordinal));
         Assert.DoesNotContain(expected.Keys, path => path.StartsWith("runtimes/linux", StringComparison.Ordinal));
 
         var project = dotnet.NewProject($"{family}-default-{command}-{targetFramework}",
@@ -77,8 +75,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         string? commandRid, string targetFramework)
     {
         var core = ReadPackage(family);
-        var platforms = family == "SkiaSharp" ? ["Linux"] : Platforms;
-        var natives = platforms.Select(platform => ReadPackage(family + ".NativeAssets." + platform)).ToArray();
+        var natives = Platforms.Select(platform => ReadPackage(family + ".NativeAssets." + platform)).ToArray();
         Assert.All(natives, package => Assert.Equal(core.Version, package.Version));
         var all = natives.SelectMany(package => package.NativeFiles).ToDictionary(p => p.Key, p => p.Value);
         Assert.Contains(all.Keys, path => path.StartsWith("runtimes/linux-x64/native/", StringComparison.Ordinal));
@@ -104,8 +101,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     public async Task MultiTargetConsolePreservesEachFrameworkOutput(string family, string command)
     {
         var core = ReadPackage(family);
-        var platforms = family == "SkiaSharp" ? ["Linux"] : Platforms;
-        var natives = platforms.Select(platform => ReadPackage(family + ".NativeAssets." + platform)).ToArray();
+        var natives = Platforms.Select(platform => ReadPackage(family + ".NativeAssets." + platform)).ToArray();
         Assert.All(natives, package => Assert.Equal(core.Version, package.Version));
         var expected = natives.SelectMany(package => package.NativeFiles).ToDictionary(p => p.Key, p => p.Value);
         var project = dotnet.NewProject($"{family}-multi-target-{string.Join("-", TargetFrameworks)}-{command}",
@@ -140,7 +136,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     [InlineData("linux-arm64")]
     [InlineData("linux-musl-x64")]
     [InlineData("linux-musl-arm64")]
-    public async Task RuntimeGraphSelectsOnlyTheRequestedNativePackage(string rid)
+    public async Task RidPublishDeploysOnlyTheRequestedNativeAssets(string rid)
     {
         var core = ReadPackage("SkiaSharp");
         var native = ReadPackage("SkiaSharp.runtime." + rid);
@@ -156,11 +152,20 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
 
         AssertNativeOutput(project, "SkiaSharp", expected, "net10.0");
         using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
-        Assert.Equal(["SkiaSharp.runtime." + rid],
+        Assert.Equal(DefaultRuntimeIds.Append(rid).Distinct().Select(id => "SkiaSharp.runtime." + id).Order(),
             assets.RootElement.GetProperty("libraries").EnumerateObject()
                 .Select(p => p.Name.Split('/')[0])
                 .Where(id => id.StartsWith("SkiaSharp.runtime.", StringComparison.Ordinal))
                 .Order());
+        using var deps = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "output", "Consumer.deps.json")));
+        var deployedNativeFiles = new List<string>();
+        foreach (var target in deps.RootElement.GetProperty("targets").EnumerateObject())
+            foreach (var library in target.Value.EnumerateObject())
+                if (library.Value.TryGetProperty("native", out var files))
+                    deployedNativeFiles.AddRange(files.EnumerateObject()
+                        .Select(file => Path.GetFileName(file.Name))
+                        .Where(file => file.StartsWith("libSkiaSharp.", StringComparison.Ordinal)));
+        Assert.Equal(expected.Keys.Order(), deployedNativeFiles.Order());
         dotnet.CleanBuildOutput(project);
     }
 
@@ -182,8 +187,11 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         await dotnet.Restore(project, rid);
 
         using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
-        Assert.DoesNotContain(assets.RootElement.GetProperty("libraries").EnumerateObject(),
-            p => p.Name.StartsWith("SkiaSharp.runtime.", StringComparison.Ordinal));
+        Assert.Equal(DefaultRuntimeIds.Select(id => "SkiaSharp.runtime." + id).Order(),
+            assets.RootElement.GetProperty("libraries").EnumerateObject()
+                .Select(p => p.Name.Split('/')[0])
+                .Where(id => id.StartsWith("SkiaSharp.runtime.", StringComparison.Ordinal))
+                .Order());
     }
 
     [Theory]
@@ -195,7 +203,7 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         var core = ReadPackage("SkiaSharp");
         var windows = ReadPackage("SkiaSharp.NativeAssets.Win32");
         Assert.Equal(3, windows.NativeFiles.Count);
-        var expected = rid is null ? windows.NativeFiles :
+        var expected = rid is null ? ReadDefaultNativeFiles("SkiaSharp") :
             ReadPackage("SkiaSharp.runtime." + rid).NativeFiles
                 .ToDictionary(p => p.Key[$"runtimes/{rid}/native/".Length..], p => p.Value);
         var xml = XElement.Parse(ProjectXml("SkiaSharp", core.Version, "net10.0"));
@@ -217,16 +225,41 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     }
 
     [Fact]
-    public async Task CurrentRidSelectedByTheApplicationWorksOnFirstBuild()
+    public async Task CommandLineRidWorksOnFirstBuild()
     {
         var core = ReadPackage("SkiaSharp");
         var rid = RuntimeInformation.RuntimeIdentifier;
         var native = ReadPackage("SkiaSharp.runtime." + rid);
         var prefix = $"runtimes/{rid}/native/";
         var expected = native.NativeFiles.ToDictionary(p => p.Key[prefix.Length..], p => p.Value);
-        var xml = XElement.Parse(ProjectXml("SkiaSharp", core.Version, "net10.0"));
-        xml.Element("PropertyGroup")!.Add(new XElement("UseCurrentRuntimeIdentifier", "true"));
-        var project = dotnet.NewProject("SkiaSharp-current-rid-first-build", xml.ToString());
+        var project = dotnet.NewProject("SkiaSharp-command-line-rid-first-build",
+            ProjectXml("SkiaSharp", core.Version, "net10.0"));
+        File.WriteAllText(Path.Combine(project, "Program.cs"), """
+            using SkiaSharp;
+            using var bitmap = new SKBitmap(8, 8);
+            bitmap.Erase(SKColors.Magenta);
+            if (bitmap.GetPixel(3, 3) != SKColors.Magenta)
+                throw new System.Exception("Native pixel round-trip failed.");
+            System.Console.WriteLine("Native pixel round-trip passed.");
+            """);
+
+        await dotnet.Build(project, rid: rid);
+
+        AssertNativeOutput(project, "SkiaSharp", expected, "net10.0");
+        Assert.Contains("Native pixel round-trip passed.",
+            await dotnet.Execute(project, Path.Combine("output", "Consumer.dll")));
+        dotnet.CleanBuildOutput(project);
+    }
+
+    [Theory(SkipUnless = nameof(IsWindowsOrMacOS),
+        Skip = "The default desktop dependencies cover Windows and macOS; Linux requires a native package or RID.")]
+    [InlineData("net10.0")]
+    [InlineData("net11.0")]
+    public async Task PortableApplicationLoadsNativeAssetsOnFirstBuild(string targetFramework)
+    {
+        var core = ReadPackage("SkiaSharp");
+        var project = dotnet.NewProject($"SkiaSharp-portable-first-build-{targetFramework}",
+            ProjectXml("SkiaSharp", core.Version, targetFramework));
         File.WriteAllText(Path.Combine(project, "Program.cs"), """
             using SkiaSharp;
             using var bitmap = new SKBitmap(8, 8);
@@ -238,7 +271,9 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
 
         await dotnet.Build(project);
 
-        AssertNativeOutput(project, "SkiaSharp", expected, "net10.0");
+        AssertNativeOutput(project, "SkiaSharp", ReadDefaultNativeFiles("SkiaSharp"), targetFramework);
+        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
+        Assert.Equal([targetFramework], assets.RootElement.GetProperty("targets").EnumerateObject().Select(p => p.Name));
         Assert.Contains("Native pixel round-trip passed.",
             await dotnet.Execute(project, Path.Combine("output", "Consumer.dll")));
         dotnet.CleanBuildOutput(project);
@@ -412,7 +447,9 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
     public async Task PortableNoDependenciesReplacesExplicitRegularLinuxAssets(bool reverseOrder)
     {
         var core = ReadPackage("SkiaSharp");
-        var expected = ReadPackage("SkiaSharp.NativeAssets.Linux.NoDependencies").NativeFiles;
+        var expected = ReadPackage("SkiaSharp.NativeAssets.Linux.NoDependencies").NativeFiles
+            .Concat(ReadDefaultNativeFiles("SkiaSharp"))
+            .ToDictionary(p => p.Key, p => p.Value);
         var xml = XElement.Parse(ProjectXml("SkiaSharp", core.Version, "net10.0", includeLinux: true));
         var references = xml.Element("ItemGroup")!;
         var reference = new XElement("PackageReference",
@@ -463,6 +500,11 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
 
     private Task BuildOrPublish(string project, string command, string? rid = null) =>
         command == "build" ? dotnet.Build(project) : dotnet.Publish(project, rid);
+
+    private Dictionary<string, string> ReadDefaultNativeFiles(string family) =>
+        ReadPackage(family + ".NativeAssets.Win32").NativeFiles
+            .Concat(ReadPackage(family + ".NativeAssets.macOS").NativeFiles)
+            .ToDictionary(p => p.Key, p => p.Value);
 
     private string CreateLegacyNativeProject(string packageId, string version, string framework,
         string frameworkVersion, bool optOut)

@@ -25,10 +25,11 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
 ## Core Managed Packages
 
 These contain the managed C# assemblies. In this experimental source version,
-`SkiaSharp` selects desktop/server native packages through a package-root
-`runtime.json` when the application restores with a RID. `HarfBuzzSharp` retains
-its existing TFM-conditional NativeAssets dependencies. Workload-specific assets
-and WebAssembly retain their existing packaging model; see
+`SkiaSharp` retains ordinary Windows/macOS native dependencies so plain
+applications work without a RID, and adds RID-specific desktop/server packages
+through a package-root `runtime.json`. `HarfBuzzSharp` retains its existing
+TFM-conditional NativeAssets dependencies. Workload-specific assets and
+WebAssembly retain their existing packaging model; see
 [Auto-Included NativeAssets](#auto-included-nativeassets).
 
 | Package | Description |
@@ -84,8 +85,9 @@ NanoServer, or WinUI variants. SkiaSharp's Win32, macOS, Linux and
 Linux.NoDependencies names remain ordinary compatibility packages; their
 exact-version dependencies restore every runtime pack in the selected family.
 For example, Win32 depends on all three Windows architectures. A modern
-RID-selected `SkiaSharp` application instead restores the relevant
-`SkiaSharp.runtime.<rid>` pack through `runtime.json`.
+RID-selected `SkiaSharp` application also restores the relevant
+`SkiaSharp.runtime.<rid>` pack through `runtime.json`. Its ordinary desktop
+dependencies are still downloaded; the SDK filters native assets for deployment.
 
 Apple native assets built from this source require macOS 12+, iOS 15+, tvOS 15+
 or Mac Catalyst 15+. This raises the previous macOS 11 and iOS/tvOS/Catalyst 14
@@ -134,23 +136,20 @@ package-root `runtime.json`. For each supported desktop/server RID it adds an
 Linux glibc x86/x64/arm/arm64/riscv64/loongarch64, musl
 x64/arm/arm64/riscv64/loongarch64, and Bionic x64/arm64.
 Each runtime package contains only that RID's native library. Both macOS packs
-currently use the **same unthinned universal dylib**; this reduces cross-platform
-downloads but not the macOS binary's architecture size.
+currently use the **same unthinned universal dylib**. The compatibility package
+also retains its universal workload/Framework asset, so these packages do not
+yet eliminate duplicate macOS payloads.
 There is no x86 musl runtime pack; its graph entry blocks an incompatible glibc
 x86 fallback rather than claiming support for an unbuilt artifact.
 
 This is an experimental, unofficial use of NuGet's package runtime graph.
-It is **not fully automatic for a clean no-RID F5/build/test**. A library-shipped
-target is too late to influence the application's initial restore. Choose the
-RID in the application or test project **before its first restore**, for example:
+The core package preserves ordinary Win32/macOS dependencies for neutral TFMs,
+and Win32 dependencies for Windows TFMs. A clean no-RID Windows/macOS
+application or test therefore works without additional project properties.
+No-RID output retains the desktop native assets in runtime subdirectories,
+and .NET uses the dependency file to load the appropriate host asset.
 
-```xml
-<PropertyGroup>
-  <UseCurrentRuntimeIdentifier>true</UseCurrentRuntimeIdentifier>
-</PropertyGroup>
-```
-
-Alternatively, select the deployment RID explicitly:
+Select a deployment RID explicitly when building or publishing for one platform:
 
 ```bash
 dotnet build -r win-x64
@@ -158,19 +157,21 @@ dotnet test -r win-x64
 dotnet publish -r linux-x64 --self-contained false
 ```
 
-Use `linux-musl-x64` rather than `linux-x64` for Alpine. Host inference is not a
-cross-compilation/deployment selector. `RuntimeIdentifiers` can pre-restore
-several RIDs, but the build/publish still needs a selected `RuntimeIdentifier`.
-Modern neutral and `-windows` SkiaSharp TFMs no longer have ordinary Win32/macOS
-dependencies. A no-RID executable/test receives warning `SKNATIVE001` unless an
-explicit compatibility/runtime package is present or native inclusion is
-disabled. The package never silently changes RID, self-contained mode or output
+Use `linux-musl-x64` rather than `linux-x64` for Alpine. A RID-selected restore
+adds the corresponding runtime package, including Linux, and the SDK deploys
+only matching native assets. This filters output, not downloads: ordinary
+Windows/macOS dependencies still restore for a Linux deployment.
+`RuntimeIdentifiers` can pre-restore several RIDs, but an ordinary console
+build/publish still needs a selected `RuntimeIdentifier` to produce RID-specific
+output. Apple universal builds instead dispatch one inner build per RID.
+The package never changes the consumer's RID, self-contained mode or output
 paths, and never recursively restores the consumer.
 
 Tracking: [NuGet/Home#10571](https://github.com/NuGet/Home/issues/10571),
 [dotnet/sdk#35792](https://github.com/dotnet/sdk/issues/35792), and
 [SkiaSharp#3210](https://github.com/mono/SkiaSharp/discussions/3210).
-These limitations remain relevant even when RID-selected restores work.
+These track the upstream limitations that prevent a package from selecting only
+the host's native dependency during a clean no-RID restore.
 Empty graph entries for Android RIDs prevent NuGet's
 `android -> linux-bionic -> linux` fallback from selecting desktop Linux
 packages in Android workload applications. Tizen entries likewise keep
@@ -185,8 +186,8 @@ The following retain TFM-conditional dependencies:
 |----------|------------------------------|
 | HarfBuzzSharp.NativeAssets.Win32 | Windows or neutral TFMs, including .NET Framework and .NET Standard |
 | HarfBuzzSharp.NativeAssets.macOS | macOS or neutral TFMs, including .NET Framework and .NET Standard |
-| SkiaSharp.NativeAssets.Win32 | .NET Framework (`net462`, `net48`) |
-| SkiaSharp.NativeAssets.macOS | macOS workload TFMs and .NET Framework (`net462`, `net48`) |
+| SkiaSharp.NativeAssets.Win32 | Windows or neutral TFMs, including .NET Framework and .NET Standard |
+| SkiaSharp.NativeAssets.macOS | macOS or neutral TFMs, including .NET Framework and .NET Standard |
 | SkiaSharp.NativeAssets.Android<br/>HarfBuzzSharp.NativeAssets.Android | Android TFM (`net8.0-android`) |
 | SkiaSharp.NativeAssets.iOS<br/>HarfBuzzSharp.NativeAssets.iOS | iOS TFM (`net8.0-ios`) |
 | SkiaSharp.NativeAssets.MacCatalyst<br/>HarfBuzzSharp.NativeAssets.MacCatalyst | Mac Catalyst TFM (`net8.0-maccatalyst`) |

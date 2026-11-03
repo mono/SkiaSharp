@@ -20,19 +20,15 @@
     <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos'))" />
-    <!-- Full Framework preserves AnyCPU and packages.config's ordinary native dependencies. -->
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.StartsWith('net4'))" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <!-- Ordinary desktop dependencies preserve clean no-RID builds and Framework AnyCPU support. -->
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos')) or !$(TargetFramework.Contains('-'))" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\NativeAssets.Inventory.props" />
   <Import Project="..\NativeAssets.Tasks.targets" />
-  <ItemGroup>
-    <PackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\SkiaSharp.targets" />
-  </ItemGroup>
   <Target Name="_GenerateRuntimeJson" BeforeTargets="_GetPackageFiles" DependsOnTargets="CollectAssemblyVersionInfo">
     <PropertyGroup>
       <_RuntimeJsonPath>$(IntermediateOutputPath)runtime.json</_RuntimeJsonPath>

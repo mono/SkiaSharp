@@ -50,8 +50,8 @@ public sealed class DotNet : IDisposable
         return directory;
     }
 
-    public Task Build(string directory, string? framework = null, string? outputDirectory = "output") =>
-        Run(directory, "build", framework: framework, outputDirectory: outputDirectory);
+    public Task Build(string directory, string? framework = null, string? outputDirectory = "output", string? rid = null) =>
+        Run(directory, "build", rid: rid, framework: framework, outputDirectory: outputDirectory);
 
     public Task<string> Execute(string directory, string assembly) =>
         RunCommand(directory, [Path.GetFullPath(Path.Combine(directory, assembly))],
