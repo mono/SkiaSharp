@@ -1,10 +1,10 @@
 {
-   "Title":"SkiaSharp.Benchmarks.Tracking.RasterImageLifecycleBenchmark-20261103-122532",
+   "Title":"SkiaSharp.Benchmarks.Tracking.RasterImageLifecycleBenchmark-20261103-182538",
    "HostEnvironmentInfo":{
       "BenchmarkDotNetCaption":"BenchmarkDotNet",
       "BenchmarkDotNetVersion":"0.14.0",
       "OsVersion":"Ubuntu 26.04.1 LTS (Resolute Raccoon)",
-      "ProcessorName":"AMD EPYC 9V45",
+      "ProcessorName":"AMD EPYC 7763",
       "PhysicalProcessorCount":1,
       "PhysicalCoreCount":2,
       "LogicalCoreCount":4,
@@ -28,61 +28,61 @@
          "MethodTitle":"CreateRasterImage",
          "Parameters":"Count=256",
          "FullName":"SkiaSharp.Benchmarks.Tracking.RasterImageLifecycleBenchmark.CreateRasterImage(Count: 256)",
-         "HardwareIntrinsics":"AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT,AvxVnni VectorSize=256",
+         "HardwareIntrinsics":"AVX2,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256",
          "Statistics":{
             "OriginalValues":[
-               135340.64306640625,136516.86206054688,132747.41381835938,133083.0986328125,134664.65600585938,132109.46118164062,132269.01611328125,135510.40454101562,136578.6044921875,131778.56640625,131431.70141601562,132321.92211914062,133683.0087890625,132997.38989257812
+               252457.49658203125,250738.69873046875,250697.02978515625,250783.47021484375,250713.6962890625,250736.19921875,249704.3798828125,249423.5302734375,251579.6865234375,250330.50537109375,250831.7998046875,250851.45556640625,251977.08203125
             ],
-            "N":14,
-            "Min":131431.70141601562,
-            "LowerFence":127948.13708496094,
-            "Q1":132282.2426147461,
-            "Median":133040.2442626953,
-            "Mean":133645.19632393974,
-            "Q3":135171.64630126953,
-            "UpperFence":139505.7518310547,
-            "Max":136578.6044921875,
-            "InterquartileRange":2889.4036865234375,
+            "N":13,
+            "Min":249423.5302734375,
+            "LowerFence":250465.39111328125,
+            "Q1":250697.02978515625,
+            "Median":250738.69873046875,
+            "Mean":250832.69463641828,
+            "Q3":250851.45556640625,
+            "UpperFence":251083.09423828125,
+            "Max":252457.49658203125,
+            "InterquartileRange":154.42578125,
             "LowerOutliers":[
-               
+               249423.5302734375,249704.3798828125,250330.50537109375
             ],
             "UpperOutliers":[
-               
+               251579.6865234375,251977.08203125,252457.49658203125
             ],
             "AllOutliers":[
-               
+               249423.5302734375,249704.3798828125,250330.50537109375,251579.6865234375,251977.08203125,252457.49658203125
             ],
-            "StandardError":469.82878077983463,
-            "Variance":3090347.165486922,
-            "StandardDeviation":1757.938328123863,
-            "Skewness":0.45068086307796673,
-            "Kurtosis":1.591446144991153,
+            "StandardError":227.47388080411818,
+            "Variance":672676.76382512,
+            "StandardDeviation":820.1687410680317,
+            "Skewness":0.25621360857358255,
+            "Kurtosis":2.486090424190675,
             "ConfidenceInterval":{
-               "N":14,
-               "Mean":133645.19632393974,
-               "StandardError":469.82878077983463,
+               "N":13,
+               "Mean":250832.69463641828,
+               "StandardError":227.47388080411818,
                "Level":12,
-               "Margin":1983.0682238742227,
-               "Lower":131662.1281000655,
-               "Upper":135628.26454781397
+               "Margin":982.1847395195127,
+               "Lower":249850.50989689876,
+               "Upper":251814.8793759378
             },
             "Percentiles":{
-               "P0":131431.70141601562,
-               "P25":132282.2426147461,
-               "P50":133040.2442626953,
-               "P67":134379.97831298827,
-               "P80":135408.54765625,
-               "P85":135560.7274169922,
-               "P90":136214.9248046875,
-               "P95":136538.4719116211,
-               "P100":136578.6044921875
+               "P0":249423.5302734375,
+               "P25":250697.02978515625,
+               "P50":250738.69873046875,
+               "P67":250832.58603515624,
+               "P80":251288.394140625,
+               "P85":251659.16562500002,
+               "P90":251897.60292968748,
+               "P95":252169.2478515625,
+               "P100":252457.49658203125
             }
          },
          "Memory":{
-            "Gen0Collections":13,
+            "Gen0Collections":6,
             "Gen1Collections":0,
             "Gen2Collections":0,
-            "TotalOperations":4096,
+            "TotalOperations":2048,
             "BytesAllocatedPerOperation":55296
          },
          "Measurements":[
@@ -92,516 +92,502 @@
                "LaunchIndex":1,
                "IterationIndex":1,
                "Operations":1,
-               "Nanoseconds":191797
+               "Nanoseconds":342329
             },{
                "IterationMode":"Workload",
                "IterationStage":"Jitting",
                "LaunchIndex":1,
                "IterationIndex":1,
                "Operations":1,
-               "Nanoseconds":9865631
+               "Nanoseconds":16801006
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Jitting",
                "LaunchIndex":1,
                "IterationIndex":2,
                "Operations":16,
-               "Nanoseconds":238507
+               "Nanoseconds":373557
             },{
                "IterationMode":"Workload",
                "IterationStage":"Jitting",
                "LaunchIndex":1,
                "IterationIndex":2,
                "Operations":16,
-               "Nanoseconds":3772307
+               "Nanoseconds":6814805
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":1,
                "Operations":16,
-               "Nanoseconds":3437837
+               "Nanoseconds":6282302
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":2,
                "Operations":32,
-               "Nanoseconds":6725569
+               "Nanoseconds":12696969
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":3,
                "Operations":64,
-               "Nanoseconds":13575503
+               "Nanoseconds":25415950
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":4,
                "Operations":128,
-               "Nanoseconds":27417325
+               "Nanoseconds":50621367
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":5,
                "Operations":256,
-               "Nanoseconds":55679814
+               "Nanoseconds":123687000
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":6,
                "Operations":512,
-               "Nanoseconds":158447456
+               "Nanoseconds":309168815
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":7,
                "Operations":1024,
-               "Nanoseconds":301907897
+               "Nanoseconds":296029699
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":8,
                "Operations":2048,
-               "Nanoseconds":264901049
-            },{
-               "IterationMode":"Workload",
-               "IterationStage":"Pilot",
-               "LaunchIndex":1,
-               "IterationIndex":9,
-               "Operations":4096,
-               "Nanoseconds":549574974
+               "Nanoseconds":511325440
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":4096,
-               "Nanoseconds":8002
+               "Operations":2048,
+               "Nanoseconds":7304
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":4096,
-               "Nanoseconds":6019
+               "Operations":2048,
+               "Nanoseconds":4729
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":4096,
-               "Nanoseconds":5889
+               "Operations":2048,
+               "Nanoseconds":4619
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":4096,
-               "Nanoseconds":5949
+               "Operations":2048,
+               "Nanoseconds":4629
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":4096,
-               "Nanoseconds":6129
+               "Operations":2048,
+               "Nanoseconds":4599
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":4096,
-               "Nanoseconds":5898
+               "Operations":2048,
+               "Nanoseconds":4578
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":4096,
-               "Nanoseconds":5878
+               "Operations":2048,
+               "Nanoseconds":4588
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":4096,
-               "Nanoseconds":5839
+               "Operations":2048,
+               "Nanoseconds":4619
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":4096,
-               "Nanoseconds":5839
-            },{
-               "IterationMode":"Overhead",
-               "IterationStage":"Warmup",
-               "LaunchIndex":1,
-               "IterationIndex":10,
-               "Operations":4096,
-               "Nanoseconds":5879
+               "Operations":2048,
+               "Nanoseconds":4548
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":4096,
-               "Nanoseconds":7331
+               "Operations":2048,
+               "Nanoseconds":5771
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":4096,
-               "Nanoseconds":6249
+               "Operations":2048,
+               "Nanoseconds":5972
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":4096,
-               "Nanoseconds":6219
+               "Operations":2048,
+               "Nanoseconds":5931
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":4096,
-               "Nanoseconds":6119
+               "Operations":2048,
+               "Nanoseconds":5951
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":4096,
-               "Nanoseconds":6189
+               "Operations":2048,
+               "Nanoseconds":5531
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":4096,
-               "Nanoseconds":5999
+               "Operations":2048,
+               "Nanoseconds":5891
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":4096,
-               "Nanoseconds":6309
+               "Operations":2048,
+               "Nanoseconds":5801
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":4096,
-               "Nanoseconds":5968
+               "Operations":2048,
+               "Nanoseconds":5951
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":4096,
-               "Nanoseconds":5919
+               "Operations":2048,
+               "Nanoseconds":5850
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":10,
-               "Operations":4096,
-               "Nanoseconds":5889
+               "Operations":2048,
+               "Nanoseconds":5941
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":11,
-               "Operations":4096,
-               "Nanoseconds":5869
+               "Operations":2048,
+               "Nanoseconds":5751
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":12,
-               "Operations":4096,
-               "Nanoseconds":5879
+               "Operations":2048,
+               "Nanoseconds":34936
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":13,
-               "Operations":4096,
-               "Nanoseconds":6049
+               "Operations":2048,
+               "Nanoseconds":5811
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":14,
-               "Operations":4096,
-               "Nanoseconds":5949
+               "Operations":2048,
+               "Nanoseconds":5520
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":15,
-               "Operations":4096,
-               "Nanoseconds":5969
+               "Operations":2048,
+               "Nanoseconds":5560
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":4096,
-               "Nanoseconds":549694869
+               "Operations":2048,
+               "Nanoseconds":516044265
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":4096,
-               "Nanoseconds":568087861
+               "Operations":2048,
+               "Nanoseconds":516634338
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":4096,
-               "Nanoseconds":578842650
+               "Operations":2048,
+               "Nanoseconds":515199007
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":4096,
-               "Nanoseconds":562765338
+               "Operations":2048,
+               "Nanoseconds":506912771
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":4096,
-               "Nanoseconds":566693685
+               "Operations":2048,
+               "Nanoseconds":506310568
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":4096,
-               "Nanoseconds":556207272
+               "Operations":2048,
+               "Nanoseconds":508457252
+            },{
+               "IterationMode":"Workload",
+               "IterationStage":"Warmup",
+               "LaunchIndex":1,
+               "IterationIndex":7,
+               "Operations":2048,
+               "Nanoseconds":507122031
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":4096,
-               "Nanoseconds":554361273
+               "Operations":2048,
+               "Nanoseconds":517038803
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":4096,
-               "Nanoseconds":588700886
+               "Operations":2048,
+               "Nanoseconds":513518705
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":4096,
-               "Nanoseconds":559179066
+               "Operations":2048,
+               "Nanoseconds":513433367
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":4096,
-               "Nanoseconds":543739406
+               "Operations":2048,
+               "Nanoseconds":513610397
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":4096,
-               "Nanoseconds":545114371
+               "Operations":2048,
+               "Nanoseconds":513467500
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":4096,
-               "Nanoseconds":551592430
+               "Operations":2048,
+               "Nanoseconds":513513586
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":4096,
-               "Nanoseconds":541126352
+               "Operations":2048,
+               "Nanoseconds":511400420
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":4096,
-               "Nanoseconds":541779889
+               "Operations":2048,
+               "Nanoseconds":510825240
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":4096,
-               "Nanoseconds":555056616
+               "Operations":2048,
+               "Nanoseconds":524268433
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":10,
-               "Operations":4096,
-               "Nanoseconds":559431963
+               "Operations":2048,
+               "Nanoseconds":532734920
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":11,
-               "Operations":4096,
-               "Nanoseconds":539771007
+               "Operations":2048,
+               "Nanoseconds":515241048
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":12,
-               "Operations":4096,
-               "Nanoseconds":538350248
+               "Operations":2048,
+               "Nanoseconds":512682725
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":13,
-               "Operations":4096,
-               "Nanoseconds":541996592
+               "Operations":2048,
+               "Nanoseconds":513709376
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":14,
-               "Operations":4096,
-               "Nanoseconds":547571603
+               "Operations":2048,
+               "Nanoseconds":513749631
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":15,
-               "Operations":4096,
-               "Nanoseconds":544763308
+               "Operations":2048,
+               "Nanoseconds":516054914
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":4096,
-               "Nanoseconds":554355274
+               "Operations":2048,
+               "Nanoseconds":517032953
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":4096,
-               "Nanoseconds":559173067
+               "Operations":2048,
+               "Nanoseconds":513512855
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":4096,
-               "Nanoseconds":543733407
+               "Operations":2048,
+               "Nanoseconds":513427517
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":4096,
-               "Nanoseconds":545108372
+               "Operations":2048,
+               "Nanoseconds":513604547
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":4096,
-               "Nanoseconds":551586431
+               "Operations":2048,
+               "Nanoseconds":513461650
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":4096,
-               "Nanoseconds":541120353
+               "Operations":2048,
+               "Nanoseconds":513507736
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":4096,
-               "Nanoseconds":541773890
+               "Operations":2048,
+               "Nanoseconds":511394570
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":4096,
-               "Nanoseconds":555050617
+               "Operations":2048,
+               "Nanoseconds":510819390
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":4096,
-               "Nanoseconds":559425964
+               "Operations":2048,
+               "Nanoseconds":515235198
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":10,
-               "Operations":4096,
-               "Nanoseconds":539765008
+               "Operations":2048,
+               "Nanoseconds":512676875
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":11,
-               "Operations":4096,
-               "Nanoseconds":538344249
+               "Operations":2048,
+               "Nanoseconds":513703526
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":12,
-               "Operations":4096,
-               "Nanoseconds":541990593
+               "Operations":2048,
+               "Nanoseconds":513743781
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":13,
-               "Operations":4096,
-               "Nanoseconds":547565604
-            },{
-               "IterationMode":"Workload",
-               "IterationStage":"Result",
-               "LaunchIndex":1,
-               "IterationIndex":14,
-               "Operations":4096,
-               "Nanoseconds":544757309
+               "Operations":2048,
+               "Nanoseconds":516049064
             }
          ],
          "Metrics":[
             {
-               "Value":3.173828125,
+               "Value":2.9296875,
                "Descriptor":{
                   "Id":"Gen0Collects",
                   "DisplayName":"Gen0",
@@ -658,21 +644,21 @@
          "MethodTitle":"CreateDataWithReleaseProc",
          "Parameters":"Count=256",
          "FullName":"SkiaSharp.Benchmarks.Tracking.RasterImageLifecycleBenchmark.CreateDataWithReleaseProc(Count: 256)",
-         "HardwareIntrinsics":"AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT,AvxVnni VectorSize=256",
+         "HardwareIntrinsics":"AVX2,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256",
          "Statistics":{
             "OriginalValues":[
-               58065.579010009766,57896.470794677734,57865.26516723633,56730.365631103516,56769.27993774414,56195.91751098633,56990.60470581055,55632.24411010742,56556.45700073242,56834.93844604492,56477.91549682617,55180.4328918457,55597.31948852539,55404.733001708984
+               95587.3271484375,95750.63842773438,95715.29040527344,95991.78405761719,95361.70593261719,95622.61010742188,95787.98095703125,95403.00024414062,95319.80590820312,95721.98901367188,95451.41223144531,95240.74560546875,95558.60437011719
             ],
-            "N":14,
-            "Min":55180.4328918457,
-            "LowerFence":54005.37393951416,
-            "Q1":55773.16246032715,
-            "Median":56643.41131591797,
-            "Mean":56585.53737095424,
-            "Q3":56951.68814086914,
-            "UpperFence":58719.47666168213,
-            "Max":58065.579010009766,
-            "InterquartileRange":1178.5256805419922,
+            "N":13,
+            "Min":95240.74560546875,
+            "LowerFence":94924.51708984375,
+            "Q1":95403.00024414062,
+            "Median":95587.3271484375,
+            "Mean":95577.91495455228,
+            "Q3":95721.98901367188,
+            "UpperFence":96200.47216796875,
+            "Max":95991.78405761719,
+            "InterquartileRange":318.98876953125,
             "LowerOutliers":[
                
             ],
@@ -682,37 +668,37 @@
             "AllOutliers":[
                
             ],
-            "StandardError":248.57817524781555,
-            "Variance":865075.5289334719,
-            "StandardDeviation":930.0943656067764,
-            "Skewness":0.12159264888846401,
-            "Kurtosis":1.7286448721675767,
+            "StandardError":59.9671457908543,
+            "Variance":46748.76146592048,
+            "StandardDeviation":216.21461899214972,
+            "Skewness":0.1367620967044233,
+            "Kurtosis":1.890386345289149,
             "ConfidenceInterval":{
-               "N":14,
-               "Mean":56585.53737095424,
-               "StandardError":248.57817524781555,
+               "N":13,
+               "Mean":95577.91495455228,
+               "StandardError":59.9671457908543,
                "Level":12,
-               "Margin":1049.2066485675339,
-               "Lower":55536.33072238671,
-               "Upper":57634.74401952177
+               "Margin":258.92561932874264,
+               "Lower":95318.98933522354,
+               "Upper":95836.84057388103
             },
             "Percentiles":{
-               "P0":55180.4328918457,
-               "P25":55773.16246032715,
-               "P50":56643.41131591797,
-               "P67":56815.89747863769,
-               "P80":57340.46889038086,
-               "P85":57866.825448608404,
-               "P90":57887.10910644531,
-               "P95":57955.65867004395,
-               "P100":58065.579010009766
+               "P0":95240.74560546875,
+               "P25":95403.00024414062,
+               "P50":95587.3271484375,
+               "P67":95715.55834960938,
+               "P80":95739.17866210938,
+               "P85":95758.10693359375,
+               "P90":95780.51245117188,
+               "P95":95869.50219726562,
+               "P100":95991.78405761719
             }
          },
          "Memory":{
-            "Gen0Collections":34,
+            "Gen0Collections":17,
             "Gen1Collections":0,
             "Gen2Collections":0,
-            "TotalOperations":16384,
+            "TotalOperations":8192,
             "BytesAllocatedPerOperation":34816
          },
          "Measurements":[
@@ -722,532 +708,546 @@
                "LaunchIndex":1,
                "IterationIndex":1,
                "Operations":1,
-               "Nanoseconds":199288
+               "Nanoseconds":350494
             },{
                "IterationMode":"Workload",
                "IterationStage":"Jitting",
                "LaunchIndex":1,
                "IterationIndex":1,
                "Operations":1,
-               "Nanoseconds":9826359
+               "Nanoseconds":16734031
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Jitting",
                "LaunchIndex":1,
                "IterationIndex":2,
                "Operations":16,
-               "Nanoseconds":237345
+               "Nanoseconds":338262
             },{
                "IterationMode":"Workload",
                "IterationStage":"Jitting",
                "LaunchIndex":1,
                "IterationIndex":2,
                "Operations":16,
-               "Nanoseconds":1876355
+               "Nanoseconds":3520440
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":1,
                "Operations":16,
-               "Nanoseconds":1471930
+               "Nanoseconds":3024966
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":2,
                "Operations":32,
-               "Nanoseconds":3235697
+               "Nanoseconds":6331617
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":3,
                "Operations":64,
-               "Nanoseconds":6413457
+               "Nanoseconds":12714679
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":4,
                "Operations":128,
-               "Nanoseconds":12510822
+               "Nanoseconds":25112799
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":5,
                "Operations":256,
-               "Nanoseconds":24931668
+               "Nanoseconds":50929311
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":6,
                "Operations":512,
-               "Nanoseconds":55234666
+               "Nanoseconds":129986015
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":7,
                "Operations":1024,
-               "Nanoseconds":136827233
+               "Nanoseconds":300880069
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":8,
                "Operations":2048,
-               "Nanoseconds":304155668
+               "Nanoseconds":244119435
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":9,
                "Operations":4096,
-               "Nanoseconds":231384609
+               "Nanoseconds":377356909
             },{
                "IterationMode":"Workload",
                "IterationStage":"Pilot",
                "LaunchIndex":1,
                "IterationIndex":10,
                "Operations":8192,
-               "Nanoseconds":450108522
-            },{
-               "IterationMode":"Workload",
-               "IterationStage":"Pilot",
-               "LaunchIndex":1,
-               "IterationIndex":11,
-               "Operations":16384,
-               "Nanoseconds":892528471
+               "Nanoseconds":765553228
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":16384,
-               "Nanoseconds":29764
+               "Operations":8192,
+               "Nanoseconds":20508
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":16384,
-               "Nanoseconds":42173
+               "Operations":8192,
+               "Nanoseconds":16941
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":16384,
-               "Nanoseconds":22473
+               "Operations":8192,
+               "Nanoseconds":16651
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":16384,
-               "Nanoseconds":22433
+               "Operations":8192,
+               "Nanoseconds":16741
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":16384,
-               "Nanoseconds":23014
+               "Operations":8192,
+               "Nanoseconds":16782
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":16384,
-               "Nanoseconds":22454
+               "Operations":8192,
+               "Nanoseconds":16711
+            },{
+               "IterationMode":"Overhead",
+               "IterationStage":"Warmup",
+               "LaunchIndex":1,
+               "IterationIndex":7,
+               "Operations":8192,
+               "Nanoseconds":16741
+            },{
+               "IterationMode":"Overhead",
+               "IterationStage":"Warmup",
+               "LaunchIndex":1,
+               "IterationIndex":8,
+               "Operations":8192,
+               "Nanoseconds":16902
+            },{
+               "IterationMode":"Overhead",
+               "IterationStage":"Warmup",
+               "LaunchIndex":1,
+               "IterationIndex":9,
+               "Operations":8192,
+               "Nanoseconds":20098
+            },{
+               "IterationMode":"Overhead",
+               "IterationStage":"Warmup",
+               "LaunchIndex":1,
+               "IterationIndex":10,
+               "Operations":8192,
+               "Nanoseconds":17323
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":16384,
-               "Nanoseconds":22454
+               "Operations":8192,
+               "Nanoseconds":18174
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":16384,
-               "Nanoseconds":22593
+               "Operations":8192,
+               "Nanoseconds":18044
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":16384,
-               "Nanoseconds":23265
+               "Operations":8192,
+               "Nanoseconds":18164
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":16384,
-               "Nanoseconds":27592
+               "Operations":8192,
+               "Nanoseconds":18183
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":16384,
-               "Nanoseconds":27020
+               "Operations":8192,
+               "Nanoseconds":18254
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":16384,
-               "Nanoseconds":28282
+               "Operations":8192,
+               "Nanoseconds":18214
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":16384,
-               "Nanoseconds":28773
+               "Operations":8192,
+               "Nanoseconds":20007
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":16384,
-               "Nanoseconds":28513
+               "Operations":8192,
+               "Nanoseconds":29846
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":16384,
-               "Nanoseconds":29765
+               "Operations":8192,
+               "Nanoseconds":29385
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":10,
-               "Operations":16384,
-               "Nanoseconds":28012
+               "Operations":8192,
+               "Nanoseconds":50524
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":11,
-               "Operations":16384,
-               "Nanoseconds":28603
+               "Operations":8192,
+               "Nanoseconds":29505
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":12,
-               "Operations":16384,
-               "Nanoseconds":42033
+               "Operations":8192,
+               "Nanoseconds":30697
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":13,
-               "Operations":16384,
-               "Nanoseconds":28062
+               "Operations":8192,
+               "Nanoseconds":29054
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":14,
-               "Operations":16384,
-               "Nanoseconds":27060
+               "Operations":8192,
+               "Nanoseconds":29355
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":15,
-               "Operations":16384,
-               "Nanoseconds":27391
+               "Operations":8192,
+               "Nanoseconds":34023
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":16,
-               "Operations":16384,
-               "Nanoseconds":28182
+               "Operations":8192,
+               "Nanoseconds":29165
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":17,
-               "Operations":16384,
-               "Nanoseconds":22443
+               "Operations":8192,
+               "Nanoseconds":30537
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":18,
-               "Operations":16384,
-               "Nanoseconds":22413
+               "Operations":8192,
+               "Nanoseconds":30988
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":19,
-               "Operations":16384,
-               "Nanoseconds":23686
+               "Operations":8192,
+               "Nanoseconds":29535
             },{
                "IterationMode":"Overhead",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":20,
-               "Operations":16384,
-               "Nanoseconds":22764
+               "Operations":8192,
+               "Nanoseconds":29606
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":16384,
-               "Nanoseconds":916089531
+               "Operations":8192,
+               "Nanoseconds":773355139
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":16384,
-               "Nanoseconds":935629273
+               "Operations":8192,
+               "Nanoseconds":790116791
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":16384,
-               "Nanoseconds":911477066
+               "Operations":8192,
+               "Nanoseconds":777059292
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":16384,
-               "Nanoseconds":912782092
+               "Operations":8192,
+               "Nanoseconds":775415367
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":16384,
-               "Nanoseconds":939061450
+               "Operations":8192,
+               "Nanoseconds":776248931
             },{
                "IterationMode":"Workload",
                "IterationStage":"Warmup",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":16384,
-               "Nanoseconds":931144615
+               "Operations":8192,
+               "Nanoseconds":775459063
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":16384,
-               "Nanoseconds":951373938
+               "Operations":8192,
+               "Nanoseconds":790005114
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":16384,
-               "Nanoseconds":948603269
+               "Operations":8192,
+               "Nanoseconds":783080754
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":16384,
-               "Nanoseconds":948091996
+               "Operations":8192,
+               "Nanoseconds":789238192
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":16384,
-               "Nanoseconds":929497802
+               "Operations":8192,
+               "Nanoseconds":784418600
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":16384,
-               "Nanoseconds":930135374
+               "Operations":8192,
+               "Nanoseconds":784129029
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":16384,
-               "Nanoseconds":1003777112
+               "Operations":8192,
+               "Nanoseconds":786394065
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":16384,
-               "Nanoseconds":920741404
+               "Operations":8192,
+               "Nanoseconds":781232465
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":16384,
-               "Nanoseconds":933761559
+               "Operations":8192,
+               "Nanoseconds":783369792
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":16384,
-               "Nanoseconds":911506179
+               "Operations":8192,
+               "Nanoseconds":784724510
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":10,
-               "Operations":16384,
-               "Nanoseconds":926648483
+               "Operations":8192,
+               "Nanoseconds":781570748
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":11,
-               "Operations":16384,
-               "Nanoseconds":931211123
+               "Operations":8192,
+               "Nanoseconds":780889220
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":12,
-               "Operations":16384,
-               "Nanoseconds":925361659
+               "Operations":8192,
+               "Nanoseconds":784183904
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":13,
-               "Operations":16384,
-               "Nanoseconds":904103704
+               "Operations":8192,
+               "Nanoseconds":781967339
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":14,
-               "Operations":16384,
-               "Nanoseconds":910933974
+               "Operations":8192,
+               "Nanoseconds":780241558
             },{
                "IterationMode":"Workload",
                "IterationStage":"Actual",
                "LaunchIndex":1,
                "IterationIndex":15,
-               "Operations":16384,
-               "Nanoseconds":907778637
+               "Operations":8192,
+               "Nanoseconds":782845457
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":1,
-               "Operations":16384,
-               "Nanoseconds":951346446.5
+               "Operations":8192,
+               "Nanoseconds":783051384
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":2,
-               "Operations":16384,
-               "Nanoseconds":948575777.5
+               "Operations":8192,
+               "Nanoseconds":784389230
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":3,
-               "Operations":16384,
-               "Nanoseconds":948064504.5
+               "Operations":8192,
+               "Nanoseconds":784099659
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":4,
-               "Operations":16384,
-               "Nanoseconds":929470310.5
+               "Operations":8192,
+               "Nanoseconds":786364695
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":5,
-               "Operations":16384,
-               "Nanoseconds":930107882.5
+               "Operations":8192,
+               "Nanoseconds":781203095
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":6,
-               "Operations":16384,
-               "Nanoseconds":920713912.5
+               "Operations":8192,
+               "Nanoseconds":783340422
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":7,
-               "Operations":16384,
-               "Nanoseconds":933734067.5
+               "Operations":8192,
+               "Nanoseconds":784695140
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":8,
-               "Operations":16384,
-               "Nanoseconds":911478687.5
+               "Operations":8192,
+               "Nanoseconds":781541378
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":9,
-               "Operations":16384,
-               "Nanoseconds":926620991.5
+               "Operations":8192,
+               "Nanoseconds":780859850
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":10,
-               "Operations":16384,
-               "Nanoseconds":931183631.5
+               "Operations":8192,
+               "Nanoseconds":784154534
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":11,
-               "Operations":16384,
-               "Nanoseconds":925334167.5
+               "Operations":8192,
+               "Nanoseconds":781937969
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":12,
-               "Operations":16384,
-               "Nanoseconds":904076212.5
+               "Operations":8192,
+               "Nanoseconds":780212188
             },{
                "IterationMode":"Workload",
                "IterationStage":"Result",
                "LaunchIndex":1,
                "IterationIndex":13,
-               "Operations":16384,
-               "Nanoseconds":910906482.5
-            },{
-               "IterationMode":"Workload",
-               "IterationStage":"Result",
-               "LaunchIndex":1,
-               "IterationIndex":14,
-               "Operations":16384,
-               "Nanoseconds":907751145.5
+               "Operations":8192,
+               "Nanoseconds":782816087
             }
          ],
          "Metrics":[
