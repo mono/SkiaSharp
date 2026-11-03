@@ -1,35 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
+    <NativeRuntimeFamily>Linux</NativeRuntimeFamily>
     <Title>$(PackagingGroup) - Native Assets for Linux</Title>
-    <PackageNotes>Compatibility package. References all Linux per-RID native asset packages (glibc and musl).
-For new projects, SkiaSharp's runtime.json handles per-RID resolution automatically.</PackageNotes>
+    <PackageNotes>Compatibility package with exact-version dependencies on all glibc, musl and Bionic runtime packs. The default Linux build uses fontconfig; modern RID-selected applications can reference SkiaSharp alone.</PackageNotes>
   </PropertyGroup>
-  <!-- Plain dependencies on all Linux per-RID packages -->
-  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
-    <!-- glibc -->
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-x64\SkiaSharp.NativeAssets.runtime.linux-x64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-x86\SkiaSharp.NativeAssets.runtime.linux-x86.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-arm64\SkiaSharp.NativeAssets.runtime.linux-arm64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-arm\SkiaSharp.NativeAssets.runtime.linux-arm.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-riscv64\SkiaSharp.NativeAssets.runtime.linux-riscv64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-loongarch64\SkiaSharp.NativeAssets.runtime.linux-loongarch64.csproj" />
-    <!-- Musl -->
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-musl-x64\SkiaSharp.NativeAssets.runtime.linux-musl-x64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-musl-x86\SkiaSharp.NativeAssets.runtime.linux-musl-x86.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-musl-arm64\SkiaSharp.NativeAssets.runtime.linux-musl-arm64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-musl-arm\SkiaSharp.NativeAssets.runtime.linux-musl-arm.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-musl-riscv64\SkiaSharp.NativeAssets.runtime.linux-musl-riscv64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.linux-musl-loongarch64\SkiaSharp.NativeAssets.runtime.linux-musl-loongarch64.csproj" />
-    <!-- Bionic -->
-    <PackageFile Include="..\..\output\native\bionic\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\bionic\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
-  </ItemGroup>
-  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
-    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets" />
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" Condition="$(TargetFramework.StartsWith('net4'))">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets;build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>

@@ -101,6 +101,11 @@ Task("nuget-normal")
 
     // Each build produces one coherent package family. Preview labels use a
     // unique suffix; PREVIEW_LABEL=stable clears the suffix for an exact release.
+    var runtimeProps = new Dictionary<string, string>(props) {
+        { "PackageOutputPath", OUTPUT_NUGETS_PATH.FullPath },
+    };
+    RunDotNetBuild($"{ROOT_PATH}/binding/NativeAssets.Runtime.proj",
+        targets: new[] { "PackRuntimeAssets" }, properties: runtimeProps);
     RunDotNetPack($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
 });
 

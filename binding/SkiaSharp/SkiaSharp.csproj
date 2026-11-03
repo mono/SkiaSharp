@@ -6,7 +6,6 @@
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
@@ -21,33 +20,28 @@
     <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
-    <!-- Desktop/server native assets are now handled via runtime.json (per-RID packages). -->
-    <!-- macOS TFM still needs the NativeAssets.macOS package for Xamarin.Mac/MAUI macOS targets -->
     <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos'))" />
-    <!-- Windows TFM still needs NativeAssets.Win32 for WinForms/WPF desktop targets -->
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
+    <!-- Full Framework preserves AnyCPU and packages.config's ordinary native dependencies. -->
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.StartsWith('net4'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <!-- Generate runtime.json at pack time with the correct version -->
-  <Target Name="_GenerateRuntimeJson" BeforeTargets="_GetPackageFiles">
+  <Import Project="..\NativeAssets.Inventory.props" />
+  <Import Project="..\NativeAssets.Tasks.targets" />
+  <ItemGroup>
+    <PackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\SkiaSharp.targets" />
+  </ItemGroup>
+  <Target Name="_GenerateRuntimeJson" BeforeTargets="_GetPackageFiles" DependsOnTargets="CollectAssemblyVersionInfo">
     <PropertyGroup>
-      <_RuntimeJsonTemplate>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\runtime.json.template'))</_RuntimeJsonTemplate>
-      <_RuntimeJsonContent>$(_RuntimeJsonTemplate.Replace('VERSION_PLACEHOLDER', '$(PackageVersion)'))</_RuntimeJsonContent>
       <_RuntimeJsonPath>$(IntermediateOutputPath)runtime.json</_RuntimeJsonPath>
     </PropertyGroup>
-    <WriteLinesToFile File="$(_RuntimeJsonPath)" Lines="$(_RuntimeJsonContent)" Overwrite="true" />
+    <GenerateSkiaSharpRuntimeGraph Runtimes="@(SkiaSharpNativeRuntime)" Boundaries="@(SkiaSharpNativeRuntimeBoundary)" Version="$(PackageVersion)" OutputPath="$(_RuntimeJsonPath)" />
     <ItemGroup>
       <FileWrites Include="$(_RuntimeJsonPath)" />
       <None Include="$(_RuntimeJsonPath)" PackagePath="runtime.json" Pack="true" />
     </ItemGroup>
   </Target>
 
-  <!-- Ship UCRI targets inside the SkiaSharp package for consumer projects -->
-  <Target Name="_IncludeUcriTargets" BeforeTargets="_GetPackageFiles" Condition="!$(TargetFramework.StartsWith('net4'))">
-    <ItemGroup>
-      <None Include="$(MSBuildProjectDirectory)\buildTransitive\SkiaSharp.PerRid.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\SkiaSharp.PerRid.targets" Pack="true" />
-    </ItemGroup>
-  </Target>
 </Project>

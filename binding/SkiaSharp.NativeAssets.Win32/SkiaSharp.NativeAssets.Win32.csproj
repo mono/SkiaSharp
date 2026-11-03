@@ -1,21 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
+    <NativeRuntimeFamily>Windows</NativeRuntimeFamily>
     <Title>$(PackagingGroup) - Native Assets for Win32</Title>
-    <PackageNotes>Compatibility package. References all Windows per-RID native asset packages.
-For new projects, SkiaSharp's runtime.json handles per-RID resolution automatically.</PackageNotes>
+    <PackageNotes>Compatibility package with exact-version dependencies on all three Windows runtime packs. Modern RID-selected applications can reference SkiaSharp alone.</PackageNotes>
   </PropertyGroup>
-  <!-- Plain dependencies on per-RID packages — downloads all Windows RIDs -->
-  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.win-x64\SkiaSharp.NativeAssets.runtime.win-x64.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.win-x86\SkiaSharp.NativeAssets.runtime.win-x86.csproj" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.win-arm64\SkiaSharp.NativeAssets.runtime.win-arm64.csproj" />
-  </ItemGroup>
-  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
-    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets" />
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" Condition="$(TargetFramework.StartsWith('net4'))">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets;build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>

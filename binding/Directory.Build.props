@@ -1,5 +1,10 @@
 <Project>
 
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.NativeAssets.RuntimePack'">
+    <NativeRuntimeFlavor Condition="'$(NativeRuntimeFlavor)' == ''">Default</NativeRuntimeFlavor>
+    <BaseIntermediateOutputPath>obj\$(NativeRuntimeRid)\$(NativeRuntimeFlavor)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.props" />
 
   <PropertyGroup>
