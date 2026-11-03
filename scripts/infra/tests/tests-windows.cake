@@ -20,7 +20,6 @@ Task ("Default")
         // Restrict restore too: --framework alone still restores the other platforms.
         { "TargetFramework", tfm },
         { "TargetFrameworks", tfm },
-        { "Platform", "x64" },
     };
 
     RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: tfm, noBuild: SKIP_BUILD, properties: properties);
