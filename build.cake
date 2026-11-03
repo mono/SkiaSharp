@@ -91,7 +91,8 @@ Task ("tests")
     .IsDependentOn ("tests-netcore")
     .IsDependentOn ("tests-android")
     .IsDependentOn ("tests-ios")
-    .IsDependentOn ("tests-maccatalyst");
+    .IsDependentOn ("tests-maccatalyst")
+    .IsDependentOn ("tests-windows");
 
 Task ("tests-netfx")
     .Description ("Run all Full .NET Framework tests.")
@@ -129,6 +130,11 @@ Task ("tests-maccatalyst")
     .Description ("Run all Mac Catalyst tests.")
     .IsDependentOn ("externals")
     .Does (() => RunCake ("./scripts/infra/tests/tests-maccatalyst.cake", "Default"));
+
+Task ("tests-windows")
+    .Description ("Run all Windows device tests.")
+    .IsDependentOn ("externals")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-windows.cake", "Default"));
 
 Task ("tests-wasm")
     .Description ("Run WASM tests.")
