@@ -59,6 +59,12 @@ if: |
 # Give the skill's Phase 5 report a writable step-summary sink (mirrors the
 # convention used by auto-triage).
 steps:
+  - name: Prepare sandbox .NET runtime directory
+    run: |
+      mkdir -p /tmp/gh-aw
+      RUNTIME_DIR=$(mktemp -d /tmp/gh-aw/dotnet-runtime.XXXXXX)
+      chmod 700 "$RUNTIME_DIR"
+      printf 'XDG_RUNTIME_DIR=%s\n' "$RUNTIME_DIR" >> "$GITHUB_ENV"
   - name: Redirect step summary into agent-writable directory
     run: |
       mkdir -p /tmp/gh-aw/agent
@@ -166,6 +172,11 @@ alone. **One finding per run.**
 All the methodology lives in the skill. Follow it exactly.
 
 ## Step 1 — Run the memory-leak-fixer skill
+
+First run `dotnet tool list --local` inside the agent sandbox to verify .NET
+startup and its runtime-directory access, even if the scan later finds no candidate.
+This only lists tool declarations; it does not restore tools or download natives.
+If it fails, report the infrastructure failure with `report_incomplete` and stop.
 
 Read and follow `.agents/skills/memory-leak-fixer/SKILL.md` end-to-end.
 

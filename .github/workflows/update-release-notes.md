@@ -184,7 +184,7 @@ jobs:
             echo "Prepare produced an empty patch — agent and PR will be skipped."
           fi
       - name: Upload Prepare output
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.4.3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: release-notes-prepare
           path: ${{ runner.temp }}/prepare-out
@@ -205,7 +205,7 @@ pre-agent-steps:
       git fetch origin "$SOURCE_BRANCH" --quiet
       git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
   - name: Download Prepare output
-    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.8
+    uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
     with:
       name: release-notes-prepare
       path: /tmp/gh-aw/prepare-in
@@ -309,8 +309,9 @@ finding requires it.
 ## Commit and submit
 
 After final validation, inspect the release-tree diff for scope and unexpected changes.
-Do not repeat the completed factual review after staging. If the diff is empty, exit
-without a commit or PR, even when source-only tools elsewhere differ from main.
+Do not repeat the completed factual review after staging. If the diff is empty,
+call the registered `noop` safe-output with the no-change reason and exit without
+a commit or PR, even when source-only tools elsewhere differ from main.
 
 1. Write the PR description yourself from the repository template and actual diff,
    following the skill. Preserve sections/checklists, omit complete instructional
