@@ -15,9 +15,9 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 18,
+    "product": 20,
     "mixed": 3,
-    "internal": 53
+    "internal": 54
   },
   "breaking_candidates": [],
   "contributors": [
@@ -70,6 +70,38 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5577": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5577",
+      "title": "Fix DWriteCore custom-font data lifetime",
+      "body": "Fix DWriteCore custom-font data lifetime (#5577)\n\nFixes: https://github.com/mono/SkiaSharp/issues/5553\nContext: https://github.com/mono/skia/pull/418\nChanges: https://github.com/mono/skia/compare/f002f66149aca6013f46eeec4625462f32a0de17...3f4c606e9405cb0acb12e36accc0c986fde46bb3\n\nConsume the native custom-font ownership fix. DWriteCore's shared factory\nretains a font-stream reference after both loaders unregister and the\noriginal typeface is destroyed, keeping application data and its managed\nrelease callback rooted. The same native DLL releases that data when using\nsystem DirectWrite, identifying native cache lifetime rather than a missing\nmanaged Dispose as the problem.\n\nUse the companion's isolated factory per stream-backed typeface, retained\nthrough existing COM references while dependent clones remain alive. Keep\nsystem fonts on the shared factory and cache the factory-creation entry point\nto avoid acquiring another DLL reference for each custom font. This trades\ncross-typeface cache sharing for bounded application-data ownership without\nchanging public API signatures.\n\nAdd ReleaseDataWaitsForLastTypefaceClone alongside the existing callback\nregression. It creates a distinct variation clone, disposes the original and\nSKData wrappers, checks that the callback has not run, and reads the clone's\nfamily name and table tags. Disposing the clone must then release the data.\nRetain the explicit macOS exclusion because that backend does not release\nfont data on typeface disposal.\n\nAdvance externals/skia and cgmanifest.json together to the actual native\nmerge, 3f4c606e9405cb0acb12e36accc0c986fde46bb3. Verify that its two parents\ninclude reviewed commit 2d708936b0ad102cdfd55117d4b020858e364f31 and that the\nmerged and reviewed trees are identical; the landing repin changes references,\nnot the native implementation.\n\nHistorical source-built callback and clone regressions failed baseline and\npassed fixed, including reverse-red verification. The investigation recorded\n77 typeface tests passing with system DirectWrite and 77 with DWriteCore.\nThose results precede the rebase and split; Windows runtime tests were not\nrerun on the macOS host that prepared these revisions.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product",
+      "fixes": [
+        5553
+      ]
+    },
+    "5382": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5382",
+      "title": "Validate font buffers and integrate native fork cleanup",
+      "body": "Validate font buffers and integrate native fork cleanup (#5382)\n\nFixes: https://github.com/mono/SkiaSharp/issues/5167\nFixes: https://github.com/mono/SkiaSharp/issues/4647\nFixes: https://github.com/mono/SkiaSharp/issues/5331\nContext: https://github.com/mono/skia/pull/404\nContext: https://github.com/mono/SkiaSharp/pull/5551\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1659327\nChanges: https://github.com/mono/skia/compare/9b49fbb09b83b4b036290d28834856e18994cdf6...f002f66149aca6013f46eeec4625462f32a0de17\n\nValidate managed text inputs before crossing the trusting native boundary,\nand consume the landed native lifetime/platform cleanup without changing\npublic signatures or advancing the Skia milestone.\n\n~~ Reject malformed encoded font buffers before interop ~~\n\nValidateTextArgs previously checked empty input and null pointers but\naccepted negative byte lengths and incomplete GlyphIDs. BreakText's\nnative GlyphID loop reads 16-bit words, so an odd byte count could reach\na read beyond the supplied buffer.\n\nReject negative lengths with ArgumentOutOfRangeException and odd GlyphID\nbyte counts with ArgumentException in the existing shared helper. This\nalso protects glyph conversion, counting, measurement and text paths\ninstead of fixing only one BreakText overload.\n\nKeep empty and well-formed input behavior. Existing-host regressions cover\nbyte spans, pointers, shared callers and BreakText's zero-width/zero-size\npaths. Correct the encoded overload documentation to say that BreakText\nreturns bytes; string and char-span overloads still return UTF-16 code units.\n\n~~ Integrate the landed native cleanup and its project changes ~~\n\nAdvance the gitlink and component manifest together to\nf002f66149aca6013f46eeec4625462f32a0de17, the actual landed mono/skia#404\ncommit. It retains the OpenGL module behind cached WGL pointers, corrects\noptional stream callbacks and XPS COM ownership, fixes browser capability\nhandling, and retires the fork-specific WinRT target. Desktop Windows,\nWinUI/Windows App SDK and NanoServer remain supported.\n\nRemove sk_xamarin.cpp from the existing iOS/macOS/tvOS Xcode projects and\nTizen source assignment because the native cleanup deletes that empty\ntranslation unit. Retain the header and native symbol-retention roots;\ndo not leave project references to a source that no longer exists.\n\nReuse the focused module-retention assertion from #5551 in the existing\nno-context GL test. It passed in Windows .NET Core CI 1659327 on the earlier\nnative 7b784be5d6 build; this checks normal-process retention, not forced\nrelocation. No subprocess harness, new test project or skip expansion.\n\nThe native PR was squash-merged. The maintainer explicitly accepted that\nexception after its tree was verified identical to reviewed 8abac5da62dc;\nthe repin changes references, not native source. Do not weaken the normal\ntwo-parent ancestry guard for future Skia updates.\n\nThe audited source passed the macOS ARM64 native build, binding generation,\nmanaged build and unfiltered Console solution. Generated bindings and the\ncompared macOS native export lists are unchanged. Windows/Tizen execution\nand browser runtime claims remain limited to the recorded CI/probe evidence.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\nCopilot-Session: 78b70915-5eb0-4cd0-9c41-71af480083a5",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product",
+      "fixes": [
+        4647,
+        5167,
+        5331
+      ]
+    },
+    "5557": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5557",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5549": {
       "url": "https://github.com/mono/SkiaSharp/pull/5549",
       "title": "docs: regenerate API diffs and release notes",
