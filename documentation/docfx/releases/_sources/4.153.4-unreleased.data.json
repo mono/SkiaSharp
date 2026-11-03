@@ -16,7 +16,7 @@
   "api_links": [],
   "tallies": {
     "product": 0,
-    "mixed": 0,
+    "mixed": 1,
     "internal": 1
   },
   "breaking_candidates": [],
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5585": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5585",
+      "title": "[Build] Backport Windows SDK ANGLE resource compiler to 4.153",
+      "body": "Backport mono/SkiaSharp#5537 (f515dd58d9782a208a569532512db736838c7a22): replace the Chromium GCS rc.exe download with the reviewed idempotent rc.py patch. Preserve preprocessing and dependency tracking, use the Windows SDK compiler output directly, and reject unexpected script shapes.\n\nAdapt file access to System.IO.File for the servicing Cake setup; leave other ANGLE bootstrap behavior unchanged.\n\nValidated Cake dry run and exact production-block transformation against ANGLE chromium/6275 (ea1cea778c4a2312ef1b963b29a62fe595dd4df8), Chromium build a18493935f13d1b0992c78f5615a5d10336d60c0: Python syntax, idempotence, missing-anchor rejection, preprocessing parity, and SDK dispatch. Windows end-to-end validation requires CI; not run on macOS.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
     "5487": {
       "url": "https://github.com/mono/SkiaSharp/pull/5487",
       "title": "Bump to the next version (4.153.4) after release",
