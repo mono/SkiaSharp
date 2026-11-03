@@ -4,16 +4,18 @@ Every SkiaSharp perf fix needs **two proofs**, and this file is how to produce b
 repo's real harness. Neither alone is sufficient: a benchmark with no parity test can ship a
 rendering regression; a parity test with no benchmark can ship a "fix" that isn't faster.
 
-Before either proof or any local source build, complete this bootstrap exactly once:
+Before either proof or any local source build, ensure tools and pre-built natives are available:
 
 ```bash
-dotnet tool restore && dotnet cake --target=externals-download
+dotnet tool restore
+dotnet cake --target=externals-download  # only when setup has not already populated output/native
 ```
 
 In the autonomous workflow, Phase 1.4 owns this command after the candidate clears the source
 evidence and de-dup gates. In interactive scan, author, and review modes, run it after selecting
-the candidate and before the first proof. Do not run it during source scanning or de-duplication,
-and do not repeat it in later phases; all proof commands reuse the same bootstrap.
+the candidate and before the first proof. A configured Copilot environment may already contain the
+natives; reuse them instead of downloading again. Do not bootstrap during source scanning or
+de-duplication.
 
 ## Proof 1 — faster (BenchmarkDotNet, New vs Old, one process)
 
@@ -54,11 +56,25 @@ House style, from the README and existing benchmarks:
 - **Defeat constant-folding.** A benchmark whose result the JIT folds to a constant measures
   nothing. **Return/consume every result** (return it, or accumulate into a sink), feed inputs via
   `[Params]`/non-`const` fields, and sanity-check the absolute times are plausible for the work.
+- **Benchmark the complete end-to-end operation across all serious candidates.** An isolated BCL
+  helper is not a proxy for a SkiaSharp method that also allocates/copies native data. Include those
+  native operations in `Old`, each credible intermediate candidate, and `New` so the ratio and
+  allocations describe the user-visible operation.
 
 Read the result with statistical rigor — BenchmarkDotNet noise is the default failure mode:
 
 - Look at the full row: **Mean, Error, StdDev, Ratio, RatioSD.** A "win" whose Error/StdDev bands
   overlap `Old`'s is **within noise — not a finding.**
+- **Validate the exported report after every run.** A `--job dry` smoke run intentionally has
+  `NA` statistical columns and cannot prove a win. For final default-job evidence, verify every
+  expected benchmark completed and has numeric Mean/Error/StdDev (the latter may be in detailed
+  results). `Allocated` may be `-`, meaning zero bytes. Reject zero executed benchmarks, build
+  errors, or benchmark exceptions such as `DllNotFoundException`. Preserve the report before the
+  next run because BenchmarkDotNet overwrites `BenchmarkDotNet.Artifacts`.
+- **Never edit benchmark `.cs` files to inject `InProcessEmitToolchain`.** `benchmarks/Directory.Build.targets`
+  already scopes NuGet restore of referenced binding projects to `$(TFMCurrent)` for both `dotnet run`
+  and BenchmarkDotNet's out-of-process child `.csproj`. If you want a fast in-process sanity check,
+  pass `--inProcess` on the command line.
 - **Run it at least twice** (separate processes). If the ratio is not stable, it is noise. Small
   L1-resident arrays and memory-bandwidth-bound loops swing run-to-run (#4241 saw 0.68×↔1.48× for
   identical code at 1,024 points).
@@ -129,8 +145,11 @@ class plus neighbouring consumers (e.g. for an `SKMatrix` change, also `SKPath`/
 re-measured later.
 
 ```bash
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~<YourType>"
+dotnet build binding/SkiaSharp/SkiaSharp.csproj -p:TargetFramework=net10.0
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -- --filter-class "*<YourType>*"
+dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
 ```
 
 ## Reading native Skia to prove an invariant

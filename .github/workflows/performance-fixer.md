@@ -208,16 +208,17 @@ those are repo artifacts, not scratch. Each bash call is a fresh subshell — re
    by an OPEN `[performance]` / `perf(...)` / `Optimize …` issue or PR on `mono/SkiaSharp`
    (e.g. #4241, #3489, #4182, #3033). A candidate whose only prior item is CLOSED may be re-filed.
    Only after one managed-C# candidate has a citable hot path/invariant and clears de-dup, run
-   `dotnet tool restore && dotnet cake --target=externals-download` exactly once. This remains
-   mandatory before any source build, test, or benchmark, but a quiet/duplicate run must not run
-   it and later phases must not repeat it.
+   `dotnet tool restore`, then run `dotnet cake --target=externals-download` only if the setup
+   environment has not already populated `output/native`. This remains mandatory before any source
+   build, test, or benchmark, but a quiet/duplicate run must not bootstrap and later phases must
+   reuse the same native output.
 3. **Two proofs before you open a PR.** Only open a PR when you have (a) a BenchmarkDotNet
    New-vs-Old result showing a real, repeatable speedup with no allocation regression (skill
    Phase 2) **and** (b) an equivalence test proving the result is identical to the original/native
    path, including edge inputs, and that the test catches a deliberately-wrong result (skill
    Phase 3). No speedup ⇒ nothing to fix. Any behaviour change ⇒ reject the fix.
-4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, use the single
-   post-qualification `externals-download` bootstrap from Guardrail 2, be benchmarked with
+4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, use the
+   post-qualification native environment from Guardrail 2, be benchmarked with
    `dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks -- --filter ...`, and validated
    with `dotnet test`. If the strongest candidate's only real win is in native / upstream Skia
    (`externals/skia/**`, including the C shim), do **not** open an unvalidated PR — file a

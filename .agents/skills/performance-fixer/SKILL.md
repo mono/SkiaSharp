@@ -63,20 +63,38 @@ and [`documentation/dev/architecture.md`](../../../documentation/dev/architectur
 8. **Honest, numeric scope note.** Report the **actual measured numbers** (Mean/Error/StdDev,
    allocations, ratio) on named hardware/TFM; say what is *empirically measured* vs *statically
    reasoned*, plus ABI impact. Never claim a speedup you did not measure.
-9. **Finding nothing is the expected outcome.** SkiaSharp is mature; most obvious overhead is already
-   optimized. Most runs should end with **no candidate**. A 2% win on a synthetic micro-loop no real
-   caller hits is **not** a finding. A quiet run is a first-class success — emit a `noop`.
+9. **Explore the full solution space before picking a fix.** Do not stop at the first idea that
+   works. Trace the complete dataflow, inspect BCL overloads and repository helpers, and compare
+   credible approaches such as direct destination writes, caller buffers, bounded `stackalloc`,
+   pooling, and intermediate arrays. Include every serious candidate in the same end-to-end
+   benchmark before selecting `New`; see [repo-helpers.md](references/repo-helpers.md) for
+   SkiaSharp-specific examples.
+10. **Validate the benchmark run itself.** A zero exit code is not proof. Inspect the exported
+    report after every run and reject zero executed benchmarks, build errors, benchmark exceptions,
+    or methods that measure only an isolated helper instead of the complete SkiaSharp operation.
+    Smoke jobs may omit statistical columns; final evidence must contain numeric Mean/Error/StdDev
+    (in the table or detailed results). An `Allocated` value of `-` means zero bytes, not failure.
+    Preserve each valid final report before starting the next run.
+11. **Commit code changes before calling permission-gated external tools.** Always commit (and push
+    when applicable) verified code, test, and benchmark changes *before* invoking external comment
+    or review-reply tools that may block on a permission prompt or time out.
+12. **Finding nothing is the expected outcome.** SkiaSharp is mature; most obvious overhead is already
+    optimized. Most runs should end with **no candidate**. A 2% win on a synthetic micro-loop no real
+    caller hits is **not** a finding. A quiet run is a first-class success — emit a `noop`.
 
 ## How to use this skill
 
 1. **Decide if it's worth it.** [decision-framework.md](references/decision-framework.md): be
    aggressive with low-complexity wins on hot paths; reserve high-complexity (native-math ports,
    SIMD, caching) for measured cases. Confirm a **realistic hot caller** first.
-2. **Reuse before you build.** [repo-helpers.md](references/repo-helpers.md) — a shared helper
-   (`Utils.RentArray`, `RentHandlesArray`, `SKString`) or the native oracle may already fit.
+2. **Reuse before you build.** [repo-helpers.md](references/repo-helpers.md) — check the shared
+   allocation/interop helpers, writable native destinations, and the native oracle before writing
+   TFM-specific call-site branches or allocating scratch arrays.
 3. **Route from the signal.** [signals.md](references/signals.md) maps *what the code does* → the
    hot-path / bcl-pattern reference that covers it.
-4. **Prove it.** [measuring.md](references/measuring.md) — both proofs, against this repo's harness.
+4. **Enumerate variants.** Read the matching BCL-pattern reference and list all credible approaches
+   so the benchmark compares the full solution space end-to-end.
+5. **Prove it.** [measuring.md](references/measuring.md) — both proofs, against this repo's harness.
 
 ## The cheap wins (apply by default on hot paths)
 
@@ -178,37 +196,46 @@ Respect in-flight work (#4241 SKMatrix, #4276/#3699 bench CI, #3489 CopyTo, #418
 #3033 DrawShapedText). Pick the ONE strongest candidate; if none convinces, **stop** (`noop`).
 
 **1.4 Bootstrap one qualified candidate.** Only after one managed-C# candidate has a citable hot
-path/invariant and clears the Phase 1.3 open-item de-dup gate, run this exact command **once per
-run**:
+path/invariant and clears the Phase 1.3 open-item de-dup gate, ensure tools and pre-built natives
+are available:
 ```bash
-dotnet tool restore && dotnet cake --target=externals-download
+dotnet tool restore
+dotnet cake --target=externals-download  # only when setup has not already populated output/native
 ```
 This is the mandatory bootstrap before any source build, test, or benchmark, not a scan
-prerequisite. Do not run either command for a quiet/duplicate candidate, and do not repeat either
-command in later phases.
+prerequisite. A configured Copilot environment may already contain `output/native`; reuse it
+instead of downloading the same packages again. Do not bootstrap a quiet/duplicate candidate.
 
 ### Phase 2 — Prove it is faster
 Follow [measuring.md](references/measuring.md) §"Proof 1": a `New` vs `Old` benchmark in one process,
 `[MemoryDiagnoser]`, realistic workload, statistical rigor (Mean/Error/StdDev, ≥2 runs, no alloc
-regression, no regression on any real shape). **No measurable/repeatable win ⇒ not a finding.**
+regression, no regression on any real shape). Before running, list all plausible implementations for
+the complete end-to-end operation and include each as a separately named benchmark method. After
+running, open the generated report and confirm every expected benchmark completed; use a full
+default-job report, not a smoke job with intentionally missing statistics, as evidence.
+**No measurable/repeatable win ⇒ not a finding.**
 
 ### Phase 3 — Fix + prove identical
 Write the equivalence test **first** ([measuring.md](references/measuring.md) §"Proof 2") — full
 behaviour parity (return value bit-exact for numeric ports; edge inputs; exceptions/validation;
 ownership/`GC.KeepAlive`; rendered pixels), confirmed to catch a deliberately-wrong result. Then
 implement the minimal fix using the matching hot-path + bcl-pattern references, honouring that
-family's **Watch out** and **all TFMs** (guard newer APIs; a float port keeps the x87 fallback).
+family's **Watch out** and **all TFMs** (prefer `Util.cs` polyfill extension methods over `#if`
+clutter at call sites; a float port keeps the x87 fallback).
 Confirm: identical (equivalence passes), faster (benchmark holds), no regressions (type's test class
 + neighbours).
 
 **Self-review gate — before the PR** (all must tick, else fix or `noop`):
 - [ ] Real, repeatable speedup outside the error bands, ≥2 runs, no alloc regression, realistic workload.
+- [ ] The benchmark measures the complete end-to-end operation and compares all serious alternatives.
+- [ ] Final benchmark reports contain complete statistics for every expected method/parameter; no
+      smoke-run `NA`, zero-run, build, or benchmark exception was mistaken for evidence.
 - [ ] Full behaviour parity proven (value/edges/exceptions/ownership/pixels) and the test catches a
       deliberately-wrong result.
 - [ ] Behaviour unchanged; SkiaSharp still renders identically.
 - [ ] Fix in `binding/**`/`source/**` only — no `*.generated.cs`, no `externals/skia/**`.
 - [ ] No public signature changed (body/additive overload only).
-- [ ] All TFMs handled; no ARM64/x86 SIMD regression; float port keeps the x87 fallback.
+- [ ] All TFMs handled cleanly; no ARM64/x86 SIMD regression; float port keeps the x87 fallback.
 - [ ] The matching **Watch out** does not describe what you did; not already covered by an open issue/PR.
 
 ### Phase 4 — File the finding, then the linked fix PR

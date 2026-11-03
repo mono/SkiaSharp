@@ -337,7 +337,14 @@ Stop investigating when you can answer:
 
 ## Phase 6: Fix
 
-**Principle: Minimal change.** Fix only what's broken.
+**Principle: Minimal root-cause change.** Fix only what's broken, but do not stop at the first
+plausible implementation. Compare the credible approaches and existing repository helpers, then
+choose the simplest one that preserves behavior and avoids unnecessary allocations, copies, or
+interop calls. Route performance-sensitive bugs through the `performance-fixer` guidance for
+candidate enumeration and measurement.
+
+Commit each verified, coherent code/test checkpoint before posting progress comments or invoking
+other permission-gated external tools, so a timeout cannot discard completed work.
 
 For guidance on specific types of fixes, see:
 - [Memory management](../../../documentation/dev/memory-management.md) - disposal patterns, ownership
@@ -379,7 +386,7 @@ Name: `Issue_NNNN_BriefDescription()`
 ### Run Tests
 
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console.slnx
+dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
 ```
 
 Run the solution unfiltered first. If it identifies a failure, use the owning core,
