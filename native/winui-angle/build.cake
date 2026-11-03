@@ -66,14 +66,21 @@ Task("sync-ANGLE")
         RunPython(ANGLE_PATH, ANGLE_PATH.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
     }
 
-    // download rc.exe
-    var rc_exe = "build/toolchain/win/rc/win/rc.exe";
-    var rcPath = ANGLE_PATH.CombineWithFilePath(rc_exe);
-    if (!FileExists(rcPath)) {
-        var shaPath = ANGLE_PATH.CombineWithFilePath($"{rc_exe}.sha1");
-        var sha = System.IO.File.ReadAllText(shaPath.FullPath);
-        var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
-        DownloadFile(url, rcPath);
+    // Use the Windows SDK rc.exe instead of downloading Chromium's prebuilt rc.exe.
+    {
+        var rcPy = ANGLE_PATH.CombineWithFilePath("build/toolchain/win/rc/rc.py");
+        var contents = System.IO.File.ReadAllText(rcPy.FullPath);
+        const string msrcOutput = "msrc_out = flags.output";
+        const string skipChromiumRc = "rc_exe_exit_code = 0";
+        var newContents = contents
+            .Replace("msrc_out = flags.output + '_ms_rc'", msrcOutput)
+            .Replace("rc_exe_exit_code = RunRc(preprocessed_output, is_utf8, flags)", skipChromiumRc);
+        if (newContents.Contains("flags.output + '_ms_rc'") ||
+            !newContents.Contains(msrcOutput) ||
+            !newContents.Contains(skipChromiumRc))
+            throw new Exception($"Cannot configure Windows SDK rc.exe at {rcPy}.");
+        if (contents != newContents)
+            System.IO.File.WriteAllText(rcPy.FullPath, newContents);
     }
 
     // download llvm
