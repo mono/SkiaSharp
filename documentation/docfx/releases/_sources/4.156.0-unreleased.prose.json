@@ -1,22 +1,42 @@
 {
-  "theme": "Rendering and platform updates",
-  "highlights_headline": "Upcoming changes improve rendering correctness and refresh Apple and Uno platform requirements.",
-  "highlights_body": "Android texture render loops follow display refresh, Linux HarfBuzz avoids conflicts with system libraries, and native callbacks use the correct boolean widths. Apple deployment floors rise, while Uno views move to Uno Platform 7 and .NET 10.",
+  "theme": "Rendering and platform reliability",
+  "highlights_headline": "The upcoming release improves rendering reliability and modernizes Apple, Windows, Uno, and WebAssembly integration.",
+  "highlights_body": "Changes include display-paced Android rendering, Windows custom-font lifetime fixes, Linux HarfBuzz coexistence fixes, and further Skia m156 corrections. Review the Apple deployment minimums and Uno 7 migration requirements before upgrading.",
   "breaking": [
     {
-      "title": "Raise Apple application deployment targets",
-      "body": "SkiaSharp and HarfBuzzSharp native deployment floors are now macOS 12 and iOS, tvOS, and Mac Catalyst 15, with managed minima aligned for Xcode 27 builds. Raise application deployment targets to at least these versions; retain any higher framework requirement. .NET 9 targets remain supported.",
+      "title": "Raise Apple deployment targets",
+      "body": "SkiaSharp and HarfBuzzSharp native libraries now require macOS 12 and iOS, tvOS, and Mac Catalyst 15. Raise application deployment targets accordingly, retaining any higher framework requirement. These floors supersede the earlier macOS 11 and iOS/tvOS/Catalyst 14 baselines collected in this release line.",
       "prs": [5383, 5514]
     },
     {
-      "title": "Move Uno applications to Uno Platform 7",
-      "body": "Non-Windows Uno views now require Uno Platform 7 and .NET 10; legacy platform runtime packages and pre-Uno 7 WasmShell integration are retired. Migrate to Uno.Sdk 7 and the .NET SDK WASM pipeline. SKSwapChainPanel now derives from Grid and uses a CPU fallback with null GRContext outside Windows; use SKCanvasElement for GPU drawing. Update code relying on its former base type or removed RaiseOnUnsupported member. Windows facades retain the ANGLE-backed control.",
+      "title": "Migrate Uno applications to Uno 7 and .NET 10",
+      "body": "The non-Windows Uno views now require Uno 7 and .NET 10; old platform/runtime packages and pre-Uno 7 WasmShell integration are retired. Use Uno.Sdk's native assets and .NET SDK WebAssembly pipeline. SKSwapChainPanel now derives from Grid, uses CPU rendering, reports a null GRContext, and drops RaiseOnUnsupported. Use SKCanvasElement for GPU rendering on Uno; the Windows facade remains ANGLE-backed.",
       "prs": [5377]
     },
     {
+      "title": "Use portable Windows runtime identifiers",
+      "body": "Source-built AnyCPU native-asset imports for SkiaSharp, HarfBuzzSharp, and WinUI now recognize win-x86, win-x64, and win-arm64 instead of legacy win10-* identifiers. Update projects using the old identifiers to the matching portable RID. Explicit-platform and empty-RID selection paths are unchanged.",
+      "prs": [5551]
+    },
+    {
       "title": "Use matching rebuilt WebAssembly native archives",
-      "body": "Newer-than-.NET 8 WebGPU consumers need rebuilt libSkiaSharp.a archives containing emdawnwebgpu C++ support. Upgrade native assets alongside the managed package, and include that support in custom Graphite builds; old or GPU-disabled custom archives do not meet the link contract. The .NET 8 built-in WebGPU link path is unchanged.",
+      "body": "WebGPU consumers newer than .NET 8 require rebuilt libSkiaSharp.a archives containing emdawnwebgpu C++ support. Upgrade native assets alongside the managed package and include this support in custom Graphite builds; pre-change and GPU-disabled custom archives do not satisfy the link contract. The .NET 8 built-in WebGPU link path is unchanged.",
       "prs": [5316]
+    },
+    {
+      "title": "Move away from the fork-specific WinRT target",
+      "body": "The fork-specific native WinRT target is retired. Use the supported desktop Windows or WinUI/Windows App SDK integration instead; desktop Windows, WinUI/Windows App SDK, and NanoServer remain supported.",
+      "prs": [5382]
+    },
+    {
+      "title": "Supply valid encoded text buffers",
+      "body": "Font text operations now reject negative byte lengths with ArgumentOutOfRangeException and odd GlyphID byte counts with ArgumentException before native calls. Validate pointer lengths and supply complete 16-bit glyph IDs. Empty and well-formed inputs keep their existing behavior; encoded BreakText overloads return byte counts, while string and char-span overloads return UTF-16 code-unit counts.",
+      "prs": [5382]
+    },
+    {
+      "title": "Match character-code input to its encoding",
+      "body": "StringUtilities.GetUnicodeCharacterCode now requires exactly one encoded code unit: use UTF-8 for ASCII, UTF-16 for BMP characters, and UTF-32 for supplementary characters. Previously accepted multi-character UTF-32 input is rejected rather than silently returning its first character. GetString now throws ArgumentNullException, not NullReferenceException, for a null byte array.",
+      "prs": [5506]
     }
   ],
   "categories": [
@@ -24,14 +44,19 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Safer SkSL and region processing",
-          "detail": "Same-milestone Skia m156 fixes reject overflowing shader slot counts and invalid runtime-effect types, prevent execution of partially constructed runtime-shader pipelines, and correctly size region storage for subdivided conics.",
+          "lead": "More robust glyph and region processing",
+          "detail": "Further Skia m156 updates guard glyph bounds and distance-field allocations, avoid oversized remote-glyph rasterization, and size region storage safely for subdivided conics. Graphite corrections cover stroke bounds, complete paint-key comparisons, and inverse-filled shapes outside the scissor.",
+          "prs": [5575, 5517]
+        },
+        {
+          "lead": "Safer runtime-shader failure handling",
+          "detail": "SkSL rejects overflowing shader slot counts and invalid runtime-effect types earlier. Failed shader construction no longer leaves executable partial pipelines, including transformed child shaders.",
           "prs": [5489, 5517]
         },
         {
-          "lead": "GPU rendering correctness",
-          "detail": "Graphite preserves cap and join bounds for hairline and subpixel strokes and compares complete paint keys. Ganesh disables a BGRA upload configuration invalid in OpenGL ES, without changing readback.",
-          "prs": [5500, 5517]
+          "lead": "Correct GLES upload configuration",
+          "detail": "Ganesh GL no longer selects the BGRA8-as-RGBx upload configuration that advertised GL_RGBA but was invalid in GLES. Readback behavior is unchanged.",
+          "prs": [5500]
         }
       ]
     },
@@ -39,39 +64,34 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
+          "lead": "Bounded Windows custom-font data lifetime",
+          "detail": "DWriteCore stream-backed typefaces use isolated factories so cached native references do not indefinitely root application font data and its managed release callback. Data remains available while dependent typeface clones are alive and is released after the last clone is disposed.",
+          "prs": [5577]
+        },
+        {
+          "lead": "Release WinUI rendering surfaces on teardown",
+          "detail": "EGL teardown unbinds this renderer's current context before destroying its surface, allowing the native window and SKGLView platform panel to be collected without unbinding a different context on the calling thread.",
+          "prs": [5551]
+        },
+        {
           "lead": "Display-paced Android texture rendering",
-          "detail": "Automatic continuous frames, including MAUI Android SKGLView.HasRenderLoop, follow Choreographer display callbacks rather than buffer-swap throughput. Drawing stays on the GL worker; explicit render requests remain independent, and request-driven rendering is preserved.",
+          "detail": "Continuous GLTextureView rendering, including MAUI SKGLView.HasRenderLoop, follows display callbacks instead of unrestricted buffer swaps. Drawing stays on the GL worker; explicit render requests and lifecycle progress remain independent of display pacing. Pause, reattachment, and render-mode transitions preserve redraw scheduling.",
           "prs": [5345]
         },
         {
-          "lead": "Linux HarfBuzz load-order conflicts",
-          "detail": "Bundled HarfBuzz function calls stay within libHarfBuzzSharp.so, preventing incompatible private objects from crossing into system HarfBuzz when GTK or another library loads it first. The common Linux recipe, including nodeps and clang-cross variants, carries the fix.",
-          "prs": [5352]
-        },
-        {
-          "lead": "Native callback boolean widths",
-          "detail": "Skia callbacks use one-byte native booleans and HarfBuzz callbacks use four-byte hb_bool_t values, addressing Apple ARM64 interpreter return handling and false-returning HarfBuzz callbacks. Public managed delegates and APIs continue to use bool.",
+          "lead": "Reliable native boolean callbacks",
+          "detail": "Skia callbacks use the native one-byte boolean width, addressing Apple ARM64 interpreter return-value issues. HarfBuzz callbacks use four-byte hb_bool_t values and honor false glyph-name results without copying name data. Public managed delegates still use bool.",
           "prs": [5479]
         },
         {
-          "lead": "String conversion validation",
-          "detail": "GetUnicodeCharacterCode validates one encoded unit: ASCII for UTF-8, one BMP unit for UTF-16, or one code point for UTF-32. Null byte arrays passed to GetString now throw ArgumentNullException instead of NullReferenceException. FromCString also receives a native buffer over-read fix.",
-          "prs": [5506, 5429]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "Lower allocation overhead",
-          "detail": "Valid managed image pixel copies avoid an intermediate SKData allocation. HarfBuzzSharp pools AddUtf32 string encoding buffers and avoids native feature-string allocation while preserving decoding behavior and legacy target frameworks.",
-          "prs": [5052, 5060, 5230]
+          "lead": "Linux HarfBuzz load-order isolation",
+          "detail": "Bundled HarfBuzz functions bind locally, preventing system HarfBuzz loaded by GTK from intercepting internal calls and mixing incompatible private objects. This addresses load-order crashes without changing exported entry points or managed signatures.",
+          "prs": [5352]
         },
         {
-          "lead": "Front-buffered stream retention",
-          "detail": "Corrects front-buffered stream retention.",
-          "prs": [5327]
+          "lead": "Native string buffer access corrected",
+          "detail": "FromCString fixes a native buffer over-read and writes directly to SKData.",
+          "prs": [5429]
         }
       ]
     },
@@ -79,20 +99,40 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Updated Windows integrations",
-          "detail": "WinUI ANGLE advances to chromium/8118 with matching packaged PDB names. Windows library dependencies move to Windows App SDK 1.7.250909003, aligned with MAUI 9 and 10, without changing declared Windows runtime minima.",
+          "lead": "Updated Windows rendering dependencies",
+          "detail": "The WinUI ANGLE dependency advances from chromium/6275 to chromium/8118. Windows library dependencies align with MAUI 9 and 10 using Windows App SDK 1.7.250909003; this does not change the declared Windows runtime minimum.",
           "prs": [5321, 5390]
+        },
+        {
+          "lead": "WebAssembly links no longer compile WebGPU C++ support",
+          "detail": "WebGPU C++ support is bundled in libSkiaSharp.a, avoiding C++ flags leaking onto application C sources and the resulting link failure. The required JavaScript glue remains a link input rather than deployed application content.",
+          "prs": [5316]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Fewer temporary allocations",
+          "detail": "Managed image pixel copies avoid an intermediate SKData allocation for valid buffers while preserving invalid-input validation. HarfBuzzSharp pools AddUtf32 string encoding buffers and avoids native feature-string allocation without changing decoding behavior.",
+          "prs": [5052, 5060, 5230]
+        },
+        {
+          "lead": "Native lifetime and callback corrections",
+          "detail": "Native cleanup retains the OpenGL module behind cached WGL pointers and corrects optional stream callbacks and XPS COM ownership. The release also includes a front-buffered stream retention fix.",
+          "prs": [5382, 5327]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "akoeplinger": "Corrected duplicate issue-author mentions and disabled Dependabot on the Azure DevOps mirror.",
-    "ramezgerges": "Moved Uno views to Uno Platform 7 and packaged WebGPU C++ support inside the WebAssembly native archive.",
-    "VirgilMing": "Fixed Linux HarfBuzz symbol-binding conflicts and made Blazor CPU sample captures wait for their first painted pixel.",
-    "dalexsoto": "Reviewed contextual PoliCheck findings and clarified workflow and Uno sample wording without changing behavior.",
-    "rolfbjarne": "Removed unused sample files to reduce unnecessary automated code-scanning findings.",
-    "Saad-elnagar": "Removed an obsolete libmicrohttpd notice."
+    "akoeplinger": "Corrected issue-author mentions and disabled dependency automation on the Azure DevOps mirror.",
+    "ramezgerges": "Modernized Uno views for Uno 7 and moved WebGPU C++ support into the WebAssembly native archive.",
+    "VirgilMing": "Fixed Linux HarfBuzz symbol binding and made Blazor CPU sample captures wait for the first paint.",
+    "dalexsoto": "Reviewed contextual terminology findings and clarified workflow and sample wording.",
+    "rolfbjarne": "Removed unused sample files.",
+    "Saad-elnagar": "Removed the obsolete libmicrohttpd notice."
   },
   "preview_summaries": {}
 }
