@@ -299,6 +299,39 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public unsafe void ReleaseDataWaitsForLastTypefaceClone()
+		{
+			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+			var released = false;
+
+			fixed (byte* b = bytes)
+			{
+				using var data = SKData.Create((IntPtr)b, bytes.Length, (addr, ctx) => released = true);
+				using var typeface = SKTypeface.FromData(data);
+				Assert.NotNull(typeface);
+				var axes = typeface.VariationDesignParameters;
+				Assert.NotEmpty(axes);
+
+				using var clone = typeface.Clone(new[] {
+					new SKFontVariationPositionCoordinate { Axis = axes[0].Tag, Value = axes[0].Max }
+				});
+				Assert.NotNull(clone);
+				Assert.NotSame(typeface, clone);
+
+				data.Dispose();
+				typeface.Dispose();
+				Assert.False(released, "The data was released while a typeface clone still needed it.");
+				Assert.Equal("Distortable", clone.FamilyName);
+				Assert.NotEmpty(clone.GetTableTags());
+
+				clone.Dispose();
+				Assert.True(released, "The data was not released after the last typeface clone.");
+			}
+		}
+
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
