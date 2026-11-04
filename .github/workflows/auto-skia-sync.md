@@ -60,6 +60,15 @@ on:
 # Expose detect step outputs for use in the prompt and other jobs.
 # Required: without this, ${{ needs.pre_activation.outputs.target }} is empty.
 jobs:
+  activation:
+    steps:
+      - name: Archive trusted agent configuration
+        # Keep modes and symlinks inside tar: Actions artifacts normalize loose
+        # files to 0644. The runtime uploads /tmp/gh-aw/base after these steps.
+        run: |
+          mv /tmp/gh-aw/base /tmp/gh-aw/base-unpacked
+          mkdir /tmp/gh-aw/base
+          tar -cf /tmp/gh-aw/base/agent-config.tar -C /tmp/gh-aw/base-unpacked .
   pre-activation:
     outputs:
       current: ${{ steps.detect.outputs.current }}
@@ -188,6 +197,10 @@ sandbox:
 # Both steps: and pre-agent-steps: run on the HOST, not inside the AWF container.
 # The agent runs in an AWF chroot. sandbox.agent.mounts handles /etc/fonts.
 steps:
+  - name: Extract trusted agent configuration
+    # Runs after downloading activation, before the runtime restores trusted
+    # config over the checkout. The archive came from activation's own snapshot.
+    run: tar -xf /tmp/gh-aw/base/agent-config.tar -C /tmp/gh-aw/base
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
@@ -242,11 +255,6 @@ steps:
 # in the AWF chroot (shared host filesystem), but dotnet tool restore does NOT
 # carry into the chroot — the agent must run it itself.
 pre-agent-steps:
-  - name: Restore trusted config execute bits
-    # Activation snapshots .agents/.github/AGENTS.md from github.sha; artifact
-    # transport loses execute bits. Run after runtime restoration, not against
-    # the potentially different release/target base or a mutable branch tip.
-    run: python3 .github/scripts/skia-sync-restore-modes.py
   - name: Install native build dependencies
     # These run on the HOST and are visible to the agent's AWF chroot via the shared
     # filesystem. The agent itself CANNOT apt-install anything (no apt inside the chroot,

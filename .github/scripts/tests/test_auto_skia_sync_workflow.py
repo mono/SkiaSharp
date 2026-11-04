@@ -17,19 +17,20 @@ COMPILED_WORKFLOW = WORKFLOW.with_suffix(".lock.yml")
 
 
 class AutoSkiaSyncWorkflowTests(unittest.TestCase):
-    def test_config_modes_are_restored_after_snapshot_before_builds_and_agent(self):
+    def test_config_archive_surrounds_artifact_transport_and_runtime_restoration(self):
         compiled = yaml.safe_load(COMPILED_WORKFLOW.read_text(encoding="utf-8"))
         steps = compiled["jobs"]["agent"]["steps"]
         names = [step.get("name") for step in steps]
-        repair = names.index("Restore trusted config execute bits")
-        self.assertGreater(repair, names.index("Restore agent config folders from base branch"))
-        self.assertGreater(repair, names.index("Restore inline skills from activation artifact"))
-        self.assertLess(repair, names.index("Install native build dependencies"))
-        self.assertEqual(
-            "python3 .github/scripts/skia-sync-restore-modes.py",
-            steps[repair]["run"],
-        )
+        extract = names.index("Extract trusted agent configuration")
+        self.assertGreater(extract, names.index("Download activation artifact"))
+        self.assertLess(extract, names.index("Restore agent config folders from base branch"))
+        self.assertLess(extract, names.index("Prepare Skia checkout"))
+        self.assertLess(extract, names.index("Install native build dependencies"))
         activation = compiled["jobs"]["activation"]["steps"]
+        names = [step.get("name") for step in activation]
+        archive = names.index("Archive trusted agent configuration")
+        self.assertGreater(archive, names.index("Save agent config folders for base branch restoration"))
+        self.assertLess(archive, names.index("Upload activation artifact"))
         checkout = next(step for step in activation if step.get("name") == "Checkout .github and .agents folders")
         self.assertNotIn("ref", checkout["with"])
         snapshot = next(step for step in activation if step.get("name") == "Save agent config folders for base branch restoration")
