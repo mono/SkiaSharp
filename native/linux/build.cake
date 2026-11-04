@@ -116,7 +116,6 @@ Task("libHarfBuzzSharp")
         GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
-            $"visibility_hidden=false " +
             $"skia_use_partition_alloc=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
