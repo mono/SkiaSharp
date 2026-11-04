@@ -27,11 +27,7 @@ namespace SkiaSharp
 			get {
 				try {
 					return nativeVersion ??= new Version (SkiaApi.sk_version_get_milestone (), SkiaApi.sk_version_get_increment ());
-#if NETSTANDARD1_3 || UAP10_0_10240
-				} catch (Exception ex) when (ex.GetType ().FullName == "System.EntryPointNotFoundException") {
-#else
 				} catch (EntryPointNotFoundException) {
-#endif
 					return nativeVersion ??= Zero;
 				}
 			}

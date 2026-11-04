@@ -215,14 +215,22 @@ function Get-WasmArtifacts([string] $NativeRoot) {
 }
 
 function Get-NativeArtifactInventory([string] $NativeRoot) {
+    $versions = Get-Content -LiteralPath "$PSScriptRoot/../VERSIONS.txt" -Raw
+    $sonames = @{}
+    foreach ($component in @{ libSkiaSharp = 'libSkiaSharp'; libHarfBuzzSharp = 'HarfBuzz' }.GetEnumerator()) {
+        $entries = [regex]::Matches($versions, "(?m)^\s*$($component.Value)\s+soname\s+(\d+\.\d+\.\d+)\s*$")
+        if ($entries.Count -ne 1) {
+            throw "Expected exactly one $($component.Value) SONAME in VERSIONS.txt."
+        }
+        $sonames[$component.Key] = $entries[0].Groups[1].Value
+    }
+
     foreach ($path in Get-AndroidArtifacts $NativeRoot) {
         $relative = [IO.Path]::GetRelativePath($NativeRoot, $path).Replace('\', '/')
         New-NativeArtifact $NativeRoot $relative AndroidPageAlignment Elf
         New-NativeArtifact $NativeRoot "$relative.dbg" AndroidDebugSymbols ElfDebug
     }
 
-    # Keep these exact aliases aligned with scripts/VERSIONS.txt; a changed SONAME needs review.
-    $sonames = @{ libSkiaSharp = '156.0.0'; libHarfBuzzSharp = '0.61440.0' }
     foreach ($artifact in Get-LinuxArtifacts $NativeRoot) {
         $relative = [IO.Path]::GetRelativePath($NativeRoot, $artifact.Path).Replace('\', '/')
         New-NativeArtifact $NativeRoot $relative LinuxDependencies Elf
@@ -323,7 +331,7 @@ function Get-PeCodeViewIdentity([string] $Path) {
             throw "Expected one CodeView identity: $Path"
         }
         $identity = $reader.ReadCodeViewDebugDirectoryData($entries[0])
-        return [pscustomobject]@{ Guid = $identity.Guid; Age = $identity.Age }
+        return [pscustomobject]@{ Guid = $identity.Guid; Age = $identity.Age; Path = $identity.Path }
     } finally {
         $reader.Dispose()
         $stream.Dispose()

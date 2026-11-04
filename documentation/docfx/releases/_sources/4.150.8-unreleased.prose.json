@@ -1,0 +1,25 @@
+{
+  "theme": "Region and texture reliability",
+  "highlights_headline": "The upcoming 4.150.8 update fixes region allocation and OpenGL texture sampling without changing managed APIs.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Safe conic region allocation",
+          "detail": "Region construction budgets scanline storage for subdivided conics and rejects accumulation overflow, preventing an undersized buffer and out-of-bounds writes.",
+          "prs": [5543]
+        },
+        {
+          "lead": "Correct OpenGL texture boundaries",
+          "detail": "Disable GLES-invalid BGRA-as-RGBx upload capabilities and preserve nearest-filtered texture subset clamps when magnification or fractional mappings could sample neighboring texels. One-to-one integer-relative mappings retain their fast path.",
+          "prs": [5543]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

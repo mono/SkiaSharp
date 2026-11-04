@@ -216,6 +216,17 @@ branches, tags, packages, or GitHub Releases.
 `audit-release-state.ps1` is a read-only next-action summary for one `A.B`
 line, not an approval or milestone-repair tool.
 
+Human output leads with a table combining public NuGet shipments, the unpublished
+cut, that cut's exact-tip build/BAR, and the next release action. A second table
+shows base-branch commits, open line PRs, exact-base build/BAR, and readiness
+work. The third shows the upstream gap, base, sync PR, exact-sync build, and
+sync action. These builds are not interchangeable.
+It shows the latest public shipment using shared numeric version
+ordering, retaining older unfinished/inconsistent shipments. Full history
+remains in JSON. `openPullRequests` adds line-targeted open PR evidence;
+`packageBuilds` also includes the incoming sync branch at its head SHA.
+Sync CI is a source-branch package build, not PR merge validation.
+
 - Maintenance is `release/A.B.x` when present; otherwise `main` qualifies
   only when its checked-in version belongs to the line.
 - Exact public versions are checked against package provenance, tags, and

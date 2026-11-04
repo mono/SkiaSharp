@@ -1279,10 +1279,10 @@ Assert-True ($auditScript -match
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
 Assert-True ((Format-ReleasePackageBuild $rerunBuild) -match
-    '#100 green / BAR 331115.*newer #105 canceled') `
+    '#100 succeeded / BAR 331115.*newer #105 canceled') `
     'The human-readable audit hid the newer canceled rerun.'
 Assert-True ((Format-ReleasePackageBuild $partialBuild) -match
-    '#104 partial / BAR 331117.*newer #105 canceled') `
+    '#104 partially succeeded - review required / BAR 331117.*newer #105 canceled') `
     'The human-readable audit hid the partial BAR or canceled rerun.'
 Assert-Equal 'review-build' (New-ReleasePackageBuildAction -Build $partialBuild `
     -Purpose $buildBranch).Kind `
@@ -1923,6 +1923,7 @@ $state = Get-ReleaseAuditState `
     } -Delta (New-AuditDelta 'none')
 Assert-Equal 2 @($state.Releases | Where-Object NuGet -match 'preview').Count `
     'Exact public prerelease shipments were collapsed.'
+$publicShipmentsState = $state
 
 $mainPreview = New-AuditBranch '4.154.0-preview.1' $sha0
 $mainPreviewPackage = New-AuditPackage '4.154.0-preview.1.1' $mainPreview.Name $sha0
@@ -1963,10 +1964,19 @@ Assert-True ($latestUnpublishedReport -notmatch 'publish release branch; Publish
 Assert-True ($plainLatestUnpublishedReport -match '(?m)^Release line:\s+4\.153$') `
     'The report summary fields were not aligned.'
 Assert-True ($plainLatestUnpublishedReport -match
-    '(?m)^Identity\s+Branch SHA\s+NuGet\s+Build / BAR\s+Tag\s+GitHub Release\s+State / action$') `
-    'The report did not render an aligned PowerShell table.'
-Assert-True ($plainLatestUnpublishedReport -notmatch '\| Identity \|') `
-    'The report still rendered the old Markdown table.'
+    '(?m)^On NuGet\s+Cut release\s+Build / BAR\s+Next release step\s*$') `
+    'The report did not combine public shipment, cut branch, build, and next release step in one table.'
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^Release branch:\s+release/4\.153\.0-rc\.1$') `
+    'The report did not identify the release branch awaiting publication.'
+Assert-True ($plainLatestUnpublishedReport -notmatch 'release/4\.153\.0-preview\.1') `
+    'A superseded unpublished branch cluttered the current shipment report.'
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^main\s+1\s+not checked') `
+    'The report did not distinguish the next Prepare base from the release branch.'
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^Changes since cut:\s+1 merged commit\(s\) since release/4\.153\.0-rc\.1') `
+    'The report did not explain where queued maintenance commits are counted from.'
 $incomingPullRequestReport = [regex]::Replace(
     (@(Write-ReleaseAuditReport $blockedBySync) -join "`n"),
     "$([char] 0x1b)\[[0-9;]*m",
@@ -1978,17 +1988,160 @@ $upstreamReport = [regex]::Replace(
     "$([char] 0x1b)\[[0-9;]*m",
     '')
 Assert-True ($upstreamReport -match
-    '(?m)^Upstream Skia:\s+chrome/m152@a{12} -> mono/skia:release/4\.152\.x \(1 newer commit\)') `
+    'Compared with mono/skia:release/4\.152\.x\.') `
+    'The report did not identify the branch used for the upstream comparison.'
+Assert-True ($upstreamReport -match
+    '1 missing') `
     'The report did not show the newer upstream Skia commit.'
+Assert-True ($upstreamReport -match
+    '(?m)^Base branch\s+Upstream commits\s+Sync PR\s+Sync build\s+Next sync step\s*$') `
+    'The report did not render upstream status and its next sync step as a table.'
+Assert-True ($upstreamReport.Substring(0, $upstreamReport.IndexOf('3. Upstream / sync')) -notmatch
+    'Update Skia sync branch|auto-skia-sync|Sync 1 newer upstream') `
+    'A sync action leaked into the next release step or release evidence.'
 $pendingReport = [regex]::Replace(
     (@(Write-ReleaseAuditReport $pendingState) -join "`n"),
     "$([char] 0x1b)\[[0-9;]*m",
     '')
 Assert-True ($pendingReport -match
-    '(?m)^Pending milestone:\s+4\.155 via m155 -> main \(current 4\.154\.0/m154\)') `
+    'Pending 4\.155: main is still 4\.154\.0/m154\.') `
     'The report did not explain the pending next milestone.'
 Assert-True ($pendingReport -match '(?m)^Incoming sync PR:\s+#5081 ') `
     'The report did not show the pending next-milestone PR.'
+Assert-True ($pendingReport -match 'No active source branch for this line') `
+    'The report represented a pending milestone as an active release source.'
+
+$failedReleaseBuildState.PackageBuilds['main'] = New-AuditPackageBuild `
+    -Branch main -Commit $sha1 -State green -Ready $true -BuildId 204 -BarId 330715
+$failedReport = @(Write-ReleaseAuditReport $failedReleaseBuildState) -join "`n"
+Assert-True ($failedReport -match '(?m)^Release CI / BAR:\s+#201 failed$' -and
+    $failedReport -match '(?m)^Base CI \(exact SHA\):\s+#204 succeeded / BAR 330715$' -and
+    $failedReport.Substring(0, $failedReport.IndexOf('2. Branch readiness')) -notmatch '330715|commitHash=') `
+    'The report confused a green base build/BAR with a failed release publication candidate.'
+$partialReport = @(Write-ReleaseAuditReport $partialReleaseBuildState) -join "`n"
+Assert-True ($partialReport -match '#201 partially succeeded - review required / BAR 330713' -and
+    $partialReport -notmatch 'commitHash=') `
+    'The report presented a partial BAR as ready to publish.'
+$unavailableReportState = $partialReleaseBuildState.PSObject.Copy()
+$unavailableReportState.PackageBuilds = @{ main = $unavailableBuild }
+$unavailableReportState.Releases = @(
+    $partialReleaseBuildState.Releases | Where-Object State -ne 'superseded' |
+        ForEach-Object { $_.PSObject.Copy() }
+)
+$unavailableReportState.Releases[0].PackageBuild = $unavailableBuild
+$unavailableReport = @(Write-ReleaseAuditReport $unavailableReportState) -join "`n"
+Assert-True ($unavailableReport -match 'Release CI unavailable:' -and
+    $unavailableReport -match 'Base CI unavailable:' -and
+    $unavailableReport.Contains($unavailableBuild.Message)) `
+    'The report hid why a required CI check was unavailable.'
+$greenReleaseBuildState.UpstreamSync = $blockedByUpstream.UpstreamSync
+$greenReport = @(Write-ReleaseAuditReport $greenReleaseBuildState) -join "`n"
+Assert-True ($greenReport -match "commitHash=$($latestRc.Sha)" -and
+    $greenReport -match '#202 succeeded / BAR 330714 \(newer #203 canceled\)' -and
+    $greenReport -match 'check for an existing MAUI run before queueing') `
+    'The report lost exact publication inputs or confused upstream work with existing publication.'
+Assert-True ($greenReport.IndexOf('commitHash=') -lt $greenReport.IndexOf('3. Upstream / sync')) `
+    'Publication instructions were buried under future upstream work.'
+Assert-True ($greenReport -match 'Verify CI/BAR,\s+then Publish' -and
+    $failedReport -match 'Fix release build' -and
+    $partialReport -match 'Review partial release build') `
+    'The release table did not give the release action appropriate to its own build.'
+$prepareReport = @(Write-ReleaseAuditReport $greenMaintenanceAllowsRelease) -join "`n"
+Assert-True ($prepareReport -match
+    'Release - Prepare \(workflow ref=main\): base=release/4\.152\.x; release=4\.152\.1-stable; push=false') `
+    'The report did not show the exact Prepare workflow inputs.'
+$finishState = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{} -GitHubReleases @{} -Delta (New-AuditDelta 'none')
+$finishReport = @(Write-ReleaseAuditReport $finishState) -join "`n"
+Assert-True ($finishReport -match '(?m)^4\.152\.0\s+None\s+N/A\s+Finish public shipment\s*$' -and
+    $finishReport -match 'Release - Finish \(workflow ref=main\): version=4\.152\.0; push=false' -and
+    $finishReport -match 'None awaiting publication') `
+    'The report confused Finish for public packages with publishing a prepared branch.'
+Assert-True ($finishReport -notmatch "$([char] 0x1b)\[") `
+    'Redirected audit output contained ANSI styling.'
+$draftDoesNotBlock.UpstreamSync = $upstreamCurrent
+$draftDoesNotBlock.UpstreamSync = $draftDoesNotBlock.UpstreamSync.PSObject.Copy()
+$draftDoesNotBlock.UpstreamSync.CompareRef = $draftSyncPullRequest.HeadBranch
+$draftDoesNotBlock.UpstreamSync.SyncBranch = $draftSyncPullRequest.HeadBranch
+$draftDoesNotBlock.UpstreamSync.SyncBranchSha = $sha1
+$draftReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+Assert-True ($draftReport -match 'not proof it has landed in the release source' -and
+    $draftReport.Contains('(draft,')) `
+    'An up-to-date draft sync branch was presented as already merged.'
+$linePr = [pscustomobject] @{
+    Number = 9999; Title = 'Backport release fix'; Url = 'https://github.com/mono/SkiaSharp/pull/9999'
+    BaseBranch = $maintenance.Branch; HeadBranch = 'backport/test'; IsDraft = $false
+}
+$draftDoesNotBlock.OpenPullRequests = @($linePr, $draftSyncPullRequest)
+$draftDoesNotBlock.PackageBuilds = @{
+    $maintenance.Branch = $greenMaintenanceBuild
+    $draftSyncPullRequest.HeadBranch = New-AuditPackageBuild `
+        -Branch $draftSyncPullRequest.HeadBranch -Commit $draftSyncPullRequest.HeadSha `
+        -State failed -Ready $false -BuildId 205 -BarId 0
+}
+$originalAuditOutputWidth = ${function:Get-ReleaseAuditOutputWidth}
+try {
+    foreach ($reportWidth in @(80, 120)) {
+        Set-Item Function:\Get-ReleaseAuditOutputWidth -Value { $reportWidth }
+        $lineReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+        Assert-True ($lineReport -match '#9999 Backport release fix:' -and
+            $lineReport.Contains($linePr.Url) -and
+            $lineReport -match '(?m)^Base readiness:\s+.*review open PRs') `
+            "The branch-readiness view hid pending line PRs at width $reportWidth."
+    }
+} finally {
+    Set-Item Function:\Get-ReleaseAuditOutputWidth -Value $originalAuditOutputWidth
+}
+Assert-True ($lineReport -match '#205 failed' -and
+    $lineReport.Substring($lineReport.IndexOf('3. Upstream / sync')) -notmatch "#$($greenMaintenanceBuild.BuildId) succeeded") `
+    'The upstream view borrowed maintenance CI instead of displaying the sync branch build.'
+$greenSyncBuild = New-AuditPackageBuild `
+    -Branch $draftSyncPullRequest.HeadBranch -Commit $draftSyncPullRequest.HeadSha `
+    -State green -Ready $true -BuildId 205 -BarId 330716
+$greenSyncBuild.NewerBuilds = @(
+    [pscustomobject] @{ BuildId = 206; State = 'failed' }
+    [pscustomobject] @{ BuildId = 207; State = 'canceled' }
+)
+$draftDoesNotBlock.PackageBuilds[$draftSyncPullRequest.HeadBranch] = $greenSyncBuild
+$syncRerunReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+$syncRerunSection = $syncRerunReport.Substring($syncRerunReport.IndexOf('3. Upstream / sync'))
+Assert-True ($syncRerunSection -match
+    '(?m)^Sync CI \(exact SHA\):\s+#205 succeeded / BAR 330716 \(newer #206 failed, #207 canceled\)$') `
+    'The upstream view hid newer failed or canceled attempts after a succeeded exact-sync build.'
+
+function Invoke-GitHubJsonWithRetry([string[]] $Arguments) {
+    return @(
+        [pscustomobject] @{ number = 1; base = @{ ref = 'release/4.152.x' }; head = @{ ref = 'fix/one' } }
+        [pscustomobject] @{ number = 2; base = @{ ref = 'release/4.152.1' }; head = @{ ref = 'fix/two' } }
+        [pscustomobject] @{ number = 3; base = @{ ref = 'release/4.153.x' }; head = @{ ref = 'fix/three' } }
+        [pscustomobject] @{ number = 4; base = @{ ref = 'main' }; head = @{ ref = 'fix/four' } }
+    )
+}
+try {
+    Assert-Equal @(1, 2) @((Get-ReleaseLinePullRequests -Line '4.152').Number) `
+        'Open line PRs did not include both maintenance/cut targets or included another release line.'
+    Assert-Equal @(1, 2, 4) @((Get-ReleaseLinePullRequests -Line '4.152' -IncludeMain).Number) `
+        'Main-targeted PRs were not included for a current/pending main line.'
+} finally {
+    Remove-Item Function:\Invoke-GitHubJsonWithRetry
+}
+
+$publicState = $publicShipmentsState
+$publicState.Releases += [pscustomobject] @{
+    Identity = $preview.Identity.Title; NuGet = '4.153.0-preview.1.10'; State = 'finished'
+}
+Assert-Equal @('4.153.0-preview.1.10') @((Get-ReleaseAuditPublicShipments $publicState).NuGet) `
+    'The concise report selected a public build lexically rather than numerically.'
+$publicState.Releases += [pscustomobject] @{
+    Identity = '4.153.0-preview.2'; NuGet = '4.153.0-preview.2.1'; State = 'finished branch unavailable'
+}
+$publicState.Releases[0].State = 'finish shipment'
+Assert-Equal @('4.153.0-preview.1.1', '4.153.0-preview.2.1') @(
+    (Get-ReleaseAuditPublicShipments $publicState).NuGet
+) 'The concise report hid an older unfinished shipment or a newer missing source branch.'
+Assert-True ((@(Write-ReleaseAuditReport $inactive) -join "`n") -match
+    'No active source branch for this line') 'The inactive-line report invented a release source.'
 Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
 Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
     'A first release identity was not preview.1.'

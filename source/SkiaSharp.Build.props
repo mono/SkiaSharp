@@ -97,9 +97,9 @@
     <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
   </PropertyGroup>
 
-  <!-- MAUI Package Versions (must match installed workload versions per TFM) -->
+  <!-- MAUI package versions per TFM; Apple workload/Xcode versions are pinned separately. -->
   <PropertyGroup>
-    <MauiVersion Condition="$(TargetFramework.StartsWith('net10'))">10.0.20</MauiVersion>
+    <MauiVersion Condition="$(TargetFramework.StartsWith('net10'))">10.0.110</MauiVersion>
     <MauiVersion Condition="$(TargetFramework.StartsWith('net9'))">9.0.120</MauiVersion>
   </PropertyGroup>
 
@@ -178,13 +178,11 @@
     <MauiTargetFrameworksAppPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksAppPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksAppPrevious>
   </PropertyGroup>
 
-  <!-- Uno Platform -->
+  <!-- Uno Platform (Uno Platform 7 needs .NET 10 or later) -->
   <PropertyGroup>
-    <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksReference Condition="'$(TFMPrevious)' != ''">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksPrevious Condition="!$(IsLinux) and '$(TFMPrevious)' != ''">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</UnoTargetFrameworksPrevious>
-    <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksPrevious);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
+    <UnoTargetFrameworks>$(TFMCurrent)</UnoTargetFrameworks>
+    <UnoTargetFrameworks Condition="'$(TFMPrevious)' != '' and $([MSBuild]::IsTargetFrameworkCompatible('$(TFMPrevious)', 'net10.0'))">$(UnoTargetFrameworks);$(TFMPrevious)</UnoTargetFrameworks>
+    <UnoTargetFrameworks>$(UnoTargetFrameworks);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -226,12 +224,12 @@
 
   <!-- platform version number information -->
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
-    <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>14.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>14.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>

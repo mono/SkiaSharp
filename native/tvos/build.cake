@@ -6,7 +6,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 string GetDeploymentTarget(string arch)
 {
-    return "14.0";
+    return "15.0";
 }
 
 Task("libSkiaSharp")

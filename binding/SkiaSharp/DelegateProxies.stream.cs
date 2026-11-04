@@ -30,10 +30,10 @@ internal static unsafe partial class DelegateProxies
 		return stream.OnGetPosition ();
 	}
 
-	private static partial bool SKManagedStreamHasLengthProxyImplementation (IntPtr s, void* context)
+	private static partial byte SKManagedStreamHasLengthProxyImplementation (IntPtr s, void* context)
 	{
 		var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-		return stream.OnHasLength ();
+		return stream.OnHasLength () ? (byte)1 : (byte)0;
 	}
 
 	private static partial void SKManagedStreamDestroyProxyImplementation (IntPtr s, void* context)
@@ -46,22 +46,22 @@ internal static unsafe partial class DelegateProxies
 		gch.Free ();
 	}
 
-	private static partial bool SKManagedStreamHasPositionProxyImplementation (IntPtr s, void* context)
+	private static partial byte SKManagedStreamHasPositionProxyImplementation (IntPtr s, void* context)
 	{
 		var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-		return stream.OnHasPosition ();
+		return stream.OnHasPosition () ? (byte)1 : (byte)0;
 	}
 
-	private static partial bool SKManagedStreamIsAtEndProxyImplementation (IntPtr s, void* context)
+	private static partial byte SKManagedStreamIsAtEndProxyImplementation (IntPtr s, void* context)
 	{
 		var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-		return stream.OnIsAtEnd ();
+		return stream.OnIsAtEnd () ? (byte)1 : (byte)0;
 	}
 
-	private static partial bool SKManagedStreamMoveProxyImplementation (IntPtr s, void* context, int offset)
+	private static partial byte SKManagedStreamMoveProxyImplementation (IntPtr s, void* context, int offset)
 	{
 		var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-		return stream.OnMove (offset);
+		return stream.OnMove (offset) ? (byte)1 : (byte)0;
 	}
 
 	private static partial /* size_t */
@@ -79,16 +79,16 @@ internal static unsafe partial class DelegateProxies
 		return stream.OnRead ((IntPtr)buffer, size);
 	}
 
-	private static partial bool SKManagedStreamRewindProxyImplementation (IntPtr s, void* context)
+	private static partial byte SKManagedStreamRewindProxyImplementation (IntPtr s, void* context)
 	{
 		var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-		return stream.OnRewind ();
+		return stream.OnRewind () ? (byte)1 : (byte)0;
 	}
 
-	private static partial bool SKManagedStreamSeekProxyImplementation (IntPtr s, void* context, /* size_t */
+	private static partial byte SKManagedStreamSeekProxyImplementation (IntPtr s, void* context, /* size_t */
 		IntPtr position)
 	{
 		var stream = GetUserData<SKAbstractManagedStream> ((IntPtr)context, out _);
-		return stream.OnSeek (position);
+		return stream.OnSeek (position) ? (byte)1 : (byte)0;
 	}
 }

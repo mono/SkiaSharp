@@ -2,7 +2,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
-#load "test-shared.cake"
+#load "tests-shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CONTAINER TESTS — run ONLY the console test suite (SkiaSharp.Tests.Console)

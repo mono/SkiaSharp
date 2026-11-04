@@ -28,7 +28,7 @@ parameters:
     default:
       pool:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
+        image: windows.vs2026.amd64
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -36,7 +36,7 @@ parameters:
     default:
       pool:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
+        image: windows.vs2026.amd64
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
@@ -44,7 +44,7 @@ parameters:
     default:
       pool:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
+        image: windows.vs2026.amd64
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -80,6 +80,10 @@ parameters:
         os: linux
   - name: runApiScan
     displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
+    type: boolean
+    default: false
+  - name: runFuzzing
+    displayName: 'Run fuzzing for this build (scheduled main builds run automatically)'
     type: boolean
     default: false
   - name: forceRealSigning
@@ -158,3 +162,4 @@ extends:
           forceRealSigning: ${{ parameters.forceRealSigning }}
           registerInBar: ${{ parameters.registerInBar }}
           runApiScan: ${{ parameters.runApiScan }}
+          runFuzzing: ${{ parameters.runFuzzing }}

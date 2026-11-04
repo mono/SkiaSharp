@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "3.119.5",
   "family": "skiasharp",
   "status": "unreleased",
@@ -35,6 +35,7 @@
     "4579": {
       "url": "https://github.com/mono/SkiaSharp/pull/4579",
       "title": "[Apple] Backport 26.0 library and unversioned app TFMs",
+      "body": "[Apple] Backport 26.0 library and unversioned app TFMs (#4579)\n\nFixes: https://github.com/mono/SkiaSharp/issues/4031\nContext: https://github.com/mono/SkiaSharp/pull/3798\n\nSkiaSharp 3.119.4 packages inherited Apple target platform versions of\n26.2 from the .NET 10 upgrade. This prevents Mac Catalyst native assets\nfrom resolving for Avalonia applications targeting 26.0 and causes Uno\niOS builds on older 26.x workloads to select platform-neutral assemblies,\nleading to registrar and linker failures.\n\nBackport the fix already shipped in v4: pin Apple library packages to the\nbase 26.0 TPV while leaving app and test TFMs unversioned so they use the\ninstalled workload. Align the reference-pack metadata and update the\nAndroid, iOS, and Mac Catalyst test tasks to their unversioned TFMs,\navoiding mismatched output paths and NETSDK1005 restore failures.\n\nCo-authored-by: Tim Miller <898335+drasticactions@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "drasticactions",
       "community": true,
       "tag": "product"
@@ -42,6 +43,7 @@
     "4105": {
       "url": "https://github.com/mono/SkiaSharp/pull/4105",
       "title": "Fix x86 .NET Framework threading test OOM failures",
+      "body": "Fix x86 .NET Framework threading test OOM failures (#4105)\n\nBackport of #3674 to release/3.119.x.\nFixes #3608\n\nContext: https://github.com/mono/SkiaSharp/pull/3674\nFixes: chronically-red \"Windows (.NET Framework)\" (net48/x86) Tests job on release/3.119.x\n\nThe internal Tests pipeline on release/3.119.x has been red for months.\nThe failing job is Windows (.NET Framework) on x86, where\nSKBitmapThreadingTest.ImageScalingMultipleThreadsTest(100, 1000) and\nSKObjectTest.EnsureMultithreadingDoesNotThrow(1000) throw \"Unable to\nallocate pixels for the bitmap\", with adjacent tests dying as collateral\nin the same starved process.\n\nThese tests intentionally create native SkiaSharp objects without\ndisposing them so they are reclaimed only by the GC and finalizer thread\n\u2014 that is the point of the tests: they verify SkiaSharp objects can be\nfinalized safely from many threads concurrently. Disposing would defeat\nthe purpose (an earlier \"add using\" attempt was wrong and was reverted).\nThe real cause is an environment limit: on x86 (.NET Framework, 2 GB\naddress space) the heaviest variants queue more undisposed native\nallocations than the finalizer can keep pace with, so Skia's allocator\nfails. The 64-bit .NET Core jobs have enough address space and pass.\n\n  * Skip the known-OOM combinations on x86 only (IntPtr.Size == 4) \u2014 a\n    sanctioned environment skip, not masking a product bug.\n  * Add lighter intermediate variants (10x100 and 100) so concurrent\n    GC/finalizer behavior is still exercised on x86 at lower load.\n  * Document the test purpose and that disposal is intentionally omitted,\n    so future readers don't \"fix\" it by adding using.\n\nTouches tests only:\ntests/SkiaSharp.Tests.Console/SkiaSharp/SKBitmapThreadingTest.cs and\ntests/Tests/SkiaSharp/SKObjectTest.cs (+28/-0).\n\nValidated by a full pipeline run that built natives fresh in-run\n(3.119.5-preview.0.3+merge): all stages succeeded, including every\nTests-stage job. The previously chronically-red net48/x86 job now passes.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal",
@@ -52,6 +54,7 @@
     "4086": {
       "url": "https://github.com/mono/SkiaSharp/pull/4086",
       "title": "Fix WinUI Projection DLL not found for .NET 9 consumers",
+      "body": "[3.119.x] Fix WinUI Projection DLL not resolved for .NET 9 consumers on Windows (#4086)\n\nFixes: https://github.com/mono/SkiaSharp/issues/4082\nCherry-pick of: #4084\n\nBackport of the same fix to the 3.119.x release branch. The Projection DLL\nwas only placed in `runtimes/win-{arch}/lib/net10.0-windows10.0.19041.0/`,\nwhich NuGet won't serve to net9 consumers. .NET 9 apps hit a\n`FileNotFoundException` for `SkiaSharp.Views.WinUI.Native.Projection` at\nstartup.\n\nInclude the Projection DLL in both the `$(WindowsTargetFrameworksCurrent)`\n(net10.0) and `$(WindowsTargetFrameworksPrevious)` (net9.0) runtime folders\nso NuGet resolves it for both .NET 9 and .NET 10 consumers.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -59,6 +62,7 @@
     "4041": {
       "url": "https://github.com/mono/SkiaSharp/pull/4041",
       "title": "[docs] Update API diff for v3.119.4",
+      "body": "Generated from branch release/3.119.x by the api-diff workflow.\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -66,6 +70,7 @@
     "4045": {
       "url": "https://github.com/mono/SkiaSharp/pull/4045",
       "title": "[release/3.119.x] Fix CI failures: ANGLE, WASM 2.0.6, Tizen SDK, Alpine",
+      "body": "[CI] Fix native build failures on release/3.119.x (#4045)\n\nContext: #4014, #4022, #3743, #4013\n\nFour independent CI failures were blocking all builds on the 3.119.x\nrelease branch. Each fix is backported from main and adapted to the\nolder file layout (scripts/ vs scripts/infra/).\n\n~~ ANGLE WinAppSDK download (WinError 10013) ~~\n\nDevDiv 1ES agents block Python's urllib from making outbound HTTPS\nconnections. Replace the winappsdk_setup.py invocation with a Cake\nDownloadFile() from dnceng's dotnet-public feed, followed by a new\nPowerShell script (generate_winappsdk_headers.ps1) that runs winmdidl\n+ midlrt to produce the C++ headers ANGLE needs.\n\n~~ WASM Emscripten 2.0.6 hang ~~\n\nThe 2.0.6 build intermittently hangs in CI. No .NET release ever\nconsumed this version \u2014 it was a legacy artifact from early\nexperimentation. Remove it from the matrix and merge lists.\n\n~~ Tizen SDK 6.1 permanently broken ~~\n\nSamsung rebranded Tizen Studio to Tizen SDK starting with version 10.0\nand the old 6.1 Certificate-Manager package fails deterministically\nwith NoClassDefFoundError. Update to SDK 10.0 with the new URL pattern.\n\n~~ Alpine apk.static transient download failures ~~\n\nGitLab returns intermittent HTTP 5xx for apk.static. Without --fail,\ncurl silently saves the error body and the script tries to chmod +x a\nJSON string. Add --fail --retry 5 --retry-delay 10 --retry-all-errors.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed"
@@ -73,6 +78,7 @@
     "4043": {
       "url": "https://github.com/mono/SkiaSharp/pull/4043",
       "title": "Bump to the next version (3.119.5) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

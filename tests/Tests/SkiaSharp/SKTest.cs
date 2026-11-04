@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using SkiaSharp.Extended;
+using SkiaSharp.Tests.Shared;
 
 namespace SkiaSharp.Tests
 {

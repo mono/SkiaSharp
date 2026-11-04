@@ -29,28 +29,28 @@ namespace SkiaSharp
 
 		// public sk_managedstream_isAtEnd_proc fIsAtEnd
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fIsAtEnd;
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Byte> fIsAtEnd;
 #else
 		public SKManagedStreamIsAtEndProxyDelegate fIsAtEnd;
 #endif
 
 		// public sk_managedstream_hasPosition_proc fHasPosition
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fHasPosition;
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Byte> fHasPosition;
 #else
 		public SKManagedStreamHasPositionProxyDelegate fHasPosition;
 #endif
 
 		// public sk_managedstream_hasLength_proc fHasLength
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fHasLength;
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Byte> fHasLength;
 #else
 		public SKManagedStreamHasLengthProxyDelegate fHasLength;
 #endif
 
 		// public sk_managedstream_rewind_proc fRewind
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, bool> fRewind;
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Byte> fRewind;
 #else
 		public SKManagedStreamRewindProxyDelegate fRewind;
 #endif
@@ -64,14 +64,14 @@ namespace SkiaSharp
 
 		// public sk_managedstream_seek_proc fSeek
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr, bool> fSeek;
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, /* size_t */ IntPtr, Byte> fSeek;
 #else
 		public SKManagedStreamSeekProxyDelegate fSeek;
 #endif
 
 		// public sk_managedstream_move_proc fMove
 #if USE_LIBRARY_IMPORT
-		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Int32, bool> fMove;
+		public delegate* unmanaged[Cdecl] <sk_stream_managedstream_t, void*, Int32, Byte> fMove;
 #else
 		public SKManagedStreamMoveProxyDelegate fMove;
 #endif

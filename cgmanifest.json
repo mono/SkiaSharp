@@ -204,15 +204,15 @@
         "type": "other",
         "other": {
           "name": "vulkan-headers",
-          "version": "1.4.345",
+          "version": "1.4.365",
           "downloadUrl": "https://github.com/KhronosGroup/Vulkan-Headers"
         }
       },
       "skia_dependency": {
         "name": "vulkan-headers",
-        "revision": "74d8a6cb930c68ef617b202c3ff3c59d919e086b",
-        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers@74d8a6cb930c68ef617b202c3ff3c59d919e086b",
-        "version_source": "include/vulkan/vulkan_core.h: VK_HEADER_VERSION_COMPLETE = 1.4.345"
+        "revision": "c46850864f4661461b0f6cb9922c058ffea4915e",
+        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers@c46850864f4661461b0f6cb9922c058ffea4915e",
+        "version_source": "include/vulkan/vulkan_core.h: VK_HEADER_VERSION_COMPLETE = 1.4.365"
       }
     },
     {
@@ -221,7 +221,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/google/angle.git",
-          "commitHash": "ea1cea778c4a2312ef1b963b29a62fe595dd4df8"
+          "commitHash": "d39da9a2abc47fc5fee3711b18b461feab80d34c"
         }
       }
     },
@@ -230,7 +230,7 @@
         "type": "other",
         "other": {
           "name": "angle",
-          "version": "chromium/6275",
+          "version": "chromium/8118",
           "downloadUrl": "https://github.com/google/angle"
         }
       }
@@ -241,7 +241,7 @@
         "type": "other",
         "other": {
           "name": "jsoncpp",
-          "version": "1.9.4",
+          "version": "1.9.5",
           "downloadUrl": "https://github.com/open-source-parsers/jsoncpp"
         }
       }
@@ -252,19 +252,28 @@
         "type": "other",
         "other": {
           "name": "astc-encoder",
-          "version": "573c475389bf",
+          "version": "2319d9c4d4af53a7fc7c52985e264ce6e8a02a9b",
           "downloadUrl": "https://github.com/ARM-software/astc-encoder"
         }
       }
     },
     {
-      "comment": "ANGLE-only: meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc. (Skia pulls these individually via DEPS)",
+      "comment": "ANGLE-only: SPIR-V headers loaded by ANGLE's translator graph (not used by Skia)",
       "component": {
-        "type": "other",
-        "other": {
-          "name": "angle-vulkan-deps",
-          "version": "3834da2004ec",
-          "downloadUrl": "https://chromium.googlesource.com/vulkan-deps"
+        "type": "git",
+        "git": {
+          "repositoryUrl": "https://github.com/KhronosGroup/SPIRV-Headers.git",
+          "commitHash": "86f980c731e62ae4eaf383d320449d71687936bf"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: SPIR-V tools loaded by ANGLE's translator graph (not used by Skia)",
+      "component": {
+        "type": "git",
+        "git": {
+          "repositoryUrl": "https://github.com/KhronosGroup/SPIRV-Tools.git",
+          "commitHash": "71f287f18ed78d496e724fbfb1c3feae3a2af75a"
         }
       }
     },
@@ -274,7 +283,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "2ef241b9858f1c48c48b80885efbc32a63da0402"
+          "commitHash": "ce0fc683a40c6ba84d55072f31aa48d55c8f2131"
         }
       }
     },
@@ -284,13 +293,13 @@
         "type": "other",
         "other": {
           "name": "skia",
-          "version": "chrome/m156",
+          "version": "chrome/m157",
           "downloadUrl": "https://github.com/google/skia"
         }
       },
-      "chrome_milestone": 156,
-      "upstream_merge_commit": "95ee33d7ec7791ab9c071675710a14fe6408ae4f",
-      "upstream_ref": "chrome/m156"
+      "chrome_milestone": 157,
+      "upstream_merge_commit": "ca220d775882831560d7517d0cd0e67ef95bbe20",
+      "upstream_ref": "chrome/m157"
     }
   ]
 }

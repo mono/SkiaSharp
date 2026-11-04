@@ -1,40 +1,39 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 
-// empty lets GN detect an installed SDK
-string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", "");
+string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", EnvironmentVariable("WINDOWS_SDK_VERSION") ?? "10.0.28000.0");
+
+var defaultLlvmHome = string.IsNullOrEmpty(VS_INSTALL) ? "" : $"{VS_INSTALL}/VC/Tools/Llvm/x64";
+string LLVM_HOME = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? defaultLlvmHome);
+
+Task("validate-windows-toolchain")
+    .WithCriteria(IsRunningOnWindows())
+    .Does(() =>
+{
+    if (string.IsNullOrEmpty(VS_INSTALL))
+        throw new Exception("A Visual Studio installation is required. Pass --vsinstall or set VS_INSTALL.");
+    if (string.IsNullOrEmpty(WINDOWS_SDK_VERSION))
+        throw new Exception("A Windows SDK version is required. Pass --windowsSdkVersion or set WINDOWS_SDK_VERSION.");
+});
 
 string GetToolsetVersion()
 {
     var build = ((DirectoryPath)VS_INSTALL).Combine("VC/Auxiliary/Build");
     var version = FileReadText(build.CombineWithFilePath("Microsoft.VCToolsVersion.default.txt")).Trim();
     var parsed = Version.Parse(version);
-    if (parsed.Major != 14 || parsed.Minor < 30 || parsed.Minor >= 50)
-        version = FileReadText(build.CombineWithFilePath("Microsoft.VCToolsVersion.v143.default.txt")).Trim();
+    if (parsed.Major != 14 || parsed.Minor < 50)
+        throw new Exception($"Visual Studio 2026 MSVC v145 or newer is required, found {version}.");
     return version;
 }
 
 var TOOLSET_VERSION = new Lazy<string>(GetToolsetVersion);
 
-void RunNinjaWithVcVars(
-    DirectoryPath working,
-    DirectoryPath outDir,
-    string target,
-    string architecture,
-    string windowsSdkVersion,
-    string vcVarsVersion)
+void RunNinjaWithVcVars(DirectoryPath working, DirectoryPath outDir, string target, string architecture)
 {
     var vcVarsAll = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
 
-    // omitted rather than empty, as vcvarsall fails on an SDK that is not installed
-    var windowsSdkVersionArg = string.IsNullOrEmpty(windowsSdkVersion)
-        ? ""
-        : $" {windowsSdkVersion}";
-    var vcVarsVersionArg = string.IsNullOrEmpty(vcVarsVersion)
-        ? ""
-        : $" -vcvars_ver={vcVarsVersion}";
     var ninjaTarget = string.IsNullOrEmpty(target) ? "" : $" {target}";
     var command =
-        $"call \"{vcVarsAll.FullPath}\" {architecture}{windowsSdkVersionArg}{vcVarsVersionArg}" +
+        $"call \"{vcVarsAll.FullPath}\" {architecture} {WINDOWS_SDK_VERSION} -vcvars_ver={TOOLSET_VERSION.Value}" +
         $" && \"{NINJA_EXE}\" -C \"{outDir.FullPath}\"{ninjaTarget}";
 
     Information($"Initializing the Visual C++ environment once for {architecture}.");

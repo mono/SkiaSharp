@@ -202,10 +202,6 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
 
 			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
-			if (returnType == "bool")
-			{
-				writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
-			}
 
 			writer.WriteLine($"\tinternal unsafe delegate {returnType} {name}({string.Join(", ", paramsList)});");
 			writer.WriteLine();
@@ -635,6 +631,7 @@ namespace SkiaSharpGenerator
 					writer.WriteLine($"\t\t#if !USE_DELEGATES");
 					writer.WriteLine($"\t\t#if USE_LIBRARY_IMPORT");
 					writer.WriteLine($"\t\t[LibraryImport ({config.DllName})]");
+					writer.WriteLine("\t\t[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]");
 					if (!string.IsNullOrEmpty(retAttr))
 						writer.WriteLine($"\t\t{retAttr}");
 					writer.WriteLine($"\t\tinternal static partial {returnType} {name} ({string.Join(", ", paramsListWithFuncPointers)});");
@@ -741,7 +738,6 @@ namespace SkiaSharpGenerator
 				writer.WriteLine($"\tpublic static readonly {name} {proxyName} = {implName};");
 				writer.WriteLine($"\t[MonoPInvokeCallback (typeof ({name}))]");
 				writer.WriteLine($"#endif");
-				if (returnType == "bool") writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
 				writer.WriteLine($"\tprivate static partial {returnType} {implName}({string.Join(",", paramsList)});");
 				writer.WriteLine();
 			}
