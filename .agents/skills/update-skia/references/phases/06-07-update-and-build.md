@@ -2,24 +2,32 @@
 
 ## Phase 06 — update version surfaces
 
-Hydrate the dependencies recorded by the merged Skia `DEPS` before inspecting their
-semantic-version evidence:
+After Phase 02/03's source-backed version comparison and Phase 05's dependency decisions pass,
+hydrate merged `DEPS` to verify the selected versions. Do not defer downgrade detection until
+hydration or the manifest gate:
 
 ```bash
 python3 externals/skia/tools/git-sync-deps
 ```
 
 This synchronizes dependency source only; it does not build native binaries. Then run the
-maintained version helper from the parent repository:
+maintained version helper from the parent repository. The explicit arguments below support local
+runs using Phase 01's resolved values; automation reads those values directly from `SKIA_SYNC_*`:
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
-  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}" --artifact-dir "$ARTIFACT_DIR" \
+  --current "$SKIA_SYNC_CURRENT" --target "$SKIA_SYNC_TARGET" \
+  --upstream-ref "$SKIA_SYNC_UPSTREAM_REF" \
+  --upstream-sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+  --parent-base-sha "$SKIA_SYNC_PARENT_BASE_SHA" \
+  --skia-base-sha "$SKIA_SYNC_SKIA_BASE_SHA"
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
-`cgmanifest.json`, `scripts/azure-templates-variables.yml`, and the native C API version. It
-reads the workflow-resolved `SKIA_SYNC_*` values in automation and implements all modes:
+`cgmanifest.json`, `scripts/azure-templates-variables.yml`, and the native C API version. Native
+artifact tests read SONAME expectations directly from `VERSIONS.txt`; no separate map needs updating.
+The helper reads the workflow-resolved `SKIA_SYNC_*` values in automation and implements all modes:
 
 - Milestone bump: advance milestone and package/native versions.
 - Same-milestone bug-fix: keep versions and advance Skia hashes.
@@ -60,11 +68,11 @@ platform and architecture; it restores tools and builds from source. Example tar
 
 | Host | Command |
 |---|---|
-| Linux x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform linux --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
-| Linux arm64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform linux --arch arm64 --artifact-dir "$ARTIFACT_DIR"` |
-| Windows x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform windows --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
-| macOS arm64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform macos --arch arm64 --artifact-dir "$ARTIFACT_DIR"` |
-| macOS x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --platform macos --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
+| Linux x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --repo-root "${GITHUB_WORKSPACE:-$PWD}" --platform linux --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
+| Linux arm64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --repo-root "${GITHUB_WORKSPACE:-$PWD}" --platform linux --arch arm64 --artifact-dir "$ARTIFACT_DIR"` |
+| Windows x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --repo-root "${GITHUB_WORKSPACE:-$PWD}" --platform windows --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
+| macOS arm64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --repo-root "${GITHUB_WORKSPACE:-$PWD}" --platform macos --arch arm64 --artifact-dir "$ARTIFACT_DIR"` |
+| macOS x64 | `python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_native.py" --repo-root "${GITHUB_WORKSPACE:-$PWD}" --platform macos --arch x64 --artifact-dir "$ARTIFACT_DIR"` |
 
 ```bash
 set -euo pipefail

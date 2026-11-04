@@ -21,6 +21,26 @@ ANDROID_WORKLOAD_SETUP = CLOUD_SETUP.with_name("install-android-workload.sh")
 
 
 class AutoSkiaSyncWorkflowTests(unittest.TestCase):
+    def test_config_archive_surrounds_artifact_transport_and_runtime_restoration(self):
+        compiled = yaml.safe_load(COMPILED_WORKFLOW.read_text(encoding="utf-8"))
+        steps = compiled["jobs"]["agent"]["steps"]
+        names = [step.get("name") for step in steps]
+        extract = names.index("Extract trusted agent configuration")
+        self.assertGreater(extract, names.index("Download activation artifact"))
+        self.assertLess(extract, names.index("Restore agent config folders from base branch"))
+        self.assertLess(extract, names.index("Prepare Skia checkout"))
+        self.assertLess(extract, names.index("Set up Linux cloud agent"))
+        activation = compiled["jobs"]["activation"]["steps"]
+        names = [step.get("name") for step in activation]
+        archive = names.index("Archive trusted agent configuration")
+        self.assertGreater(archive, names.index("Save agent config folders for base branch restoration"))
+        self.assertLess(archive, names.index("Upload activation artifact"))
+        checkout = next(step for step in activation if step.get("name") == "Checkout .github and .agents folders")
+        self.assertNotIn("ref", checkout["with"])
+        snapshot = next(step for step in activation if step.get("name") == "Save agent config folders for base branch restoration")
+        self.assertEqual(".agents .github", snapshot["env"]["GH_AW_AGENT_FOLDERS"])
+        self.assertEqual("AGENTS.md", snapshot["env"]["GH_AW_AGENT_FILES"])
+
     def test_dispatch_inputs_keep_target_before_optional_branch(self):
         for path, expected in (
             (WORKFLOW, ["target", "target_branch"]),

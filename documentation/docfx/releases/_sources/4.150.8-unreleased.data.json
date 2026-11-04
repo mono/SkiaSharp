@@ -16,7 +16,7 @@
   "api_links": [],
   "tallies": {
     "product": 1,
-    "mixed": 0,
+    "mixed": 1,
     "internal": 1
   },
   "breaking_candidates": [],
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5589": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5589",
+      "title": "[Build] Backport Windows SDK ANGLE resource compiler to 4.150",
+      "body": "Backport mono/SkiaSharp#5537 (f515dd58d9782a208a569532512db736838c7a22) to release/4.150.x. Replace the Chromium GCS rc.exe download with the same guarded, idempotent rc.py patch so Windows SDK rc.exe consumes the preprocessed resource input while header dependency tracking is preserved.\n\nKeep the release branch System.IO.File calls: its Cake bootstrap does not provide main\u2019s FileReadText/FileWriteText helpers. No other bootstrap behavior changes.\n\nValidated: Cake dry run; seven checks against Chromium build a18493935f13d1b0992c78f5615a5d10336d60c0 rc.py, including repeat application, unmatched-shape rejection, preserved preprocessing, and Windows path/error propagation; Python compilation; git diff --check. Windows native compilation requires Windows CI and was not run on this macOS host.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
     "5543": {
       "url": "https://github.com/mono/SkiaSharp/pull/5543",
       "title": "[Skia] Sync m150 region and texture fixes",
