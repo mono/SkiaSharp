@@ -1,0 +1,44 @@
+{
+  "format": 6,
+  "version": "4.157.0",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": null,
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [],
+  "tallies": {
+    "product": 0,
+    "mixed": 0,
+    "internal": 2
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5542": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5542",
+      "title": "[M157] Update SkiaSharp to Skia milestone 157",
+      "body": "[M157] Update SkiaSharp to Skia milestone 157 (#5542)\n\nRequires: https://github.com/mono/skia/pull/416\nContext: https://github.com/mono/SkiaSharp/pull/5595\nChanges: https://github.com/mono/skia/compare/92d87f74f704671936d3cf7f15249037e48e9823...ce0fc683a40c6ba84d55072f31aa48d55c8f2131\n\nAdvance the native engine to m157 while keeping package versions, artifact\nexpectations and Component Governance identities aligned with that source.\nManaged wrappers and generated declarations remain unchanged.\n\n~~ Pin landed native history without changing reviewed content ~~\n\nUpdate externals/skia and its manifest registration together to actual\nnative merge ce0fc683a40c6ba84d55072f31aa48d55c8f2131. Record upstream\nchrome/m157 at ca220d775882831560d7517d0cd0e67ef95bbe20 for milestone\nand vulnerability tracking.\n\nThe native merge contains reviewed head\n8056a04b3038112f4a188bc1b80c63d2440ffd8e and has the identical tree,\nf66705b370e50f8f70b722491f8091f91c01224a. The dependent repin changes\nthe gitlink and matching manifest SHA, retaining reviewed source while\nrecording the landed ancestry.\n\nThe native update preserves the m156 glyph-bounds guard and its regression\neven though m157 upstream lacks them, and fixes Tizen compiler-variable\ninitialization ordering. Graphite Metal adopts upstream's iOS/tvOS 15\nruntime minimum; its macOS minimum remains 12.\n\n~~ Align package and artifact identities with milestone 157 ~~\n\nAdvance SkiaSharp packages to 4.157.0, assembly/file versions to 4.157.0.0,\nand libSkiaSharp's SONAME to 157.0.0 with C API increment 0. Match the Azure\nSKIASHARP_VERSION variable to the package version.\n\nNative HarfBuzz remains 14.4.0. Advance its package/file revision band from\n14.4.0.100 to 14.4.0.200 for the new Skia milestone, retaining assembly\nversion 1.0.0.0 and SONAME 0.61440.0.\n\nUpdate the explicit Linux artifact inventory to expect Skia's 157.0.0\naliases. Leaving 156.0.0 there caused coverage to reject the correctly named\nnew artifacts as unclaimed. Keep strict inventory matching and the existing\nHarfBuzz alias expectations rather than adding a fallback or weakening\ncoverage.\n\n~~ Register the Vulkan headers consumed by m157 ~~\n\nThe native update adopts Vulkan-Headers 1.4.365 at\nc46850864f4661461b0f6cb9922c058ffea4915e for m157's protected-pipeline\nfeature types. Replace the former 1.4.345 registration and revision with\nthe source-derived version, exact DEPS identity and reviewed identity.\nKeep the recorded component version tied to the headers actually compiled.\n\n~~ Stop passing an unused HarfBuzz GN argument ~~\n\nRemove visibility_hidden=false from Linux HarfBuzz GN arguments after\nsource-build validation identified the unused input. This is not a request\nto hide the HarfBuzz API: the native target explicitly gives HB_EXTERN\ndefault visibility, and the Linux version script continues to export hb_*.\n\nIndependent regeneration matched the checked-in binding output. Before the\nancestry-only repin, the cleaned native source built on macOS ARM64 and\npassed the unfiltered SkiaSharp.Tests.Console.slnx solution. Native tree\nequality preserves that reviewed content; it is not a new runtime test run.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5595": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5595",
+      "title": "Sync Skia submodule and cgmanifest",
+      "body": "Latest: [M157] Merge upstream Skia while preserving fork compatibility (#416)\nCommit: ce0fc683a40c6ba84d55072f31aa48d55c8f2131\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}
