@@ -242,6 +242,11 @@ steps:
 # in the AWF chroot (shared host filesystem), but dotnet tool restore does NOT
 # carry into the chroot — the agent must run it itself.
 pre-agent-steps:
+  - name: Restore trusted config execute bits
+    # Activation snapshots .agents/.github/AGENTS.md from github.sha; artifact
+    # transport loses execute bits. Run after runtime restoration, not against
+    # the potentially different release/target base or a mutable branch tip.
+    run: python3 .github/scripts/skia-sync-restore-modes.py
   - name: Install native build dependencies
     # These run on the HOST and are visible to the agent's AWF chroot via the shared
     # filesystem. The agent itself CANNOT apt-install anything (no apt inside the chroot,

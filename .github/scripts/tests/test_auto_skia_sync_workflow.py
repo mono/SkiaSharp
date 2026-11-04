@@ -17,6 +17,25 @@ COMPILED_WORKFLOW = WORKFLOW.with_suffix(".lock.yml")
 
 
 class AutoSkiaSyncWorkflowTests(unittest.TestCase):
+    def test_config_modes_are_restored_after_snapshot_before_builds_and_agent(self):
+        compiled = yaml.safe_load(COMPILED_WORKFLOW.read_text(encoding="utf-8"))
+        steps = compiled["jobs"]["agent"]["steps"]
+        names = [step.get("name") for step in steps]
+        repair = names.index("Restore trusted config execute bits")
+        self.assertGreater(repair, names.index("Restore agent config folders from base branch"))
+        self.assertGreater(repair, names.index("Restore inline skills from activation artifact"))
+        self.assertLess(repair, names.index("Install native build dependencies"))
+        self.assertEqual(
+            "python3 .github/scripts/skia-sync-restore-modes.py",
+            steps[repair]["run"],
+        )
+        activation = compiled["jobs"]["activation"]["steps"]
+        checkout = next(step for step in activation if step.get("name") == "Checkout .github and .agents folders")
+        self.assertNotIn("ref", checkout["with"])
+        snapshot = next(step for step in activation if step.get("name") == "Save agent config folders for base branch restoration")
+        self.assertEqual(".agents .github", snapshot["env"]["GH_AW_AGENT_FOLDERS"])
+        self.assertEqual("AGENTS.md", snapshot["env"]["GH_AW_AGENT_FILES"])
+
     def test_dispatch_inputs_keep_target_before_optional_branch(self):
         for path, expected in (
             (WORKFLOW, ["target", "target_branch"]),
