@@ -1,16 +1,32 @@
 {
   "theme": "Skia m157 engine update",
-  "highlights_headline": "The next SkiaSharp release moves the native renderer to Skia m157 without changing managed API declarations.",
-  "highlights_body": "The update retains the m156 glyph-bounds guard. HarfBuzzSharp moves to package revision 14.4.0.200 while its native HarfBuzz engine remains at 14.4.0.",
-  "breaking": [],
+  "highlights_headline": "The next SkiaSharp release updates the native renderer to Skia m157 and corrects generated interop calling conventions.",
+  "highlights_body": "The engine update preserves the existing glyph-bounds guard. Graphite Metal adopts an iOS/tvOS 15 native runtime minimum. HarfBuzzSharp advances to package revision 14.4.0.200; native HarfBuzz remains at 14.4.0.",
+  "breaking": [
+    {
+      "title": "Check Graphite Metal deployment requirements",
+      "body": "Graphite Metal now requires iOS or tvOS 15 or later at the native backend level. Ensure deployments using this backend meet that minimum without lowering any higher managed or framework requirements. Its macOS minimum remains 12.",
+      "prs": [5542]
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
           "lead": "Skia m157",
-          "detail": "Updates the bundled renderer to milestone 157, preserving the existing glyph-bounds guard and leaving managed wrappers and generated declarations unchanged.",
+          "detail": "Updates the bundled renderer to milestone 157 while preserving the m156 glyph-bounds guard. The engine update leaves managed wrappers and API declarations unchanged.",
           "prs": [5542]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Explicit cdecl for generated interop",
+          "detail": "Generated LibraryImport bindings for SkiaSharp, HarfBuzzSharp, SceneGraph, Skottie, and Resources now explicitly use cdecl, matching the existing DllImport and delegate paths. This addresses an ABI mismatch on Windows x86 without changing public APIs or native exports; runtime verification of the reported stack-growth symptom remains outstanding.",
+          "prs": [5565]
         }
       ]
     }
