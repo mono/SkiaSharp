@@ -102,6 +102,8 @@ An update is complete only when:
   (such as `git diff` or `git merge-base --is-ancestor`) explicitly, distinguishing a negative result
   from an error. Never let `head` or `tee` mask a command's failure; capture complete output first,
   then inspect bounded excerpts.
+- Handle expected search no-matches and absent optional paths explicitly; propagate tool errors.
+  Discover shim filenames in the fork's `src/c/` and `include/c/`, not the upstream tree.
 - Keep complete logs and broad diffs in `$ARTIFACT_DIR`; inspect bounded excerpts instead of
   streaming large generated files, manifests, or successful build/test logs into model context.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.

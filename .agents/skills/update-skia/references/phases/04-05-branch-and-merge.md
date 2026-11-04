@@ -79,7 +79,7 @@ Account for every revision and enabled/commented-state difference:
 | Decision | Required evidence |
 |---|---|
 | Preserve fork | A fork patch, build file, security update, or product choice depends on it |
-| Accept target | No fork customization depends on the old state |
+| Accept target | Phase 02's source-backed version comparison rules out an unexplained downgrade, and no fork customization depends on the old state |
 | Compatibility roll | Target source uses dependency API absent from the fork revision |
 
 For a compatibility-sensitive revision, inspect the upstream roll commit and its coupled source
@@ -113,6 +113,7 @@ merge:
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
+  --skia-root "${GITHUB_WORKSPACE:-$PWD}/externals/skia" \
   --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
   --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
