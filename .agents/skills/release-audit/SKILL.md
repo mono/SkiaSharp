@@ -28,6 +28,15 @@ The command is read-only and reports:
 - pending next-milestone transitions; and
 - dependency-ordered Finish, build, publication, sync, and Prepare actions.
 
+Each release's `Publication` checks the shipping `nuget` rows in
+`scripts/VERSIONS.txt` at its exact source commit, including the distinct
+SkiaSharp and HarfBuzzSharp versions. Report `complete`, `partial`, `missing`,
+and `unavailable` separately, retaining missing ID/version pairs and service
+errors. Other shipping IDs, exact tags, and cut builds can identify a shipment
+whose SkiaSharp anchor is absent. Never infer completeness from an anchor or
+first/last push order. A partial shipment must complete its existing
+BAR/publication run before Finish or a replacement cut.
+
 Use `-Json` when coordinating several lines. Exit `0` means no action, `1`
 means work or inconsistency remains, and `2` means a required check was
 unavailable. Never reinterpret exit `2` as healthy.

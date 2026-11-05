@@ -250,11 +250,99 @@ function Get-ReleaseIdentity([string] $PublicVersion) {
 function Get-NuGetPackageVersions([string] $PackageId) {
     $lowerId = $PackageId.ToLowerInvariant()
     $uri = "https://api.nuget.org/v3-flatcontainer/$lowerId/index.json"
-    $response = Invoke-RestMethod -Uri $uri
+    $response = Invoke-RestMethod -Uri $uri -TimeoutSec 30
     if ($null -eq $response.versions) {
         throw "NuGet catalogue for $PackageId does not contain a versions array."
     }
     return @($response.versions | ForEach-Object { [string] $_ })
+}
+
+# Reads only the shipping NuGet rows, at the shipment's source revision.
+function ConvertFrom-ReleasePackageVersions([string] $Text, [string] $PublicVersion) {
+    $release = Get-ReleaseIdentity $PublicVersion
+    $suffix = $PublicVersion.Substring($release.Numeric.Length)
+    $packages = @{}
+    foreach ($line in $Text -split "`r?`n") {
+        if ($line -match '^\s*(#|$)') { continue }
+        if ($line -match '^\s*(?<id>\S+)\s+nuget\s+(?<version>\d+\.\d+\.\d+(?:\.\d+)?)\s*$') {
+            $id = $Matches.id
+            $version = $Matches.version
+            if ($packages.ContainsKey($id)) {
+                throw "Duplicate NuGet package $id in scripts/VERSIONS.txt."
+            }
+            $packages[$id] = $version
+        } elseif ($line -match '^\s*\S+\s+nuget\s+') {
+            throw "Invalid NuGet row in scripts/VERSIONS.txt: $line"
+        }
+    }
+    if ($packages['SkiaSharp'] -ne $release.Numeric -or !$packages.ContainsKey('HarfBuzzSharp')) {
+        throw "scripts/VERSIONS.txt does not identify both package families for $PublicVersion."
+    }
+    return @(foreach ($id in $packages.Keys | Sort-Object) {
+        # NuGet normalizes a zero fourth numeric component away.
+        $version = $packages[$id] -replace '^(\d+\.\d+\.\d+)\.0$', '$1'
+        [pscustomobject] @{ Id = $id; Version = "$version$suffix" }
+    })
+}
+
+function Get-ReleaseExpectedPackages([string] $Root, [string] $Commit, [string] $PublicVersion) {
+    $text = Get-GitFileText -Root $Root -Commit $Commit -Path $ReleaseVersionsPath
+    return @(ConvertFrom-ReleasePackageVersions -Text $text -PublicVersion $PublicVersion)
+}
+
+# Cache catalogue successes and failures for one audit, rather than downloading packages.
+function Get-NuGetVersionIndex([string] $PackageId, [hashtable] $Cache) {
+    if (!$Cache.ContainsKey($PackageId)) {
+        try {
+            $Cache[$PackageId] = [pscustomobject] @{
+                Available = $true
+                Versions = @(Get-NuGetPackageVersions -PackageId $PackageId)
+                Message = ''
+            }
+        } catch {
+            $notFound = $_.Exception.Response -and [int] $_.Exception.Response.StatusCode -eq 404
+            $Cache[$PackageId] = [pscustomobject] @{
+                Available = [bool] $notFound
+                Versions = @()
+                Message = if ($notFound) { '' } else { $_.Exception.Message }
+            }
+        }
+    }
+    return $Cache[$PackageId]
+}
+
+function Get-NuGetPublication([object[]] $ExpectedPackages, [hashtable] $Cache = @{}) {
+    if (!$ExpectedPackages.Count) {
+        throw 'A publication check requires a nonempty expected shipping package set.'
+    }
+    $checks = @(foreach ($package in $ExpectedPackages) {
+        $index = Get-NuGetVersionIndex -PackageId $package.Id -Cache $Cache
+        $status = if (!$index.Available) { 'unavailable' } elseif ($package.Version -in $index.Versions) {
+            'present'
+        } else { 'missing' }
+        [pscustomobject] @{
+            Id = $package.Id
+            Version = $package.Version
+            State = $status
+            Url = "https://api.nuget.org/v3-flatcontainer/$($package.Id.ToLowerInvariant())/$($package.Version.ToLowerInvariant())/$($package.Id.ToLowerInvariant()).nuspec"
+            Message = $index.Message
+        }
+    })
+    $present = @($checks | Where-Object State -eq 'present')
+    $missing = @($checks | Where-Object State -eq 'missing')
+    $unavailable = @($checks | Where-Object State -eq 'unavailable')
+    $state = if ($unavailable.Count) { 'unavailable' } elseif (!$missing.Count) { 'complete' } elseif (
+        $present.Count
+    ) { 'partial' } else { 'missing' }
+    return [pscustomobject] @{
+        State = $state
+        Available = !$unavailable.Count
+        ExpectedCount = $checks.Count
+        PublishedCount = $present.Count
+        MissingPackages = $missing
+        UnavailablePackages = $unavailable
+        Packages = $checks
+    }
 }
 
 # Resolves a prerelease identity to its one exact public NuGet package version.
@@ -651,6 +739,10 @@ Export-ModuleMember -Function @(
     'Set-GitHubItemMilestone',
     'Get-ReleaseIdentity',
     'Get-NuGetPackageVersions',
+    'ConvertFrom-ReleasePackageVersions',
+    'Get-ReleaseExpectedPackages',
+    'Get-NuGetVersionIndex',
+    'Get-NuGetPublication',
     'Resolve-NuGetPackageVersion',
     'Get-NuGetPackageSource',
     'Invoke-GitHubMutation',

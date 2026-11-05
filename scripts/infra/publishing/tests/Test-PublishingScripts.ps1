@@ -224,6 +224,113 @@ foreach ($invalid in @('4.152.0-preview.0', '4.152.0-rc.0', '4.152.0-beta.1', '4
     Assert-Equal $invalid (Resolve-NuGetPackageVersion 'SkiaSharp' $invalid) `
         "A non-resolvable version ($invalid) was not passed through unchanged."
 }
+$shippingVersions = @'
+# nuget versions
+skia release m152
+SkiaSharp assembly 4.152.0.0
+Some.Tool release 1.0.0
+SkiaSharp nuget 4.152.0
+SkiaSharp.NativeAssets.Linux nuget 4.152.0
+SkiaSharp.Views.Gtk4 nuget 4.152.0
+HarfBuzzSharp nuget 14.2.1.300
+HarfBuzzSharp.NativeAssets.Linux nuget 14.2.1.300
+'@
+$expectedShipping = @(ConvertFrom-ReleasePackageVersions $shippingVersions '4.152.0-rc.1.123.4')
+Assert-Equal 5 $expectedShipping.Count 'Nonshipping version rows entered the package inventory.'
+Assert-Equal '14.2.1.300-rc.1.123.4' ($expectedShipping | Where-Object Id -eq HarfBuzzSharp).Version `
+    'The distinct HarfBuzz version or shared build suffix was lost.'
+Assert-Equal '4.152.0-rc.1.123.4' ($expectedShipping | Where-Object Id -eq SkiaSharp).Version `
+    'The exact SkiaSharp version was lost.'
+$olderShipping = @(ConvertFrom-ReleasePackageVersions `
+    ($shippingVersions -replace '(?m)^SkiaSharp.Views.Gtk4.*\r?\n', '') '4.152.0')
+Assert-Equal 4 $olderShipping.Count 'An older source inventory acquired a newer package ID.'
+Assert-Equal '14.2.1.300' ($olderShipping | Where-Object Id -eq HarfBuzzSharp).Version `
+    'Stable publication unexpectedly acquired a suffix.'
+$zeroRevision = ConvertFrom-ReleasePackageVersions `
+    ($shippingVersions.Replace('14.2.1.300', '14.2.1.0')) '4.152.0'
+Assert-Equal '14.2.1' ($zeroRevision | Where-Object Id -eq HarfBuzzSharp).Version `
+    'NuGet normalization of a zero fourth component was not preserved.'
+Assert-Throws { ConvertFrom-ReleasePackageVersions "$shippingVersions`nSkiaSharp nuget 4.152.0" '4.152.0' } `
+    'Duplicate' 'Duplicate shipping package IDs were accepted.'
+Assert-Throws { ConvertFrom-ReleasePackageVersions $shippingVersions '4.153.0' } `
+    'both package families' 'An inventory from the wrong source revision was accepted.'
+Assert-Throws { Get-NuGetPublication -ExpectedPackages @() } 'nonempty' `
+    'An empty inventory was marked complete.'
+
+$publicationCache = @{}
+foreach ($package in $expectedShipping) {
+    $publicationCache[$package.Id] = [pscustomobject] @{
+        Available = $true; Versions = @($package.Version); Message = ''
+    }
+}
+$completePublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'complete' $completePublication.State 'Complete publication of both families was rejected.'
+Assert-Equal 5 $completePublication.PublishedCount 'The published count did not include both families.'
+$publicationCache['SkiaSharp.Views.Gtk4'].Versions = @()
+$partialPublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'partial' $partialPublication.State 'A missing views package was hidden by a public SkiaSharp anchor.'
+Assert-Equal @('SkiaSharp.Views.Gtk4') @($partialPublication.MissingPackages.Id) `
+    'The partial shipment did not identify its exact missing package.'
+Assert-Equal @('4.152.0-rc.1.123.4') @($partialPublication.MissingPackages.Version) `
+    'The missing-package result omitted the exact version.'
+$publicationCache['SkiaSharp'].Versions = @()
+$anchorlessPublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'partial' $anchorlessPublication.State 'A missing anchor hid other published packages.'
+$publicationCache['HarfBuzzSharp'].Versions = @('14.2.1.300-rc.1.999.9')
+$wrongFamilyBuild = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-True ($wrongFamilyBuild.MissingPackages.Id -contains 'HarfBuzzSharp') `
+    'A HarfBuzz package from another build satisfied the shipment.'
+foreach ($index in $publicationCache.Values) { $index.Versions = @() }
+Assert-Equal 'missing' (Get-NuGetPublication $expectedShipping $publicationCache).State `
+    'A wholly unpublished shipment was called partial.'
+$publicationCache['SkiaSharp'].Available = $false
+$publicationCache['SkiaSharp'].Message = 'HTTP 503'
+$unavailablePublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'unavailable' $unavailablePublication.State 'A failed registry check was classified as missing.'
+Assert-Equal 4 $unavailablePublication.MissingPackages.Count 'Known absences disappeared during an outage.'
+Assert-Equal @('SkiaSharp') @($unavailablePublication.UnavailablePackages.Id) `
+    'The unavailable package was not identified.'
+
+$script:RegistryCalls = 0
+function global:Invoke-RestMethod {
+    $script:RegistryCalls++
+    throw 'Registry temporarily unavailable (HTTP 503).'
+}
+try {
+    $failureCache = @{}
+    $failedIndex = Get-NuGetVersionIndex 'SkiaSharp' $failureCache
+    $null = Get-NuGetVersionIndex 'SkiaSharp' $failureCache
+    Assert-Equal 1 $script:RegistryCalls 'Registry failures were not cached within an audit.'
+    Assert-True (!$failedIndex.Available -and $failedIndex.Message -match '503') `
+        'The registry service error was hidden.'
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
+function global:Invoke-RestMethod {
+    $response = [Net.Http.HttpResponseMessage]::new([Net.HttpStatusCode]::NotFound)
+    throw [Microsoft.PowerShell.Commands.HttpResponseException]::new('Not Found', $response)
+}
+try {
+    $absentId = Get-NuGetVersionIndex 'New.Shipping.Package' @{}
+    Assert-True $absentId.Available 'A real HTTP 404 was classified as a service outage.'
+    Assert-Equal 0 $absentId.Versions.Count 'An absent package ID acquired published versions.'
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
+
+# The current Windows product pack inputs and shipping rows enumerate the same IDs.
+$currentVersionText = Get-Content (Join-Path $repositoryRoot 'scripts/VERSIONS.txt') -Raw
+$currentVersion = [regex]::Match($currentVersionText, '(?m)^SkiaSharp\s+nuget\s+(\S+)').Groups[1].Value
+$currentShipping = ConvertFrom-ReleasePackageVersions $currentVersionText $currentVersion
+$windowsPack = Get-Content (Join-Path $repositoryRoot 'source/SkiaSharpSource.windows.slnf') -Raw | ConvertFrom-Json
+$packIds = @($windowsPack.solution.projects | ForEach-Object {
+    [IO.Path]::GetFileNameWithoutExtension(($_ -replace '\\', '/'))
+} | Sort-Object)
+Assert-Equal $packIds @($currentShipping.Id | Sort-Object) `
+    'VERSIONS shipping rows no longer match product pack inputs; review the inventory contract.'
+$finishScript = Get-Content $finishPath -Raw
+Assert-True ($finishScript -match '(?s)Get-ReleaseExpectedPackages.*Get-NuGetPublication.*Cannot Finish.*Push-ReleaseTag') `
+    'Finish does not check the complete package set before mutating tags.'
 $releaseTopology = @(
     'v2.88.4-preview.95',
     'v4.150.2',
@@ -1300,7 +1407,10 @@ function New-AuditBranch([string] $Identity, [string] $Sha) {
 }
 
 function New-AuditPackage([string] $Version, [string] $Branch, [string] $Commit) {
-    return [pscustomobject] @{ Version = $Version; Branch = $Branch; Commit = $Commit }
+    return [pscustomobject] @{
+        Version = $Version; Branch = $Branch; Commit = $Commit
+        Publication = [pscustomobject] @{ State = 'complete'; Available = $true }
+    }
 }
 
 function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = $false) {
@@ -1729,6 +1839,81 @@ Assert-Equal 'version bump only' $state.MaintenanceDelta.Text 'The bump-only mai
 Assert-Equal $sha0 $state.Releases[0].SourceCommit 'NuGet source provenance was omitted from the audit state.'
 
 $realChanges = New-AuditDelta '2 queued release commits' 2
+foreach ($publication in @($partialPublication, $anchorlessPublication, $unavailablePublication)) {
+    $incompletePackage = New-AuditPackage '4.152.0' $stable.Name $sha0
+    $incompletePackage.Publication = $publication
+    $incompleteState = Get-ReleaseAuditState `
+        -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($incompletePackage) `
+        -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
+    Assert-True ($incompleteState.Actions.Kind -notcontains 'finish' -and
+        $incompleteState.Actions.Kind -notcontains 'start' -and
+        $incompleteState.Actions.Kind -notcontains 'publish') `
+        "$($publication.State) publication offered Finish, a new cut, or a fresh publication."
+    Assert-True (@($incompleteState.Actions.Kind | Where-Object {
+        $_ -in @('complete-publication', 'publication-unavailable')
+    }).Count -gt 0) 'Incomplete publication did not direct completing/checking the existing shipment.'
+    $incompleteReport = (Write-ReleaseAuditReport $incompleteState) -join "`n"
+    Assert-True ($incompleteReport -match $publication.State -and $incompleteReport -match 'SkiaSharp') `
+        'The human-readable report hid incomplete publication.'
+}
+
+$discoveryBranch = New-AuditBranch '4.152.0-rc.1' $sha0
+$discoveryRegistry = @{}
+foreach ($package in $expectedShipping) {
+    $discoveryRegistry[$package.Id.ToLowerInvariant()] = @()
+}
+$discoveryRegistry['skiasharp.nativeassets.linux'] = @('4.152.0-rc.1.123.4')
+$discoveryRegistry['harfbuzzsharp'] = @('14.2.1.300-rc.1.123.4')
+function global:Invoke-RestMethod {
+    param($Uri, $TimeoutSec)
+    $id = ([uri] $Uri).Segments[-2].TrimEnd('/')
+    return [pscustomobject] @{ versions = @($discoveryRegistry[$id]) }
+}
+try {
+    & {
+        function Get-ReleaseExpectedPackages {
+            param($Root, $Commit, $PublicVersion)
+            ConvertFrom-ReleasePackageVersions $shippingVersions $PublicVersion
+        }
+        function Get-ResolvedGitCommit { param($Root, $Reference) return $Reference }
+        function Get-NuGetPackageSource {
+            param($PackageId, $PackageVersion)
+            [pscustomobject] @{ Branch = $discoveryBranch.Name; Commit = $discoveryBranch.Sha }
+        }
+        function Get-ReleasePackageBuild {
+            param($Branch, $Commit)
+            [pscustomobject] @{ Available = $true; BuildNumber = '' }
+        }
+        $discovered = @(Get-ReleaseAuditPackages -Root $repositoryRoot -Line '4.152' `
+            -Branches @($discoveryBranch) -TagShas @{} -PackageBuilds @{})
+        Assert-Equal 1 $discovered.Count 'A partial shipment without SkiaSharp was not discovered.'
+        Assert-Equal '4.152.0-rc.1.123.4' $discovered[0].Version `
+            'A HarfBuzz/native version was not mapped to its exact SkiaSharp shipment.'
+        Assert-Equal 'partial' $discovered[0].Publication.State `
+            'An anchorless shipment was not classified as partial.'
+        Assert-Equal 2 $discovered[0].Publication.PublishedCount `
+            'The anchorless shipment did not include both published families.'
+        Assert-True ($discovered[0].Publication.MissingPackages.Id -contains 'SkiaSharp') `
+            'The absent SkiaSharp anchor was omitted from missing packages.'
+
+        $discoveryRegistry['skiasharp.nativeassets.linux'] = @()
+        $harfBuzzOnly = @(Get-ReleaseAuditPackages -Root $repositoryRoot -Line '4.152' `
+            -Branches @($discoveryBranch) -TagShas @{} -PackageBuilds @{})
+        Assert-Equal 1 $harfBuzzOnly.Count 'A HarfBuzz-only partial shipment was hidden.'
+        Assert-Equal 1 $harfBuzzOnly[0].Publication.PublishedCount `
+            'A HarfBuzz-only partial shipment was counted incorrectly.'
+
+        $discoveryRegistry['harfbuzzsharp'] = @()
+        $tagOnly = @(Get-ReleaseAuditPackages -Root $repositoryRoot -Line '4.152' `
+            -Branches @() -TagShas @{ 'v4.152.0-rc.1.123.4' = $sha0 } -PackageBuilds @{})
+        Assert-Equal 1 $tagOnly.Count 'An exact tag with no anchor or live branch was not audited.'
+        Assert-Equal 'missing' $tagOnly[0].Publication.State `
+            'A tag was treated as proof that packages were public.'
+        Assert-Equal $sha0 $tagOnly[0].Commit 'The tagged source commit was lost.'
+    }
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
 $state = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges

@@ -62,6 +62,139 @@ function Get-ReleaseBranches([string] $Root, [string] $Line) {
     return @($result)
 }
 
+function Get-ReleaseAuditPackages(
+    [string] $Root,
+    [string] $Line,
+    [object[]] $Branches,
+    [hashtable] $TagShas,
+    [hashtable] $PackageBuilds
+) {
+    $cache = @{}
+    $packages = @{}
+    $exactVersionPattern = '^\d+\.\d+\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$'
+    $anchor = Get-NuGetVersionIndex -PackageId 'SkiaSharp' -Cache $cache
+    foreach ($version in $anchor.Versions) {
+        if ($version -notmatch "^$([regex]::Escape($Line))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$") {
+            continue
+        }
+        $source = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $version
+        $commit = Get-ResolvedGitCommit -Root $Root -Reference $source.Commit
+        $expected = Get-ReleaseExpectedPackages -Root $Root -Commit $commit -PublicVersion $version
+        $packages[$version] = [pscustomobject] @{
+            Version = $version; Branch = $source.Branch; Commit = $commit
+            Publication = Get-NuGetPublication -ExpectedPackages $expected -Cache $cache
+        }
+    }
+
+    $discoveryBranches = @($Branches)
+    foreach ($tag in $TagShas.Keys) {
+        $candidate = $tag -replace '^v'
+        if ($candidate -notmatch $exactVersionPattern) { continue }
+        $identity = Get-ReleaseIdentity $candidate
+        if ($identity.Branch -notin $Branches.Name) {
+            $discoveryBranches += [pscustomobject] @{
+                Name = $identity.Branch
+                Sha = Get-ResolvedGitCommit -Root $Root -Reference $TagShas[$tag]
+                Identity = ConvertTo-ReleaseMilestone ($identity.Branch -replace '^release/')
+            }
+        }
+    }
+    if (!$anchor.Available -and !$discoveryBranches.Count) {
+        throw "NuGet discovery unavailable for ${Line}: $($anchor.Message)"
+    }
+    foreach ($branch in $discoveryBranches | Sort-Object { $_.Identity.SortKey } -Descending) {
+        $numeric = $branch.Identity.Numeric
+        $expected = @(Get-ReleaseExpectedPackages -Root $Root -Commit $branch.Sha -PublicVersion $numeric)
+        $candidates = @{}
+        foreach ($package in $expected | Sort-Object { $_.Id -notlike 'SkiaSharp*' }, Id) {
+            $index = Get-NuGetVersionIndex -PackageId $package.Id -Cache $cache
+            foreach ($version in $index.Versions) {
+                if ($version -ne $package.Version -and !$version.StartsWith("$($package.Version)-", [StringComparison]::OrdinalIgnoreCase)) {
+                    continue
+                }
+                $candidate = "$numeric$($version.Substring($package.Version.Length))"
+                if ($candidate -notmatch $exactVersionPattern) { continue }
+                $identity = Get-ReleaseIdentity $candidate
+                if ($identity.Branch -eq $branch.Name -and !$packages.ContainsKey($candidate) -and !$candidates.ContainsKey($candidate)) {
+                    $candidates[$candidate] = [pscustomobject] @{ Id = $package.Id; Version = $version }
+                }
+            }
+        }
+        # Tags and exact-cut builds also identify candidates when no anchor was pushed.
+        foreach ($tag in $TagShas.Keys) {
+            $candidate = $tag -replace '^v'
+            if ($candidate -notmatch $exactVersionPattern) { continue }
+            $identity = Get-ReleaseIdentity $candidate
+            if ($identity.Branch -eq $branch.Name -and !$packages.ContainsKey($candidate)) {
+                if (!$candidates.ContainsKey($candidate)) { $candidates[$candidate] = $null }
+            }
+        }
+        if (!$branch.Identity.Channel -and !$packages.ContainsKey($numeric) -and !$candidates.ContainsKey($numeric)) {
+            $candidates[$numeric] = $null
+        }
+        $hasShipment = @($packages.Values | Where-Object {
+            (Get-ReleaseIdentity $_.Version).Branch -eq $branch.Name
+        }).Count -gt 0
+        if (!$hasShipment) {
+            $build = Get-ReleasePackageBuild -Branch $branch.Name -Commit $branch.Sha
+            $PackageBuilds[$branch.Name] = $build
+            $candidate = ([string] $build.BuildNumber -split '\+', 2)[0]
+            if ($candidate) {
+                $identity = Get-ReleaseIdentity $candidate
+                if ($identity.Branch -ne $branch.Name) {
+                    throw "Build #$($build.BuildId) version $candidate does not match $($branch.Name)."
+                }
+                $candidates[$candidate] = $null
+            }
+        }
+        foreach ($candidate in $candidates.Keys | Sort-Object) {
+            $evidence = $candidates[$candidate]
+            $source = if ($evidence) {
+                Get-NuGetPackageSource -PackageId $evidence.Id -PackageVersion $evidence.Version
+            } else {
+                [pscustomobject] @{
+                    Branch = $branch.Name
+                    Commit = if ($TagShas.ContainsKey("v$candidate")) { $TagShas["v$candidate"] } else { $branch.Sha }
+                }
+            }
+            # A reused HarfBuzz version can belong to a different Skia release.
+            if ($source.Branch -ne $branch.Name) {
+                if ($evidence.Id -like 'SkiaSharp*') {
+                    throw "$($evidence.Id) $($evidence.Version) names $($source.Branch), expected $($branch.Name)."
+                }
+                $buildVersion = ([string] $PackageBuilds[$branch.Name].BuildNumber -split '\+', 2)[0]
+                if ($candidate -ne $numeric -and !$TagShas.ContainsKey("v$candidate") -and $candidate -ne $buildVersion) { continue }
+                $source = [pscustomobject] @{
+                    Branch = $branch.Name
+                    Commit = if ($TagShas.ContainsKey("v$candidate")) { $TagShas["v$candidate"] } else { $branch.Sha }
+                }
+            }
+            $commit = Get-ResolvedGitCommit -Root $Root -Reference $source.Commit
+            $shipmentPackages = Get-ReleaseExpectedPackages -Root $Root -Commit $commit -PublicVersion $candidate
+            $packages[$candidate] = [pscustomobject] @{
+                Version = $candidate; Branch = $source.Branch; Commit = $commit
+                Publication = Get-NuGetPublication -ExpectedPackages $shipmentPackages -Cache $cache
+            }
+        }
+        if (!@($packages.Values | Where-Object {
+            (Get-ReleaseIdentity $_.Version).Branch -eq $branch.Name
+        }).Count) {
+            $unavailable = @($expected | Where-Object { !$cache[$_.Id].Available })
+            $branch | Add-Member -NotePropertyName Publication -NotePropertyValue ([pscustomobject] @{
+                State = if ($unavailable.Count) { 'unavailable' } else { 'missing' }
+                Available = !$unavailable.Count
+                ExpectedCount = $expected.Count; PublishedCount = 0
+                MissingPackages = @()
+                UnavailablePackages = @($unavailable | ForEach-Object {
+                    [pscustomobject] @{ Id = $_.Id; Message = $cache[$_.Id].Message }
+                })
+                Message = 'No exact shipment version was discovered; no Finish recommendation is possible.'
+            })
+        }
+    }
+    return @($packages.Values | Sort-Object Version)
+}
+
 function Get-ReleaseLinePullRequests([string] $Line, [switch] $IncludeMain) {
     $pages = Invoke-GitHubJsonWithRetry -Arguments @(
         'api', '--paginate', '--slurp', "repos/$ReleaseRepository/pulls?state=open&per_page=100"
@@ -667,9 +800,13 @@ function Get-ReleaseAuditState(
         }
         if (!$shipments.Count) {
             $branchBuild = if ($buildChecksEnabled) { $PackageBuilds[$branch.Name] } else { $null }
-            $state = if ($branch -eq $latest) { 'publish release branch' } else { 'superseded' }
+            $state = if ($branch.Publication.State -eq 'unavailable') {
+                'publication unavailable'
+            } elseif ($branch -eq $latest) { 'publish release branch' } else { 'superseded' }
             $action = if ($branch -ne $latest) {
                 '-'
+            } elseif ($branch.Publication.State -eq 'unavailable') {
+                'Restore publication checks'
             } elseif (!$buildChecksEnabled -or ($branchBuild -and $branchBuild.Ready)) {
                 'Publish release branch'
             } elseif ($branchBuild -and $branchBuild.State -eq 'running') {
@@ -687,6 +824,7 @@ function Get-ReleaseAuditState(
                 SourceBranch = '-'
                 SourceCommit = '-'
                 PackageBuild = $branchBuild
+                Publication = $branch.Publication
                 Tag = '-'
                 GitHubRelease = '-'
                 State = $state
@@ -706,14 +844,26 @@ function Get-ReleaseAuditState(
                 $githubRelease.tagName -eq $tag -and
                 ([bool] $githubRelease.isPrerelease) -eq ([bool] $release.IsPrerelease)
             $needsFinish = !$tagSha -or $tagSha -ne $package.Commit -or !$releaseConsistent
-            $state = if ($needsFinish) {
+            $publication = $package.Publication
+            $complete = $publication.State -eq 'complete'
+            $superseded = $publication.State -eq 'missing' -and $branch -ne $latest -and !$tagSha
+            $branchBuild = if ($buildChecksEnabled) { $PackageBuilds[$branch.Name] } else { $null }
+            $state = if ($superseded) {
+                'superseded'
+            } elseif (!$complete) {
+                "$($publication.State) publication"
+            } elseif ($needsFinish) {
                 'finish shipment'
             } elseif (!$sourceMatches) {
                 'public source differs from branch'
             } else {
                 'finished'
             }
-            $action = if ($needsFinish) {
+            $action = if ($superseded) {
+                '-'
+            } elseif (!$complete) {
+                if ($publication.State -eq 'unavailable') { 'Restore publication checks' } else { 'Complete existing shipment' }
+            } elseif ($needsFinish) {
                 'Finish shipment'
             } elseif (!$sourceMatches) {
                 'Investigate provenance'
@@ -727,13 +877,27 @@ function Get-ReleaseAuditState(
                 NuGet = $package.Version
                 SourceBranch = $package.Branch
                 SourceCommit = $package.Commit
-                PackageBuild = $null
+                PackageBuild = if (!$complete) { $branchBuild } else { $null }
+                Publication = $publication
                 Tag = if ($tagSha) { "$tag@$($tagSha.Substring(0, 12))" } else { "$tag (missing)" }
                 GitHubRelease = if ($githubRelease) { if ($releaseConsistent) { 'present' } else { 'inconsistent' } } else { 'missing' }
                 State = $state
                 Action = $action
             })
-            if ($needsFinish) {
+            if ($superseded) {
+                continue
+            } elseif ($publication.State -eq 'missing' -and $branch -eq $latest) {
+                if (!$buildChecksEnabled -or ($branchBuild -and $branchBuild.Ready)) {
+                    $actions.Add((New-ReleaseAuditAction -Kind 'publish' `
+                        -Message "No packages from $($package.Version) are public. Verify the exact producing Build/Tests and BAR for $($branch.Name)@$($branch.Sha), check the existing publication run, then publish this existing shipment."))
+                } else {
+                    $actions.Add((New-ReleasePackageBuildAction -Build $branchBuild -Purpose $branch.Name))
+                }
+            } elseif (!$complete) {
+                $kind = if ($publication.State -eq 'unavailable') { 'publication-unavailable' } else { 'complete-publication' }
+                $actions.Add((New-ReleaseAuditAction -Kind $kind `
+                    -Message "$action $($package.Version) from $($package.Branch)@$($package.Commit): $($publication.State), $($publication.PublishedCount)/$($publication.ExpectedCount) packages public. Investigate the existing producing BAR/publication run; do not prepare a replacement or Finish."))
+            } elseif ($needsFinish) {
                 $actions.Add((New-ReleaseAuditAction `
                     -Kind 'finish' `
                     -Message "Finish public shipment $($package.Version)." `
@@ -756,6 +920,8 @@ function Get-ReleaseAuditState(
             $releaseConsistent = $githubRelease -and $tagSha -eq $package.Commit -and
                 ([bool] $githubRelease.isPrerelease) -eq ([bool] $release.IsPrerelease)
             $needsFinish = !$tagSha -or !$releaseConsistent
+            $publication = $package.Publication
+            $complete = $publication.State -eq 'complete'
             $rows.Add([pscustomobject] @{
                 Identity = $release.Branch -replace '^release/'
                 Branch = $branchName
@@ -764,12 +930,17 @@ function Get-ReleaseAuditState(
                 SourceBranch = $package.Branch
                 SourceCommit = $package.Commit
                 PackageBuild = $null
+                Publication = $publication
                 Tag = if ($tagSha) { "$($release.Tag)@$($tagSha.Substring(0, 12))" } else { "$($release.Tag) (missing)" }
                 GitHubRelease = if ($githubRelease) { if ($releaseConsistent) { 'present' } else { 'inconsistent' } } else { 'missing' }
-                State = if ($needsFinish) { 'finish shipment' } else { 'finished branch unavailable' }
-                Action = if ($needsFinish) { 'Finish shipment' } else { 'Investigate branch' }
+                State = if (!$complete) { "$($publication.State) publication" } elseif ($needsFinish) { 'finish shipment' } else { 'finished branch unavailable' }
+                Action = if (!$complete) { 'Investigate publication' } elseif ($needsFinish) { 'Finish shipment' } else { 'Investigate branch' }
             })
-            if ($needsFinish) {
+            if (!$complete) {
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind $(if ($publication.State -eq 'unavailable') { 'publication-unavailable' } else { 'complete-publication' }) `
+                    -Message "Investigate $($publication.State) publication $($package.Version): $($publication.PublishedCount)/$($publication.ExpectedCount) packages public; complete the existing shipment before Finish."))
+            } elseif ($needsFinish) {
                 $actions.Add((New-ReleaseAuditAction `
                     -Kind 'finish' `
                     -Message "Finish public shipment $($package.Version)." `
@@ -788,7 +959,8 @@ function Get-ReleaseAuditState(
     }
     $latestPublic = if ($latestShipments.Count) {
         @($latestShipments | Where-Object {
-            $_.Package.Branch -eq $latest.Name -and $_.Package.Commit -eq $latest.Sha
+            $_.Package.Branch -eq $latest.Name -and $_.Package.Commit -eq $latest.Sha -and
+                $_.Package.Publication.State -eq 'complete'
         })
     } else {
         @()
@@ -802,7 +974,10 @@ function Get-ReleaseAuditState(
         $null
     }
     if ($latest -and !$latestShipments.Count) {
-        if (!$buildChecksEnabled -or ($latestBuild -and $latestBuild.Ready)) {
+        if ($latest.Publication.State -eq 'unavailable') {
+            $actions.Add((New-ReleaseAuditAction -Kind 'publication-unavailable' `
+                -Message "Restore publication checks for $($latest.Name) before recommending publication or Finish."))
+        } elseif (!$buildChecksEnabled -or ($latestBuild -and $latestBuild.Ready)) {
             $buildEvidence = if ($latestBuild) {
                 " Exact-tip build #$($latestBuild.BuildId) succeeded with BAR $($latestBuild.BarId).$(if ($latestBuild.Message) { " $($latestBuild.Message)" })"
             } else {
@@ -867,7 +1042,8 @@ function Get-ReleaseAuditState(
     }
     $releaseBlocked = [bool] (
         ($IncomingPullRequest -and $IncomingPullRequest.BlocksRelease) -or
-        ($UpstreamSync -and $UpstreamSync.BlocksRelease)
+        ($UpstreamSync -and $UpstreamSync.BlocksRelease) -or
+        @($rows | Where-Object { $_.Publication -and $_.Publication.State -ne 'complete' -and $_.State -ne 'superseded' }).Count
     )
     $maintenanceBuild = if ($buildChecksEnabled -and $Maintenance) {
         $PackageBuilds[$Maintenance.Branch]
@@ -960,7 +1136,9 @@ function Get-ReleaseAuditOutputWidth {
 }
 
 function Get-ReleaseAuditPublicShipments([pscustomobject] $State) {
-    $public = @($State.Releases | Where-Object NuGet -ne '-')
+    $public = @($State.Releases | Where-Object {
+        $_.NuGet -ne '-' -and (!$_.Publication -or $_.Publication.PublishedCount -gt 0 -or $_.Publication.State -eq 'complete')
+    })
     if (!$public.Count) {
         return @()
     }
@@ -980,6 +1158,8 @@ function Format-ReleaseAuditNextSteps([object[]] $Actions, [switch] $BeforePrepa
         switch ($_.Kind) {
             'finish' { 'Finish public shipment' }
             'publish' { 'Verify CI/BAR, then Publish' }
+            'complete-publication' { 'Complete existing shipment before Finish' }
+            'publication-unavailable' { 'Restore publication checks and rerun audit' }
             'start' { 'Prepare next release' }
             'prepare' { 'Resolve next release identity' }
             'investigate' { 'Investigate release provenance' }
@@ -1014,10 +1194,16 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     $releaseActions = @($State.Actions | Where-Object { $_.Kind -notin $syncKinds -and $_.Kind -ne 'queued' })
     $public = @(Get-ReleaseAuditPublicShipments $State)
     $candidate = @($State.Releases | Where-Object {
-        $_.NuGet -eq '-' -and $_.State -ne 'superseded'
+        ($_.NuGet -eq '-' -or ($_.Publication -and $_.Publication.State -ne 'complete')) -and $_.State -ne 'superseded'
     })
     $summary = [pscustomobject] [ordered] @{
-        'On NuGet' = if ($public.Count) { $public.NuGet -join "`n" } else { 'None' }
+        'On NuGet' = if ($public.Count) {
+            @($public | ForEach-Object {
+                if ($_.Publication -and $_.Publication.State -ne 'complete') {
+                    "$($_.NuGet) ($($_.Publication.State): $($_.Publication.PublishedCount)/$($_.Publication.ExpectedCount))"
+                } else { $_.NuGet }
+            }) -join "`n"
+        } else { 'None' }
         'Cut release' = if ($candidate.Count) { $candidate.Identity -join "`n" } else { 'None' }
         'Build / BAR' = if ($candidate.Count) {
             @($candidate | ForEach-Object { Format-ReleasePackageBuild $_.PackageBuild -Compact }) -join "`n"
@@ -1059,6 +1245,15 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     if ($public.Count) {
         foreach ($release in $public) {
             Write-Output "   $($release.NuGet) source: $($release.SourceBranch)@$($release.SourceCommit)"
+            if ($release.Publication) {
+                Write-Output "   Publication: $($release.Publication.State); $($release.Publication.PublishedCount)/$($release.Publication.ExpectedCount) exact ID/version pairs public."
+                foreach ($missing in $release.Publication.MissingPackages) {
+                    Write-Output "   Missing: $($missing.Id) $($missing.Version) - $($missing.Url)"
+                }
+                foreach ($unavailable in $release.Publication.UnavailablePackages) {
+                    Write-Output "   Unavailable: $($unavailable.Id) $($unavailable.Version) - $($unavailable.Message)"
+                }
+            }
             if ($release.State -ne 'finished') {
                 Write-Output "   Tag: $($release.Tag); GitHub Release: $($release.GitHubRelease); $($release.Action)."
             }
@@ -1071,6 +1266,20 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
         foreach ($release in $candidate) {
             Write-Output (Format-ReleaseAuditField -Label 'Release branch' -Value $release.Branch)
             Write-Output (Format-ReleaseAuditField -Label 'Release SHA' -Value $release.BranchSha)
+            if ($release.Publication) {
+                Write-Output "   Publication: $($release.Publication.State); $($release.Publication.PublishedCount)/$($release.Publication.ExpectedCount) exact ID/version pairs public."
+                if ($release.Publication.Message) {
+                    Write-Output "   $($release.Publication.Message)"
+                }
+                if ($release.NuGet -ne '-') {
+                    Write-Output "   Expected shipment version: $($release.NuGet)"
+                }
+                if ($release.Publication.PublishedCount -eq 0) {
+                    foreach ($missing in $release.Publication.MissingPackages) {
+                        Write-Output "   Missing: $($missing.Id) $($missing.Version) - $($missing.Url)"
+                    }
+                }
+            }
             Write-Output (Format-ReleaseAuditField `
                 -Label 'Release CI / BAR' `
                 -Value (Format-ReleasePackageBuild $release.PackageBuild))
@@ -1079,6 +1288,9 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
             }
             if ($release.PackageBuild -and !$release.PackageBuild.Available) {
                 Write-Output "   Release CI unavailable: $($release.PackageBuild.Message)"
+            }
+            foreach ($unavailable in $release.Publication.UnavailablePackages) {
+                Write-Output "   Publication unavailable: $($unavailable.Id) - $($unavailable.Message)"
             }
         }
         Write-Output '   Only this release-branch SHA/BAR is a publication candidate; package CI alone is not approval.'
@@ -1399,18 +1611,14 @@ try {
         -Expected $incomingPullRequest `
         -Legacy $legacyIncomingPullRequest
     $branches = @(Get-ReleaseBranches -Root $root -Line $Version)
-    $linePackages = foreach ($publicVersion in Get-NuGetPackageVersions -PackageId 'SkiaSharp') {
-        if ($publicVersion -match "^$([regex]::Escape($Version))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*\.\d+(?:\.\d+)?)?$") {
-            $source = Get-NuGetPackageSource -PackageId 'SkiaSharp' -PackageVersion $publicVersion
-            [pscustomobject] @{ Version = $publicVersion; Branch = $source.Branch; Commit = $source.Commit }
-        }
-    }
     $githubReleases = Get-GitHubReleaseMap -Repository $ReleaseRepository
     $tagShas = Get-RemoteTagMap -Root $root -Remote origin -Pattern "refs/tags/v$Version.*"
     $latest = @($branches | Where-Object {
         $_.Name -match "^release/$([regex]::Escape($Version))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*)?$"
     } | Sort-Object { $_.Identity.SortKey } | Select-Object -Last 1)
     $packageBuilds = @{}
+    $linePackages = @(Get-ReleaseAuditPackages -Root $root -Line $Version -Branches $branches `
+        -TagShas $tagShas -PackageBuilds $packageBuilds)
     if ($maintenance) {
         $packageBuilds[$maintenance.Branch] = Get-ReleasePackageBuild `
             -Branch $maintenance.Branch `
@@ -1418,12 +1626,12 @@ try {
     }
     $latestHasShipment = if ($latest) {
         @($linePackages | Where-Object {
-            (Get-ReleaseIdentity $_.Version).Branch -eq $latest.Name
+            (Get-ReleaseIdentity $_.Version).Branch -eq $latest.Name -and $_.Publication.State -eq 'complete'
         }).Count -gt 0
     } else {
         $false
     }
-    if ($latest -and !$latestHasShipment) {
+    if ($latest -and !$latestHasShipment -and !$packageBuilds.ContainsKey($latest.Name)) {
         $packageBuilds[$latest.Name] = Get-ReleasePackageBuild `
             -Branch $latest.Name `
             -Commit $latest.Sha
@@ -1461,7 +1669,8 @@ try {
     $buildCheckUnavailable = @($packageBuilds.Values | Where-Object {
         !$_.Available
     }).Count -gt 0
-    $exitCode = if ($buildCheckUnavailable) {
+    $publicationUnavailable = @($state.Releases | Where-Object { $_.Publication.State -eq 'unavailable' }).Count -gt 0
+    $exitCode = if ($buildCheckUnavailable -or $publicationUnavailable) {
         2
     } elseif ($state.Actions.Count) {
         1
