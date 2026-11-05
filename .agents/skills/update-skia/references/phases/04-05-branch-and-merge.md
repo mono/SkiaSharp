@@ -99,7 +99,10 @@ Before committing:
 - Verify every conflict and fork patch has a recorded disposition.
 - Compare final `DEPS` against both the fork base and target, then confirm every dependency-decision
   row names the revision and enabled/commented state actually present in the merged file.
-- Run `git diff --check` and confirm no unresolved paths remain.
+- Scope `git diff --check` findings to this update's own fork-authored changes and conflict
+  resolutions, using the exact target upstream SHA and previous fork patches to attribute them.
+  Preserve upstream formatting verbatim; do not edit unrelated imported lines or historical fork
+  patches to silence a whole-merge whitespace check. Confirm no unresolved paths remain.
 
 Create the required two-parent merge commit. Verify its parents are the selected mono/skia base and
 the target upstream commit. Build-driven dependency or C API adaptations belong in later, separate
@@ -125,6 +128,9 @@ Inspect both old and new patches for every table row. Replace every `TODO` with 
 disposition and concrete source/commit evidence, then rerun with `--validate`. Reapply or adapt any
 patch that was neither upstreamed nor intentionally obsolete. Never infer integrity from commit or
 file counts alone.
+
+Review this update's own changes against the exact target upstream and previous fork patches;
+do not justify needless cosmetic differences as `intentional-addition`. Undo those cosmetic edits.
 
 ## Gate
 
