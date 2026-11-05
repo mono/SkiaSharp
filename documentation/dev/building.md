@@ -171,11 +171,11 @@ dotnet cake --target=externals-linux --arch=x64
 ### Xcode 27
 
 Xcode 27.0 requires macOS 26.6 or later. For managed Apple applications, use
-.NET SDK 10.0.401, workload set **10.0.401.1** (Apple packs **27.0.10722**)
-and MAUI **10.0.110** or a compatible later servicing release. These are separate
-version pins; installing the SDK alone does not update workloads. See the
-[Apple workload release](https://github.com/dotnet/macios/releases/tag/dotnet-10.0.1xx-xcode27.0-10722).
-Xcode 27.1 is not interchangeable with 27.0.
+the SDK pinned in `global.json` and a workload set compatible with your selected
+Xcode, as specified by the [Apple workload releases](https://github.com/dotnet/macios/releases).
+The MAUI package version is defined by `MauiVersion` in
+`source/SkiaSharp.Build.props`. These are separate version pins; installing the
+SDK alone does not update workloads. Xcode 27.1 is not interchangeable with 27.0.
 
 To keep the machine's shared SDK and workloads unchanged, provision a
 repository-local SDK, then install the required workloads into that SDK:
@@ -183,8 +183,12 @@ repository-local SDK, then install the required workloads into that SDK:
 ```sh
 use_installed_dotnet_cli=false ./eng/common/dotnet.sh --info
 ./.dotnet/dotnet workload install ios tvos macos maccatalyst maui \
-  --version 10.0.401.1 --configfile nuget.config
+  --version "<workload-set-version>" --configfile nuget.config
 ```
+
+Replace `<workload-set-version>` with the compatible set from the Apple workload
+release. CI's workload set is defined by `DOTNET_WORKLOAD_VERSION` in
+`scripts/azure-templates-variables.yml` and may target an older Xcode.
 
 Allow sufficient free space for the SDK, workload packs, Skia checkout and native
 build outputs. Select Xcode per process rather than changing `xcode-select`:
@@ -220,9 +224,10 @@ their output directories contain the newly built libraries:
 Do not use `externals-download` for native changes or disable Xcode-version
 validation to work around an incompatible workload. Existing .NET 9 targets
 still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
-workload. The existing CI Xcode 26.3/workload 10.0.202 path is retained for that
-coverage; use the local pairing above to validate Xcode 27 without changing the
-CI pins. The current macOS 15/Sequoia CI images cannot run Xcode 27.
+workload. The CI Apple toolchain and workload pins in
+`scripts/azure-templates-variables.yml` retain that coverage; use a compatible
+local pairing to validate Xcode 27 without changing the CI pins. The current
+macOS 15/Sequoia CI images cannot run Xcode 27.
 
 ## GTK4 Tests
 
