@@ -48,11 +48,14 @@ public package provenance, tags, GitHub Releases, and incoming milestone Skia
 sync work. Follow its next-action recommendation rather than cutting a new
 release while publication or Finish is outstanding.
 
-Publication checks use the `nuget` rows in `scripts/VERSIONS.txt` at the shipment's
-source commit, including each family's version and the producing build's
-prerelease suffix. A public SkiaSharp package alone does not prove completeness.
+Publication checks use the `nuget` rows in `scripts/VERSIONS.txt` selected by the
+shipping pack filter at the shipment's source commit, including each family's
+version and the producing build's prerelease suffix. A public SkiaSharp package
+alone does not prove completeness.
 The JSON `Publication` field distinguishes `complete`, `partial`, `missing`, and
 `unavailable`, with counts and exact `MissingPackages`/`UnavailablePackages`.
+Previously published package versions count toward availability; a partial set
+does not prove a publication run started or failed.
 Registry errors and unresolved shipment versions are reported, not treated as
 successful checks.
 

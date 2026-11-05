@@ -287,7 +287,23 @@ function ConvertFrom-ReleasePackageVersions([string] $Text, [string] $PublicVers
 
 function Get-ReleaseExpectedPackages([string] $Root, [string] $Commit, [string] $PublicVersion) {
     $text = Get-GitFileText -Root $Root -Commit $Commit -Path $ReleaseVersionsPath
-    return @(ConvertFrom-ReleasePackageVersions -Text $text -PublicVersion $PublicVersion)
+    $packages = @(ConvertFrom-ReleasePackageVersions -Text $text -PublicVersion $PublicVersion)
+    $sourceFiles = (Invoke-Git -Root $Root -Arguments @('ls-tree', '--name-only', "${Commit}:source")).Output
+    $filters = @($sourceFiles -split "`r?`n" | Where-Object { $_ -ieq 'SkiaSharpSource.windows.slnf' })
+    if ($filters.Count -ne 1) {
+        throw "Cannot identify the Windows shipping pack filter at $Commit."
+    }
+    # Windows includes both families' cross-platform packages. A version row can
+    # precede inclusion of its project in the shipping solution.
+    $filter = Get-GitFileText -Root $Root -Commit $Commit -Path "source/$($filters[0])" | ConvertFrom-Json
+    $packedIds = @($filter.solution.projects | ForEach-Object {
+        [IO.Path]::GetFileNameWithoutExtension(($_ -replace '\\', '/'))
+    })
+    $shipping = @($packages | Where-Object Id -in $packedIds)
+    if ('SkiaSharp' -notin $shipping.Id -or 'HarfBuzzSharp' -notin $shipping.Id) {
+        throw "The shipping pack filter at $Commit does not include both package families."
+    }
+    return $shipping
 }
 
 # Cache catalogue successes and failures for one audit, rather than downloading packages.

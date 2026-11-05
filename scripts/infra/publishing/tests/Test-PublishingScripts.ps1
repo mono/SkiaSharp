@@ -911,6 +911,31 @@ try {
         -Remote $bareRoot `
         -Tag v9.9.9 `
         -SourceCommit $otherSha } 'expected' 'A dry run ignored a conflicting release tag.'
+
+    $null = New-Item -ItemType Directory -Path (Join-Path $gitRoot 'scripts'), (Join-Path $gitRoot 'source')
+    $shippingVersions | Set-Content (Join-Path $gitRoot 'scripts/VERSIONS.txt')
+    $packFilterPath = Join-Path $gitRoot 'source/SkiaSharpSource.Windows.slnf'
+    $packFilter = @{ solution = @{ projects = @(
+        '..\binding\SkiaSharp\SkiaSharp.csproj',
+        '..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj'
+    ) } }
+    $packFilter | ConvertTo-Json -Depth 4 | Set-Content $packFilterPath
+    & git -C $gitRoot add scripts source
+    & git -C $gitRoot commit --quiet -m 'Shipping inventory before project inclusion'
+    $beforeInclusion = (git -C $gitRoot rev-parse HEAD).Trim()
+    $packFilter.solution.projects += 'SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj'
+    $packFilter | ConvertTo-Json -Depth 4 | Set-Content $packFilterPath
+    & git -C $gitRoot add source
+    & git -C $gitRoot commit --quiet -m 'Include new shipping project'
+    $afterInclusion = (git -C $gitRoot rev-parse HEAD).Trim()
+    $olderExpected = @(Get-ReleaseExpectedPackages $gitRoot $beforeInclusion '4.152.0-rc.1.123.4')
+    $newerExpected = @(Get-ReleaseExpectedPackages $gitRoot $afterInclusion '4.152.0-rc.1.123.4')
+    Assert-Equal @('HarfBuzzSharp', 'SkiaSharp') @($olderExpected.Id) `
+        'A version row absent from the source pack filter became an expected package.'
+    Assert-Equal @('HarfBuzzSharp', 'SkiaSharp', 'SkiaSharp.Views.Gtk4') @($newerExpected.Id) `
+        'A newly included shipping project was omitted from the expected set.'
+    Assert-Equal '14.2.1.300-rc.1.123.4' ($olderExpected | Where-Object Id -eq HarfBuzzSharp).Version `
+        'Filtering the exact-source shipping inventory lost the HarfBuzz version.'
 } finally {
     Remove-Item $gitRoot, $bareRoot, $readerRoot -Recurse -Force -ErrorAction SilentlyContinue
 }

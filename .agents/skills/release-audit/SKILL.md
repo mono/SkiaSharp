@@ -29,9 +29,9 @@ The command is read-only and reports:
 - dependency-ordered Finish, build, publication, sync, and Prepare actions.
 
 Report each release's `Publication` state and missing ID/version pairs.
-The expected set comes from `scripts/VERSIONS.txt` at the shipment's source
-commit, including both package families. Never infer completeness from
-SkiaSharp alone or push order. Partial publication requires investigating the
+The expected set comes from `scripts/VERSIONS.txt` and the shipping pack filter
+at the shipment's source commit, including both package families. Never infer
+completeness from SkiaSharp alone or push order. Partial publication requires investigating the
 existing BAR/publication run before Finish or a replacement cut; unavailable
 checks require restoring access and rerunning.
 
