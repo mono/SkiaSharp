@@ -28,12 +28,9 @@ The full command is read-only and reports:
 - pending next-milestone transitions; and
 - dependency-ordered Finish, build, publication, sync, and Prepare actions.
 
-Report each release's `Publication` state and missing ID/version pairs.
-The expected set comes from `scripts/VERSIONS.txt` and the shipping pack filter
-at the shipment's source commit, including both package families. Never infer
-completeness from SkiaSharp alone or push order. Partial publication requires investigating the
-existing BAR/publication run before Finish or a replacement cut; unavailable
-checks require restoring access and rerunning.
+Report `Publication` and missing ID/version pairs for both families. The expected
+set comes from the shipment's source `scripts/VERSIONS.txt` and pack filter.
+Do not offer Finish or a new cut for partial/unavailable publication.
 
 Use `-Json` when coordinating several lines. Exit `0` means no action, `1`
 means work or inconsistency remains, and `2` means a required check was
@@ -44,16 +41,14 @@ unavailable. Never reinterpret exit `2` as healthy.
 Use `-Check Upstream` for new upstream commits/sync PRs, `-Check Prepare` for
 bases ready to cut, `-Check Finish` for unfinished public shipments, or
 `-Check NuGet` for exact shipping-package availability. Omit it for `All`.
-Focused checks skip unrelated collection, not merely its presentation.
-Prepare still checks all release gates before offering a cut.
+Prepare checks all release gates; other checks skip unrelated collection.
 
 ```powershell
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.150-4.156 -Check Upstream -Json
 ```
 
-Report only the requested view for a focused check. Do not treat null omitted
-facts as healthy, invent actions from unchecked data, or describe exit `0` as
-full release readiness. The `Prepare` view must retain prerequisite blockers.
+Report only the requested view. Null facts were not checked; exit `0` applies
+only to the selected check. Retain all blockers in the `Prepare` view.
 
 ## Resolve requested lines
 
@@ -111,12 +106,9 @@ audit. If none is emitted, say so, rather than substituting a sync action.
 Keep partial builds, unavailable checks, provenance errors, and newer
 failed/canceled reruns explicit.
 
-Show the latest complete shipment as well as the latest partial shipment.
-Give every unresolved stable cut its own row, including older wholly
-unpublished cuts that JSON marks `superseded`. Include each cut's publication
-count and own exact build/BAR; label older missing cuts for review, not automatic
-publication. Do not hide a missing intermediate cut behind the latest cut or
-infer that it was deliberately abandoned. Unused older preview/RC branches
+Show the latest complete and partial shipments and every unresolved stable cut,
+including those marked `superseded`. Use each cut's own count/build/BAR; older
+missing cuts need review, not automatic publication. Unused preview/RC branches
 may remain in JSON only.
 
 ### 2. Branch readiness — get the base ready for Prepare

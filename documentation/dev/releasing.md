@@ -42,48 +42,31 @@ it. The post-stable bump PR targets that branch when present, otherwise `main`.
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
 ```
 
-The read-only command accepts `A.B` or an inclusive same-major milestone range
-such as `4.150-4.156` (`4.150..4.156` also works). Add `-Json` for structured output:
-one object for a single line, an array for a range. A failed line does not stop
-the remaining checks; the process returns the highest per-line exit code.
+Use `-Check` to select the data to fetch:
 
-Use `-Check` to fetch only the data needed for a question:
-
-| Check | Question / data collected |
+| Check | Scope |
 | --- | --- |
 | `All` (default) | Full release, branch readiness, and upstream audit |
-| `Upstream` | New upstream commits and pending sync PRs, including their own build evidence |
-| `Prepare` | Which bases can be prepared? Checks all publication, build, and upstream gates, then reports readiness and blockers |
-| `Finish` | Unfinished shipments: exact package completeness and tag/GitHub Release state; no base-readiness or upstream checks |
-| `NuGet` | Exact package completeness only; source tags/cut builds may be read to discover shipment versions |
+| `Upstream` | Upstream commits and sync PRs/builds |
+| `Prepare` | Branch readiness, including publication and upstream blockers |
+| `Finish` | Package completeness and tag/GitHub Release state |
+| `NuGet` | Package completeness; source tags/builds used only to identify shipments |
 
-For example:
+`-Version` accepts `A.B` or an inclusive same-major range:
 
 ```powershell
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.150-4.156 -Check Upstream
-pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152 -Check NuGet -Json
 ```
 
-Focused JSON includes `check` and the collected `sections`; unrequested facts
-are null, not successful checks. Exit `0` applies only to the requested check.
-Only `All` and `Prepare` can recommend preparing a release, since other checks
-omit prerequisite gates.
+`4.150..4.156` is equivalent. With `-Json`, a line returns one object and a range
+returns an array. Failed lines do not stop the range; the highest exit code wins.
+Unrequested facts are null. Only `All` and `Prepare` check every gate for a new cut.
 
-It checks maintenance and release branches, exact-tip internal builds/BAR IDs,
-public package provenance, tags, GitHub Releases, and incoming milestone Skia
-sync work. Follow its next-action recommendation rather than cutting a new
-release while publication or Finish is outstanding.
-
-Publication checks use the `nuget` rows in `scripts/VERSIONS.txt` selected by the
-shipping pack filter at the shipment's source commit, including each family's
-version and the producing build's prerelease suffix. A public SkiaSharp package
-alone does not prove completeness.
-The JSON `Publication` field distinguishes `complete`, `partial`, `missing`, and
-`unavailable`, with counts and exact `MissingPackages`/`UnavailablePackages`.
-Previously published package versions count toward availability; a partial set
-does not prove a publication run started or failed.
-Registry errors and unresolved shipment versions are reported, not treated as
-successful checks.
+Package checks use `scripts/VERSIONS.txt` and the shipping pack filter at the
+shipment's source commit, with separate SkiaSharp/HarfBuzzSharp versions.
+JSON `Publication` reports `complete`, `partial`, `missing`, or `unavailable`,
+plus counts and missing/unavailable ID/version pairs. Reused public versions
+count as available; a partial set alone does not establish why packages are missing.
 
 The text report combines shipping status in one table and keeps sync work separate:
 
@@ -107,12 +90,9 @@ missing/unavailable evidence is explicit. An up-to-date sync branch is
 not proof its PR has merged. Upstream work does not block publication or Finish
 of an already-cut release.
 
-The release table shows the latest complete shipment, the latest exact public
-shipment, and older unfinished or inconsistent shipments. Older unpublished
-stable cuts remain visible with their package counts and exact build/BAR,
-even when a newer cut exists. These gaps require review, not automatic
-publication: a newer cut does not explain why an older one was left unpublished.
-Unused older preview/RC branches remain in `-Json` rather than the summary.
+The release table includes the latest complete and partial shipments and older
+unpublished stable cuts. Older gaps require review, not automatic publication.
+Full history, including unused preview/RC branches, remains in `-Json`.
 A partial package build with a BAR still requires review; even a
 succeeded release build requires the detailed publication checks below.
 
@@ -206,8 +186,7 @@ After approval, monitor **that same run** and independently verify every
 staged shipping ID/version on NuGet.org. A partial publish or failed run must
 be investigated with its evidence intact, not automatically retried.
 Only a complete public package set permits a Finish plan.
-`finish-release.ps1` independently enforces the same full-inventory check before
-creating tags or GitHub Releases.
+`finish-release.ps1` checks package completeness before creating tags or Releases.
 
 ## 5. Finish the public release
 
