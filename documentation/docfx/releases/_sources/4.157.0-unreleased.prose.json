@@ -1,16 +1,32 @@
 {
   "theme": "Skia m157 engine update",
-  "highlights_headline": "The next SkiaSharp release moves the native renderer to Skia m157 without changing managed API declarations.",
-  "highlights_body": "The update retains the m156 glyph-bounds guard. HarfBuzzSharp moves to package revision 14.4.0.200 while its native HarfBuzz engine remains at 14.4.0.",
-  "breaking": [],
+  "highlights_headline": "SkiaSharp 4.157.0 updates the native rendering engine to Skia m157 without changing the managed API surface.",
+  "highlights_body": "This unreleased line also makes calling conventions explicit in generated LibraryImport bindings. Graphite Metal adopts a native iOS and tvOS 15 runtime minimum.",
+  "breaking": [
+    {
+      "title": "Graphite Metal requires iOS and tvOS 15",
+      "body": "The native Graphite Metal backend now requires iOS or tvOS 15. Apps using this backend must deploy to version 15 or later while continuing to meet any higher managed or framework requirements. Its macOS minimum remains 12.",
+      "prs": [5542]
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
           "lead": "Skia m157",
-          "detail": "Updates the bundled renderer to milestone 157, preserving the existing glyph-bounds guard and leaving managed wrappers and generated declarations unchanged.",
+          "detail": "Updates the native engine to milestone 157 while preserving the fork's m156 glyph-bounds guard. Managed wrappers and generated declarations are unchanged by this engine update. HarfBuzz stays at native version 14.4.0; its package revision advances from 14.4.0.100 to 14.4.0.200.",
           "prs": [5542]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Explicit cdecl calling conventions",
+          "detail": "Generated LibraryImport bindings for SkiaSharp, HarfBuzzSharp, SceneGraph, Skottie, and Resources now explicitly use cdecl, matching DllImport and delegate paths. This addresses a Windows x86 ABI mismatch; runtime validation of the reported stack growth in optimized calls remains outstanding.",
+          "prs": [5565]
         }
       ]
     }
