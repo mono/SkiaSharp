@@ -1,16 +1,32 @@
 {
-  "theme": "Skia m157 engine update",
-  "highlights_headline": "The next SkiaSharp release moves the native renderer to Skia m157 without changing managed API declarations.",
-  "highlights_body": "The update retains the m156 glyph-bounds guard. HarfBuzzSharp moves to package revision 14.4.0.200 while its native HarfBuzz engine remains at 14.4.0.",
-  "breaking": [],
+  "theme": "Skia m157 and interop reliability",
+  "highlights_headline": "The upcoming SkiaSharp 4.157.0 release updates the native engine to Skia m157.",
+  "highlights_body": "The update keeps the managed API unchanged and makes calling conventions explicit in source-generated native imports. Graphite Metal users should review the iOS and tvOS runtime requirement below.",
+  "breaking": [
+    {
+      "title": "Graphite Metal requires iOS and tvOS 15",
+      "body": "Graphite Metal now requires iOS or tvOS 15 or later. If you use this backend, ensure your deployment target meets that minimum as well as any higher managed or framework requirements. This is a backend-specific native runtime minimum, not a change to all SkiaSharp platform requirements; Graphite Metal's macOS minimum remains 12.",
+      "prs": [5542]
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m157",
-          "detail": "Updates the bundled renderer to milestone 157, preserving the existing glyph-bounds guard and leaving managed wrappers and generated declarations unchanged.",
+          "lead": "Skia m157 engine update",
+          "detail": "Updates the bundled renderer to Skia m157 without changing managed wrappers or API declarations. The update retains SkiaSharp's glyph-bounds guard from m156.",
           "prs": [5542]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Explicit calling conventions for generated imports",
+          "detail": "LibraryImport declarations now explicitly use cdecl, matching the existing DllImport and delegate paths across SkiaSharp, HarfBuzzSharp, SceneGraph, Skottie, and Resources. This addresses an ABI mismatch relevant to Windows x86; runtime validation of the reported optimized-call stack growth remains outstanding. Public APIs and native exports are unchanged.",
+          "prs": [5565]
         }
       ]
     }
