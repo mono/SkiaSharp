@@ -2317,7 +2317,8 @@ $finishState = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{} -GitHubReleases @{} -Delta (New-AuditDelta 'none')
 $finishReport = @(Write-ReleaseAuditReport $finishState) -join "`n"
-Assert-True ($finishReport -match '(?m)^4\.152\.0 \(complete\)\s+None\s+N/A\s+Finish\s+public\s+shipment\s*$' -and
+Assert-True ($finishReport -match '4\.152\.0 \(complete\)' -and
+    $finishReport -match '(?m)^Release action:\s+Finish public shipment\s*$' -and
     $finishReport -match 'Release - Finish \(workflow ref=main\): version=4\.152\.0; push=false' -and
     $finishReport -match 'None awaiting publication') `
     'The report confused Finish for public packages with publishing a prepared branch.'
