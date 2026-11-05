@@ -322,7 +322,7 @@ try {
 $currentVersionText = Get-Content (Join-Path $repositoryRoot 'scripts/VERSIONS.txt') -Raw
 $currentVersion = [regex]::Match($currentVersionText, '(?m)^SkiaSharp\s+nuget\s+(\S+)').Groups[1].Value
 $currentShipping = ConvertFrom-ReleasePackageVersions $currentVersionText $currentVersion
-$windowsPack = Get-Content (Join-Path $repositoryRoot 'source/SkiaSharpSource.windows.slnf') -Raw | ConvertFrom-Json
+$windowsPack = Get-Content (Join-Path $repositoryRoot 'source/SkiaSharpSource.Windows.slnf') -Raw | ConvertFrom-Json
 $packIds = @($windowsPack.solution.projects | ForEach-Object {
     [IO.Path]::GetFileNameWithoutExtension(($_ -replace '\\', '/'))
 } | Sort-Object)
