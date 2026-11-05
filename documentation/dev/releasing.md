@@ -81,9 +81,13 @@ missing/unavailable evidence is explicit. An up-to-date sync branch is
 not proof its PR has merged. Upstream work does not block publication or Finish
 of an already-cut release.
 
-The release table shows the latest exact public shipment plus any older
-unfinished or inconsistent shipments. Full history remains available in
-`-Json`. A partial package build with a BAR still requires review; even a
+The release table shows the latest complete shipment, the latest exact public
+shipment, and older unfinished or inconsistent shipments. Older unpublished
+stable cuts remain visible with their package counts and exact build/BAR,
+even when a newer cut exists. These gaps require review, not automatic
+publication: a newer cut does not explain why an older one was left unpublished.
+Unused older preview/RC branches remain in `-Json` rather than the summary.
+A partial package build with a BAR still requires review; even a
 succeeded release build requires the detailed publication checks below.
 
 | Recommendation | Next step |

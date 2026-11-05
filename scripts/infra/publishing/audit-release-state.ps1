@@ -1148,8 +1148,17 @@ function Get-ReleaseAuditPublicShipments([pscustomobject] $State) {
     $latestTag = Get-ShippedTag -Title $latestIdentity.Identity -Tags @(
         $public | ForEach-Object { "v$($_.NuGet)" }
     )
+    $complete = @($public | Where-Object { !$_.Publication -or $_.Publication.State -eq 'complete' })
+    $latestComplete = $complete |
+        Sort-Object { (ConvertTo-ReleaseMilestone $_.Identity).SortKey } |
+        Select-Object -Last 1
+    $completeTag = if ($latestComplete) {
+        Get-ShippedTag -Title $latestComplete.Identity -Tags @(
+            $complete | ForEach-Object { "v$($_.NuGet)" }
+        )
+    }
     return @($public | Where-Object {
-        "v$($_.NuGet)" -eq $latestTag -or $_.State -ne 'finished'
+        "v$($_.NuGet)" -eq $latestTag -or "v$($_.NuGet)" -eq $completeTag -or $_.State -ne 'finished'
     })
 }
 
@@ -1196,24 +1205,41 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     $candidate = @($State.Releases | Where-Object {
         ($_.NuGet -eq '-' -or ($_.Publication -and $_.Publication.State -ne 'complete')) -and $_.State -ne 'superseded'
     })
+    $olderUnpublished = @($State.Releases | Where-Object {
+        $_.State -eq 'superseded' -and $_.Identity -match '^\d+\.\d+\.\d+(?:\.\d+)?$'
+    })
+    $reportedCuts = @(@($candidate) + @($olderUnpublished) |
+        Sort-Object { (ConvertTo-ReleaseMilestone $_.Identity).SortKey })
     $summary = [pscustomobject] [ordered] @{
         'On NuGet' = if ($public.Count) {
             @($public | ForEach-Object {
                 if ($_.Publication -and $_.Publication.State -ne 'complete') {
                     "$($_.NuGet) ($($_.Publication.State): $($_.Publication.PublishedCount)/$($_.Publication.ExpectedCount))"
-                } else { $_.NuGet }
+                } else { "$($_.NuGet) (complete)" }
             }) -join "`n"
         } else { 'None' }
-        'Cut release' = if ($candidate.Count) { $candidate.Identity -join "`n" } else { 'None' }
-        'Build / BAR' = if ($candidate.Count) {
-            @($candidate | ForEach-Object { Format-ReleasePackageBuild $_.PackageBuild -Compact }) -join "`n"
+        'Cut release' = if ($reportedCuts.Count) {
+            @($reportedCuts | ForEach-Object {
+                if ($_.Publication) {
+                    "$($_.Identity) ($($_.Publication.State): $($_.Publication.PublishedCount)/$($_.Publication.ExpectedCount))"
+                } else { $_.Identity }
+            }) -join "`n"
+        } else { 'None' }
+        'Build / BAR' = if ($reportedCuts.Count) {
+            @($reportedCuts | ForEach-Object { Format-ReleasePackageBuild $_.PackageBuild -Compact }) -join "`n"
         } else {
             'N/A'
         }
         'Next release step' = Format-ReleaseAuditNextSteps $releaseActions -BeforePrepare:(!$candidate.Count)
     }
-    $table = $summary | Format-Table -AutoSize -Wrap | Out-String -Width (Get-ReleaseAuditOutputWidth)
+    $width = Get-ReleaseAuditOutputWidth
+    $columnWidth = [int] [Math]::Floor(($width - 3) / 4)
+    $columns = @($summary.PSObject.Properties.Name | ForEach-Object {
+        @{ Expression = [string] $_; Width = $columnWidth }
+    })
+    $table = $summary | Format-Table -Property $columns -Wrap | Out-String -Width $width
     Write-Output $table.TrimEnd()
+    Write-Output (Format-ReleaseAuditField -Label 'Release action' -Value $summary.'Next release step')
     Write-Output ''
     foreach ($action in $releaseActions) {
         Write-Output "   $($action.Message)"
@@ -1258,14 +1284,17 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
                 Write-Output "   Tag: $($release.Tag); GitHub Release: $($release.GitHubRelease); $($release.Action)."
             }
         }
-        Write-Output '   Latest public shipment and any older unfinished/inconsistent shipments shown; full history: -Json.'
+        Write-Output '   Latest complete and latest public shipments, plus older unfinished/inconsistent shipments shown; full history: -Json.'
         Write-Output '   Finish completes the tag and GitHub Release; it does not publish packages.'
     }
 
-    if ($candidate.Count) {
-        foreach ($release in $candidate) {
+    if ($reportedCuts.Count) {
+        foreach ($release in $reportedCuts) {
             Write-Output (Format-ReleaseAuditField -Label 'Release branch' -Value $release.Branch)
             Write-Output (Format-ReleaseAuditField -Label 'Release SHA' -Value $release.BranchSha)
+            if ($release.State -eq 'superseded') {
+                Write-Output '   Older unpublished cut: a newer cut exists. Review why it was left unpublished; do not automatically publish it.'
+            }
             if ($release.Publication) {
                 Write-Output "   Publication: $($release.Publication.State); $($release.Publication.PublishedCount)/$($release.Publication.ExpectedCount) exact ID/version pairs public."
                 if ($release.Publication.Message) {
@@ -1293,7 +1322,8 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
                 Write-Output "   Publication unavailable: $($unavailable.Id) - $($unavailable.Message)"
             }
         }
-        Write-Output '   Only this release-branch SHA/BAR is a publication candidate; package CI alone is not approval.'
+        Write-Output '   Publication actions apply only to their named cut and exact SHA/BAR; older unpublished cuts are shown for review, not automatic publication.'
+        Write-Output '   Package CI alone is not approval.'
     } else {
         Write-Output '   None awaiting publication.'
     }

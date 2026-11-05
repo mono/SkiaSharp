@@ -2181,6 +2181,47 @@ Assert-True ($plainLatestUnpublishedReport -match
     'The report did not identify the release branch awaiting publication.'
 Assert-True ($plainLatestUnpublishedReport -notmatch 'release/4\.153\.0-preview\.1') `
     'A superseded unpublished branch cluttered the current shipment report.'
+
+$gapBranches = @(5..7 | ForEach-Object { New-AuditBranch "4.152.$_" $sha0 })
+$gapPackages = @(5..7 | ForEach-Object {
+    $package = New-AuditPackage "4.152.$_" "release/4.152.$_" $sha0
+    $package.Publication = [pscustomobject] @{
+        State = if ($_ -eq 5) { 'complete' } elseif ($_ -eq 6) { 'missing' } else { 'partial' }
+        PublishedCount = if ($_ -eq 5) { 40 } elseif ($_ -eq 6) { 0 } else { 14 }
+        ExpectedCount = 40
+        Available = $true
+    }
+    $package
+})
+$gapBuilds = @{}
+foreach ($number in 6..7) {
+    $gapBuilds["release/4.152.$number"] = New-AuditPackageBuild `
+        -Branch "release/4.152.$number" -Commit $sha0 -State green -Ready $true `
+        -BuildId (300 + $number) -BarId (330000 + $number)
+}
+$gapState = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches $gapBranches -Packages $gapPackages `
+    -TagShas @{ 'v4.152.5' = $sha0 } `
+    -GitHubReleases @{ 'v4.152.5' = (New-AuditRelease 'v4.152.5' $sha0) } `
+    -Delta (New-AuditDelta 'none') -PackageBuilds $gapBuilds
+$gapReport = @(Write-ReleaseAuditReport $gapState) -join "`n"
+Assert-Equal @('4.152.5', '4.152.7') @((Get-ReleaseAuditPublicShipments $gapState).NuGet) `
+    'A newer partial shipment hid the latest complete shipment.'
+Assert-True ($gapReport -match '4\.152\.5' -and
+    $gapReport -match 'Publication: complete; 40/40' -and
+    $gapReport -match 'Publication: partial; 14/40') `
+    'The release summary did not distinguish complete and partial public shipments.'
+Assert-True ($gapReport -match '(?s)Release branch:\s+release/4\.152\.6.*?Publication: missing; 0/40' -and
+    $gapReport -match '#306 succeeded / BAR 330006' -and
+    $gapReport -match 'buildId=306') `
+    'The report hid an older unpublished stable cut or borrowed another cut build/BAR.'
+Assert-True ($gapReport -match 'Review why it was left unpublished; do not automatically publish it') `
+    'The report treated an older missing cut as an instruction to publish it.'
+Assert-True (@($gapState.Actions.Kind) -notcontains 'publish' -and
+    @($gapState.Actions.Kind) -notcontains 'start' -and
+    @($gapState.Actions.Kind) -notcontains 'finish') `
+    'Reporting an older missing cut changed publication or release-cut gating.'
+
 Assert-True ($plainLatestUnpublishedReport -match
     '(?m)^main\s+1\s+not checked') `
     'The report did not distinguish the next Prepare base from the release branch.'
@@ -2252,9 +2293,9 @@ Assert-True ($greenReport -match "commitHash=$($latestRc.Sha)" -and
     'The report lost exact publication inputs or confused upstream work with existing publication.'
 Assert-True ($greenReport.IndexOf('commitHash=') -lt $greenReport.IndexOf('3. Upstream / sync')) `
     'Publication instructions were buried under future upstream work.'
-Assert-True ($greenReport -match 'Verify CI/BAR,\s+then Publish' -and
-    $failedReport -match 'Fix release build' -and
-    $partialReport -match 'Review partial release build') `
+Assert-True ($greenReport -match 'Verify\s+CI/BAR,\s+then\s+Publish' -and
+    $failedReport -match 'Fix\s+release\s+build' -and
+    $partialReport -match 'Review\s+partial\s+release\s+build') `
     'The release table did not give the release action appropriate to its own build.'
 $prepareReport = @(Write-ReleaseAuditReport $greenMaintenanceAllowsRelease) -join "`n"
 Assert-True ($prepareReport -match
@@ -2264,7 +2305,7 @@ $finishState = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{} -GitHubReleases @{} -Delta (New-AuditDelta 'none')
 $finishReport = @(Write-ReleaseAuditReport $finishState) -join "`n"
-Assert-True ($finishReport -match '(?m)^4\.152\.0\s+None\s+N/A\s+Finish public shipment\s*$' -and
+Assert-True ($finishReport -match '(?m)^4\.152\.0 \(complete\)\s+None\s+N/A\s+Finish\s+public\s+shipment\s*$' -and
     $finishReport -match 'Release - Finish \(workflow ref=main\): version=4\.152\.0; push=false' -and
     $finishReport -match 'None awaiting publication') `
     'The report confused Finish for public packages with publishing a prepared branch.'

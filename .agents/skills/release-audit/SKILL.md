@@ -92,6 +92,14 @@ audit. If none is emitted, say so, rather than substituting a sync action.
 Keep partial builds, unavailable checks, provenance errors, and newer
 failed/canceled reruns explicit.
 
+Show the latest complete shipment as well as the latest partial shipment.
+Give every unresolved stable cut its own row, including older wholly
+unpublished cuts that JSON marks `superseded`. Include each cut's publication
+count and own exact build/BAR; label older missing cuts for review, not automatic
+publication. Do not hide a missing intermediate cut behind the latest cut or
+infer that it was deliberately abandoned. Unused older preview/RC branches
+may remain in JSON only.
+
 ### 2. Branch readiness — get the base ready for Prepare
 
 | Line | Base branch / version | Additional commits | Open PRs | Build / BAR | Readiness action |
