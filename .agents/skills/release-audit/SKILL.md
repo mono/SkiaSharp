@@ -18,7 +18,7 @@ Use the repository command as the source of release facts:
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
 ```
 
-The command is read-only and reports:
+The full command is read-only and reports:
 
 - maintenance and specific release branches;
 - exact public NuGet provenance, tags, and GitHub Releases;
@@ -39,6 +39,22 @@ Use `-Json` when coordinating several lines. Exit `0` means no action, `1`
 means work or inconsistency remains, and `2` means a required check was
 unavailable. Never reinterpret exit `2` as healthy.
 
+## Choose the question
+
+Use `-Check Upstream` for new upstream commits/sync PRs, `-Check Prepare` for
+bases ready to cut, `-Check Finish` for unfinished public shipments, or
+`-Check NuGet` for exact shipping-package availability. Omit it for `All`.
+Focused checks skip unrelated collection, not merely its presentation.
+Prepare still checks all release gates before offering a cut.
+
+```powershell
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.150-4.156 -Check Upstream -Json
+```
+
+Report only the requested view for a focused check. Do not treat null omitted
+facts as healthy, invent actions from unchecked data, or describe exit `0` as
+full release readiness. The `Prepare` view must retain prerequisite blockers.
+
 ## Resolve requested lines
 
 Accept these natural selectors:
@@ -49,14 +65,17 @@ Accept these natural selectors:
 | `4.150-4.155` or `4.150..4.155` | Inclusive numeric range |
 | `4.15*` | Matching discovered release lines plus current/pending `main` |
 
-For a numeric range, expand each minor. For a wildcard, discover unique lines
+Pass a numeric range directly to the script. It checks every included line,
+returns a JSON array, preserves per-line failures, and exits with the highest
+per-line code. For a wildcard, discover unique lines
 from release branches, exact public NuGet versions, exact tags, current
 `main`, and the immediately following `skia-sync/mN -> main` transition.
 Do not invent empty lines beyond current or pending evidence.
 
 ## Run and aggregate
 
-Run independent line audits in parallel:
+For an exact line or numeric range, use one invocation. Run independently
+discovered wildcard lines in parallel:
 
 ```powershell
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 `

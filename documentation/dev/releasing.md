@@ -42,7 +42,33 @@ it. The post-stable bump PR targets that branch when present, otherwise `main`.
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
 ```
 
-The read-only command accepts exactly `A.B`; add `-Json` for structured output.
+The read-only command accepts `A.B` or an inclusive same-major milestone range
+such as `4.150-4.156` (`4.150..4.156` also works). Add `-Json` for structured output:
+one object for a single line, an array for a range. A failed line does not stop
+the remaining checks; the process returns the highest per-line exit code.
+
+Use `-Check` to fetch only the data needed for a question:
+
+| Check | Question / data collected |
+| --- | --- |
+| `All` (default) | Full release, branch readiness, and upstream audit |
+| `Upstream` | New upstream commits and pending sync PRs, including their own build evidence |
+| `Prepare` | Which bases can be prepared? Checks all publication, build, and upstream gates, then reports readiness and blockers |
+| `Finish` | Unfinished shipments: exact package completeness and tag/GitHub Release state; no base-readiness or upstream checks |
+| `NuGet` | Exact package completeness only; source tags/cut builds may be read to discover shipment versions |
+
+For example:
+
+```powershell
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.150-4.156 -Check Upstream
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152 -Check NuGet -Json
+```
+
+Focused JSON includes `check` and the collected `sections`; unrequested facts
+are null, not successful checks. Exit `0` applies only to the requested check.
+Only `All` and `Prepare` can recommend preparing a release, since other checks
+omit prerequisite gates.
+
 It checks maintenance and release branches, exact-tip internal builds/BAR IDs,
 public package provenance, tags, GitHub Releases, and incoming milestone Skia
 sync work. Follow its next-action recommendation rather than cutting a new

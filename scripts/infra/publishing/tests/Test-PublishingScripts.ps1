@@ -1392,8 +1392,8 @@ $auditParameters = @($auditCommand.Parameters.Keys | Where-Object {
         'ProgressAction', 'ErrorVariable', 'WarningVariable', 'InformationVariable',
         'OutVariable', 'OutBuffer', 'PipelineVariable')
 })
-Assert-Equal @('Json', 'Version') @($auditParameters | Sort-Object) `
-    'The release-line audit must expose only Version and Json.'
+Assert-Equal @('Check', 'Json', 'Version') @($auditParameters | Sort-Object) `
+    'The release-line audit must expose Version, Check, and Json.'
 Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.FullName `
     'The release-line audit Version parameter must be a string.'
 $auditScript = Get-Content $auditPath -Raw
@@ -1410,6 +1410,18 @@ Assert-True ($auditScript -match
     'The release-line audit does not inspect pre-transition sync PRs after a servicing branch is cut.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
+Assert-Equal @('4.152') @(Expand-ReleaseAuditVersions '4.152') 'An exact line selector changed.'
+Assert-Equal @('4.150', '4.151', '4.152') @(Expand-ReleaseAuditVersions '4.150-4.152') `
+    'An inclusive milestone range was not expanded.'
+Assert-Equal @('4.150', '4.151', '4.152') @(Expand-ReleaseAuditVersions '4.150..4.152') `
+    'The dotted range form was not expanded.'
+Assert-Throws { Expand-ReleaseAuditVersions '4.152-4.150' } 'ascending' 'A descending range was accepted.'
+Assert-Throws { Expand-ReleaseAuditVersions '3.119-4.150' } 'one major' 'A cross-major range was accepted.'
+Assert-Equal @('Upstream') @(Get-ReleaseAuditSections 'Upstream') 'Upstream requested unrelated sections.'
+Assert-Equal @('Release') @(Get-ReleaseAuditSections 'NuGet') 'NuGet requested branch readiness or upstream.'
+Assert-Equal @('Release') @(Get-ReleaseAuditSections 'Finish') 'Finish requested unrelated sections.'
+Assert-Equal @('Release', 'Readiness', 'Upstream') @(Get-ReleaseAuditSections 'Prepare') `
+    'Prepare omitted a prerequisite release gate.'
 Assert-True ((Format-ReleasePackageBuild $rerunBuild) -match
     '#100 succeeded / BAR 331115.*newer #105 canceled') `
     'The human-readable audit hid the newer canceled rerun.'
@@ -2402,5 +2414,149 @@ Assert-Equal '4.154.0-rc.1' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4
     'Later previews did not advance to RC.1.'
 Assert-Equal '4.154.0-stable' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-rc.1' $sha0) '4.154.0') `
     'RC did not advance to stable.'
+
+& {
+    $calls = [Collections.Generic.List[string]]::new()
+    $publicationState = 'complete'
+    $baseReady = $true
+    $upstreamBlocked = $false
+    function Get-GitRepositoryRoot { return '.' }
+    function Get-RemoteBranchSha {
+        param($Root, $Remote, $Branch)
+        if ($Branch -eq 'release/4.152.x') { return $sha1 }
+        return $null
+    }
+    function Get-ResolvedGitCommit { param($Root, $Reference) return $sha1 }
+    function Get-SkiaSharpReleaseInfoAtCommit {
+        return [pscustomobject] @{ Version = '4.152.1'; SkiaMilestone = 152 }
+    }
+    function Get-LegacyTransitionSyncSelection { return $null }
+    function Get-SkiaUpstreamStatus {
+        $calls.Add('upstream')
+        return [pscustomobject] @{
+            State = if ($upstreamBlocked) { 'changes available' } else { 'current' }
+            HasChanges = $upstreamBlocked; BlocksRelease = $upstreamBlocked
+            BehindBy = if ($upstreamBlocked) { 1 } else { 0 }
+            Milestone = 152; UpstreamRef = 'chrome/m152'; ParentBaseBranch = 'release/4.152.x'
+        }
+    }
+    function Get-GitHubOpenPullRequests { $calls.Add('sync-prs'); return @() }
+    function Get-ReleaseBranches { $calls.Add('cuts'); return @(New-AuditBranch '4.152.0' $sha0) }
+    function Get-GitHubReleaseMap { $calls.Add('releases'); return @{} }
+    function Get-RemoteTagMap { $calls.Add('tags'); return @{} }
+    function Get-ReleaseAuditPackages {
+        $calls.Add('nuget')
+        $package = New-AuditPackage '4.152.0' 'release/4.152.0' $sha0
+        $package.Publication = [pscustomobject] @{
+            State = $publicationState; Available = $true; ExpectedCount = 40
+            PublishedCount = if ($publicationState -eq 'complete') { 40 } else { 14 }
+        }
+        return @($package)
+    }
+    function Get-ReleasePackageBuild {
+        param($Branch, $Commit)
+        $calls.Add("build:$Branch")
+        return New-AuditPackageBuild -Branch $Branch -Commit $Commit `
+            -State $(if ($baseReady) { 'green' } else { 'failed' }) -Ready $baseReady
+    }
+    function Get-ReleaseLinePullRequests { $calls.Add('line-prs'); return @() }
+    function Get-MaintenanceDelta { $calls.Add('delta'); return New-AuditDelta '1 queued release commit' 1 }
+
+    $focused = Invoke-ReleaseLineAudit -Version '4.152' -Check Upstream
+    Assert-Equal @('sync-prs', 'upstream') @($calls | Sort-Object) `
+        'The upstream check fetched NuGet, cut branches, branch builds, or readiness data.'
+    Assert-Equal $null $focused.releases 'Unrequested publication checks were reported as an empty/healthy set.'
+    Assert-Equal $null $focused.maintenanceDelta 'Unrequested branch readiness was reported as checked.'
+    $focusedReport = (Write-ReleaseAuditReport $focused) -join "`n"
+    Assert-True ($focusedReport -match '3. Upstream / sync' -and
+        $focusedReport -notmatch '1. Current release|2. Branch readiness') `
+        'The upstream report included unrequested sections.'
+
+    $calls.Clear()
+    $focused = Invoke-ReleaseLineAudit -Version '4.152' -Check NuGet
+    Assert-Equal @('cuts', 'nuget', 'tags') @($calls | Sort-Object) `
+        'The NuGet check fetched GitHub Releases, readiness, or upstream data.'
+    Assert-Equal 0 $focused.exitCode 'Complete package publication was blocked by unchecked GitHub Release state.'
+    Assert-Equal 'complete publication' $focused.releases[0].State `
+        'A package-only check claimed the shipment was finished.'
+    Assert-Equal $null $focused.releases[0].GitHubRelease 'Unrequested GitHub Release state was called missing.'
+    Assert-True ($focused.actions.Kind -notcontains 'finish' -and $focused.actions.Kind -notcontains 'start') `
+        'A NuGet-only check offered Finish or Prepare without their prerequisite checks.'
+    $packageReport = (Write-ReleaseAuditReport $focused) -join "`n"
+    Assert-True ($packageReport -match 'Package publication' -and
+        $packageReport -notmatch '1. Current release|2. Branch readiness|3. Upstream / sync') `
+        'The NuGet-only report included unrelated release sections.'
+    $publicationState = 'partial'
+    $partialOnly = Invoke-ReleaseLineAudit -Version '4.152' -Check NuGet
+    Assert-Equal 1 $partialOnly.exitCode 'A package-only partial shipment reported success.'
+    Assert-Equal @('verify-publication') @($partialOnly.actions.Kind) `
+        'A package-only partial check offered mutation or readiness actions.'
+
+    $calls.Clear()
+    $focused = Invoke-ReleaseLineAudit -Version '4.152' -Check Finish
+    Assert-Equal @('build:release/4.152.0', 'cuts', 'nuget', 'releases', 'tags') @($calls | Sort-Object) `
+        'The Finish check fetched base readiness or upstream data.'
+    Assert-True ($focused.actions.Kind -notcontains 'finish' -and $focused.actions.Kind -notcontains 'start') `
+        'An incomplete Finish check offered Finish or Prepare.'
+    $publicationState = 'complete'
+    $finishOnly = Invoke-ReleaseLineAudit -Version '4.152' -Check Finish
+    Assert-Equal @('finish') @($finishOnly.actions.Kind) 'A complete untagged shipment did not need Finish.'
+
+    $calls.Clear()
+    $prepareOnly = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-Equal @('build:release/4.152.x', 'cuts', 'delta', 'line-prs', 'nuget', 'releases', 'sync-prs', 'tags', 'upstream') `
+        @($calls | Sort-Object) 'Prepare did not collect every required release gate.'
+    Assert-True ($null -ne $prepareOnly.openPullRequests -and $prepareOnly.openPullRequests.Count -eq 0) `
+        'An empty checked PR list became an unchecked null value.'
+    Assert-True ($prepareOnly.actions.Kind -notcontains 'start') `
+        'Prepare was recommended while a public shipment still needed Finish.'
+    function Get-GitHubReleaseMap { return @{ 'v4.152.0' = (New-AuditRelease 'v4.152.0' $sha0) } }
+    function Get-RemoteTagMap { return @{ 'v4.152.0' = $sha0 } }
+    $ready = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-Equal @('start') @($ready.actions.Kind) 'A fully checked ready base was not offered Prepare.'
+    $upstreamBlocked = $true
+    $blocked = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-True ($blocked.actions.Kind -contains 'sync-skia' -and $blocked.actions.Kind -notcontains 'start') `
+        'Prepare ignored an upstream blocker.'
+    $prepareReport = (Write-ReleaseAuditReport $blocked) -join "`n"
+    Assert-True ($prepareReport -match '2. Branch readiness' -and $prepareReport -match 'Sync 1 newer' -and
+        $prepareReport -notmatch '1. Current release|3. Upstream / sync') `
+        'The Prepare report omitted prerequisite blockers or included unrelated full-detail sections.'
+    $upstreamBlocked = $false
+    $baseReady = $false
+    $blocked = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-True ($blocked.actions.Kind -contains 'fix-build' -and $blocked.actions.Kind -notcontains 'start') `
+        'Prepare ignored an unsuccessful base build.'
+    $baseReady = $true
+    $publicationState = 'partial'
+    $blocked = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-True ($blocked.actions.Kind -contains 'complete-publication' -and $blocked.actions.Kind -notcontains 'start') `
+        'Prepare ignored partial publication.'
+    $defaultFull = Invoke-ReleaseLineAudit -Version '4.152'
+    Assert-Equal @('Release', 'Readiness', 'Upstream') @($defaultFull.sections) `
+        'The default invocation stopped collecting the full audit.'
+    Assert-Equal @($blocked.actions.Kind) @($defaultFull.actions.Kind) `
+        'Prepare and the full audit disagreed on prerequisite blockers.'
+    function Get-ReleaseAuditPackages { throw 'NuGet service unavailable.' }
+    $unaffected = Invoke-ReleaseLineAudit -Version '4.152' -Check Upstream
+    Assert-Equal 0 $unaffected.exitCode 'An unrequested NuGet outage affected the upstream check.'
+    $unavailable = @(Invoke-ReleaseAudit -Version '4.152' -Check NuGet)
+    Assert-True ($unavailable[0].exitCode -eq 2 -and $unavailable[0].error -match 'NuGet service unavailable') `
+        'A selected unavailable check lost its failure status or cause.'
+}
+
+& {
+    function Invoke-ReleaseLineAudit {
+        param($Version, $Check)
+        if ($Version -eq '4.151') { throw 'NuGet service unavailable for this line.' }
+        [pscustomobject] @{ line = $Version; check = $Check; exitCode = 0 }
+    }
+    $rangeResults = @(Invoke-ReleaseAudit -Version '4.150-4.152' -Check NuGet)
+    Assert-Equal @('4.150', '4.151', '4.152') @($rangeResults.line) `
+        'An unavailable line prevented later range checks from running.'
+    Assert-Equal @(0, 2, 0) @($rangeResults.exitCode) 'Per-line unavailable results were lost.'
+    Assert-Equal 'NuGet' $rangeResults[1].check 'A failed line lost the requested check identity.'
+    Assert-True ($rangeResults[1].error -match 'service unavailable') 'A failed line hid its original service error.'
+}
 
 Write-Output "All $script:TestsRun publishing script tests passed."

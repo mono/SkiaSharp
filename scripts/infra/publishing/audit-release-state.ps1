@@ -2,20 +2,26 @@
 
 <#
 .SYNOPSIS
-    Summarizes one SkiaSharp release line without changing release state.
+    Audits selected release data for one SkiaSharp line or milestone range.
 
 .DESCRIPTION
     Reads the maintenance branch, release branches, public NuGet provenance,
     tags, GitHub Releases, exact-tip internal package builds, and newer commits
-    on the matching upstream Skia milestone branch for one A.B line. Detailed
+    on the matching upstream Skia milestone branches. Check selects the task:
+    Upstream, Prepare, Finish, NuGet, or All (default). Prepare checks all release
+    gates; other tasks skip unrelated checks. Version accepts A.B or an
+    inclusive same-major range such as 4.150-4.156 or 4.150..4.156. Detailed
     release validation remains the responsibility of prepare-release.ps1 and
     finish-release.ps1.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory, Position = 0)]
-    [ValidatePattern('^\d+\.\d+$')]
+    [ValidatePattern('^\d+\.\d+(?:(?:-|\.\.)\d+\.\d+)?$')]
     [string] $Version,
+
+    [ValidateSet('All', 'Upstream', 'Prepare', 'Finish', 'NuGet')]
+    [string] $Check = 'All',
 
     [switch] $Json
 )
@@ -26,6 +32,30 @@ Import-Module (Join-Path $PSScriptRoot 'Git.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'GitHub.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'Publishing.Common.psm1') -Force
 Import-Module (Join-Path $PSScriptRoot 'AzureDevOps.Common.psm1') -Force
+
+function Expand-ReleaseAuditVersions([string] $Selector) {
+    if ($Selector -match '^\d+\.\d+$') {
+        return @($Selector)
+    }
+    if ($Selector -notmatch '^(?<major>\d+)\.(?<first>\d+)(?:-|\.\.)(?<endMajor>\d+)\.(?<last>\d+)$') {
+        throw 'Version must be A.B or an inclusive A.B-A.C range.'
+    }
+    $major = [int] $Matches.major
+    $first = [int] $Matches.first
+    $last = [int] $Matches.last
+    if ($major -ne [int] $Matches.endMajor -or $first -gt $last) {
+        throw 'A release range must be ascending and stay within one major version.'
+    }
+    return @($first..$last | ForEach-Object { "$major.$_" })
+}
+
+function Get-ReleaseAuditSections([string] $Check) {
+    switch ($Check) {
+        'Upstream' { return @('Upstream') }
+        { $_ -in @('Finish', 'NuGet') } { return @('Release') }
+        default { return @('Release', 'Readiness', 'Upstream') }
+    }
+}
 
 function Get-SkiaSharpReleaseInfoAtCommit([string] $Root, [string] $Commit) {
     $versions = Get-GitFileText -Root $Root -Commit $Commit -Path 'scripts/VERSIONS.txt'
@@ -770,8 +800,13 @@ function Get-ReleaseAuditState(
     [pscustomobject] $UpstreamSync = $null,
     [pscustomobject] $PendingMilestone = $null,
     [hashtable] $PackageBuilds = $null,
-    [object[]] $OpenPullRequests = $null
+    [object[]] $OpenPullRequests = $null,
+    [string] $Check = 'All'
 ) {
+    $Sections = @(Get-ReleaseAuditSections $Check)
+    $checkRelease = 'Release' -in $Sections
+    $checkReadiness = 'Readiness' -in $Sections
+    $checkUpstream = 'Upstream' -in $Sections
     $specific = @($Branches | Where-Object {
         $_.Name -match "^release/$([regex]::Escape($Line))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*)?$"
     } | Sort-Object { $_.Identity.SortKey })
@@ -781,6 +816,8 @@ function Get-ReleaseAuditState(
     $publicByBranch = @{}
     $buildChecksEnabled = $null -ne $PackageBuilds
 
+    if (!$checkRelease) { $Packages = @() }
+    $reportedBranches = if ($checkRelease) { $specific } else { @() }
     foreach ($package in @($Packages | Sort-Object Version)) {
         $release = Get-ReleaseIdentity $package.Version
         if (!$publicByBranch.ContainsKey($release.Branch)) {
@@ -792,7 +829,7 @@ function Get-ReleaseAuditState(
         })
     }
 
-    foreach ($branch in $specific) {
+    foreach ($branch in $reportedBranches) {
         $shipments = if ($publicByBranch.ContainsKey($branch.Name)) {
             @($publicByBranch[$branch.Name])
         } else {
@@ -800,10 +837,14 @@ function Get-ReleaseAuditState(
         }
         if (!$shipments.Count) {
             $branchBuild = if ($buildChecksEnabled) { $PackageBuilds[$branch.Name] } else { $null }
-            $state = if ($branch.Publication.State -eq 'unavailable') {
+            $state = if ($Check -eq 'NuGet') {
+                "$($branch.Publication.State) publication"
+            } elseif ($branch.Publication.State -eq 'unavailable') {
                 'publication unavailable'
             } elseif ($branch -eq $latest) { 'publish release branch' } else { 'superseded' }
-            $action = if ($branch -ne $latest) {
+            $action = if ($Check -eq 'NuGet') {
+                'Check exact publication version'
+            } elseif ($branch -ne $latest) {
                 '-'
             } elseif ($branch.Publication.State -eq 'unavailable') {
                 'Restore publication checks'
@@ -843,12 +884,14 @@ function Get-ReleaseAuditState(
             $releaseConsistent = $githubRelease -and
                 $githubRelease.tagName -eq $tag -and
                 ([bool] $githubRelease.isPrerelease) -eq ([bool] $release.IsPrerelease)
-            $needsFinish = !$tagSha -or $tagSha -ne $package.Commit -or !$releaseConsistent
+            $needsFinish = $Check -ne 'NuGet' -and (!$tagSha -or $tagSha -ne $package.Commit -or !$releaseConsistent)
             $publication = $package.Publication
             $complete = $publication.State -eq 'complete'
             $superseded = $publication.State -eq 'missing' -and $branch -ne $latest -and !$tagSha
             $branchBuild = if ($buildChecksEnabled) { $PackageBuilds[$branch.Name] } else { $null }
-            $state = if ($superseded) {
+            $state = if ($Check -eq 'NuGet') {
+                "$($publication.State) publication"
+            } elseif ($superseded) {
                 'superseded'
             } elseif (!$complete) {
                 "$($publication.State) publication"
@@ -879,13 +922,17 @@ function Get-ReleaseAuditState(
                 SourceCommit = $package.Commit
                 PackageBuild = if (!$complete) { $branchBuild } else { $null }
                 Publication = $publication
-                Tag = if ($tagSha) { "$tag@$($tagSha.Substring(0, 12))" } else { "$tag (missing)" }
-                GitHubRelease = if ($githubRelease) { if ($releaseConsistent) { 'present' } else { 'inconsistent' } } else { 'missing' }
+                Tag = if ($Check -eq 'NuGet') { $null } elseif ($tagSha) { "$tag@$($tagSha.Substring(0, 12))" } else { "$tag (missing)" }
+                GitHubRelease = if ($Check -eq 'NuGet') { $null } elseif ($githubRelease) { if ($releaseConsistent) { 'present' } else { 'inconsistent' } } else { 'missing' }
                 State = $state
                 Action = $action
             })
-            if ($superseded) {
+            if ($superseded -and $Check -ne 'NuGet') {
                 continue
+            } elseif ($Check -eq 'NuGet' -and !$complete) {
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind $(if ($publication.State -eq 'unavailable') { 'publication-unavailable' } else { 'verify-publication' }) `
+                    -Message "$($package.Version): $($publication.State), $($publication.PublishedCount)/$($publication.ExpectedCount) expected packages public."))
             } elseif ($publication.State -eq 'missing' -and $branch -eq $latest) {
                 if (!$buildChecksEnabled -or ($branchBuild -and $branchBuild.Ready)) {
                     $actions.Add((New-ReleaseAuditAction -Kind 'publish' `
@@ -919,7 +966,7 @@ function Get-ReleaseAuditState(
             $githubRelease = $GitHubReleases[$release.Tag]
             $releaseConsistent = $githubRelease -and $tagSha -eq $package.Commit -and
                 ([bool] $githubRelease.isPrerelease) -eq ([bool] $release.IsPrerelease)
-            $needsFinish = !$tagSha -or !$releaseConsistent
+            $needsFinish = $Check -ne 'NuGet' -and (!$tagSha -or !$releaseConsistent)
             $publication = $package.Publication
             $complete = $publication.State -eq 'complete'
             $rows.Add([pscustomobject] @{
@@ -931,12 +978,17 @@ function Get-ReleaseAuditState(
                 SourceCommit = $package.Commit
                 PackageBuild = $null
                 Publication = $publication
-                Tag = if ($tagSha) { "$($release.Tag)@$($tagSha.Substring(0, 12))" } else { "$($release.Tag) (missing)" }
-                GitHubRelease = if ($githubRelease) { if ($releaseConsistent) { 'present' } else { 'inconsistent' } } else { 'missing' }
-                State = if (!$complete) { "$($publication.State) publication" } elseif ($needsFinish) { 'finish shipment' } else { 'finished branch unavailable' }
-                Action = if (!$complete) { 'Investigate publication' } elseif ($needsFinish) { 'Finish shipment' } else { 'Investigate branch' }
+                Tag = if ($Check -eq 'NuGet') { $null } elseif ($tagSha) { "$($release.Tag)@$($tagSha.Substring(0, 12))" } else { "$($release.Tag) (missing)" }
+                GitHubRelease = if ($Check -eq 'NuGet') { $null } elseif ($githubRelease) { if ($releaseConsistent) { 'present' } else { 'inconsistent' } } else { 'missing' }
+                State = if (!$complete -or $Check -eq 'NuGet') { "$($publication.State) publication" } elseif ($needsFinish) { 'finish shipment' } else { 'finished branch unavailable' }
+                Action = if (!$complete) { 'Investigate publication' } elseif ($Check -eq 'NuGet') { '-' } elseif ($needsFinish) { 'Finish shipment' } else { 'Investigate branch' }
             })
-            if (!$complete) {
+            if ($Check -eq 'NuGet') {
+                if (!$complete) {
+                    $actions.Add((New-ReleaseAuditAction -Kind 'verify-publication' `
+                        -Message "$($package.Version): $($publication.State), $($publication.PublishedCount)/$($publication.ExpectedCount) expected packages public."))
+                }
+            } elseif (!$complete) {
                 $actions.Add((New-ReleaseAuditAction `
                     -Kind $(if ($publication.State -eq 'unavailable') { 'publication-unavailable' } else { 'complete-publication' }) `
                     -Message "Investigate $($publication.State) publication $($package.Version): $($publication.PublishedCount)/$($publication.ExpectedCount) packages public; complete the existing shipment before Finish."))
@@ -946,9 +998,11 @@ function Get-ReleaseAuditState(
                     -Message "Finish public shipment $($package.Version)." `
                     -Command "pwsh ./scripts/infra/publishing/finish-release.ps1 -Version $($package.Version) -Mode DryRun"))
             }
-            $actions.Add((New-ReleaseAuditAction `
-                -Kind 'investigate' `
-                -Message "Investigate public shipment $($package.Version): source branch $branchName is not available."))
+            if ($Check -ne 'NuGet') {
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind 'investigate' `
+                    -Message "Investigate public shipment $($package.Version): source branch $branchName is not available."))
+            }
         }
     }
 
@@ -973,7 +1027,10 @@ function Get-ReleaseAuditState(
     } else {
         $null
     }
-    if ($latest -and !$latestShipments.Count) {
+    if ($checkRelease -and $latest -and !$latestShipments.Count -and $Check -eq 'NuGet') {
+        $actions.Add((New-ReleaseAuditAction -Kind 'verify-publication' `
+            -Message "No exact public shipment version discovered for $($latest.Name)."))
+    } elseif ($checkRelease -and $latest -and !$latestShipments.Count) {
         if ($latest.Publication.State -eq 'unavailable') {
             $actions.Add((New-ReleaseAuditAction -Kind 'publication-unavailable' `
                 -Message "Restore publication checks for $($latest.Name) before recommending publication or Finish."))
@@ -992,53 +1049,55 @@ function Get-ReleaseAuditState(
                 -Purpose $latest.Name))
         }
     }
-    if ($UpstreamSync -and $UpstreamSync.BlocksRelease) {
-        if ($UpstreamSync.HasChanges) {
-            $count = [int] $UpstreamSync.BehindBy
-            $actions.Add((New-ReleaseAuditAction `
-                -Kind 'sync-skia' `
-                -Message "Sync $count newer upstream Skia commit$(if ($count -eq 1) { '' } else { 's' }) from $($UpstreamSync.UpstreamRef) into $($UpstreamSync.ParentBaseBranch) before its next release cut." `
-                -Command "gh workflow run auto-skia-sync.lock.yml --repo $ReleaseRepository --ref main -f target=$($UpstreamSync.Milestone)"))
-        } else {
-            $actions.Add((New-ReleaseAuditAction `
-                -Kind 'investigate-upstream' `
-                -Message "Investigate upstream Skia state: $($UpstreamSync.Message)"))
-        }
-    }
-    if ($IncomingPullRequest -and $IncomingPullRequest.BlocksRelease) {
-        if ($IncomingPullRequest.Number -and $IncomingPullRequest.State -ne 'inconsistent') {
-            $actions.Add((New-ReleaseAuditAction `
-                -Kind 'merge-sync' `
-                -Message "Review and merge incoming Skia sync PR #$($IncomingPullRequest.Number): $($IncomingPullRequest.Title)." `
-                -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
-        } else {
-            $message = if ($IncomingPullRequest.Number) {
-                "Investigate incoming maintenance PR #$($IncomingPullRequest.Number): $($IncomingPullRequest.Message)"
+    if ($checkUpstream) {
+        if ($UpstreamSync -and $UpstreamSync.BlocksRelease) {
+            if ($UpstreamSync.HasChanges) {
+                $count = [int] $UpstreamSync.BehindBy
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind 'sync-skia' `
+                    -Message "Sync $count newer upstream Skia commit$(if ($count -eq 1) { '' } else { 's' }) from $($UpstreamSync.UpstreamRef) into $($UpstreamSync.ParentBaseBranch) before its next release cut." `
+                    -Command "gh workflow run auto-skia-sync.lock.yml --repo $ReleaseRepository --ref main -f target=$($UpstreamSync.Milestone)"))
             } else {
-                $IncomingPullRequest.Message
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind 'investigate-upstream' `
+                    -Message "Investigate upstream Skia state: $($UpstreamSync.Message)"))
             }
+        }
+        if ($IncomingPullRequest -and $IncomingPullRequest.BlocksRelease) {
+            if ($IncomingPullRequest.Number -and $IncomingPullRequest.State -ne 'inconsistent') {
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind 'merge-sync' `
+                    -Message "Review and merge incoming Skia sync PR #$($IncomingPullRequest.Number): $($IncomingPullRequest.Title)." `
+                    -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
+            } else {
+                $message = if ($IncomingPullRequest.Number) {
+                    "Investigate incoming maintenance PR #$($IncomingPullRequest.Number): $($IncomingPullRequest.Message)"
+                } else {
+                    $IncomingPullRequest.Message
+                }
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind 'investigate-sync' `
+                    -Message $message))
+            }
+        } elseif ($PendingMilestone -and $IncomingPullRequest) {
+            $actions.Add((New-ReleaseAuditAction `
+                -Kind 'review-sync' `
+                -Message "Complete incoming milestone PR #$($IncomingPullRequest.Number) before $($PendingMilestone.Line) becomes the active main line: $($IncomingPullRequest.Title)." `
+                -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
+        } elseif ($IncomingPullRequest -and $IncomingPullRequest.State -eq 'draft') {
+            $actions.Add((New-ReleaseAuditAction `
+                -Kind 'review-sync' `
+                -Message "Review draft Skia sync PR #$($IncomingPullRequest.Number) before it can be merged: $($IncomingPullRequest.Title)." `
+                -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
+        } elseif (
+            $PendingMilestone -and
+            $UpstreamSync -and
+            $UpstreamSync.State -eq 'current'
+        ) {
             $actions.Add((New-ReleaseAuditAction `
                 -Kind 'investigate-sync' `
-                -Message $message))
+                -Message "$($UpstreamSync.UpstreamRef) is synchronized in mono/skia, but no SkiaSharp pull request is open to activate $($PendingMilestone.Line)."))
         }
-    } elseif ($PendingMilestone -and $IncomingPullRequest) {
-        $actions.Add((New-ReleaseAuditAction `
-            -Kind 'review-sync' `
-            -Message "Complete incoming milestone PR #$($IncomingPullRequest.Number) before $($PendingMilestone.Line) becomes the active main line: $($IncomingPullRequest.Title)." `
-            -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
-    } elseif ($IncomingPullRequest -and $IncomingPullRequest.State -eq 'draft') {
-        $actions.Add((New-ReleaseAuditAction `
-            -Kind 'review-sync' `
-            -Message "Review draft Skia sync PR #$($IncomingPullRequest.Number) before it can be merged: $($IncomingPullRequest.Title)." `
-            -Command "gh pr view $($IncomingPullRequest.Number) --repo $ReleaseRepository --web"))
-    } elseif (
-        $PendingMilestone -and
-        $UpstreamSync -and
-        $UpstreamSync.State -eq 'current'
-    ) {
-        $actions.Add((New-ReleaseAuditAction `
-            -Kind 'investigate-sync' `
-            -Message "$($UpstreamSync.UpstreamRef) is synchronized in mono/skia, but no SkiaSharp pull request is open to activate $($PendingMilestone.Line)."))
     }
     $releaseBlocked = [bool] (
         ($IncomingPullRequest -and $IncomingPullRequest.BlocksRelease) -or
@@ -1050,56 +1109,60 @@ function Get-ReleaseAuditState(
     } else {
         $null
     }
-    if ($Maintenance -and !$latest) {
-        if (!$releaseBlocked) {
-            if (!$buildChecksEnabled -or ($maintenanceBuild -and $maintenanceBuild.Ready)) {
-                $next = Get-NextReleaseIdentity -Line $Line -Latest $null -MaintenanceVersion $Maintenance.Version
-                $actions.Add((New-ReleaseAuditAction `
-                    -Kind 'start' `
-                    -Message "Start the first release from $($Maintenance.Branch)." `
-                    -Command "pwsh ./scripts/infra/publishing/prepare-release.ps1 -Base $($Maintenance.Branch) -Release $next -Mode DryRun"))
-            } else {
-                $actions.Add((New-ReleasePackageBuildAction `
-                    -Build $maintenanceBuild `
-                    -Purpose "$($Maintenance.Branch) before its first release cut"))
-            }
-        }
-    } elseif ($Maintenance -and $Delta.Queued.Count) {
-        if ($latest -and !$latestPublic.Count) {
-            $actions.Add((New-ReleaseAuditAction `
-                -Kind 'queued' `
-                -Message "$($Delta.Queued.Count) newer maintenance commit(s) are queued until $($latest.Name) is published."))
-        } elseif (!$releaseBlocked -and (!$latest -or $latestFinished)) {
-            if (!$buildChecksEnabled -or ($maintenanceBuild -and $maintenanceBuild.Ready)) {
-                $next = Get-NextReleaseIdentity -Line $Line -Latest $latest -MaintenanceVersion $Maintenance.Version
-                if ($next) {
+    if ($checkRelease -and $checkReadiness -and $checkUpstream) {
+        if ($Maintenance -and !$latest) {
+            if (!$releaseBlocked) {
+                if (!$buildChecksEnabled -or ($maintenanceBuild -and $maintenanceBuild.Ready)) {
+                    $next = Get-NextReleaseIdentity -Line $Line -Latest $null -MaintenanceVersion $Maintenance.Version
                     $actions.Add((New-ReleaseAuditAction `
                         -Kind 'start' `
-                        -Message "Start the next release from $($Maintenance.Branch)." `
+                        -Message "Start the first release from $($Maintenance.Branch)." `
                         -Command "pwsh ./scripts/infra/publishing/prepare-release.ps1 -Base $($Maintenance.Branch) -Release $next -Mode DryRun"))
                 } else {
-                    $actions.Add((New-ReleaseAuditAction `
-                        -Kind 'prepare' `
-                        -Message "Prepare the next release from $($Maintenance.Branch); its identity cannot be derived safely."))
+                    $actions.Add((New-ReleasePackageBuildAction `
+                        -Build $maintenanceBuild `
+                        -Purpose "$($Maintenance.Branch) before its first release cut"))
                 }
-            } else {
-                $actions.Add((New-ReleasePackageBuildAction `
-                    -Build $maintenanceBuild `
-                    -Purpose "$($Maintenance.Branch) before its next release cut"))
+            }
+        } elseif ($Maintenance -and $Delta.Queued.Count) {
+            if ($latest -and !$latestPublic.Count) {
+                $actions.Add((New-ReleaseAuditAction `
+                    -Kind 'queued' `
+                    -Message "$($Delta.Queued.Count) newer maintenance commit(s) are queued until $($latest.Name) is published."))
+            } elseif (!$releaseBlocked -and (!$latest -or $latestFinished)) {
+                if (!$buildChecksEnabled -or ($maintenanceBuild -and $maintenanceBuild.Ready)) {
+                    $next = Get-NextReleaseIdentity -Line $Line -Latest $latest -MaintenanceVersion $Maintenance.Version
+                    if ($next) {
+                        $actions.Add((New-ReleaseAuditAction `
+                            -Kind 'start' `
+                            -Message "Start the next release from $($Maintenance.Branch)." `
+                            -Command "pwsh ./scripts/infra/publishing/prepare-release.ps1 -Base $($Maintenance.Branch) -Release $next -Mode DryRun"))
+                    } else {
+                        $actions.Add((New-ReleaseAuditAction `
+                            -Kind 'prepare' `
+                            -Message "Prepare the next release from $($Maintenance.Branch); its identity cannot be derived safely."))
+                    }
+                } else {
+                    $actions.Add((New-ReleasePackageBuildAction `
+                        -Build $maintenanceBuild `
+                        -Purpose "$($Maintenance.Branch) before its next release cut"))
+                }
             }
         }
     }
     return [pscustomobject] @{
         Line = $Line
+        Check = $Check
+        Sections = $Sections
         Maintenance = $Maintenance
         LatestSpecificBranch = $latest
-        MaintenanceDelta = $Delta
+        MaintenanceDelta = if ($checkReadiness) { $Delta } else { $null }
         IncomingPullRequest = $IncomingPullRequest
         UpstreamSync = $UpstreamSync
         PendingMilestone = $PendingMilestone
         PackageBuilds = $PackageBuilds
         OpenPullRequests = $OpenPullRequests
-        Releases = @($rows)
+        Releases = if ($checkRelease) { ,@($rows) } else { $null }
         Actions = @($actions)
     }
 }
@@ -1192,14 +1255,62 @@ function Format-ReleaseAuditNextSteps([object[]] $Actions, [switch] $BeforePrepa
 }
 
 function Write-ReleaseAuditReport([pscustomobject] $State) {
+    $sections = if ($State.Sections) { $State.Sections } else { @('Release', 'Readiness', 'Upstream') }
+    $check = if ($State.Check) { $State.Check } else { 'All' }
+    if ($check -eq 'Prepare') { $sections = @('Readiness') }
     Write-Output (Format-ReleaseAuditField `
         -Label 'Release line' `
         -Value $State.Line `
         -ValueStyle $PSStyle.Foreground.BrightCyan)
     Write-Output ''
-    Write-Output '1. Current release (ship the existing cut)'
+    if ($check -eq 'Prepare') {
+        Write-Output '   Prepare check: publication, base readiness, and upstream gates checked together.'
+        foreach ($action in $State.Actions) {
+            Write-Output "   $($action.Message)"
+            if ($action.Command) { Write-Output "   $($action.Command)" }
+        }
+        Write-Output ''
+    } elseif (@($sections).Count -lt 3) {
+        Write-Output "   Focused audit: $($sections -join ', '). Other sections were not checked; run the full audit before Prepare."
+        Write-Output ''
+    }
+    if ($check -eq 'NuGet') {
+        Write-Output 'Package publication'
+        $table = $State.Releases | Select-Object Identity, @{
+            Name = 'Version'; Expression = { $_.NuGet }
+        }, @{
+            Name = 'Publication'; Expression = { $_.Publication.State }
+        }, @{
+            Name = 'Public / expected'; Expression = { "$($_.Publication.PublishedCount)/$($_.Publication.ExpectedCount)" }
+        } | Format-Table -AutoSize -Wrap | Out-String -Width (Get-ReleaseAuditOutputWidth)
+        Write-Output $table.TrimEnd()
+        foreach ($release in $State.Releases) {
+            if ($release.Publication.Message) { Write-Output "   $($release.Identity): $($release.Publication.Message)" }
+            foreach ($package in $release.Publication.MissingPackages) {
+                Write-Output "   Missing: $($package.Id) $($package.Version) - $($package.Url)"
+            }
+            foreach ($package in $release.Publication.UnavailablePackages) {
+                Write-Output "   Unavailable: $($package.Id) $($package.Version) - $($package.Message)"
+            }
+        }
+        if (!$State.Releases.Count) { Write-Output '   No shipment candidates discovered for this line.' }
+        Write-Output '   Tag/Release consistency, branch readiness, and upstream gates were not checked.'
+        return
+    }
+    if ('Release' -in $sections) {
+        Write-ReleaseAuditCurrentReport $State
+    }
+    if ('Readiness' -in $sections) {
+        Write-ReleaseAuditReadinessReport $State
+    }
+    if ('Upstream' -in $sections) {
+        Write-ReleaseAuditUpstreamReport $State
+    }
+}
+
+function Write-ReleaseAuditCurrentReport([pscustomobject] $State) {
     $syncKinds = @('sync-skia', 'review-sync', 'merge-sync', 'investigate-sync', 'investigate-upstream')
-    $syncActions = @($State.Actions | Where-Object Kind -in $syncKinds)
+    Write-Output '1. Current release (ship the existing cut)'
     $releaseActions = @($State.Actions | Where-Object { $_.Kind -notin $syncKinds -and $_.Kind -ne 'queued' })
     $public = @(Get-ReleaseAuditPublicShipments $State)
     $candidate = @($State.Releases | Where-Object {
@@ -1329,6 +1440,9 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     }
 
     Write-Output ''
+}
+
+function Write-ReleaseAuditReadinessReport([pscustomobject] $State) {
     Write-Output '2. Branch readiness (get the base ready for Prepare)'
     if ($State.Maintenance) {
         $maintenanceBuild = if ($State.PackageBuilds) {
@@ -1419,6 +1533,11 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     }
 
     Write-Output ''
+}
+
+function Write-ReleaseAuditUpstreamReport([pscustomobject] $State) {
+    $syncKinds = @('sync-skia', 'review-sync', 'merge-sync', 'investigate-sync', 'investigate-upstream')
+    $syncActions = @($State.Actions | Where-Object Kind -in $syncKinds)
     Write-Output '3. Upstream / sync (land upstream changes)'
     $upstream = $State.UpstreamSync
     $incoming = $State.IncomingPullRequest
@@ -1505,151 +1624,176 @@ function Write-ReleaseAuditReport([pscustomobject] $State) {
     }
 }
 
-try {
+function Invoke-ReleaseLineAudit(
+    [string] $Version,
+    [string] $Check = 'All'
+) {
+    $Sections = @(Get-ReleaseAuditSections $Check)
+    $checkRelease = 'Release' -in $Sections
+    $checkReadiness = 'Readiness' -in $Sections
+    $checkUpstream = 'Upstream' -in $Sections
     $root = Get-GitRepositoryRoot -Path $PSScriptRoot
+    $maintenance = $null
+    $pendingMilestone = $null
+    $syncBase = $null
+    $upstreamSync = $null
+    $incomingPullRequest = $null
     $mainSha = $null
     $mainReleaseInfo = $null
-    $maintenanceBranch = "release/$Version.x"
-    $maintenanceSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $maintenanceBranch
-    if ($maintenanceSha) {
-        $maintenanceSha = Get-ResolvedGitCommit `
-            -Root $root `
-            -Reference $maintenanceBranch
-        $releaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root $root -Commit $maintenanceSha
-        $maintenance = [pscustomobject] @{
-            Branch = $maintenanceBranch
-            Sha = $maintenanceSha
-            Version = $releaseInfo.Version
-            SkiaMilestone = $releaseInfo.SkiaMilestone
-            Label = 'servicing'
+    if ($checkReadiness -or $checkUpstream) {
+        $maintenanceBranch = "release/$Version.x"
+        $maintenanceSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $maintenanceBranch
+        if ($maintenanceSha) {
+            $maintenanceSha = Get-ResolvedGitCommit `
+                -Root $root `
+                -Reference $maintenanceBranch
+            $releaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root $root -Commit $maintenanceSha
+            $maintenance = [pscustomobject] @{
+                Branch = $maintenanceBranch
+                Sha = $maintenanceSha
+                Version = $releaseInfo.Version
+                SkiaMilestone = $releaseInfo.SkiaMilestone
+                Label = 'servicing'
+            }
+        } else {
+            $mainSha = Get-ResolvedGitCommit -Root $root -Reference 'main'
+            $mainReleaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root $root -Commit $mainSha
+            $maintenance = if ($mainReleaseInfo.Version -match "^$([regex]::Escape($Version))\.") {
+                [pscustomobject] @{
+                    Branch = 'main'
+                    Sha = $mainSha
+                    Version = $mainReleaseInfo.Version
+                    SkiaMilestone = $mainReleaseInfo.SkiaMilestone
+                    Label = 'current main'
+                }
+            } else {
+                $null
+            }
         }
-    } else {
-        $mainSha = Get-ResolvedGitCommit -Root $root -Reference 'main'
-        $mainReleaseInfo = Get-SkiaSharpReleaseInfoAtCommit -Root $root -Commit $mainSha
-        $maintenance = if ($mainReleaseInfo.Version -match "^$([regex]::Escape($Version))\.") {
+        $pendingMilestone = if (!$maintenance -and $mainReleaseInfo) {
+            Get-PendingMainMilestone `
+                -Line $Version `
+                -MainSha $mainSha `
+                -MainReleaseInfo $mainReleaseInfo
+        } else {
+            $null
+        }
+        $syncBase = if ($maintenance) {
+            $maintenance
+        } elseif ($pendingMilestone) {
             [pscustomobject] @{
                 Branch = 'main'
-                Sha = $mainSha
-                Version = $mainReleaseInfo.Version
-                SkiaMilestone = $mainReleaseInfo.SkiaMilestone
+                Sha = $pendingMilestone.BaseSha
+                Version = $pendingMilestone.CurrentVersion
+                SkiaMilestone = $pendingMilestone.CurrentMilestone
                 Label = 'current main'
             }
         } else {
             $null
         }
     }
-    $pendingMilestone = if (!$maintenance -and $mainReleaseInfo) {
-        Get-PendingMainMilestone `
-            -Line $Version `
-            -MainSha $mainSha `
-            -MainReleaseInfo $mainReleaseInfo
-    } else {
-        $null
-    }
-    $syncBase = if ($maintenance) {
-        $maintenance
-    } elseif ($pendingMilestone) {
-        [pscustomobject] @{
-            Branch = 'main'
-            Sha = $pendingMilestone.BaseSha
-            Version = $pendingMilestone.CurrentVersion
-            SkiaMilestone = $pendingMilestone.CurrentMilestone
-            Label = 'current main'
-        }
-    } else {
-        $null
-    }
-    $syncTopology = if ($syncBase) {
-        Get-SkiaSyncTopology `
-            -Maintenance $syncBase `
-            -TargetMilestone $(if ($pendingMilestone) { $pendingMilestone.Milestone } else { 0 })
-    } else {
-        $null
-    }
-    $upstreamSync = if ($syncBase) {
-        Get-SkiaUpstreamStatus `
-            -Root $root `
-            -Maintenance $syncBase `
-            -Topology $syncTopology
-    } else {
-        $null
-    }
-    $incomingPullRequest = $null
-    if ($syncBase) {
-        $syncBranch = $syncTopology.SyncBranch
-        if ($syncBranch) {
-            $syncSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $syncBranch
-            $parentSyncSkiaSha = if ($syncSha) {
-                $resolvedSyncSha = Get-ResolvedGitCommit `
-                    -Root $root `
-                    -Reference $syncBranch
-                Get-GitTreeEntrySha `
-                    -Root $root `
-                    -Commit $resolvedSyncSha `
-                    -Path 'externals/skia'
-            } else {
-                ''
-            }
-            $syncPullRequests = Get-GitHubOpenPullRequests `
-                -Repository $ReleaseRepository `
-                -Head $syncBranch `
-                -Base $syncBase.Branch
-            $incomingPullRequest = Get-IncomingReleasePullRequest `
+    if ($checkUpstream) {
+        $syncTopology = if ($syncBase) {
+            Get-SkiaSyncTopology `
                 -Maintenance $syncBase `
-                -SyncBranchSha $syncSha `
-                -PullRequests $syncPullRequests `
-                -Topology $syncTopology `
-                -SkiaSyncBranchSha $upstreamSync.SyncBranchSha `
-                -ParentSkiaSha $upstreamSync.ParentSkiaSha `
-                -ParentSyncSkiaSha $parentSyncSkiaSha
+                -TargetMilestone $(if ($pendingMilestone) { $pendingMilestone.Milestone } else { 0 })
+        } else {
+            $null
         }
-    }
-    $legacyIncomingPullRequest = $null
-    if ($maintenance) {
-        $legacySelection = Get-LegacyTransitionSyncSelection -Maintenance $maintenance
-        if ($legacySelection) {
-            $legacySyncBranch = $legacySelection.Topology.SyncBranch
-            $legacySyncSha = Get-RemoteBranchSha `
+        $upstreamSync = if ($syncBase) {
+            Get-SkiaUpstreamStatus `
                 -Root $root `
-                -Remote origin `
-                -Branch $legacySyncBranch
-            $legacyParentSyncSkiaSha = if ($legacySyncSha) {
-                $resolvedLegacySyncSha = Get-ResolvedGitCommit `
-                    -Root $root `
-                    -Reference $legacySyncBranch
-                Get-GitTreeEntrySha `
-                    -Root $root `
-                    -Commit $resolvedLegacySyncSha `
-                    -Path 'externals/skia'
-            } else {
-                ''
+                -Maintenance $syncBase `
+                -Topology $syncTopology
+        } else {
+            $null
+        }
+        $incomingPullRequest = $null
+        if ($syncBase) {
+            $syncBranch = $syncTopology.SyncBranch
+            if ($syncBranch) {
+                $syncSha = Get-RemoteBranchSha -Root $root -Remote origin -Branch $syncBranch
+                $parentSyncSkiaSha = if ($syncSha) {
+                    $resolvedSyncSha = Get-ResolvedGitCommit `
+                        -Root $root `
+                        -Reference $syncBranch
+                    Get-GitTreeEntrySha `
+                        -Root $root `
+                        -Commit $resolvedSyncSha `
+                        -Path 'externals/skia'
+                } else {
+                    ''
+                }
+                $syncPullRequests = Get-GitHubOpenPullRequests `
+                    -Repository $ReleaseRepository `
+                    -Head $syncBranch `
+                    -Base $syncBase.Branch
+                $incomingPullRequest = Get-IncomingReleasePullRequest `
+                    -Maintenance $syncBase `
+                    -SyncBranchSha $syncSha `
+                    -PullRequests $syncPullRequests `
+                    -Topology $syncTopology `
+                    -SkiaSyncBranchSha $upstreamSync.SyncBranchSha `
+                    -ParentSkiaSha $upstreamSync.ParentSkiaSha `
+                    -ParentSyncSkiaSha $parentSyncSkiaSha
             }
-            $legacySkiaBranches = Get-RemoteBranchShas `
-                -Root $root `
-                -Remote 'https://github.com/mono/skia.git' `
-                -Branches @($legacySyncBranch)
-            $legacyIncomingPullRequest = Get-LegacyTransitionIncomingPullRequest `
-                -Maintenance $maintenance `
-                -Selection $legacySelection `
-                -SyncBranchSha $legacySyncSha `
-                -SkiaSyncBranchSha $legacySkiaBranches[$legacySyncBranch] `
-                -ParentSkiaSha $upstreamSync.ParentSkiaSha `
-                -ParentSyncSkiaSha $legacyParentSyncSkiaSha
         }
+        $legacyIncomingPullRequest = $null
+        if ($maintenance) {
+            $legacySelection = Get-LegacyTransitionSyncSelection -Maintenance $maintenance
+            if ($legacySelection) {
+                $legacySyncBranch = $legacySelection.Topology.SyncBranch
+                $legacySyncSha = Get-RemoteBranchSha `
+                    -Root $root `
+                    -Remote origin `
+                    -Branch $legacySyncBranch
+                $legacyParentSyncSkiaSha = if ($legacySyncSha) {
+                    $resolvedLegacySyncSha = Get-ResolvedGitCommit `
+                        -Root $root `
+                        -Reference $legacySyncBranch
+                    Get-GitTreeEntrySha `
+                        -Root $root `
+                        -Commit $resolvedLegacySyncSha `
+                        -Path 'externals/skia'
+                } else {
+                    ''
+                }
+                $legacySkiaBranches = Get-RemoteBranchShas `
+                    -Root $root `
+                    -Remote 'https://github.com/mono/skia.git' `
+                    -Branches @($legacySyncBranch)
+                $legacyIncomingPullRequest = Get-LegacyTransitionIncomingPullRequest `
+                    -Maintenance $maintenance `
+                    -Selection $legacySelection `
+                    -SyncBranchSha $legacySyncSha `
+                    -SkiaSyncBranchSha $legacySkiaBranches[$legacySyncBranch] `
+                    -ParentSkiaSha $upstreamSync.ParentSkiaSha `
+                    -ParentSyncSkiaSha $legacyParentSyncSkiaSha
+            }
+        }
+        $incomingPullRequest = Select-IncomingReleasePullRequest `
+            -Expected $incomingPullRequest `
+            -Legacy $legacyIncomingPullRequest
     }
-    $incomingPullRequest = Select-IncomingReleasePullRequest `
-        -Expected $incomingPullRequest `
-        -Legacy $legacyIncomingPullRequest
-    $branches = @(Get-ReleaseBranches -Root $root -Line $Version)
-    $githubReleases = Get-GitHubReleaseMap -Repository $ReleaseRepository
-    $tagShas = Get-RemoteTagMap -Root $root -Remote origin -Pattern "refs/tags/v$Version.*"
+    $branches = if ($checkRelease -or $checkReadiness) {
+        @(Get-ReleaseBranches -Root $root -Line $Version)
+    } else { @() }
+    $githubReleases = @{}
+    $tagShas = @{}
     $latest = @($branches | Where-Object {
         $_.Name -match "^release/$([regex]::Escape($Version))\.\d+(?:\.\d+)?(?:-(?:preview|rc)\.[1-9]\d*)?$"
     } | Sort-Object { $_.Identity.SortKey } | Select-Object -Last 1)
     $packageBuilds = @{}
-    $linePackages = @(Get-ReleaseAuditPackages -Root $root -Line $Version -Branches $branches `
-        -TagShas $tagShas -PackageBuilds $packageBuilds)
-    if ($maintenance) {
+    $linePackages = @()
+    if ($checkRelease) {
+        if ($Check -ne 'NuGet') {
+            $githubReleases = Get-GitHubReleaseMap -Repository $ReleaseRepository
+        }
+        $tagShas = Get-RemoteTagMap -Root $root -Remote origin -Pattern "refs/tags/v$Version.*"
+        $linePackages = @(Get-ReleaseAuditPackages -Root $root -Line $Version -Branches $branches `
+            -TagShas $tagShas -PackageBuilds $packageBuilds)
+    }
+    if ($checkReadiness -and $maintenance) {
         $packageBuilds[$maintenance.Branch] = Get-ReleasePackageBuild `
             -Branch $maintenance.Branch `
             -Commit $maintenance.Sha
@@ -1661,12 +1805,12 @@ try {
     } else {
         $false
     }
-    if ($latest -and !$latestHasShipment -and !$packageBuilds.ContainsKey($latest.Name)) {
+    if ($checkRelease -and $Check -ne 'NuGet' -and $latest -and !$latestHasShipment -and !$packageBuilds.ContainsKey($latest.Name)) {
         $packageBuilds[$latest.Name] = Get-ReleasePackageBuild `
             -Branch $latest.Name `
             -Commit $latest.Sha
     }
-    if ($incomingPullRequest.HeadBranch -and $incomingPullRequest.HeadSha) {
+    if ($checkUpstream -and $incomingPullRequest.HeadBranch -and $incomingPullRequest.HeadSha) {
         if ($packageBuilds.ContainsKey($incomingPullRequest.HeadBranch) -and
             $packageBuilds[$incomingPullRequest.HeadBranch].Commit -ne $incomingPullRequest.HeadSha) {
             throw "Conflicting audited commits for sync branch $($incomingPullRequest.HeadBranch)."
@@ -1675,10 +1819,13 @@ try {
             -Branch $incomingPullRequest.HeadBranch `
             -Commit $incomingPullRequest.HeadSha
     }
-    $openPullRequests = @(Get-ReleaseLinePullRequests `
-        -Line $Version `
-        -IncludeMain:($syncBase -and $syncBase.Branch -eq 'main'))
-    $delta = if ($maintenance -and $latest) {
+    $openPullRequests = $null
+    if ($checkReadiness) {
+        $openPullRequests = @(Get-ReleaseLinePullRequests `
+            -Line $Version `
+            -IncludeMain:($syncBase -and $syncBase.Branch -eq 'main'))
+    }
+    $delta = if ($checkReadiness -and $maintenance -and $latest) {
         Get-MaintenanceDelta -Root $root -MaintenanceSha $maintenance.Sha -ReleaseSha $latest.Sha
     } else {
         [pscustomobject] @{ Commits = @(); Queued = @(); VersionBumpOnly = $false; Text = 'none' }
@@ -1695,7 +1842,8 @@ try {
         -UpstreamSync $upstreamSync `
         -PendingMilestone $pendingMilestone `
         -PackageBuilds $packageBuilds `
-        -OpenPullRequests $openPullRequests
+        -OpenPullRequests $openPullRequests `
+        -Check $Check
     $buildCheckUnavailable = @($packageBuilds.Values | Where-Object {
         !$_.Available
     }).Count -gt 0
@@ -1707,25 +1855,36 @@ try {
     } else {
         0
     }
-    if ($Json) {
-        [ordered] @{
-            line = $state.Line
-            maintenance = $state.Maintenance
-            latestSpecificBranch = $state.LatestSpecificBranch
-            maintenanceDelta = $state.MaintenanceDelta
-            incomingPullRequest = $state.IncomingPullRequest
-            upstreamSync = $state.UpstreamSync
-            pendingMilestone = $state.PendingMilestone
-            packageBuilds = $state.PackageBuilds
-            openPullRequests = $state.OpenPullRequests
-            releases = $state.Releases
-            actions = $state.Actions
-            exitCode = $exitCode
-        } | ConvertTo-Json -Depth 8
-    } else {
-        Write-ReleaseAuditReport $state
+    return [pscustomobject] [ordered] @{
+        line = $state.Line
+        check = $Check
+        sections = $state.Sections
+        maintenance = $state.Maintenance
+        latestSpecificBranch = $state.LatestSpecificBranch
+        maintenanceDelta = $state.MaintenanceDelta
+        incomingPullRequest = $state.IncomingPullRequest
+        upstreamSync = $state.UpstreamSync
+        pendingMilestone = $state.PendingMilestone
+        packageBuilds = $state.PackageBuilds
+        openPullRequests = $state.OpenPullRequests
+        releases = $state.Releases
+        actions = $state.Actions
+        exitCode = $exitCode
     }
-    exit $exitCode
+}
+
+function Invoke-ReleaseAudit([string] $Version, [string] $Check = 'All') {
+    foreach ($line in Expand-ReleaseAuditVersions $Version) {
+        try {
+            Invoke-ReleaseLineAudit -Version $line -Check $Check
+        } catch {
+            [pscustomobject] @{ line = $line; check = $Check; error = $_.Exception.Message; exitCode = 2 }
+        }
+    }
+}
+
+try {
+    $results = @(Invoke-ReleaseAudit -Version $Version -Check $Check)
 } catch {
     $failure = [pscustomobject] @{
         line = $Version
@@ -1739,3 +1898,21 @@ try {
     }
     exit 2
 }
+
+$exitCode = ($results | Measure-Object exitCode -Maximum).Maximum
+if ($Json) {
+    if ($Version -match '^\d+\.\d+$') {
+        $results[0] | ConvertTo-Json -Depth 10
+    } else {
+        ConvertTo-Json -InputObject $results -Depth 10
+    }
+} else {
+    foreach ($result in $results) {
+        if ($result.error) {
+            Write-Error "Release-state audit unavailable: $($result.line): $($result.error)" -ErrorAction Continue
+        } else {
+            Write-ReleaseAuditReport $result
+        }
+    }
+}
+exit $exitCode
