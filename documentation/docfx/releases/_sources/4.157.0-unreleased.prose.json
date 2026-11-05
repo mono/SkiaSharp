@@ -1,20 +1,153 @@
 {
-  "theme": "Skia m157 engine update",
-  "highlights_headline": "The next SkiaSharp release moves the native renderer to Skia m157 without changing managed API declarations.",
-  "highlights_body": "The update retains the m156 glyph-bounds guard. HarfBuzzSharp moves to package revision 14.4.0.200 while its native HarfBuzz engine remains at 14.4.0.",
-  "breaking": [],
+  "theme": "Engine and platform modernization",
+  "highlights_headline": "The upcoming SkiaSharp 4.157 line combines Skia m157 with refreshed platform integrations and font and rendering fixes.",
+  "highlights_body": "GTK4 gains a GPU canvas, Android continuous rendering follows the display clock, and Linux NoDependencies restores installed-font discovery. Review the platform minimums, Uno 7 migration, GTK4 pixel coordinates, and removal of RAW decoding before upgrading.",
+  "breaking": [
+    {
+      "title": "Use another decoder for RAW and DNG images",
+      "body": "Bundled RAW/DNG development and embedded JPEG preview decoding are disabled; no replacement decoder is included. Decode these files with another library before passing pixels to SkiaSharp. SKEncodedImageFormat.Dng remains for compatibility but does not indicate codec support.",
+      "prs": [5162]
+    },
+    {
+      "title": "Raise Apple application deployment targets",
+      "body": "Native SkiaSharp and HarfBuzzSharp now require macOS 12 and iOS, tvOS, and Mac Catalyst 15, with managed minima aligned for Xcode 27 builds. Raise application deployment targets accordingly; retain any higher minimum required by your framework. .NET 9 targets remain available.",
+      "prs": [5383, 5514]
+    },
+    {
+      "title": "Move Tizen applications to Tizen 10",
+      "body": "The new native packages target net10.0-tizen10.0 and support Tizen 10 on x64 and ARM64, not Tizen 8/9 or 32-bit targets. Retarget applications and manifests to Tizen 10; source builds require the Tizen 10 SDK and GCC 14.2 toolchain.",
+      "prs": [5235]
+    },
+    {
+      "title": "Migrate Uno views to Uno Platform 7 and .NET 10",
+      "body": "Non-Windows Uno views require Uno 7 and .NET 10; pre-Uno 7 WasmShell pipelines are no longer supported. SKSwapChainPanel now derives from Grid, paints a raster surface, reports null GRContext, and drops RaiseOnUnsupported. Use SKCanvasElement for GPU rendering and the .NET SDK WASM pipeline. The Windows facade remains ANGLE-backed.",
+      "prs": [5377]
+    },
+    {
+      "title": "Choose GTK4 physical or logical drawing coordinates",
+      "body": "SKDrawingArea now allocates high-density backing pixels and exposes physical-pixel CanvasSize and paint Info by default. Set IgnorePixelScaling=true to retain logical painting coordinates without losing backing resolution. RawInfo remains physical and GTK input coordinates remain logical.",
+      "prs": [5249]
+    },
+    {
+      "title": "Replace the retired native WinRT target",
+      "body": "The fork-specific native WinRT target is retired. Move builds depending on that target to a supported Windows integration; desktop Windows, WinUI/Windows App SDK, and NanoServer remain supported.",
+      "prs": [5382]
+    },
+    {
+      "title": "Pass well-formed encoded text buffers",
+      "body": "Font text operations now reject negative byte lengths with ArgumentOutOfRangeException and odd GlyphId byte counts with ArgumentException before native calls. Validate lengths and provide complete 16-bit glyph IDs. Encoded BreakText overloads return byte counts; string and char-span overloads return UTF-16 code-unit counts.",
+      "prs": [5382]
+    },
+    {
+      "title": "Review HarfBuzz shaping output changes",
+      "body": "Bundled HarfBuzz advances from 14.2.1 to 14.4.0, including intentional cross-direction mark-positioning changes for DirectWrite and Core Text compatibility and glyph-position saturation. Recheck expected glyph positions and text-layout baselines when upgrading.",
+      "prs": [5135]
+    }
+  ],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m157",
-          "detail": "Updates the bundled renderer to milestone 157, preserving the existing glyph-bounds guard and leaving managed wrappers and generated declarations unchanged.",
-          "prs": [5542]
+          "lead": "Skia m157 and upstream rendering fixes",
+          "detail": "Updates the native renderer to m157. Collected upstream fixes address glyph bounds and scratch allocations, shader overflow and failed pipelines, Graphite clipping and stroke bounds, GLES BGRA uploads, and Vulkan render-pass initialization.",
+          "prs": [5542, 5612, 5575, 5517, 5500, 5489]
+        },
+        {
+          "lead": "HarfBuzz 14.4 improvements",
+          "detail": "The native refresh includes malformed-font crash and hang fixes and shaping and subsetting performance work. Later HarfBuzzSharp package revisions for Skia milestones 156 and 157 still bundle native HarfBuzz 14.4.0.",
+          "prs": [5135, 5247, 5542]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "GTK4 GPU canvas",
+          "detail": "SKGLArea adds GL-backed PaintSurface drawing, an optional GTK-driven render loop, and physical or logical pixel scaling. Invalidate with QueueRender. GTK owns the GL context; manually bundled GTK runtimes must include libepoxy.",
+          "prs": [5249]
+        },
+        {
+          "lead": "OpenType tag enums",
+          "detail": "HarfBuzzSharp exposes OpenTypeBitsTag and OpenTypeNumberTag enums. The new native raw-value and set-intersection functions remain internal; this update does not add Face wrappers for them.",
+          "prs": [5135]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Installed fonts in Linux NoDependencies",
+          "detail": "Restores directory-backed system-font discovery without adding fontconfig, fixing family lookup and SKShaper construction with installed fonts. The default directory is /usr/share/fonts/ unless overridden when building the native library.",
+          "prs": [5086]
+        },
+        {
+          "lead": "Display-paced Android rendering",
+          "detail": "Automatic continuous GLTextureView rendering, including MAUI SKGLView.HasRenderLoop, follows Choreographer display callbacks instead of swap throughput. Explicit render requests remain independent, rendering stays on the GL worker, and pause, resize, and reattachment retain lifecycle progress.",
+          "prs": [5345]
+        },
+        {
+          "lead": "Native callback and import ABI corrections",
+          "detail": "Corrects native boolean widths for Skia and HarfBuzz callbacks while preserving public bool signatures. Generated LibraryImport calls now explicitly use cdecl, matching DllImport and delegate paths, including the Windows x86 ABI.",
+          "prs": [5479, 5565]
+        },
+        {
+          "lead": "Character-code validation and native string reads",
+          "detail": "StringUtilities.GetUnicodeCharacterCode validates a single code unit of the requested encoding: ASCII for UTF-8, BMP for UTF-16, or a full code point for UTF-32. GetString reports ArgumentNullException for null byte arrays. FromCString fixes a native buffer over-read.",
+          "prs": [5506, 5429]
+        },
+        {
+          "lead": "Linux HarfBuzz coexistence",
+          "detail": "Bundled HarfBuzz binds its internal function calls locally on Linux, preventing system HarfBuzz loaded by GTK from redirecting calls into an incompatible implementation and causing invalid-pointer failures or crashes.",
+          "prs": [5352]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Bounded Windows font and view ownership",
+          "detail": "DWriteCore custom-font data is released after the last dependent typeface clone is disposed instead of remaining rooted by its shared factory cache. WinUI EGL teardown unbinds its own current context before destroying the surface so the native window can be released.",
+          "prs": [5577, 5551]
+        },
+        {
+          "lead": "Fewer temporary pixel and text buffers",
+          "detail": "Valid managed image pixel copies avoid an intermediate SKData allocation. HarfBuzzSharp pools AddUtf32 string encoding buffers and avoids native feature-string allocation while preserving existing encoding and decoding behavior.",
+          "prs": [5052, 5060, 5230]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Matching WebAssembly native assets",
+          "detail": ".NET 11+ selects Emscripten 6.0.2 archives for both products; .NET 8 retains 3.1.34 and .NET 9/10 retain 3.1.56. WebGPU C++ support is compiled into libSkiaSharp.a rather than on the application's final link line; use rebuilt GPU-enabled archives for that path.",
+          "prs": [5306, 5316]
+        },
+        {
+          "lead": "Updated Windows integration assets",
+          "detail": "Refreshes WinUI ANGLE to chromium/8118 and the library Windows App SDK dependency to 1.7.250909003 without changing the declared Windows runtime minimum. Source-built AnyCPU native-asset selection now recognizes portable win-x86, win-x64, and win-arm64 RIDs instead of legacy win10-* paths.",
+          "prs": [5321, 5390, 5551]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
-  "preview_summaries": {}
+  "contributor_summaries": {
+    "ramezgerges": "Restored Linux NoDependencies font discovery, moved WebGPU C++ support into WASM archives, and rebuilt the Uno views for Uno Platform 7.",
+    "akoeplinger": "Updated dependency automation and corrected GitOps issue-author formatting.",
+    "VirgilMing": "Fixed Linux HarfBuzz symbol conflicts and made Blazor CPU sample tests wait for their first paint.",
+    "dalexsoto": "Addressed contextual PoliCheck findings in CI.",
+    "rolfbjarne": "Removed unused sample files.",
+    "Saad-elnagar": "Removed an obsolete libmicrohttpd notice."
+  },
+  "preview_summaries": {
+    "v4.156.0-preview.1.26512.10": "Advanced to Skia m156, added GTK4 GPU rendering and pixel scaling, and restored Linux NoDependencies font discovery. This bucket also raised the Tizen baseline to 10 and aligned .NET 11 WASM asset selection.",
+    "v4.155.0-rc.1.26512.8": "Cut the first release candidate for the 4.155 line with no additional collected PRs in this bucket.",
+    "v4.155.0-preview.2.26479.13": "Updated bundled HarfBuzz to 14.4.0 and disabled RAW/DNG decoding, including embedded JPEG previews.",
+    "v4.155.0-preview.1.26471.14": "Opened the 4.155 preview line with the Skia m155 engine update and no managed binding changes from that milestone bump."
+  }
 }
