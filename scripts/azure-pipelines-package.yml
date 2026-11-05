@@ -15,9 +15,9 @@ trigger:
 pr: none
 
 schedules:
-  # 23:00 PST / 00:00 PDT, away from peak shared-pool demand.
-  - cron: "0 7 * * *"
-    displayName: Daily 07:00 UTC build for main
+  # Saturday 23:00 PST / Sunday 00:00 PDT, away from peak shared-pool demand.
+  - cron: "0 7 * * 0"
+    displayName: Sunday 07:00 UTC build for main
     branches:
       include:
         - main
