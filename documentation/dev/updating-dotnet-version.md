@@ -25,6 +25,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/azure-templates-steps-dotnet.yml`** — Review host workload defaults and explicit job descriptors.
 - [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the exact-SDK workload install and Samsung's pinned manifest handling.
+- [ ] **Developer documentation** — Refer to the authoritative version files instead of duplicating current SDK, workload, or package pins in prose or commands. Use clearly marked placeholders where a version must be supplied.
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -92,7 +93,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
-> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and static libraries must match that toolchain. Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 6.0.2**. The preview CI pins are SDK **11.0.100-rc.1.26425.128** and workload set **11.0.100-rc.1.26460.1**; approved mirrors lacked Preview 6's Emscripten 5.0.6 host packs. The obsolete 5.0.6 preview build variants are replaced by 6.0.2. When the toolchain changes for the new SDK, you must:
+> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and static libraries must match that toolchain. Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 6.0.2**. The preview CI SDK and workload set are defined by `DOTNET_VERSION_PREVIEW` and `DOTNET_WORKLOAD_VERSION_PREVIEW` in `scripts/azure-templates-variables.yml`; approved mirrors lacked Preview 6's Emscripten 5.0.6 host packs. The obsolete 5.0.6 preview build variants are replaced by 6.0.2. When the toolchain changes for the new SDK, you must:
 > 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
 > 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
 >    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
@@ -125,6 +126,8 @@ The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/pac
 Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
 Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
+
+If the exact SDK patch is not published for an existing distro suffix, explicitly review the distro change rather than choosing an unavailable tag.
 
 ### 11. NuGet & Feeds
 
