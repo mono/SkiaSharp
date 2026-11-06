@@ -82,7 +82,7 @@ half4 main(float2 fragCoord) {
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		var view = inflater.Inflate(Resource.Layout.fragment_gpu_texture, container, false);
-		skiaView = view.FindViewById<SKGLTextureView>(Resource.Id.skiaView);
+		skiaView = view.FindViewById<SKGLTextureView>(Resource.Id.gpuTextureCanvas);
 		fpsLabel = view.FindViewById<TextView>(Resource.Id.fpsLabel);
 		skiaView.PaintSurface += OnPaintSurface;
 		skiaView.Touch += OnTouch;
