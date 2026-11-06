@@ -37,7 +37,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// <remarks />
 		public SKGLView()
 		{
-			var binding = new Binding(nameof(Window), source: this);
+			var binding = BindingBase.Create(static (SKGLView view) => view.Window, source: this);
 			SetBinding(ProxyWindowProperty, binding);
 		}
 
