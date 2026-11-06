@@ -70,3 +70,8 @@ Tips:
   run — that is noise, not a finding.
 - Use `[DisassemblyDiagnoser]` when a change is codegen-sensitive (inlining, `sealed`, bounds
   checks) to confirm the JIT did what you expect.
+
+## Pixel comparison
+
+Pixel comparison, mask, diagnostic-image, and mismatch-budget benchmarks are included in source tracking.
+Allocation figures cover managed memory only, not native pixel buffers.

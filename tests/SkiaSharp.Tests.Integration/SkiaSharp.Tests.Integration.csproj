@@ -9,6 +9,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);SKIA4001</NoWarn>
     <RootNamespace>SkiaSharp.Tests.Integration</RootNamespace>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Version>1.0.0</Version>
@@ -52,13 +53,13 @@
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
-    <PackageReference Include="SkiaSharp.Extended" Version="3.1.0-preview.3" />
   </ItemGroup>
 
   <!-- SkiaSharp packages - version must be specified -->
   <ItemGroup Condition="'$(SkiaSharpVersion)' != ''">
     <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
     <PackageReference Include="HarfBuzzSharp" Version="$(HarfBuzzSharpVersion)" />
+    <PackageReference Include="SkiaSharp.Testing" Version="$(SkiaSharpVersion)" />
   </ItemGroup>
 
   <!-- Test assets -->
@@ -92,5 +93,6 @@
          Text="PackageSource must be the BAR build's NuGet V3 feed." />
     <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
   </Target>
+
 
 </Project>

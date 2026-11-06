@@ -53,6 +53,13 @@ public SKShader ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingO
 
 ---
 
+## Experimental APIs
+
+For evolving APIs, follow the [experimental API policy and diagnostic registry](experimental-apis.md).
+Existing stable API contracts remain unchanged.
+
+---
+
 ## Naming Conventions
 
 ### Types
