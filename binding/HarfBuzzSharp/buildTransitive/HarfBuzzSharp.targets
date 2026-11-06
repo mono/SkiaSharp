@@ -1,0 +1,23 @@
+<Project>
+
+  <!--
+    See binding/SkiaSharp/buildTransitive/SkiaSharp.targets for the design
+    notes. This file is the HarfBuzzSharp mirror of the same two targets.
+  -->
+
+  <Target Name="_HarfBuzzSharpCheckWasmAssetsReferenced" BeforeTargets="PrepareForBuild"
+          Condition=" ('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true'
+                       or ('$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'))
+                      and '$(_HarfBuzzSharpWasmAssetsReferenced)' != 'true' ">
+    <Error Text="HarfBuzzSharp on WebAssembly requires the HarfBuzzSharp.NativeAssets.WebAssembly package. Add a matching &lt;PackageReference Include=&quot;HarfBuzzSharp.NativeAssets.WebAssembly&quot; Version=&quot;...&quot; /&gt; alongside your existing HarfBuzzSharp reference." />
+  </Target>
+
+  <Target Name="_HarfBuzzSharpTrimUntargetedRuntimes" AfterTargets="ResolvePackageAssets"
+          Condition=" '$(RuntimeIdentifiers)' != '' and '$(RuntimeIdentifier)' == '' ">
+    <ItemGroup>
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)"
+          Condition="!$([System.Text.RegularExpressions.Regex]::Match($(RuntimeIdentifiers), '(^|;)\s*%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)\s*(;|$)').Success)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
