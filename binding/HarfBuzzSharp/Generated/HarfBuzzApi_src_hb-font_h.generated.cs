@@ -1510,26 +1510,6 @@ namespace HarfBuzzSharp
 			(hb_font_reference_delegate ??= GetSymbol<Delegates.hb_font_reference> ("hb_font_reference")).Invoke (font);
 		#endif
 
-		// extern void hb_font_set_face(hb_font_t* font, hb_face_t* face)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (HARFBUZZ)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void hb_font_set_face (hb_font_t font, hb_face_t face);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_font_set_face (hb_font_t font, hb_face_t face);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_font_set_face (hb_font_t font, hb_face_t face);
-		}
-		private static Delegates.hb_font_set_face hb_font_set_face_delegate;
-		internal static void hb_font_set_face (hb_font_t font, hb_face_t face) =>
-			(hb_font_set_face_delegate ??= GetSymbol<Delegates.hb_font_set_face> ("hb_font_set_face")).Invoke (font, face);
-		#endif
-
 		// extern void hb_font_set_funcs(hb_font_t* font, hb_font_funcs_t* klass, void* font_data, hb_destroy_func_t destroy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

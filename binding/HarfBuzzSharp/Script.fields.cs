@@ -629,5 +629,119 @@ namespace HarfBuzzSharp
 		/// <summary>The Sogdian (Sogd) script typically used with text in the Sogdian (sog) language originating from Uzbekistan.</summary>
 		/// <remarks />
 		public static readonly Script Sogdian = new Script (new Tag ('S', 'o', 'g', 'd'));
+
+		// Since 2.4.0
+
+		/// <summary>The Elymaic (Elym) script.</summary>
+		/// <remarks />
+		public static readonly Script Elymaic = new Script (new Tag ('E', 'l', 'y', 'm'));
+		/// <summary>The Nandinagari (Nand) script.</summary>
+		/// <remarks />
+		public static readonly Script Nandinagari = new Script (new Tag ('N', 'a', 'n', 'd'));
+		/// <summary>The Nyiakeng Puachue Hmong (Hmnp) script.</summary>
+		/// <remarks />
+		public static readonly Script NyiakengPuachueHmong = new Script (new Tag ('H', 'm', 'n', 'p'));
+		/// <summary>The Wancho (Wcho) script.</summary>
+		/// <remarks />
+		public static readonly Script Wancho = new Script (new Tag ('W', 'c', 'h', 'o'));
+
+		// Since 2.6.7
+
+		/// <summary>The Chorasmian (Chrs) script.</summary>
+		/// <remarks />
+		public static readonly Script Chorasmian = new Script (new Tag ('C', 'h', 'r', 's'));
+		/// <summary>The Dives Akuru (Diak) script.</summary>
+		/// <remarks />
+		public static readonly Script DivesAkuru = new Script (new Tag ('D', 'i', 'a', 'k'));
+		/// <summary>The Khitan Small Script (Kits) script.</summary>
+		/// <remarks />
+		public static readonly Script KhitanSmallScript = new Script (new Tag ('K', 'i', 't', 's'));
+		/// <summary>The Yezidi (Yezi) script.</summary>
+		/// <remarks />
+		public static readonly Script Yezidi = new Script (new Tag ('Y', 'e', 'z', 'i'));
+
+		// Since 3.0.0
+
+		/// <summary>The Cypro-Minoan (Cpmn) script.</summary>
+		/// <remarks />
+		public static readonly Script CyproMinoan = new Script (new Tag ('C', 'p', 'm', 'n'));
+		/// <summary>The Old Uyghur (Ougr) script.</summary>
+		/// <remarks />
+		public static readonly Script OldUyghur = new Script (new Tag ('O', 'u', 'g', 'r'));
+		/// <summary>The Tangsa (Tnsa) script.</summary>
+		/// <remarks />
+		public static readonly Script Tangsa = new Script (new Tag ('T', 'n', 's', 'a'));
+		/// <summary>The Toto (Toto) script.</summary>
+		/// <remarks />
+		public static readonly Script Toto = new Script (new Tag ('T', 'o', 't', 'o'));
+		/// <summary>The Vithkuqi (Vith) script.</summary>
+		/// <remarks />
+		public static readonly Script Vithkuqi = new Script (new Tag ('V', 'i', 't', 'h'));
+
+		// Since 3.4.0
+
+		/// <summary>The mathematical notation (Zmth) script.</summary>
+		/// <remarks />
+		public static readonly Script Math = new Script (new Tag ('Z', 'm', 't', 'h'));
+
+		// Since 5.2.0
+
+		/// <summary>The Kawi (Kawi) script.</summary>
+		/// <remarks />
+		public static readonly Script Kawi = new Script (new Tag ('K', 'a', 'w', 'i'));
+		/// <summary>The Nag Mundari (Nagm) script.</summary>
+		/// <remarks />
+		public static readonly Script NagMundari = new Script (new Tag ('N', 'a', 'g', 'm'));
+
+		// Since 10.0.0
+
+		/// <summary>The Garay (Gara) script.</summary>
+		/// <remarks />
+		public static readonly Script Garay = new Script (new Tag ('G', 'a', 'r', 'a'));
+		/// <summary>The Gurung Khema (Gukh) script.</summary>
+		/// <remarks />
+		public static readonly Script GurungKhema = new Script (new Tag ('G', 'u', 'k', 'h'));
+		/// <summary>The Kirat Rai (Krai) script.</summary>
+		/// <remarks />
+		public static readonly Script KiratRai = new Script (new Tag ('K', 'r', 'a', 'i'));
+		/// <summary>The Ol Onal (Onao) script.</summary>
+		/// <remarks />
+		public static readonly Script OlOnal = new Script (new Tag ('O', 'n', 'a', 'o'));
+		/// <summary>The Sunuwar (Sunu) script.</summary>
+		/// <remarks />
+		public static readonly Script Sunuwar = new Script (new Tag ('S', 'u', 'n', 'u'));
+		/// <summary>The Todhri (Todr) script.</summary>
+		/// <remarks />
+		public static readonly Script Todhri = new Script (new Tag ('T', 'o', 'd', 'r'));
+		/// <summary>The Tulu-Tigalari (Tutg) script.</summary>
+		/// <remarks />
+		public static readonly Script TuluTigalari = new Script (new Tag ('T', 'u', 't', 'g'));
+
+		// Since 11.5.0
+
+		/// <summary>The Beria Erfe (Berf) script.</summary>
+		/// <remarks />
+		public static readonly Script BeriaErfe = new Script (new Tag ('B', 'e', 'r', 'f'));
+		/// <summary>The Sidetic (Sidt) script.</summary>
+		/// <remarks />
+		public static readonly Script Sidetic = new Script (new Tag ('S', 'i', 'd', 't'));
+		/// <summary>The Tai Yo (Tayo) script.</summary>
+		/// <remarks />
+		public static readonly Script TaiYo = new Script (new Tag ('T', 'a', 'y', 'o'));
+		/// <summary>The Tolong Siki (Tols) script.</summary>
+		/// <remarks />
+		public static readonly Script TolongSiki = new Script (new Tag ('T', 'o', 'l', 's'));
+
+		// Since 14.5.0
+
+		/// <summary>The Jurchen (Jurc) script.</summary>
+		/// <remarks />
+		public static readonly Script Jurchen = new Script (new Tag ('J', 'u', 'r', 'c'));
+		/// <summary>The Proto-Cuneiform (Pcun) script.</summary>
+		/// <remarks />
+		public static readonly Script ProtoCuneiform = new Script (new Tag ('P', 'c', 'u', 'n'));
+		/// <summary>The Seal (Seal) script.</summary>
+		/// <remarks />
+		public static readonly Script Seal = new Script (new Tag ('S', 'e', 'a', 'l'));
 	}
 }
