@@ -51,7 +51,7 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
             }
             """);
         
-        await Run("dotnet", $"build {projectName} -c Release -p:WasmBuildNative=true", timeoutSeconds: 300);
+        await Run("dotnet", $"build {projectName} -c Release", timeoutSeconds: 300);
         
         await VerifyWithPlaywright(projectName, canvasView);
     }
