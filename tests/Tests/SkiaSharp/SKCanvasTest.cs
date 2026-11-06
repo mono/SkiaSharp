@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using Xunit;
 
@@ -746,6 +747,44 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, bmp.GetPixel(25, 40));
 			Assert.Equal(SKColors.Red, bmp.GetPixel(40, 25));
 			Assert.Equal(SKColors.Green, bmp.GetPixel(40, 40));
+		}
+
+		[Fact]
+		public void NWayCanvasKeepsAddedCanvasAliveUntilRemoved()
+		{
+			using var nway = new SKNWayCanvas(16, 16);
+
+			var weak = AddChildCanvasAndForget(nway);
+
+			// The child SKCanvas has no managed reference other than the one inside the
+			// SKNWayCanvas, which forwards draw calls to the child's raw native SkCanvas*.
+			// It must stay alive while the parent still references it natively; otherwise
+			// the parent would hold a dangling pointer (use-after-free).
+			CollectGarbage();
+			Assert.True(weak.IsAlive);
+
+			// Once removed, the parent no longer references it, so it may be collected.
+			RemoveChildCanvasAndForget(nway, weak);
+			CollectGarbage();
+			Assert.False(weak.IsAlive);
+
+			GC.KeepAlive(nway);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static WeakReference AddChildCanvasAndForget(SKNWayCanvas nway)
+		{
+			var bmp = new SKBitmap(4, 4);
+			var child = new SKCanvas(bmp);
+			nway.AddCanvas(child);
+			GC.KeepAlive(bmp);
+			return new WeakReference(child);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static void RemoveChildCanvasAndForget(SKNWayCanvas nway, WeakReference weak)
+		{
+			nway.RemoveCanvas((SKCanvas)weak.Target);
 		}
 	}
 }
