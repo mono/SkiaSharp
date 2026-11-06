@@ -92,6 +92,137 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Theory]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Rgb565, SKAlphaType.Opaque)]
+		[InlineData(SKColorType.Rgba16161616, SKAlphaType.Unpremul)]
+		public void ColorSpanTransfersMatchBitmap(SKColorType colorType, SKAlphaType alphaType)
+		{
+			Span<SKColor> colors = stackalloc SKColor[]
+			{
+				new SKColor(17, 89, 203, 0),
+				new SKColor(255, 0, 0, 1),
+				new SKColor(11, 37, 91, 128),
+				SKColors.Blue,
+			};
+			var original = colors.ToArray();
+			var info = new SKImageInfo(2, 2, colorType, alphaType);
+			using var expected = new SKBitmap(info, info.RowBytes + 16);
+			using var actual = new SKBitmap(info, info.RowBytes + 16);
+			expected.GetPixelSpan().Fill(0x5a);
+			actual.GetPixelSpan().Fill(0x5a);
+			expected.Pixels = original;
+			using var pixmap = actual.PeekPixels();
+
+			Assert.Equal(4, pixmap.PixelCount);
+			Assert.True(pixmap.WritePixels(colors));
+			Assert.Equal(original, colors.ToArray());
+			Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
+			colors.Clear();
+
+			Span<SKColor> readback = stackalloc SKColor[4];
+			Assert.True(pixmap.ReadPixels(readback));
+			Assert.Equal(expected.Pixels, readback.ToArray());
+		}
+
+		[Fact]
+		public unsafe void ColorSpanTransfersWorkWithoutBitmap()
+		{
+			var info = new SKImageInfo(2, 2, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+			var storage = stackalloc byte[24];
+			var bytes = new Span<byte>(storage, 24);
+			bytes.Fill(0x5a);
+			using var pixmap = new SKPixmap(info, (IntPtr)storage, 12);
+			var source = new[] { SKColors.Red, new SKColor(17, 89, 203, 0), SKColors.Blue, SKColors.White };
+			var destination = new[] { SKColors.Magenta, SKColors.Magenta, SKColors.Magenta, SKColors.Magenta, SKColors.Magenta, SKColors.Magenta };
+
+			Assert.True(pixmap.WritePixels(source));
+			Assert.True(pixmap.ReadPixels(destination.AsSpan(1, 5)));
+			Assert.Equal(source, destination.AsSpan(1, 4).ToArray());
+			Assert.Equal(SKColors.Magenta, destination[0]);
+			Assert.Equal(SKColors.Magenta, destination[5]);
+			Assert.Equal(new byte[] { 0x5a, 0x5a, 0x5a, 0x5a }, bytes.Slice(8, 4).ToArray());
+			Assert.Equal(new byte[] { 0x5a, 0x5a, 0x5a, 0x5a }, bytes.Slice(20, 4).ToArray());
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(3)]
+		public void ColorSpanReadsRejectSmallDestinations(int length)
+		{
+			using var bitmap = new SKBitmap(2, 2);
+			using var pixmap = bitmap.PeekPixels();
+			var destination = new SKColor[length];
+			Array.Fill(destination, SKColors.Magenta);
+
+			var exception = Assert.Throws<ArgumentException>(() => pixmap.ReadPixels(destination));
+
+			Assert.Equal("destination", exception.ParamName);
+			Assert.All(destination, color => Assert.Equal(SKColors.Magenta, color));
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(3)]
+		[InlineData(5)]
+		public void ColorSpanWritesRequireExactLength(int length)
+		{
+			using var bitmap = new SKBitmap(2, 2);
+			bitmap.Erase(SKColors.Blue);
+			using var pixmap = bitmap.PeekPixels();
+
+			var exception = Assert.Throws<ArgumentException>(() => pixmap.WritePixels(new SKColor[length]));
+
+			Assert.Equal("source", exception.ParamName);
+			Assert.All(bitmap.Pixels, color => Assert.Equal(SKColors.Blue, color));
+		}
+
+		[Fact]
+		public void EmptyPixmapsSupportEmptyColorSpans()
+		{
+			using var pixmap = new SKPixmap();
+			Assert.Equal(0, pixmap.PixelCount);
+			Assert.True(pixmap.ReadPixels(Span<SKColor>.Empty));
+			Assert.True(pixmap.WritePixels(ReadOnlySpan<SKColor>.Empty));
+
+			var destination = new[] { SKColors.Magenta };
+			Assert.True(pixmap.ReadPixels(destination));
+			Assert.Equal(SKColors.Magenta, destination[0]);
+			Assert.Throws<ArgumentException>(() => pixmap.WritePixels(destination));
+		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public unsafe void ColorSpanTransfersReturnFalseForInvalidStorage(bool missingStorage)
+		{
+			var storage = stackalloc byte[4];
+			var bytes = new Span<byte>(storage, 4);
+			bytes.Fill(0x5a);
+			var info = new SKImageInfo(1, 1, missingStorage ? SKColorType.Bgra8888 : SKColorType.Unknown, SKAlphaType.Unpremul);
+			using var pixmap = new SKPixmap(info, missingStorage ? IntPtr.Zero : (IntPtr)storage, 4);
+			var destination = new[] { SKColors.Magenta };
+
+			Assert.False(pixmap.ReadPixels(destination));
+			Assert.Equal(SKColors.Magenta, destination[0]);
+			Assert.False(pixmap.WritePixels(new[] { SKColors.Red }));
+			Assert.Equal(new byte[] { 0x5a, 0x5a, 0x5a, 0x5a }, bytes.ToArray());
+		}
+
+		[Fact]
+		public void PixelCountRejectsOverflow()
+		{
+			var info = new SKImageInfo(65536, 65536, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+			using var pixmap = new SKPixmap(info, IntPtr.Zero);
+
+			Assert.Throws<OverflowException>(() => pixmap.PixelCount);
+			Assert.Throws<OverflowException>(() => pixmap.ReadPixels(Array.Empty<SKColor>()));
+			Assert.Throws<ArgumentException>(() => pixmap.WritePixels(Array.Empty<SKColor>()));
+		}
+
 		[Fact]
 		public void SwizzleSwapsRedAndBlue()
 		{

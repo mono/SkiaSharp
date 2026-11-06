@@ -119,6 +119,16 @@ namespace SkiaSharp
 		/// <remarks />
 		public int Height => Info.Height;
 
+		/// <summary>Gets the number of pixels in the pixmap, excluding row padding.</summary>
+		/// <value>The width multiplied by the height.</value>
+		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
+		public int PixelCount {
+			get {
+				var info = Info;
+				return checked(info.Width * info.Height);
+			}
+		}
+
 		/// <summary>Gets the current size of the pixmap.</summary>
 		/// <value>The current size of the pixmap.</value>
 		/// <remarks />
@@ -379,6 +389,34 @@ namespace SkiaSharp
 
 		// ReadPixels
 
+		/// <summary>Copies all the pixels into a span of unpremultiplied colors.</summary>
+		/// <param name="destination">The span to receive the colors in row-major order. It must have space for at least <see cref="PixelCount" /> colors.</param>
+		/// <returns><see langword="true" /> if all pixels were copied; otherwise, <see langword="false" /> if pixel storage is inaccessible or Skia cannot convert the pixels.</returns>
+		/// <remarks>
+		/// <para>Uses Skia's bulk conversion rules without transforming the pixmap's color space. Rounding can differ from <see cref="GetPixelColor" /> for premultiplied and higher-precision pixels.</para>
+		/// <para>Any elements beyond the pixmap's pixel count are left unchanged. Reading an empty pixmap succeeds without changing the destination. No managed color array is allocated. The destination must not overlap the pixmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentException">The destination is too small to hold all the pixels.</exception>
+		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
+		public bool ReadPixels (Span<SKColor> destination)
+		{
+			var info = Info;
+			var count = checked(info.Width * info.Height);
+			if (destination.Length < count)
+				throw new ArgumentException ($"The destination must have space for Width x Height, or {count}, pixels.", nameof (destination));
+
+			if (count == 0)
+				return true;
+
+			if (GetPixels () == IntPtr.Zero)
+				return false;
+
+			fixed (SKColor* p = destination) {
+				var destinationInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+				return ReadPixels (destinationInfo, (IntPtr)p, destinationInfo.RowBytes);
+			}
+		}
+
 		/// <summary>Copies the pixels from the image into the specified buffer.</summary>
 		/// <param name="dstInfo">The image information describing the destination pixel buffer.</param>
 		/// <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
@@ -419,6 +457,42 @@ namespace SkiaSharp
 		/// <remarks />
 		public bool ReadPixels (SKPixmap pixmap) =>
 			ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0);
+
+		// WritePixels
+
+		/// <summary>Replaces all the pixels from a span of unpremultiplied colors.</summary>
+		/// <param name="source">The colors in row-major order. The length must equal <see cref="PixelCount" />.</param>
+		/// <returns><see langword="true" /> if all pixels were written; otherwise, <see langword="false" /> if pixel storage is inaccessible or Skia cannot convert the colors.</returns>
+		/// <remarks>
+		/// <para>Uses Skia's pixel conversion rules to convert to the pixmap's color type, alpha type, and color space without drawing or blending. Unpremultiplied storage preserves RGB even when alpha is zero.</para>
+		/// <para>Supply opaque colors for an opaque pixmap; the opaque alpha type is an input promise, not a request to force stored alpha to 255.</para>
+		/// <para>The colors are copied synchronously and are not retained or modified. Writing an empty span to an empty pixmap succeeds. The source must not overlap the pixmap's pixel storage.</para>
+		/// <para>This method does not notify an owning bitmap of the change. Call <see cref="SKBitmap.NotifyPixelsChanged" /> after modifying a bitmap through its pixmap.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentException">The span length does not equal the pixmap's width multiplied by its height.</exception>
+		public bool WritePixels (ReadOnlySpan<SKColor> source)
+		{
+			var info = Info;
+			var expected = (long)info.Width * info.Height;
+			if (expected != source.Length)
+				throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (source));
+
+			if (source.Length == 0)
+				return true;
+
+			var pixels = GetPixels ();
+			if (pixels == IntPtr.Zero)
+				return false;
+
+			fixed (SKColor* p = source) {
+				// SKColor and native BGRA8888 use packed 0xAARRGGBB values.
+				var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+				using var sourcePixmap = new SKPixmap (sourceInfo, (IntPtr)p);
+				var result = sourcePixmap.ReadPixels (info, pixels, RowBytes);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		// Encode
 

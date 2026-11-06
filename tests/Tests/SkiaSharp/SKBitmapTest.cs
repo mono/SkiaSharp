@@ -565,7 +565,7 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(new SKColor(1, 0, 0, 0), Assert.Single(bitmap.Pixels));
 			Span<SKColor> colors = stackalloc SKColor[1];
-			Assert.Equal(1, bitmap.GetPixelColors(colors));
+			Assert.True(bitmap.ReadPixels(colors));
 			Assert.Equal(new SKColor(1, 0, 0, 0), colors[0]);
 		}
 
@@ -587,14 +587,14 @@ namespace SkiaSharp.Tests
 			using var expected = new SKBitmap(2, 2, colorType, alphaType);
 			expected.Pixels = original;
 			using var actual = new SKBitmap(2, 2, colorType, alphaType);
-			actual.SetPixelColors(colors);
+			Assert.True(actual.WritePixels(colors));
 			Assert.Equal(original, colors.ToArray());
 			Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
 			Assert.Equal(4, actual.PixelCount);
 
 			colors.Clear();
 			Span<SKColor> readback = stackalloc SKColor[4];
-			Assert.Equal(4, actual.GetPixelColors(readback));
+			Assert.True(actual.ReadPixels(readback));
 			Assert.Equal(expected.Pixels, readback.ToArray());
 			Assert.Equal(actual.Pixels, readback.ToArray());
 		}
@@ -604,10 +604,10 @@ namespace SkiaSharp.Tests
 		{
 			using var bitmap = new SKBitmap(2, 2, SKColorType.Bgra8888, SKAlphaType.Unpremul);
 			var expected = new[] { SKColors.Red, SKColors.Green, SKColors.Blue, new SKColor(17, 89, 203, 0) };
-			bitmap.SetPixelColors(expected);
+			Assert.True(bitmap.WritePixels(expected));
 			var destination = Enumerable.Repeat(SKColors.Magenta, 8).ToArray();
 
-			Assert.Equal(4, bitmap.GetPixelColors(destination.AsSpan(1, 6)));
+			Assert.True(bitmap.ReadPixels(destination.AsSpan(1, 6)));
 			Assert.Equal(expected, destination.AsSpan(1, 4).ToArray());
 			Assert.Equal(SKColors.Magenta, destination[0]);
 			Assert.All(destination.Skip(5), color => Assert.Equal(SKColors.Magenta, color));
@@ -621,7 +621,7 @@ namespace SkiaSharp.Tests
 			using var bitmap = new SKBitmap(2, 2);
 			var destination = Enumerable.Repeat(SKColors.Magenta, length).ToArray();
 
-			var exception = Assert.Throws<ArgumentException>(() => bitmap.GetPixelColors(destination));
+			var exception = Assert.Throws<ArgumentException>(() => bitmap.ReadPixels(destination));
 
 			Assert.Equal("destination", exception.ParamName);
 			Assert.All(destination, color => Assert.Equal(SKColors.Magenta, color));
@@ -635,9 +635,9 @@ namespace SkiaSharp.Tests
 		{
 			using var bitmap = new SKBitmap(2, 2);
 			bitmap.Erase(SKColors.Blue);
-			var exception = Assert.Throws<ArgumentException>(() => bitmap.SetPixelColors(new SKColor[length]));
+			var exception = Assert.Throws<ArgumentException>(() => bitmap.WritePixels(new SKColor[length]));
 
-			Assert.Equal("value", exception.ParamName);
+			Assert.Equal("source", exception.ParamName);
 			Assert.All(bitmap.Pixels, color => Assert.Equal(SKColors.Blue, color));
 		}
 
@@ -646,12 +646,12 @@ namespace SkiaSharp.Tests
 		{
 			using var bitmap = new SKBitmap();
 			Assert.Equal(0, bitmap.PixelCount);
-			Assert.Equal(0, bitmap.GetPixelColors(default));
-			bitmap.SetPixelColors(default);
+			Assert.True(bitmap.ReadPixels(default));
+			Assert.True(bitmap.WritePixels(default));
 			Assert.Empty(bitmap.Pixels);
 
 			var destination = new[] { SKColors.Magenta };
-			Assert.Equal(0, bitmap.GetPixelColors(destination));
+			Assert.True(bitmap.ReadPixels(destination));
 			Assert.Equal(SKColors.Magenta, destination[0]);
 		}
 
@@ -668,7 +668,7 @@ namespace SkiaSharp.Tests
 				*(uint*)bitmap.GetPixels() = storage;
 				bitmap.NotifyPixelsChanged();
 				var colors = new SKColor[1];
-				Assert.Equal(1, bitmap.GetPixelColors(colors));
+				Assert.True(bitmap.ReadPixels(colors));
 				Assert.Equal(new SKColor(16, 32, 64, 128), colors[0]);
 				Assert.Equal(colors, bitmap.Pixels);
 			}
@@ -743,7 +743,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
 				var expectedColors = ReadPixelsWithNativeConversion(expected);
 				var actualColors = new SKColor[actual.PixelCount];
-				Assert.Equal(actualColors.Length, actual.GetPixelColors(actualColors));
+				Assert.True(actual.ReadPixels(actualColors));
 				Assert.Equal(expectedColors, actualColors);
 				Assert.Equal(expectedColors, actual.Pixels);
 			}
@@ -778,13 +778,13 @@ namespace SkiaSharp.Tests
 					actual.GetPixelSpan().Fill(0x5a);
 
 					WritePixelsWithNativeConversion(expected, pixels);
-					actual.SetPixelColors(pixels);
+					Assert.True(actual.WritePixels(pixels));
 
 					Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
 					var expectedColors = ReadPixelsWithNativeConversion(expected);
 					var actualColors = new SKColor[actual.PixelCount];
 					Assert.Equal(pixels.Length, actual.PixelCount);
-					Assert.Equal(pixels.Length, actual.GetPixelColors(actualColors));
+					Assert.True(actual.ReadPixels(actualColors));
 					Assert.Equal(expectedColors, actualColors);
 					Assert.Equal(expectedColors, actual.Pixels);
 				}
@@ -816,12 +816,12 @@ namespace SkiaSharp.Tests
 				using var expected = new SKBitmap(info);
 				using var actual = new SKBitmap(info);
 				WritePixelsWithNativeConversion(expected, pixels);
-				actual.SetPixelColors(pixels);
+				Assert.True(actual.WritePixels(pixels));
 
 				Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
 				var expectedColors = ReadPixelsWithNativeConversion(expected);
 				var actualColors = new SKColor[actual.PixelCount];
-				Assert.Equal(pixels.Length, actual.GetPixelColors(actualColors));
+				Assert.True(actual.ReadPixels(actualColors));
 				Assert.Equal(expectedColors, actualColors);
 				Assert.Equal(expectedColors, actual.Pixels);
 			}
@@ -927,8 +927,10 @@ namespace SkiaSharp.Tests
 			var info = new SKImageInfo(1, 1);
 			Assert.True(bitmap.InstallPixels(info, IntPtr.Zero));
 			Assert.Throws<InvalidOperationException>(() => bitmap.Pixels = new[] { SKColors.Red });
-			Assert.Throws<InvalidOperationException>(() => bitmap.SetPixelColors(new[] { SKColors.Red }));
-			Assert.Throws<InvalidOperationException>(() => bitmap.GetPixelColors(new SKColor[1]));
+			Assert.False(bitmap.WritePixels(new[] { SKColors.Red }));
+			var destination = new[] { SKColors.Magenta };
+			Assert.False(bitmap.ReadPixels(destination));
+			Assert.Equal(SKColors.Magenta, destination[0]);
 			Assert.Throws<InvalidOperationException>(() => bitmap.Pixels);
 		}
 

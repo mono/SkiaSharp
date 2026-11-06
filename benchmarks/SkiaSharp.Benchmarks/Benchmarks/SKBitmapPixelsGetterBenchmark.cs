@@ -19,7 +19,8 @@ public class SKBitmapPixelsGetterBenchmark
 		destination = new SKColor[Size * Size];
 		for (var i = 0; i < destination.Length; i++)
 			destination[i] = new SKColor((byte)i, (byte)(i >> 3), (byte)(i >> 7), (byte)(i | 0x80));
-		bitmap.SetPixelColors(destination);
+		if (!bitmap.WritePixels(destination))
+			throw new InvalidOperationException("Unable to initialize the bitmap's pixels.");
 	}
 
 	[GlobalCleanup]
@@ -46,7 +47,8 @@ public class SKBitmapPixelsGetterBenchmark
 	[Benchmark]
 	public SKColor Span()
 	{
-		bitmap.GetPixelColors(destination);
+		if (!bitmap.ReadPixels(destination))
+			throw new InvalidOperationException("Unable to read the bitmap's pixels.");
 		return destination[0];
 	}
 }
