@@ -549,49 +549,104 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Gets the number of pixels in the bitmap.</summary>
+		/// <value>The width multiplied by the height.</value>
+		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
+		public int PixelCount {
+			get {
+				var info = Info;
+				return checked(info.Width * info.Height);
+			}
+		}
+
 		/// <summary>Gets or sets all the pixels as an array of colors.</summary>
 		/// <value>The array of colors.</value>
 		/// <remarks>
+		/// <para>The getter allocates an array and reads unpremultiplied colors using Skia's bulk pixel conversion rules. It does not transform the bitmap's color space. Rounding can differ from <see cref="GetPixel" /> when converting premultiplied or higher-precision pixels.</para>
 		/// <para>Assigned colors are unpremultiplied. The setter replaces the pixels using Skia's pixel conversion rules, converting to the bitmap's color type, alpha type, and color space without drawing or blending with existing pixels. An unpremultiplied destination preserves RGB components even when alpha is zero.</para>
 		/// <para>As with native Skia pixel uploads, an opaque alpha type is a promise about the input, not a request to force stored alpha to 255. Supply opaque colors when the bitmap's alpha type is <see cref="SKAlphaType.Opaque" />.</para>
 		/// </remarks>
 		/// <exception cref="ArgumentNullException">The assigned array is <see langword="null" />.</exception>
 		/// <exception cref="ArgumentException">The assigned array length does not equal the bitmap's width multiplied by its height.</exception>
-		/// <exception cref="InvalidOperationException">A nonempty bitmap has no accessible pixel storage, or Skia cannot convert the assigned pixels.</exception>
+		/// <exception cref="InvalidOperationException">A nonempty bitmap has no accessible pixel storage, or Skia cannot convert its pixels.</exception>
+		/// <seealso cref="GetPixelColors(Span{SKColor})" />
+		/// <seealso cref="SetPixelColors(ReadOnlySpan{SKColor})" />
 		public SKColor[] Pixels {
 			get {
-				var info = Info;
-				var pixels = new SKColor[checked(info.Width * info.Height)];
-				fixed (SKColor* p = pixels) {
-					SkiaApi.sk_bitmap_get_pixel_colors (Handle, (uint*)p);
-					GC.KeepAlive (this);
-				}
+				var pixels = new SKColor[PixelCount];
+				GetPixelColors (pixels);
 				return pixels;
 			}
 			set {
 				if (value == null)
 					throw new ArgumentNullException (nameof (value));
 
-				var info = Info;
-				var expected = (long)info.Width * info.Height;
-				if (expected != value.Length)
-					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (value));
+				SetPixelColors (value);
+			}
+		}
 
-				if (value.Length == 0)
-					return;
+		/// <summary>Copies all the pixels into a span of unpremultiplied colors.</summary>
+		/// <param name="destination">The span to receive the colors in row-major order. It must have space for at least <see cref="PixelCount" /> colors.</param>
+		/// <returns>The number of colors written, equal to <see cref="PixelCount" />.</returns>
+		/// <remarks>
+		/// <para>Uses Skia's bulk conversion rules without transforming the bitmap's color space. Rounding can differ from <see cref="GetPixel" /> for premultiplied and higher-precision pixels.</para>
+		/// <para>Any elements beyond the bitmap's pixel count are left unchanged. No managed color array is allocated. The destination must not overlap the bitmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentException">The destination is too small to hold all the pixels.</exception>
+		/// <exception cref="InvalidOperationException">A nonempty bitmap has no accessible pixel storage, or Skia cannot convert its pixels.</exception>
+		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
+		public int GetPixelColors (Span<SKColor> destination)
+		{
+			var info = Info;
+			var count = checked(info.Width * info.Height);
+			if (destination.Length < count)
+				throw new ArgumentException ($"The destination must have space for Width x Height, or {count}, pixels.", nameof (destination));
 
-				using var target = PeekPixels ();
-				if (target == null)
-					throw new InvalidOperationException ("The bitmap has no accessible pixel storage.");
+			if (count == 0)
+				return 0;
 
-				fixed (SKColor* v = value) {
-					// SKColor and native BGRA8888 use packed 0xAARRGGBB values.
-					var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-					using var source = new SKPixmap (sourceInfo, (IntPtr)v);
-					if (!source.ReadPixels (target))
-						throw new InvalidOperationException ("Unable to convert the assigned pixels to the bitmap's format.");
-					NotifyPixelsChanged ();
-				}
+			using var source = PeekPixels ();
+			if (source == null)
+				throw new InvalidOperationException ("The bitmap has no accessible pixel storage.");
+
+			fixed (SKColor* p = destination) {
+				var destinationInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+				if (!source.ReadPixels (destinationInfo, (IntPtr)p, destinationInfo.RowBytes))
+					throw new InvalidOperationException ("Unable to convert the bitmap's pixels to colors.");
+			}
+			return count;
+		}
+
+		/// <summary>Replaces all the pixels from a span of unpremultiplied colors.</summary>
+		/// <param name="value">The colors in row-major order. The length must equal <see cref="PixelCount" />.</param>
+		/// <remarks>
+		/// <para>Uses Skia's pixel conversion rules to convert to the bitmap's color type, alpha type, and color space without drawing or blending. Unpremultiplied storage preserves RGB even when alpha is zero.</para>
+		/// <para>Supply opaque colors for an opaque bitmap; the opaque alpha type is an input promise, not a request to force stored alpha to 255. The bitmap is notified after a successful write.</para>
+		/// <para>The colors are copied synchronously and are not retained or modified. The source must not overlap the bitmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentException">The span length does not equal the bitmap's width multiplied by its height.</exception>
+		/// <exception cref="InvalidOperationException">A nonempty bitmap has no accessible pixel storage, or Skia cannot convert the supplied colors.</exception>
+		public void SetPixelColors (ReadOnlySpan<SKColor> value)
+		{
+			var info = Info;
+			var expected = (long)info.Width * info.Height;
+			if (expected != value.Length)
+				throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (value));
+
+			if (value.Length == 0)
+				return;
+
+			using var target = PeekPixels ();
+			if (target == null)
+				throw new InvalidOperationException ("The bitmap has no accessible pixel storage.");
+
+			fixed (SKColor* p = value) {
+				// SKColor and native BGRA8888 use packed 0xAARRGGBB values.
+				var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+				using var source = new SKPixmap (sourceInfo, (IntPtr)p);
+				if (!source.ReadPixels (target))
+					throw new InvalidOperationException ("Unable to convert the supplied colors to the bitmap's format.");
+				NotifyPixelsChanged ();
 			}
 		}
 
