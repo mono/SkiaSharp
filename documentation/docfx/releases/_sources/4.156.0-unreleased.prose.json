@@ -1,0 +1,25 @@
+{
+  "theme": "GPU rendering correctness",
+  "highlights_headline": "SkiaSharp 4.156.0 receives upstream fixes for GPU path bounds, clipping, and recorded glyph replay.",
+  "highlights_body": "These updates retain Skia milestone 156 and leave managed APIs unchanged.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "GPU paths and clipping corrected",
+          "detail": "Corrects Ganesh device-space path bounds and software coverage-mask subset clamping, plus Graphite clip-key packing and wedge miter bounds.",
+          "prs": [5617]
+        },
+        {
+          "lead": "Recorded glyph replay validated",
+          "detail": "Validates serialized Slug positions, matrices, bounds, and flags; bounds direct-mask offsets and preserves creation-time rounding. Ganesh and Graphite retain rendering fallbacks when glyph data cannot safely use atlas bilinear sampling.",
+          "prs": [5617, 5624]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
