@@ -23,7 +23,11 @@ endpoint="${2:?missing API endpoint}"
 
 case "$endpoint" in
   repos/mono/SkiaSharp/contents/scripts/VERSIONS.txt\?ref=*)
-    printf 'libSkiaSharp test milestone %s\n' "$TEST_MAIN_MS" | base64
+    ms="$TEST_MAIN_MS"
+    if [[ "$endpoint" =~ ref=release/[0-9]+\.([0-9]+)\.x$ ]]; then
+      ms="${BASH_REMATCH[1]}"
+    fi
+    printf 'libSkiaSharp test milestone %s\n' "$ms" | base64
     ;;
   repos/mono/skia/compare/*)
     printf '%s\n' "$endpoint" >>"$TEST_COMPARE_LOG"
@@ -207,6 +211,24 @@ run_override_error_case() {
   echo "PASS: $name"
 }
 
+run_override_infers_target_case() {
+  local name=release-override-infers-target
+  local case_dir="${TMP_DIR}/${name}"
+  mkdir -p "$case_dir"
+  env \
+      PATH="${MOCK_BIN}:$PATH" GITHUB_REPOSITORY=mono/SkiaSharp GITHUB_SHA=trigger-sha \
+      GITHUB_REF=refs/heads/main GITHUB_RUN_NUMBER=3 TEST_MAIN_MS=157 \
+      TEST_RELEASE_BRANCH=release/4.157.x TEST_RELEASE_SHA=release-sha TEST_SYNC_BRANCH="" \
+      TEST_SYNC_SHA=sync-sha TEST_SKIA_BASE_BRANCH=release/4.157.x TEST_BASE_SHA=base-sha \
+      TEST_UPSTREAM_SHA=upstream-x TEST_BASE_BEHIND=1 TEST_SYNC_BEHIND=0 \
+      TEST_COMPARE_LOG="${case_dir}/compare" \
+      bash "$DETECTOR" --output "${case_dir}/output" --target "" --base-branch release/4.157.x \
+      >"${case_dir}/log" 2>&1 || { cat "${case_dir}/log" >&2; fail "$name: detector failed"; }
+  grep -qx "target=157" "${case_dir}/output" || fail "$name: target not inferred"
+  grep -qx "skia_base_branch=release/4.157.x" "${case_dir}/output" || fail "$name: wrong skia base"
+  echo "PASS: $name"
+}
+
 run_compare_failure_case() {
   local name=compare-api-failure
   local case_dir="${TMP_DIR}/${name}"
@@ -264,6 +286,7 @@ run_case servicing-same-milestone-release 157 157 release/4.157.x "" 2 0 false r
 run_case bump-ignores-other-release-line 158 157 release/4.157.x "" 2 0 false skiasharp
 run_case explicit-release-override 157 157 release/4.157.x "" 2 0 false release/4.157.x release/4.157.x
 run_case non-release-override-unchanged 157 157 "" "" 2 0 false skiasharp main skia-sync/m157-main
+run_override_infers_target_case
 run_override_error_case release-override-wrong-milestone 158 release/4.157.x
 run_override_error_case missing-override-branch 157 release/4.999.x
 run_compare_failure_case

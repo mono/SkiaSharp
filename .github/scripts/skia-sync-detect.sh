@@ -167,6 +167,10 @@ rotate_select() {
 # UPSTREAM_REF is the google/skia ref we merge FROM. Two shapes only (see --target):
 # empty ⇒ rotate over versions.json; `main` ⇒ upstream tip; a number ⇒ chrome/m<number>.
 INVALID=false
+# An explicit release-line override with no target means "service that line".
+if [ -z "$SYNC_TARGET" ] && [[ "$BASE_BRANCH_OVERRIDE" =~ ^release/[0-9]+\.([0-9]+)\.x$ ]]; then
+  SYNC_TARGET="${BASH_REMATCH[1]}"
+fi
 if [ -z "$SYNC_TARGET" ]; then
   rotate_select
 elif [ "$SYNC_TARGET" = main ]; then
@@ -256,6 +260,10 @@ fi
 #   - release   → that line's milestone (== TARGET ⇒ a bug-fix-only sync)
 if [ -n "$BASE_BRANCH_OVERRIDE" ] || [ "$IS_RELEASE" = true ]; then
   CURRENT=$(milestone_of "$BASE_BRANCH")
+  if [ "$IS_RELEASE" = true ] && [ "$CURRENT" != "$TARGET" ]; then
+    echo "::error::Release branch '${BASE_BRANCH}' reports milestone '${CURRENT:-unknown}' in scripts/VERSIONS.txt, expected m${TARGET}."
+    exit 1
+  fi
 else
   CURRENT="$MAIN_MS"
 fi
