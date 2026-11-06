@@ -1,0 +1,25 @@
+{
+  "theme": "Rendering and glyph replay fixes",
+  "highlights_headline": "SkiaSharp 4.156.0 servicing work improves path bounds, clipping, and validation of serialized glyph replay data.",
+  "highlights_body": "These collected m156 updates leave managed wrappers, generated bindings, and package versions unchanged.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Correct path and clip bounds",
+          "detail": "Upstream fixes correct Ganesh device-space path bounds and software coverage-mask subset clamping, plus Graphite clip-key packing and wedge miter bounds.",
+          "prs": [5617]
+        },
+        {
+          "lead": "Validate serialized glyph replay",
+          "detail": "Slug replay validates positions, matrices, bounds, and flags, bounds direct-mask offsets, and preserves creation-time float rounding. Unsuitable glyph data retains rendering fallbacks, including when glyph-atlas bilinear filtering is unavailable.",
+          "prs": [5617, 5624]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
