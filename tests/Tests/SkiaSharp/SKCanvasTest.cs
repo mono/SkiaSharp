@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using Xunit;
 
@@ -306,6 +307,77 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void NWayCanvasKeepsAddedCanvasAliveUntilRemoved()
+		{
+			using var bitmap = new SKBitmap(new SKImageInfo(100, 100));
+			using var nway = new SKNWayCanvas(100, 100);
+			var child = AddCanvas(nway, bitmap);
+
+			CollectGarbage();
+			Assert.True(child.IsAlive);
+			nway.Clear(SKColors.Blue);
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(0, 0));
+
+			RemoveCanvas(nway, child);
+			CollectGarbage();
+			Assert.False(child.IsAlive);
+		}
+
+		[Fact]
+		public void NWayCanvasKeepsDuplicateCanvasAliveUntilLastRemoval()
+		{
+			using var bitmap = new SKBitmap(new SKImageInfo(100, 100));
+			using var nway = new SKNWayCanvas(100, 100);
+			var child = AddCanvas(nway, bitmap, twice: true);
+
+			RemoveCanvas(nway, child);
+			CollectGarbage();
+			Assert.True(child.IsAlive);
+			nway.Clear(SKColors.Red);
+			Assert.Equal(SKColors.Red, bitmap.GetPixel(0, 0));
+
+			RemoveCanvas(nway, child);
+			CollectGarbage();
+			Assert.False(child.IsAlive);
+		}
+
+		[Fact]
+		public void NWayCanvasRemoveAllReleasesEveryCanvas()
+		{
+			using var firstBitmap = new SKBitmap(new SKImageInfo(100, 100));
+			using var secondBitmap = new SKBitmap(new SKImageInfo(100, 100));
+			using var unknownBitmap = new SKBitmap(new SKImageInfo(100, 100));
+			using var nway = new SKNWayCanvas(100, 100);
+			var first = AddCanvas(nway, firstBitmap, twice: true);
+			var second = AddCanvas(nway, secondBitmap);
+			using (var unknown = new SKCanvas(unknownBitmap))
+				nway.RemoveCanvas(unknown);
+
+			CollectGarbage();
+			Assert.True(first.IsAlive);
+			Assert.True(second.IsAlive);
+
+			nway.RemoveAll();
+			CollectGarbage();
+			Assert.False(first.IsAlive);
+			Assert.False(second.IsAlive);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static WeakReference AddCanvas(SKNWayCanvas nway, SKBitmap bitmap, bool twice = false)
+		{
+			var child = new SKCanvas(bitmap);
+			nway.AddCanvas(child);
+			if (twice)
+				nway.AddCanvas(child);
+			return new WeakReference(child);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static void RemoveCanvas(SKNWayCanvas nway, WeakReference child) =>
+			nway.RemoveCanvas((SKCanvas)child.Target);
+
+		[Fact]
 		public void OverdrawCanvasDrawsProperly()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
@@ -322,6 +394,53 @@ namespace SkiaSharp.Tests
 				Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
 				Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
 			}
+		}
+
+		[Fact]
+		public void OverdrawCanvasKeepsInitialCanvasAliveUntilRemoved()
+		{
+			using var bitmap = new SKBitmap(new SKImageInfo(100, 100));
+			using var overdraw = CreateOverdrawCanvas(bitmap, out var child);
+
+			CollectGarbage();
+			Assert.True(child.IsAlive);
+			using var paint = new SKPaint();
+			overdraw.DrawRect(SKRect.Create(10, 10, 20, 20), paint);
+			Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
+
+			RemoveCanvas(overdraw, child);
+			CollectGarbage();
+			Assert.False(child.IsAlive);
+		}
+
+		[Fact]
+		public void OverdrawCanvasTracksInitialAndAdditionalRegistrations()
+		{
+			using var bitmap = new SKBitmap(new SKImageInfo(100, 100));
+			var overdraw = CreateOverdrawCanvas(bitmap, out var child, addDuplicate: true);
+
+			RemoveCanvas(overdraw, child);
+			CollectGarbage();
+			Assert.True(child.IsAlive);
+			using var paint = new SKPaint();
+			overdraw.DrawRect(SKRect.Create(10, 10, 20, 20), paint);
+			Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
+
+			overdraw.Dispose();
+			overdraw.Dispose();
+			CollectGarbage();
+			Assert.False(child.IsAlive);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKOverdrawCanvas CreateOverdrawCanvas(SKBitmap bitmap, out WeakReference child, bool addDuplicate = false)
+		{
+			var canvas = new SKCanvas(bitmap);
+			var overdraw = new SKOverdrawCanvas(canvas);
+			if (addDuplicate)
+				overdraw.AddCanvas(canvas);
+			child = new WeakReference(canvas);
+			return overdraw;
 		}
 
 		[Fact]
