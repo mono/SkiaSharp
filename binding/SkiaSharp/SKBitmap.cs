@@ -551,7 +551,13 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets all the pixels as an array of colors.</summary>
 		/// <value>The array of colors.</value>
-		/// <remarks />
+		/// <remarks>
+		/// <para>Assigned colors are unpremultiplied. The setter replaces the pixels using Skia's pixel conversion rules, converting to the bitmap's color type, alpha type, and color space without drawing or blending with existing pixels. An unpremultiplied destination preserves RGB components even when alpha is zero.</para>
+		/// <para>As with native Skia pixel uploads, an opaque alpha type is a promise about the input, not a request to force stored alpha to 255. Supply opaque colors when the bitmap's alpha type is <see cref="SKAlphaType.Opaque" />.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentNullException">The assigned array is <see langword="null" />.</exception>
+		/// <exception cref="ArgumentException">The assigned array length does not equal the bitmap's width multiplied by its height.</exception>
+		/// <exception cref="InvalidOperationException">A nonempty bitmap has no accessible pixel storage, or Skia cannot convert the assigned pixels.</exception>
 		public SKColor[] Pixels {
 			get {
 				var info = Info;
@@ -571,30 +577,27 @@ namespace SkiaSharp
 				if (expected != value.Length)
 					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (value));
 
-				fixed (SKColor* v = value) {
-					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-					// Other alpha types have different conversion semantics in the rendering path.
-					if (info.AlphaType == SKAlphaType.Premul &&
-						(info.ColorType == SKColorType.Bgra8888 || info.ColorType == SKColorType.Rgba8888)) {
-						using var source = new SKPixmap (tempInfo, (IntPtr)v);
-						using var target = PeekPixels ();
-						if (target != null && source.ReadPixels (target)) {
-							NotifyPixelsChanged ();
-							return;
-						}
-					}
+				if (value.Length == 0)
+					return;
 
-					using var temp = new SKBitmap ();
-					temp.InstallPixels (tempInfo, (IntPtr)v);
+				using var target = PeekPixels ();
+				if (target == null)
+					throw new InvalidOperationException ("The bitmap has no accessible pixel storage.");
 
-					using var shader = temp.ToShader ();
+				using var converted = Utils.RentArray<uint> (BitConverter.IsLittleEndian ? 0 : value.Length, nullIfEmpty: true);
+				for (var i = 0; i < converted.Length; i++) {
+					// SKColor is a native-endian ARGB integer; Skia's BGRA format uses little-endian bytes.
+					var color = value[i];
+					converted[i] = (uint)(color.Blue << 24 | color.Green << 16 | color.Red << 8 | color.Alpha);
+				}
 
-					using var canvas = new SKCanvas (this);
-					using var paint = new SKPaint {
-						Shader = shader,
-						BlendMode = SKBlendMode.Src
-					};
-					canvas.DrawPaint (paint);
+				fixed (SKColor* v = value)
+				fixed (uint* c = converted) {
+					var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+					using var source = new SKPixmap (sourceInfo, (IntPtr)(BitConverter.IsLittleEndian ? (void*)v : c));
+					if (!source.ReadPixels (target))
+						throw new InvalidOperationException ("Unable to convert the assigned pixels to the bitmap's format.");
+					NotifyPixelsChanged ();
 				}
 			}
 		}

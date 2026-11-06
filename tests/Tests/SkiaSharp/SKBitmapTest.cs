@@ -593,7 +593,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKColorType.Rgba8888, SKAlphaType.Opaque)]
 		[InlineData(SKColorType.Rgb565, SKAlphaType.Opaque)]
 		[InlineData(SKColorType.Gray8, SKAlphaType.Opaque)]
-		public void OptimizedPixelWriteMatchesExistingPixelsSetter(SKColorType colorType, SKAlphaType alphaType)
+		public void PixelWritesMatchNativeConversion(SKColorType colorType, SKAlphaType alphaType)
 		{
 			var pixels = new[]
 			{
@@ -614,7 +614,7 @@ namespace SkiaSharp.Tests
 				var info = new SKImageInfo(3, 3, colorType, alphaType, colorSpace);
 
 				using var expected = new SKBitmap(info);
-				WritePixelsWithRenderingPath(expected, pixels);
+				WritePixelsWithNativeConversion(expected, pixels);
 
 				using var actual = new SKBitmap(info);
 				actual.Pixels = pixels;
@@ -630,7 +630,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKColorType.Rgba8888, SKAlphaType.Premul)]
 		[InlineData(SKColorType.Rgba8888, SKAlphaType.Unpremul)]
 		[InlineData(SKColorType.Rgba8888, SKAlphaType.Opaque)]
-		public void PixelWritesMatchRenderingForAllAlphaValues(SKColorType colorType, SKAlphaType alphaType)
+		public void PixelWritesMatchNativeConversionForAllAlphaValues(SKColorType colorType, SKAlphaType alphaType)
 		{
 			var pixels = new SKColor[256 * 256];
 			for (var alpha = 0; alpha < 256; alpha++)
@@ -651,7 +651,7 @@ namespace SkiaSharp.Tests
 					expected.GetPixelSpan().Fill(0x5a);
 					actual.GetPixelSpan().Fill(0x5a);
 
-					WritePixelsWithRenderingPath(expected, pixels);
+					WritePixelsWithNativeConversion(expected, pixels);
 					actual.Pixels = pixels;
 
 					Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
@@ -659,23 +659,111 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		private static unsafe void WritePixelsWithRenderingPath(SKBitmap bitmap, SKColor[] pixels)
+		[Theory]
+		[MemberData(nameof(GetAllColorTypes))]
+		public void PixelWritesMatchNativeConversionForAllColorTypes(SKColorType colorType)
 		{
-			var info = bitmap.Info;
-			var sourceInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-			fixed (SKColor* p = pixels)
+			if (colorType == SKColorType.Unknown)
 			{
-				using var temp = new SKBitmap();
-				temp.InstallPixels(sourceInfo, (IntPtr)p);
-				using var shader = temp.ToShader();
-				using var canvas = new SKCanvas(bitmap);
-				using var paint = new SKPaint
-				{
-					Shader = shader,
-					BlendMode = SKBlendMode.Src,
-				};
-				canvas.DrawPaint(paint);
+				using var bitmap = new SKBitmap();
+				bitmap.Pixels = Array.Empty<SKColor>();
+				Assert.Empty(bitmap.Pixels);
+				return;
 			}
+
+			var pixels = new[]
+			{
+				new SKColor(17, 89, 203, 0),
+				new SKColor(255, 0, 0, 1),
+				new SKColor(0, 255, 0, 128),
+				new SKColor(0, 0, 255, 255),
+			};
+			foreach (var alphaType in new[] { SKAlphaType.Premul, SKAlphaType.Unpremul, SKAlphaType.Opaque })
+			{
+				var info = new SKImageInfo(2, 2, colorType, alphaType);
+				using var expected = new SKBitmap(info);
+				using var actual = new SKBitmap(info);
+				WritePixelsWithNativeConversion(expected, pixels);
+				actual.Pixels = pixels;
+
+				Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
+			}
+		}
+
+		[Theory]
+		[InlineData(SKColorType.Bgra8888)]
+		[InlineData(SKColorType.Rgba8888)]
+		public void PixelWritesPreserveUnpremultipliedColors(SKColorType colorType)
+		{
+			using var bitmap = new SKBitmap(3, 1, colorType, SKAlphaType.Unpremul);
+			var pixels = new[]
+			{
+				new SKColor(17, 89, 203, 0),
+				new SKColor(255, 0, 0, 1),
+				new SKColor(11, 37, 91, 128),
+			};
+			bitmap.Pixels = pixels;
+
+			Assert.Equal(pixels, bitmap.Pixels);
+		}
+
+		[Theory]
+		[InlineData(SKColorType.Bgra8888, 0, 0, 128, 128)]
+		[InlineData(SKColorType.Rgba8888, 128, 0, 0, 128)]
+		public void PixelWritesPremultiplyAndOrderChannels(SKColorType colorType, byte c0, byte c1, byte c2, byte c3)
+		{
+			using var bitmap = new SKBitmap(1, 1, colorType, SKAlphaType.Premul);
+			bitmap.Pixels = new[] { new SKColor(255, 0, 0, 128) };
+
+			Assert.Equal(new[] { c0, c1, c2, c3 }, bitmap.Bytes);
+		}
+
+		[Fact]
+		public void PixelWritesDoNotCompositeWithExistingPixels()
+		{
+			using var bitmap = new SKBitmap(1, 1, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+			bitmap.Erase(SKColors.Blue);
+			var color = new SKColor(255, 0, 0, 128);
+			bitmap.Pixels = new[] { color };
+
+			Assert.Equal(color, bitmap.GetPixel(0, 0));
+		}
+
+		private static unsafe void WritePixelsWithNativeConversion(SKBitmap bitmap, SKColor[] pixels)
+		{
+			// Explicit RGBA bytes make the oracle independent of SKColor's native-endian layout.
+			var rgba = new byte[pixels.Length * 4];
+			for (var i = 0; i < pixels.Length; i++)
+			{
+				rgba[i * 4] = pixels[i].Red;
+				rgba[i * 4 + 1] = pixels[i].Green;
+				rgba[i * 4 + 2] = pixels[i].Blue;
+				rgba[i * 4 + 3] = pixels[i].Alpha;
+			}
+			var sourceInfo = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+			fixed (byte* p = rgba)
+			{
+				using var source = new SKPixmap(sourceInfo, (IntPtr)p);
+				using var destination = bitmap.PeekPixels();
+				Assert.NotNull(destination);
+				Assert.True(source.ReadPixels(destination));
+			}
+		}
+
+		[Fact]
+		public void NullPixelsThrow()
+		{
+			using var bitmap = new SKBitmap(1, 1);
+			Assert.Throws<ArgumentNullException>(() => bitmap.Pixels = null);
+		}
+
+		[Fact]
+		public void PixelWritesWithoutStorageThrow()
+		{
+			using var bitmap = new SKBitmap();
+			var info = new SKImageInfo(1, 1);
+			Assert.True(bitmap.InstallPixels(info, IntPtr.Zero));
+			Assert.Throws<InvalidOperationException>(() => bitmap.Pixels = new[] { SKColors.Red });
 		}
 
 		[Fact]
