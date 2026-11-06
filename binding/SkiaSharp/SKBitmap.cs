@@ -971,6 +971,8 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
+			// SkBitmap::installPixels invokes releaseProc even when installation fails
+			// (src/core/SkBitmap.cpp), so the native callback frees this handle on both paths.
 			DelegateProxies.Create (del, out _, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKBitmapReleaseProxy : null;
 			var result = SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
