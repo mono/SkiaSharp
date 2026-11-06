@@ -1,0 +1,47 @@
+{
+  "theme": "New engine and rendering fixes",
+  "highlights_headline": "SkiaSharp 4.157.0 adopts Skia m157 with native rendering fixes and explicit source-generated interop calling conventions.",
+  "highlights_body": "The managed API surface remains unchanged. Native updates address clipped paths, glyph replay, Graphite readback and Vulkan initialization.",
+  "breaking": [
+    {
+      "title": "Check Graphite Metal runtime targets",
+      "body": "Graphite Metal adopts a native runtime minimum of iOS/tvOS 15; its macOS minimum remains 12. If using this backend, target a supported OS version. These backend minimums do not lower any higher requirements imposed by managed packages or frameworks.",
+      "prs": [5542]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m157",
+          "detail": "Updates the native renderer to milestone 157 while preserving the existing glyph-bounds guard and managed API. The HarfBuzzSharp package revision becomes 14.4.0.200; the native shaping engine remains HarfBuzz 14.4.0.",
+          "prs": [5542]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Path and glyph rendering",
+          "detail": "Fixes convex anti-aliased path buffer overflow across vertical clip gaps, coverage-mask clamping and device-space path bounds. Corrects Graphite clip keys and wedge bounds, and validates direct-mask Slug data and unsupported fractional glyph replay.",
+          "prs": [5612, 5630]
+        },
+        {
+          "lead": "GPU transfer and initialization",
+          "detail": "Corrects Graphite alpha-to-RGBx GPU-to-CPU transfer stride and initializes Vulkan render-pass pointers correctly.",
+          "prs": [5612, 5630]
+        },
+        {
+          "lead": "Explicit cdecl source-generated interop",
+          "detail": "Makes LibraryImport declarations use the same cdecl convention as existing DllImport and delegate paths, correcting an ABI mismatch that can affect Windows x86. Runtime validation of the reported optimized-call stack-growth symptom remains outstanding.",
+          "prs": [5565]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {},
+  "harfbuzz_summary": "HarfBuzzSharp source-generated LibraryImport declarations now explicitly use cdecl, matching the existing interop paths. This corrects a potential Windows x86 ABI mismatch; runtime validation of the reported stack-growth symptom remains outstanding."
+}
