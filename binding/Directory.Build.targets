@@ -22,6 +22,7 @@ It provides a comprehensive 2D API that can be used across mobile, server and de
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.'))" />
+  <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Compatibility.targets" Condition="'$(NativeRuntimeFamily)' != '' and '$(MSBuildProjectName)' != 'SkiaSharp.NativeAssets.RuntimePack'" />
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 

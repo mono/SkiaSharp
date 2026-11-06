@@ -1,19 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
+    <NativeRuntimeFamily>Windows</NativeRuntimeFamily>
     <Title>$(PackagingGroup) - Native Assets for Win32</Title>
-    <IsNativeAssetsProject>true</IsNativeAssetsProject>
+    <PackageNotes>Compatibility package with exact-version dependencies on all three Windows runtime packs. Modern RID-selected applications can reference SkiaSharp alone.</PackageNotes>
   </PropertyGroup>
-  <ItemGroup>
-    <NativeAssetPackageFile Include="..\..\output\native\windows\x64\libSkiaSharp*" RuntimeIdentifier="win-x64" />
-    <NativeAssetPackageFile Include="..\..\output\native\windows\x86\libSkiaSharp*" RuntimeIdentifier="win-x86" />
-    <NativeAssetPackageFile Include="..\..\output\native\windows\arm64\libSkiaSharp*" RuntimeIdentifier="win-arm64" />
-  </ItemGroup>
-  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
-    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets" />
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" Condition="$(TargetFramework.StartsWith('net4'))">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets;build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>

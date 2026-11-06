@@ -1,0 +1,40 @@
+<Project>
+  <PropertyGroup>
+    <SkiaSharpUseNoDependencies>true</SkiaSharpUseNoDependencies>
+    <ShouldIncludeNativeSkiaSharp Condition="'$(ShouldIncludeNativeSkiaSharp)' == ''">true</ShouldIncludeNativeSkiaSharp>
+    <_SkiaSharpResolvePackageAssets Condition="'$(UsingMicrosoftNETSdk)' == 'true'">ResolvePackageAssets</_SkiaSharpResolvePackageAssets>
+  </PropertyGroup>
+
+  <!-- Do not depend on runtime-graph merge order or SDK filename-conflict winners. -->
+  <Target Name="_SkiaSharpExcludeDefaultLinuxAssets"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts;GenerateBuildDependencyFile;AssignTargetPaths"
+          DependsOnTargets="$(_SkiaSharpResolvePackageAssets)"
+          Condition="'$(SkiaSharpUseNoDependencies)' == 'true'">
+    <ItemGroup>
+      <_SkiaSharpCandidateReplacementAsset Include="@(NativeCopyLocalItems);@(RuntimeTargetsCopyLocalItems);@(None);@(Content)" />
+      <_SkiaSharpReplacementAsset Include="@(_SkiaSharpCandidateReplacementAsset)"
+                                 Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(_SkiaSharpCandidateReplacementAsset.NuGetPackageId)', '(?i)^SkiaSharp[.]NativeAssets[.]Linux[.]NoDependencies[.]linux-[a-z0-9-]+$'))" />
+      <_SkiaSharpReplacementPackage Include="@(_SkiaSharpReplacementAsset->'%(NuGetPackageId)')" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_SkiaSharpReplacedPackageIds>|@(_SkiaSharpReplacementPackage, '|')|</_SkiaSharpReplacedPackageIds>
+      <_SkiaSharpReplacedPackageIds>$(_SkiaSharpReplacedPackageIds.ToLowerInvariant().Replace('.nodependencies', ''))</_SkiaSharpReplacedPackageIds>
+    </PropertyGroup>
+    <ItemGroup>
+      <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(NativeCopyLocalItems.NuGetPackageId)' != '' and $(_SkiaSharpReplacedPackageIds.Contains('|$([System.String]::Copy('%(NativeCopyLocalItems.NuGetPackageId)').ToLowerInvariant())|'))" />
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)" Condition="'%(RuntimeTargetsCopyLocalItems.NuGetPackageId)' != '' and $(_SkiaSharpReplacedPackageIds.Contains('|$([System.String]::Copy('%(RuntimeTargetsCopyLocalItems.NuGetPackageId)').ToLowerInvariant())|'))" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' != '' and $(_SkiaSharpReplacedPackageIds.Contains('|$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').ToLowerInvariant())|'))" />
+      <None Remove="@(None)" Condition="'%(None.NuGetPackageId)' != '' and $(_SkiaSharpReplacedPackageIds.Contains('|$([System.String]::Copy('%(None.NuGetPackageId)').ToLowerInvariant())|'))" />
+      <Content Remove="@(Content)" Condition="'%(Content.NuGetPackageId)' != '' and $(_SkiaSharpReplacedPackageIds.Contains('|$([System.String]::Copy('%(Content.NuGetPackageId)').ToLowerInvariant())|'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SkiaSharpExcludeDefaultLinuxPublishAssets"
+          AfterTargets="_ResolveCopyLocalAssetsForPublish"
+          BeforeTargets="_HandlePackageFileConflictsForPublish;GeneratePublishDependencyFile"
+          DependsOnTargets="_SkiaSharpExcludeDefaultLinuxAssets">
+    <ItemGroup>
+      <_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssets)" Condition="'%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)' != '' and $(_SkiaSharpReplacedPackageIds.Contains('|$([System.String]::Copy('%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)').ToLowerInvariant())|'))" />
+    </ItemGroup>
+  </Target>
+</Project>

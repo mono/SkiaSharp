@@ -1,43 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
+    <NativeRuntimeFamily>Linux</NativeRuntimeFamily>
+    <NativeRuntimeFlavor>NoDependencies</NativeRuntimeFlavor>
     <Title>$(PackagingGroup) - Native Assets for Linux (No Dependencies)</Title>
-    <PackageNotes>This variation of the Linux native assets includes the build of libSkiaSharp.so that does not have any dependencies on third-party libraries.
+    <PackageNotes>Compatibility package with exact-version dependencies on all Linux NoDependencies runtime packs. Excludes fontconfig (fonts must be loaded explicitly); still requires the platform C runtime.
 
-The complete dependency list is:
- - libpthread.so.0
- - libdl.so.2
- - libm.so.6
- - libc.so.6
- - ld-linux-x86-64.so.2
-
-The excluded dependencies are:
- - Fontconfig</PackageNotes>
+Default Linux packs may also be restored via SkiaSharp's runtime.json, but package-owned build targets exclude their assets from deployment. Bionic currently shares the same native artifact between both flavors.</PackageNotes>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- glibc -->
-    <PackageFile Include="..\..\output\native\linuxnodeps\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-loongarch64\native\%(Filename)%(Extension)" />
-    <!-- Musl -->
-    <PackageFile Include="..\..\output\native\alpinenodeps\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
-    <!-- Bionic -->
-    <PackageFile Include="..\..\output\native\bionic\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\bionic\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
-  </ItemGroup>
-  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
-    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
-      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets" />
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" Condition="$(TargetFramework.StartsWith('net4'))">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets;build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>
