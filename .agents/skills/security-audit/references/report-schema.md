@@ -8,7 +8,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
 {
   "meta": {
     "date": "2026-04-10",
-    "schemaVersion": "1.0",
+    "schemaVersion": "1.1",
     "skiaSubmoduleCommit": "8c99e432ff06e61c42cf99aa8f2cbe248d301b9a",
     "skiaUpstreamCommit": "9ab7c2064b2b1ab22f856a7f0a8c3b3ae4cb89c7",
     "skiaMilestone": 132,
@@ -25,6 +25,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
   "versionVerification": [ ... ],
   "findings": [ ... ],
   "cgAlerts": { ... },
+  "tsaWorkItems": { ... },
   "chromeReleases": { ... },
   "nextSteps": [ ... ]
 }
@@ -35,7 +36,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `date` | string | Yes | ISO date of the audit |
-| `schemaVersion` | string | Yes | Always `"1.0"` |
+| `schemaVersion` | string | Yes | Always `"1.1"` |
 | `skiaSubmoduleCommit` | string | Yes | mono/skia fork commit from `git submodule status` |
 | `skiaUpstreamCommit` | string | Yes | google/skia chrome/mNNN branch tip (independently verified) |
 | `skiaMilestone` | integer | Yes | Verified from SkMilestone.h |
@@ -69,7 +70,10 @@ Array of objects, one per dependency:
 
 ## `findings` — Individual Dependency Findings
 
-Array of finding objects, sorted by priority then severity.
+Array of finding objects, sorted by priority then severity. Every finding must correspond to an
+audited product dependency named in `versionVerification`. Component Governance alerts, TSA work
+items, and release-schedule actions are represented by their dedicated top-level sections and
+`nextSteps`; do not duplicate them as synthetic dependency findings.
 
 > 🛑 **ONE finding per dependency.** Every dependency (e.g., "skia", "libpng", "freetype")
 > must appear as exactly ONE object in this array. All CVEs for that dependency — regardless
@@ -182,6 +186,95 @@ When `assessment == "affected"`, the resolution fields (`cherryPicksCleanly`, `r
 ### CVE `source` Values
 
 Examples: `"NVD (Chrome CPE)"`, `"NVD web search"`, `"Android Security Bulletin"`, `"Huawei HarmonyOS Bulletin"`, `"Chromium severity rating (CVSS pending)"`
+
+## `tsaWorkItems` — Legacy TSA Azure Boards Evidence
+
+Required on every audit. TSA is existing legacy infrastructure retained for now; this workflow
+does not migrate it to WiM. Query only the exact
+`[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` codebase tag in the authoritative
+`internal\Dotnet-Core-Engineering` area and `internal` iteration.
+
+```json
+{
+  "queryStatus": "success",
+  "queriedAt": "2026-08-13T05:31:22.410622+00:00",
+  "organization": "https://dev.azure.com/dnceng",
+  "project": "internal",
+  "codebaseTag": "TSA-skiasharp.skiasharp_main",
+  "portalSearchUrl": "https://almsearch.dev.azure.com/dnceng/internal/_search?type=workitem&text=TSA-skiasharp.skiasharp_main",
+  "cacheFile": "output/ai/tsa-work-items-cache.json",
+  "emptyResult": false,
+  "summary": {
+    "total": 12,
+    "active": 2,
+    "historical": 10,
+    "byState": {"Active": 2, "Resolved": 10},
+    "byCategory": {"Compliance": 2, "Security": 10},
+    "byTool": {"BinSkim": 10, "Roslyn": 2},
+    "correlated": 0,
+    "unmatched": 12
+  },
+  "groups": [
+    {
+      "key": "Roslyn:CA2265:binding/SkiaSharp/SKPathBuilder.cs",
+      "tool": "Roslyn",
+      "ruleIds": ["CA2265"],
+      "occurrence": "binding/SkiaSharp/SKPathBuilder.cs",
+      "activeIds": [1234567],
+      "historicalIds": [],
+      "hasActiveHistory": false
+    }
+  ],
+  "items": [
+    {
+      "id": 1234567,
+      "title": "[roslynanalyzers:Warning]: CA2265 (...)",
+      "state": "Active",
+      "activity": "active",
+      "workItemType": "Bug",
+      "severity": "2 - High",
+      "priority": null,
+      "tags": ["TSA", "TSA-Compliance", "TSA-Roslyn-CA2265", "TSA-skiasharp.skiasharp_main"],
+      "areaPath": "internal\\Dotnet-Core-Engineering",
+      "iterationPath": "internal",
+      "assignedTo": null,
+      "createdDate": "2026-04-28T06:45:56.813Z",
+      "changedDate": "2026-04-28T06:45:56.813Z",
+      "url": "https://dev.azure.com/dnceng/internal/_workitems/edit/1234567",
+      "tool": "Roslyn",
+      "ruleIds": ["CA2265"],
+      "tsaCategory": "Compliance",
+      "impactedFile": "binding/SkiaSharp/SKPathBuilder.cs",
+      "evidence": {
+        "impactedFile": "binding/SkiaSharp/SKPathBuilder.cs",
+        "reproSteps": "Roslyn detected CA2265..."
+      },
+      "dedupKey": "Roslyn:CA2265:binding/SkiaSharp/SKPathBuilder.cs",
+      "rawFields": {
+        "System.Id": 1234567,
+        "Microsoft.VSTS.TCM.ReproSteps": "Roslyn detected CA2265..."
+      },
+      "correlation": {
+        "status": "unmatched",
+        "findingDependencies": [],
+        "cgAlertIds": [],
+        "methods": []
+      }
+    }
+  ]
+}
+```
+
+`queryStatus` may be `success`, `error`, or `unknown`, but semantic validation rejects anything
+other than `success`. A failed query must remain visibly failed; never turn it into an empty
+successful result. A genuine zero-record response from dnceng is successful evidence and sets
+`emptyResult: true`; this is distinct from an authentication, WIQL, or hydration error.
+
+`activity` separates actionable work from historical suppression/deduplication evidence. Preserve
+all records and all complete raw fields. Deduplication keys include the impacted file or title so
+separate occurrences of the same rule are not collapsed. Every item requires a `correlation`
+object. If it cannot be matched to `findings` or `cgAlerts`, retain it with
+`status: "unmatched"`.
 
 ## `nextSteps` — Prioritized Actions
 

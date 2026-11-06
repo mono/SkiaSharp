@@ -50,6 +50,7 @@ meta = data.get("meta", {})
 summary = data.get("summary", {})
 findings = data.get("findings", [])
 cg = data.get("cgAlerts", {})
+tsa = data.get("tsaWorkItems", {})
 next_steps = data.get("nextSteps", [])
 versions = data.get("versionVerification", [])
 
@@ -130,7 +131,110 @@ elif cg:
             "This timestamp must come from the actual script execution, not be invented."
         )
 
-# 4. Findings must have unique dependencies — ONE finding per dependency, all CVEs inside it
+# 4. TSA work-item validation
+if not tsa:
+    errors.append(
+        "tsaWorkItems missing — every audit must query and correlate the legacy "
+        "TSA-skiasharp.skiasharp_main Azure Boards codebase"
+    )
+else:
+    query_status = tsa.get("queryStatus", "unknown")
+    if query_status != "success":
+        errors.append(
+            f"tsaWorkItems.queryStatus is {query_status!r}, not 'success'"
+            + (f": {tsa.get('error')}" if tsa.get("error") else "")
+        )
+
+    if tsa.get("organization") != "https://dev.azure.com/dnceng":
+        errors.append("tsaWorkItems.organization must be https://dev.azure.com/dnceng")
+    if tsa.get("project") != "internal":
+        errors.append("tsaWorkItems.project must be the dnceng internal project")
+    if tsa.get("codebaseTag") != "TSA-skiasharp.skiasharp_main":
+        errors.append(
+            "tsaWorkItems.codebaseTag must be the narrow "
+            "'TSA-skiasharp.skiasharp_main' tag; broad SkiaSharp queries time out"
+        )
+    if "TSA-skiasharp.skiasharp_main" not in tsa.get("portalSearchUrl", ""):
+        errors.append("tsaWorkItems.portalSearchUrl must be keyed by TSA-skiasharp.skiasharp_main")
+
+    tsa_items = tsa.get("items", [])
+    tsa_summary = tsa.get("summary", {})
+    if tsa.get("emptyResult") != (query_status == "success" and not tsa_items):
+        errors.append(
+            "tsaWorkItems.emptyResult must be true exactly when a successful dnceng query "
+            "returns zero records"
+        )
+    total = len(tsa_items)
+    active = sum(item.get("activity") == "active" for item in tsa_items)
+    historical = sum(item.get("activity") == "historical" for item in tsa_items)
+    correlated = sum(
+        item.get("correlation", {}).get("status") == "matched"
+        for item in tsa_items
+    )
+    unmatched = sum(
+        item.get("correlation", {}).get("status") == "unmatched"
+        for item in tsa_items
+    )
+
+    for field, actual in (
+        ("total", total),
+        ("active", active),
+        ("historical", historical),
+        ("correlated", correlated),
+        ("unmatched", unmatched),
+    ):
+        if tsa_summary.get(field) != actual:
+            errors.append(
+                f"tsaWorkItems.summary.{field} ({tsa_summary.get(field)}) != actual ({actual})"
+            )
+
+    ids = [item.get("id") for item in tsa_items]
+    duplicate_ids = sorted({item_id for item_id in ids if ids.count(item_id) > 1})
+    if duplicate_ids:
+        errors.append(f"tsaWorkItems contains duplicate IDs: {duplicate_ids}")
+
+    finding_dependencies = {f.get("dependency") for f in findings}
+    cg_alert_ids = {a.get("id") for a in cg.get("alerts", [])}
+    for i, item in enumerate(tsa_items):
+        location = f"tsaWorkItems.items[{i}]"
+        if "TSA-skiasharp.skiasharp_main" not in item.get("tags", []):
+            errors.append(f"{location} missing exact codebase tag")
+        if item.get("areaPath") != r"internal\Dotnet-Core-Engineering":
+            errors.append(
+                f"{location}.areaPath must be internal\\Dotnet-Core-Engineering"
+            )
+        if item.get("iterationPath") != "internal":
+            errors.append(f"{location}.iterationPath must be internal")
+        if not item.get("rawFields"):
+            errors.append(f"{location}.rawFields is empty — preserve raw Azure Boards evidence")
+        expected_url = f"https://dev.azure.com/dnceng/internal/_workitems/edit/{item.get('id')}"
+        if item.get("url") != expected_url:
+            errors.append(f"{location}.url does not point to its dnceng/internal work item")
+        correlation = item.get("correlation")
+        if not correlation:
+            errors.append(f"{location}.correlation missing — unmatched items must be explicit")
+            continue
+        if correlation.get("status") not in ("matched", "unmatched"):
+            errors.append(f"{location}.correlation.status must be matched or unmatched")
+        unknown_findings = set(correlation.get("findingDependencies", [])) - finding_dependencies
+        if unknown_findings:
+            errors.append(f"{location} references unknown findings: {sorted(unknown_findings)}")
+        unknown_cg = set(correlation.get("cgAlertIds", [])) - cg_alert_ids
+        if unknown_cg:
+            errors.append(f"{location} references unknown CG alerts: {sorted(unknown_cg)}")
+        has_matches = bool(
+            correlation.get("findingDependencies") or correlation.get("cgAlertIds")
+        )
+        if (correlation.get("status") == "matched") != has_matches:
+            errors.append(f"{location}.correlation.status disagrees with its match arrays")
+
+    queried_at = tsa.get("queriedAt", "")
+    if queried_at and "T00:00:00" in queried_at:
+        errors.append(
+            f"tsaWorkItems.queriedAt '{queried_at}' appears fabricated (midnight UTC)"
+        )
+
+# 5. Findings must have unique dependencies — ONE finding per dependency, all CVEs inside it
 deps = [f.get("dependency") for f in findings]
 dupes = [d for d in set(deps) if deps.count(d) > 1]
 if dupes:
@@ -140,18 +244,33 @@ if dupes:
         "finding's cves[] array. Use each CVE's 'assessment' field to distinguish status."
     )
 
-# 5. Every finding with status != clean/false_positive should have CVEs or action
+# Findings are for audited product dependencies only. CG and TSA have complete dedicated
+# sections; operational actions belong in nextSteps rather than duplicate finding cards.
+verified_dependencies = {v.get("name") for v in versions if v.get("name")}
+non_dependency_findings = sorted(
+    dependency for dependency in set(deps)
+    if dependency and dependency not in verified_dependencies
+)
+if non_dependency_findings:
+    errors.append(
+        "Findings not present in versionVerification: "
+        f"{non_dependency_findings}. findings[] is only for audited product dependencies; "
+        "put Component Governance, TSA, and release-schedule actions in their dedicated "
+        "sections and nextSteps instead of duplicating them as findings."
+    )
+
+# 6. Every finding with status != clean/false_positive should have CVEs or action
 for f in findings:
     if f.get("status") in ("needs_attention", "undiscovered", "in_progress"):
         if not f.get("cves") and not f.get("nonChromeCves") and not f.get("action"):
             warnings.append(f"Finding '{f.get('dependency')}' has status={f.get('status')} but no CVEs or action")
 
-# 6. nextSteps should be sorted by priority
+# 7. nextSteps should be sorted by priority
 priorities = [s.get("priority", 999) for s in next_steps]
 if priorities != sorted(priorities):
     warnings.append("nextSteps not sorted by priority")
 
-# 7. Meta validation
+# 8. Meta validation
 if not meta.get("date"):
     errors.append("meta.date is required")
 skia_milestone = meta.get("skiaMilestone")
@@ -165,11 +284,11 @@ if not skia_sha:
 elif not (isinstance(skia_sha, str) and len(skia_sha) >= 7 and all(c in "0123456789abcdefABCDEF" for c in skia_sha)):
     errors.append(f"meta.skiaSubmoduleCommit must look like a git SHA (got {skia_sha!r})")
 
-# 8. versionVerification should have entries
+# 9. versionVerification should have entries
 if not versions:
     warnings.append("versionVerification is empty — should list verified dependencies")
 
-# 9. Skia CVE completeness — every CVE in a skia finding must be fully resolved.
+# 10. Skia CVE completeness — every CVE in a skia finding must be fully resolved.
 #    Pattern: each essential field is either a concrete value OR has an accompanying
 #    *Note field explaining why it's missing. Silent nulls are forbidden.
 def _has_note(cve, key):
@@ -221,7 +340,7 @@ for f in findings:
             if cve.get("inOurTree") is None:
                 errors.append(f"{loc}: assessment='affected' requires inOurTree (boolean, never null)")
 
-# 10. Minimum CVE count check — the NVD "Skia" query typically returns 15+ recent CVEs.
+# 11. Minimum CVE count check — the NVD "Skia" query typically returns 15+ recent CVEs.
 #     If the report has significantly fewer, the agent may have dropped "already fixed" ones.
 skia_cve_count = 0
 for f in findings:
@@ -249,9 +368,12 @@ if errors:
 else:
     total_findings = len(findings)
     cg_count = cg.get("totalAlerts", 0) if cg else 0
+    tsa_active = tsa.get("summary", {}).get("active", 0) if tsa else 0
+    tsa_historical = tsa.get("summary", {}).get("historical", 0) if tsa else 0
     print(f"✅ Valid security audit report")
     print(f"   m{meta.get('skiaMilestone', '?')} • {meta.get('date', '?')}")
     print(f"   {total_findings} findings • {summary.get('totalCves', 0)} CVEs • {cg_count} CG alerts")
+    print(f"   {tsa_active} active TSA items • {tsa_historical} historical TSA items")
     if warnings:
         print(f"   ({len(warnings)} warnings — review above)")
     sys.exit(0)
