@@ -141,10 +141,12 @@
     <WindowsTargetFrameworks Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(WindowsTargetFrameworksPrevious)</WindowsTargetFrameworks>
   </PropertyGroup>
 
-  <!-- Windows Desktop TFMs -->
+  <!-- Windows Desktop TFMs (WPF and Windows Forms use no Windows SDK APIs, so no platform version) -->
   <PropertyGroup>
+    <WindowsDesktopTargetFrameworksCurrent Condition="$(IsWindows)">$(TFMCurrent)-windows</WindowsDesktopTargetFrameworksCurrent>
+    <WindowsDesktopTargetFrameworksPrevious Condition="$(IsWindows) and '$(TFMPrevious)' != ''">$(TFMPrevious)-windows</WindowsDesktopTargetFrameworksPrevious>
     <WindowsDesktopTargetFrameworks></WindowsDesktopTargetFrameworks>
-    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworks);$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworksCurrent);$(WindowsDesktopTargetFrameworksPrevious)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
   <!-- .NET MAUI -->
