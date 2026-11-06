@@ -718,6 +718,22 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new[] { c0, c1, c2, c3 }, bitmap.Bytes);
 		}
 
+		[Theory]
+		[InlineData(SKColorType.Bgra8888, 0x7f123456u, 0x001789cbu)]
+		[InlineData(SKColorType.Rgba8888, 0x7f563412u, 0x00cb8917u)]
+		public unsafe void PixelWritesPreservePackedColorLayout(SKColorType colorType, uint expected0, uint expected1)
+		{
+			using var bitmap = new SKBitmap(2, 1, colorType, SKAlphaType.Unpremul);
+			var pixels = new[] { new SKColor(0x7f123456u), new SKColor(0x001789cbu) };
+			bitmap.Pixels = pixels;
+
+			var storage = (uint*)bitmap.GetPixels();
+			Assert.Equal(expected0, storage[0]);
+			Assert.Equal(expected1, storage[1]);
+			Assert.Equal(0x7f123456u, (uint)pixels[0]);
+			Assert.Equal(0x001789cbu, (uint)pixels[1]);
+		}
+
 		[Fact]
 		public void PixelWritesDoNotCompositeWithExistingPixels()
 		{
@@ -731,17 +747,15 @@ namespace SkiaSharp.Tests
 
 		private static unsafe void WritePixelsWithNativeConversion(SKBitmap bitmap, SKColor[] pixels)
 		{
-			// Explicit RGBA bytes make the oracle independent of SKColor's native-endian layout.
-			var rgba = new byte[pixels.Length * 4];
+			// Pack native RGBA words independently of SKColor's underlying ARGB integer.
+			var rgba = new uint[pixels.Length];
 			for (var i = 0; i < pixels.Length; i++)
 			{
-				rgba[i * 4] = pixels[i].Red;
-				rgba[i * 4 + 1] = pixels[i].Green;
-				rgba[i * 4 + 2] = pixels[i].Blue;
-				rgba[i * 4 + 3] = pixels[i].Alpha;
+				var color = pixels[i];
+				rgba[i] = (uint)(color.Alpha << 24 | color.Blue << 16 | color.Green << 8 | color.Red);
 			}
 			var sourceInfo = new SKImageInfo(bitmap.Width, bitmap.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-			fixed (byte* p = rgba)
+			fixed (uint* p = rgba)
 			{
 				using var source = new SKPixmap(sourceInfo, (IntPtr)p);
 				using var destination = bitmap.PeekPixels();

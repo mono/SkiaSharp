@@ -584,17 +584,10 @@ namespace SkiaSharp
 				if (target == null)
 					throw new InvalidOperationException ("The bitmap has no accessible pixel storage.");
 
-				using var converted = Utils.RentArray<uint> (BitConverter.IsLittleEndian ? 0 : value.Length, nullIfEmpty: true);
-				for (var i = 0; i < converted.Length; i++) {
-					// SKColor is a native-endian ARGB integer; Skia's BGRA format uses little-endian bytes.
-					var color = value[i];
-					converted[i] = (uint)(color.Blue << 24 | color.Green << 16 | color.Red << 8 | color.Alpha);
-				}
-
-				fixed (SKColor* v = value)
-				fixed (uint* c = converted) {
+				fixed (SKColor* v = value) {
+					// SKColor and native BGRA8888 use packed 0xAARRGGBB values.
 					var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-					using var source = new SKPixmap (sourceInfo, (IntPtr)(BitConverter.IsLittleEndian ? (void*)v : c));
+					using var source = new SKPixmap (sourceInfo, (IntPtr)v);
 					if (!source.ReadPixels (target))
 						throw new InvalidOperationException ("Unable to convert the assigned pixels to the bitmap's format.");
 					NotifyPixelsChanged ();
