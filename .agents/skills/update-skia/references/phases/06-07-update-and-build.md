@@ -21,7 +21,7 @@ python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versi
   --upstream-ref "$SKIA_SYNC_UPSTREAM_REF" \
   --upstream-sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
   --parent-base-sha "$SKIA_SYNC_PARENT_BASE_SHA" \
-  --skia-base-sha "$SKIA_SYNC_SKIA_BASE_SHA"
+  --parent-skia-sha "$SKIA_SYNC_PARENT_SKIA_SHA"
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
@@ -37,7 +37,7 @@ Before changing metadata, it verifies that `include/core/SkMilestone.h` matches 
 target managed milestone. A mismatch is a required, evidence-backed fork adaptation to commit
 before the native build, not an expected build failure.
 
-It also compares exact fork-base and working-tree `DEPS`, writes
+It also compares the parent gitlink (`SKIA_SYNC_PARENT_SKIA_SHA`) and working-tree `DEPS`, writes
 `$ARTIFACT_DIR/skia-dependency-changes.json`, and mechanically synchronizes each tracked
 registration's `skia_dependency.revision` while recording old/new URLs and SHAs in the artifact.
 A changed tracked dependency intentionally

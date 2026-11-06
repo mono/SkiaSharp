@@ -122,7 +122,7 @@ mono/skia tree before moving to Phase 11:
    ```bash
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
      --skia-root "${GITHUB_WORKSPACE:-$PWD}/externals/skia" \
-     --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+     --old-upstream "$SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA" \
      --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
      --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
      --merged-head HEAD \

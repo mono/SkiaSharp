@@ -5,7 +5,7 @@ Use this prompt when launching the Phase 3 validation agent. Substitute every pl
 ---
 
 I'm updating SkiaSharp's Skia submodule from exact upstream commit `{BASE_UPSTREAM_SHA}` to
-`{TARGET_UPSTREAM_SHA}`. The exact mono/skia fork base is `{SKIA_BASE_SHA}`.
+`{TARGET_UPSTREAM_SHA}`. The exact mono/skia fork base (native base tip) is `{SKIA_BASE_SHA}`.
 Here is the breaking-change analysis file: `{ANALYSIS_FILE}`.
 Here is the provisional fork-vs-target dependency decision file: `{DEPENDENCY_FILE}`.
 

@@ -69,6 +69,7 @@ class SyncPublishHandoffTests(unittest.TestCase):
             SKIA_SYNC_HEAD_BRANCH=BRANCH,
             SKIA_SYNC_PARENT_BASE_SHA=bases[0],
             SKIA_SYNC_SKIA_BASE_SHA=bases[1],
+            SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA=bases[1],
             SKIA_SYNC_BASE_UPSTREAM_SHA=bases[1],
             SKIA_SYNC_TARGET_UPSTREAM_SHA=bases[1],
         )
@@ -116,6 +117,32 @@ class SyncPublishHandoffTests(unittest.TestCase):
             self.assertEqual(
                 (self.reports / name).read_bytes(),
                 (self.package / "reports" / name).read_bytes(),
+            )
+
+    def test_restore_rejects_a_base_that_advanced_after_the_sync_started(self):
+        self.run_handoff("pack")
+        restored = self.root / "restored"
+        for name, repo in (
+            ("parent", restored),
+            ("skia", restored / "externals/skia"),
+        ):
+            repo.parent.mkdir(parents=True, exist_ok=True)
+            git(self.root, "clone", str(self.root / f"{name}.git"), str(repo))
+        skia = restored / "externals/skia"
+        git(skia, "config", "user.name", "Handoff Test")
+        git(skia, "config", "user.email", "test@example.invalid")
+        (skia / "advance.txt").write_text("native advanced", encoding="utf-8")
+        git(skia, "add", "advance.txt")
+        git(skia, "commit", "-m", "Native base advanced")
+        git(skia, "push", "origin", "main")
+        with self.assertRaisesRegex(ValueError, "advanced"):
+            self.run_handoff(
+                "restore",
+                GITHUB_WORKSPACE=str(restored),
+                GITHUB_ENV=str(self.root / "github-env"),
+                EXPECTED_HEAD_BRANCH=BRANCH,
+                EXPECTED_BASE_BRANCH="main",
+                EXPECTED_SKIA_BASE_BRANCH="main",
             )
 
     def test_restore_rejects_an_unexpected_branch_before_importing_commits(self):

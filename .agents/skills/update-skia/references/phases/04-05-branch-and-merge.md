@@ -20,9 +20,10 @@ The helper fails instead of resetting existing branches or dirty files. On succe
 
 - the parent feature branch starts at `{PARENT_BASE_SHA}`;
 - every recursive submodule matches that parent commit;
-- the mono/skia pointer is verified against `{SKIA_BASE_SHA}` and
-  `origin/{SKIA_BASE_BRANCH}`; and
-- the mono/skia feature branch is created from that exact pointer.
+- the submodule pointer equals `{PARENT_SKIA_SHA}`, which must be an ancestor of `{SKIA_BASE_SHA}`
+  (the `origin/{SKIA_BASE_BRANCH}` tip); and
+- the mono/skia feature branch is created from `{SKIA_BASE_SHA}`, so already-merged native history is
+  preserved even when the parent gitlink lags.
 
 If either feature branch already exists, stop and inspect its base and commits. Reuse it only when
 it is the intended continuation; never reset or overwrite unrelated work.
@@ -117,7 +118,7 @@ merge:
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
   --skia-root "${GITHUB_WORKSPACE:-$PWD}/externals/skia" \
-  --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+  --old-upstream "$SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA" \
   --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
   --merged-head HEAD \

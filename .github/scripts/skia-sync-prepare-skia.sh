@@ -5,11 +5,19 @@
 # The agent job checks out the workflow branch (usually main), so the submodule may
 # sit at a different SHA than the base branch (`main` or a release line) expects. The
 # submodule tracks `$skia_base_branch` in mono/skia (skiasharp for a main sync,
-# release/<major>.<milestone>.x for a release sync), so the base-branch submodule SHA
-# should be a commit on that branch.
+# release/<major>.<milestone>.x for a release sync).
 #
-# After aligning that exact gitlink, fetch the old and target google/skia commits needed
-# for the agent's breaking-change analysis and export their exact SHAs to GITHUB_ENV.
+# Two native commits matter and are kept distinct:
+#   - the parent GITLINK: what the parent base's metadata (cgmanifest, DEPS bookkeeping)
+#     currently describes;
+#   - the native BASE TIP: the current tip of origin/$skia_base_branch, where the sync
+#     merge starts so the result contains everything already merged natively.
+# The parent may lag the native branch (e.g. a native servicing PR merged before its parent
+# repin); the gitlink must then be an ancestor of the tip. Nothing is silently dropped:
+# a diverged or different-milestone native base is a hard error.
+#
+# Then fetch the old and target google/skia commits needed for the agent's
+# breaking-change analysis and export their exact SHAs to GITHUB_ENV.
 #
 # Requires (source skia-sync-detect.sh's output first):
 #   base_branch        parent base branch (main or release/<major>.<ms>.x)
@@ -29,23 +37,28 @@ WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE not set}"
 ENV_FILE="${GITHUB_ENV:?GITHUB_ENV not set}"
 SKIA_DIR="${WORKSPACE}/externals/skia"
 
-echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
+echo "Resolving native base: origin/${BASE_BRANCH} gitlink, mono/skia ${SKIA_BASE_BRANCH} tip"
 git -C "$WORKSPACE" fetch origin "$BASE_BRANCH" 2>&1
 PARENT_BASE_SHA=$(git -C "$WORKSPACE" rev-parse "origin/${BASE_BRANCH}^{commit}")
-BASE_SUB_SHA=$(git -C "$WORKSPACE" ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')
-if [ -z "$BASE_SUB_SHA" ]; then
+PARENT_SKIA_SHA=$(git -C "$WORKSPACE" ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')
+if [ -z "$PARENT_SKIA_SHA" ]; then
   echo "::error::origin/${BASE_BRANCH} does not contain the externals/skia submodule."
   exit 1
 fi
-echo "origin/${BASE_BRANCH} submodule SHA: $BASE_SUB_SHA"
+echo "origin/${BASE_BRANCH} submodule gitlink: $PARENT_SKIA_SHA"
 git -C "$SKIA_DIR" fetch origin "$SKIA_BASE_BRANCH" 2>&1
-git -C "$SKIA_DIR" checkout "$BASE_SUB_SHA" 2>&1
-echo "Verifying SHA is on ${SKIA_BASE_BRANCH} branch:"
-if ! git -C "$SKIA_DIR" branch -r --contains "$BASE_SUB_SHA" | grep -q "origin/${SKIA_BASE_BRANCH}"; then
-  echo "::error::The base submodule SHA is not on origin/${SKIA_BASE_BRANCH}."
+SKIA_BASE_SHA=$(git -C "$SKIA_DIR" rev-parse "origin/${SKIA_BASE_BRANCH}^{commit}")
+echo "origin/${SKIA_BASE_BRANCH} tip: $SKIA_BASE_SHA"
+if ! git -C "$SKIA_DIR" merge-base --is-ancestor "$PARENT_SKIA_SHA" "$SKIA_BASE_SHA"; then
+  echo "::error::The parent gitlink ${PARENT_SKIA_SHA} is not contained in origin/${SKIA_BASE_BRANCH} (${SKIA_BASE_SHA}); the parent and native bases have diverged. Repair the base before syncing."
   exit 1
 fi
-echo "  ✅ SHA is on origin/${SKIA_BASE_BRANCH}"
+git -C "$SKIA_DIR" checkout --detach "$SKIA_BASE_SHA" 2>&1
+if [ "$SKIA_BASE_SHA" = "$PARENT_SKIA_SHA" ]; then
+  echo "  ✅ parent gitlink is the tip of origin/${SKIA_BASE_BRANCH}"
+else
+  echo "::warning::Parent origin/${BASE_BRANCH} lags origin/${SKIA_BASE_BRANCH}; the sync will merge from the native tip ${SKIA_BASE_SHA}, not the parent gitlink."
+fi
 
 if git -C "$SKIA_DIR" remote get-url upstream >/dev/null 2>&1; then
   git -C "$SKIA_DIR" remote set-url upstream https://github.com/google/skia.git
@@ -80,10 +93,37 @@ if ! git -C "$SKIA_DIR" cat-file -e "${BASE_UPSTREAM_SHA}^{commit}" 2>/dev/null;
 fi
 
 git -C "$SKIA_DIR" cat-file -e "${BASE_UPSTREAM_SHA}^{commit}"
+
+# Upstream commit already merged into the native base: the old side of the fork-patch audit,
+# which must describe the same tree as the fork base. BASE_UPSTREAM_SHA stays the parent's
+# recorded commit so the breaking-change range covers everything the parent has not seen.
+if [ "$SKIA_BASE_SHA" = "$PARENT_SKIA_SHA" ]; then
+  SKIA_BASE_UPSTREAM_SHA="$BASE_UPSTREAM_SHA"
+else
+  NATIVE_MILESTONE=$(git -C "$SKIA_DIR" show "${SKIA_BASE_SHA}:include/core/SkMilestone.h" |
+    sed -n 's/^#define SK_MILESTONE[[:space:]]*\([0-9][0-9]*\).*/\1/p')
+  if [ "$NATIVE_MILESTONE" != "$CURRENT" ]; then
+    echo "::error::origin/${SKIA_BASE_BRANCH} is at milestone m${NATIVE_MILESTONE:-?} but parent origin/${BASE_BRANCH} ships m${CURRENT}. Repin the parent to the native base before syncing."
+    exit 1
+  fi
+  if ! git -C "$SKIA_DIR" rev-parse --verify --quiet "upstream/chrome/m${CURRENT}^{commit}" >/dev/null; then
+    echo "::error::upstream/chrome/m${CURRENT} is required to find the upstream commit merged into the lagging native base."
+    exit 1
+  fi
+  SKIA_BASE_UPSTREAM_SHA=$(git -C "$SKIA_DIR" merge-base "$SKIA_BASE_SHA" "upstream/chrome/m${CURRENT}")
+  if ! git -C "$SKIA_DIR" merge-base --is-ancestor "$BASE_UPSTREAM_SHA" "$SKIA_BASE_UPSTREAM_SHA"; then
+    echo "::error::Upstream commit merged into origin/${SKIA_BASE_BRANCH} (${SKIA_BASE_UPSTREAM_SHA}) does not contain the parent's recorded ${BASE_UPSTREAM_SHA}."
+    exit 1
+  fi
+fi
+echo "Native base upstream commit: ${SKIA_BASE_UPSTREAM_SHA}"
 TARGET_UPSTREAM_SHA=$(git -C "$SKIA_DIR" rev-parse "upstream/${UPSTREAM_REF}^{commit}")
 
 {
   echo "SKIA_SYNC_PARENT_BASE_SHA=$PARENT_BASE_SHA"
+  echo "SKIA_SYNC_PARENT_SKIA_SHA=$PARENT_SKIA_SHA"
+  echo "SKIA_SYNC_SKIA_BASE_SHA=$SKIA_BASE_SHA"
+  echo "SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA=$SKIA_BASE_UPSTREAM_SHA"
   echo "SKIA_BASE_UPSTREAM_SHA=$BASE_UPSTREAM_SHA"
   echo "SKIA_TARGET_UPSTREAM_REF=upstream/$UPSTREAM_REF"
   echo "SKIA_SYNC_BASE_UPSTREAM_SHA=$BASE_UPSTREAM_SHA"

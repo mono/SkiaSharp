@@ -769,7 +769,7 @@ class UpdateVersionsTests(unittest.TestCase):
             "SKIA_SYNC_UPSTREAM_REF": "chrome/m152",
             "SKIA_SYNC_TARGET_UPSTREAM_SHA": exact_sha,
             "SKIA_SYNC_PARENT_BASE_SHA": self.parent_base_sha,
-            "SKIA_SYNC_SKIA_BASE_SHA": self.skia_base_sha,
+            "SKIA_SYNC_PARENT_SKIA_SHA": self.skia_base_sha,
             "SKIA_SYNC_ARTIFACT_DIR": str(self.root / "artifacts"),
         }
         arguments = [

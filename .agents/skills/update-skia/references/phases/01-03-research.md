@@ -40,7 +40,8 @@ Fetch:
 - `upstream/{UPSTREAM_REF}` in mono/skia.
 - The base branch's recorded `upstream_merge_commit`, by SHA.
 
-Export the exact parent-base submodule pointer as `SKIA_SYNC_SKIA_BASE_SHA`; use it instead of a
+Automation exports the native base tip as `SKIA_SYNC_SKIA_BASE_SHA` (the parent gitlink is
+`SKIA_SYNC_PARENT_SKIA_SHA`, and it must be an ancestor of the tip); use these exact SHAs instead of a
 moving remote branch ref in later integrity checks.
 
 Use the base branch's recorded commit, not a milestone label:
