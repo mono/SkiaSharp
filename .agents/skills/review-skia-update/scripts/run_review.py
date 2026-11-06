@@ -11,7 +11,9 @@ import os
 import re
 import subprocess
 import sys
+import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Import sibling check modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -131,32 +133,155 @@ def recorded_commit_belongs_to_upstream(cwd: str, commit: str, upstream_ref: str
     return result.returncode == 0
 
 
+def required_skia_pr(body: str) -> int:
+    """Read the single canonical native PR link in the parent's Required skia PR section."""
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+    sections = list(re.finditer(
+        r"(?im)^\s*(?:#{1,6}\s*|\*\*)Required skia PR(?:\*\*)?\s*$",
+        body,
+    ))
+    if len(sections) != 1:
+        raise ValueError("Parent PR must have exactly one Required skia PR section")
+    section = sections[0]
+    rest = body[section.end():]
+    rest = re.split(r"(?m)^\s*(?:#{1,6}\s+|\*\*[^*\n]+\*\*\s*$)", rest, maxsplit=1)[0]
+    links = re.findall(r"https?://github\.com/mono/skia/pull/[^\s<>)]*", rest)
+    if len(links) != 1 or not re.fullmatch(r"https://github\.com/mono/skia/pull/[1-9][0-9]*", links[0]):
+        raise ValueError("Required skia PR must contain exactly one canonical https://github.com/mono/skia/pull/N link")
+    return int(links[0].rsplit("/", 1)[-1])
+
+
+PR_FIELDS = "title,body,headRefName,headRefOid,baseRefName,baseRefOid,state,author"
+
+
+def fetch_pr(repo: str, number: int) -> dict:
+    if number <= 0:
+        raise ValueError("PR number must be positive")
+    result = subprocess.run(
+        ["gh", "pr", "view", str(number), "--repo", repo, "--json", PR_FIELDS],
+        capture_output=True, text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(f"Failed to fetch {repo} PR #{number}: {result.stderr.strip()}")
+    return json.loads(result.stdout)
+
+
+def resolve_prs(skiasharp_pr: int, skia_pr: int | None = None) -> dict:
+    parent = fetch_pr("mono/SkiaSharp", skiasharp_pr)
+    linked = required_skia_pr(parent.get("body") or "") if skia_pr is None else skia_pr
+    metadata = {"parentNumber": skiasharp_pr, "nativeNumber": linked,
+                "parent": parent, "native": fetch_pr("mono/skia", linked)}
+    validate_metadata(metadata)
+    return metadata
+
+
+def validate_metadata(metadata: dict) -> None:
+    for label, number_key in (("parent", "parentNumber"), ("native", "nativeNumber")):
+        number = metadata[number_key]
+        if type(number) is not int or number <= 0:
+            raise ValueError(f"Invalid {label} PR number")
+        pr = metadata[label]
+        for field in ("headRefOid", "baseRefOid"):
+            if not re.fullmatch(r"[0-9a-f]{40}", pr.get(field, "")):
+                raise ValueError(f"Invalid {label} {field}: expected an exact 40-character SHA")
+        if not pr.get("baseRefName"):
+            raise ValueError(f"Missing {label} base ref")
+
+
+def run_isolated(metadata: dict, output_dir: str, milestone: int | None) -> None:
+    """Execute all checkout and generation steps in a public, tokenless SDK container."""
+    root = Path(output_dir).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    metadata_file = root.parent / f".skia-review-metadata-{uuid.uuid4().hex}.json"
+    metadata_file.write_text(json.dumps(metadata), encoding="utf-8")
+    metadata_file.chmod(0o600)
+    skill_dir = Path(__file__).resolve().parent.parent
+    command = [
+        "docker", "run", "--rm", "--security-opt=no-new-privileges",
+        "--pids-limit=512",
+        "--mount", f"type=bind,source={skill_dir},target=/skill,readonly",
+        "--mount", f"type=bind,source={metadata_file},target=/input/pr.json,readonly",
+        "--mount", f"type=bind,source={root},target=/export",
+        "mcr.microsoft.com/dotnet/sdk:10.0.401@sha256:2fa828c68761b1b8c23d7662dc134421b9d3b59fe1425fdbc80804e390cdb24d",
+        "sh", "-ec",
+        'for tool in git python3; do command -v "$tool" >/dev/null || { apt-get update && apt-get install -y git python3 ca-certificates; break; }; done; '
+        'git clone https://github.com/mono/SkiaSharp.git /work; '
+        'cd /work; '
+        'exec python3 /skill/scripts/run_review.py --pr-metadata /input/pr.json --output-dir /export "$@"',
+        "sh", "--skiasharp-pr", str(metadata["parentNumber"]),
+    ]
+    if milestone is not None:
+        command.extend(["--milestone", str(milestone)])
+    try:
+        subprocess.run(command, check=True)
+    finally:
+        metadata_file.unlink(missing_ok=True)
+
+
+def incomplete_results(generated, source, deps, companion) -> list[str]:
+    source_sections = source if isinstance(source, dict) else {}
+    checks = (
+        ("Generated Files", generated, {"PASS", "FAIL"}),
+        ("Upstream Integrity", source_sections.get("upstreamIntegrity"), {"PASS", "REVIEW_REQUIRED"}),
+        ("Interop Integrity", source_sections.get("interopIntegrity"), {"PASS", "REVIEW_REQUIRED"}),
+        ("DEPS Audit", deps, {"PASS", "REVIEW_REQUIRED"}),
+        ("Companion PR", companion, {"PASS", "REVIEW_REQUIRED"}),
+    )
+    return [f"{label}: missing or incomplete mechanical result"
+            for label, result, valid in checks
+            if not isinstance(result, dict) or result.get("status") not in valid]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run all mechanical checks for a Skia update review."
     )
     parser.add_argument(
-        "--skia-pr", type=int, required=True,
+        "--skia-pr", type=int,
         help="The mono/skia PR number to review.",
     )
     parser.add_argument(
-        "--skiasharp-pr", type=int, required=True,
+        "--skiasharp-pr", type=int,
         help="The SkiaSharp companion PR number.",
     )
     parser.add_argument(
-        "--milestone", type=int, required=True,
-        help="The target Chrome milestone number (e.g. 147). "
-             "AI extracts this from the PR title/body; the orchestrator validates consistency.",
+        "--milestone", type=int,
+        help="Optional target Chrome milestone; checked against the companion cgmanifest.",
     )
     parser.add_argument(
         "--output-dir", default="",
         help="Override output directory. Default: /tmp/skiasharp/skia-review/{timestamp}",
     )
+    parser.add_argument("--isolated", action="store_true",
+                        help="Clone and run mechanics in a tokenless SDK container without touching this checkout.")
+    parser.add_argument("--pr-metadata", default="",
+                        help="Frozen PR metadata supplied to a tokenless isolated worker.")
     args = parser.parse_args()
 
-    skia_pr_number = args.skia_pr
-    skiasharp_pr_number = args.skiasharp_pr
-    caller_milestone = f"chrome/m{args.milestone}"
+    if args.skiasharp_pr is None or args.skiasharp_pr <= 0:
+        parser.error("--skiasharp-pr must be a positive parent PR number")
+    if args.pr_metadata and args.isolated:
+        parser.error("--isolated and --pr-metadata cannot be combined")
+    if args.pr_metadata:
+        metadata = json.loads(Path(args.pr_metadata).read_text(encoding="utf-8"))
+        validate_metadata(metadata)
+        if args.skiasharp_pr != metadata["parentNumber"]:
+            parser.error("--skiasharp-pr does not match frozen metadata")
+    else:
+        metadata = resolve_prs(args.skiasharp_pr, args.skia_pr)
+    skia_pr_number = metadata["nativeNumber"]
+    skiasharp_pr_number = metadata["parentNumber"]
+    pr, companion_pr = metadata["native"], metadata["parent"]
+    if args.skia_pr is not None and skia_pr_number != args.skia_pr:
+        parser.error("--skia-pr does not match frozen metadata")
+    if args.isolated:
+        output_dir = args.output_dir or (
+            "/tmp/skiasharp/skia-review/"
+            + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        )
+        run_isolated(metadata, output_dir, args.milestone)
+        return
+    caller_milestone = f"chrome/m{args.milestone}" if args.milestone is not None else None
     output_dir = args.output_dir
 
     result = subprocess.run(
@@ -217,40 +342,15 @@ def main():
     # =========================================================================
     eprint("═══ Step 1 — Parse & Setup ═══")
 
-    # 1a. Fetch skia PR metadata
-    eprint(f"▸ Fetching mono/skia PR #{skia_pr_number}...")
-    pr_result = subprocess.run(
-        [
-            "gh", "pr", "view", str(skia_pr_number),
-            "--repo", "mono/skia",
-            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
-        ],
-        capture_output=True, text=True,
-    )
-    if pr_result.returncode != 0:
-        raise RuntimeError(f"Failed to fetch skia PR #{skia_pr_number}: {pr_result.stderr.strip()}")
-    pr = json.loads(pr_result.stdout)
+    # 1a. PR metadata is fetched by the host before any PR code is executed.
+    eprint(f"▸ Loading mono/skia PR #{skia_pr_number}...")
 
     eprint(f"   Title: {pr['title']}")
     eprint(f"   Head:  {pr['headRefOid']} ({pr['headRefName']})")
     eprint(f"   Base:  {pr['baseRefOid']} ({pr['baseRefName']})")
 
     # 1b. Fetch companion SkiaSharp PR metadata
-    eprint(f"▸ Fetching companion SkiaSharp PR #{skiasharp_pr_number}...")
-    companion_pr_result = subprocess.run(
-        [
-            "gh", "pr", "view", str(skiasharp_pr_number),
-            "--repo", "mono/SkiaSharp",
-            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,state,author",
-        ],
-        capture_output=True, text=True,
-    )
-    if companion_pr_result.returncode != 0:
-        raise RuntimeError(
-            f"Failed to fetch SkiaSharp PR #{skiasharp_pr_number}: "
-            f"{companion_pr_result.stderr.strip()}"
-        )
-    companion_pr = json.loads(companion_pr_result.stdout)
+    eprint(f"▸ Loading companion SkiaSharp PR #{skiasharp_pr_number}...")
 
     eprint(f"   Title: {companion_pr['title']}")
     eprint(f"   Head:  {companion_pr['headRefOid']} ({companion_pr['headRefName']})")
@@ -262,7 +362,10 @@ def main():
     # already checked out to the bumped milestone branch.
     eprint("▸ Fetching SkiaSharp refs for companion PR base/head...")
     companion_base_ref = companion_pr.get("baseRefName", "main")
-    run_git(["fetch", "origin", companion_base_ref, f"pull/{skiasharp_pr_number}/head"], cwd=repo_root)
+    run_git(["fetch", "origin", companion_base_ref], cwd=repo_root)
+    run_git(["fetch", "origin", f"pull/{skiasharp_pr_number}/head"], cwd=repo_root)
+    if run_git(["rev-parse", "FETCH_HEAD"], cwd=repo_root).stdout.strip() != companion_pr["headRefOid"]:
+        raise RuntimeError("Companion PR head changed since metadata was captured")
 
     companion_base_sha = companion_pr.get("baseRefOid", "").strip()
     if not companion_base_sha or len(companion_base_sha) < 7:
@@ -278,6 +381,9 @@ def main():
             f"baseRefOid={companion_pr.get('baseRefOid', '')!r}, "
             f"baseRefName={companion_pr.get('baseRefName', '')!r}"
         )
+    if subprocess.run(["git", "cat-file", "-e", f"{companion_base_sha}^{{commit}}"],
+                      cwd=repo_root, capture_output=True).returncode:
+        run_git(["fetch", "origin", companion_base_sha], cwd=repo_root)
 
     old_cgmanifest = load_json_at_git_ref(repo_root, companion_base_sha, "cgmanifest.json")
     old_milestone = extract_skia_milestone_from_cgmanifest(old_cgmanifest)
@@ -299,24 +405,7 @@ def main():
             f"{companion_base_sha[:12]}:cgmanifest.json"
         )
 
-    # 1d. Validate milestone consistency
-    # The caller (AI) provides --milestone; we validate it against PR title
-    # and cgmanifest.json for consistency.
-    eprint(f"▸ Validating milestone {caller_milestone}...")
-
-    # Check PR title for milestone patterns
-    title_milestone = None
-    for pattern in [r"m(\d{3,})", r"milestone\s+(\d{2,})", r"skia[\s\-_]+(\d{2,})"]:
-        m = re.findall(pattern, pr["title"], re.IGNORECASE)
-        if m:
-            title_milestone = f"chrome/m{m[-1]}"
-            break
-    if title_milestone and title_milestone != caller_milestone:
-        eprint(f"   ⚠ PR title implies {title_milestone}, but --milestone says {caller_milestone}")
-    elif not title_milestone:
-        eprint(f"   ⚠ PR title '{pr['title']}' did not match any milestone pattern")
-
-    # Check cgmanifest.json from companion PR head
+    # 1d. The companion's cgmanifest is authoritative, not PR titles.
     companion_head_sha = companion_pr.get("headRefOid", "").strip()
     cgmanifest_milestone = None
     new_upstream_ref = None
@@ -326,11 +415,11 @@ def main():
         cgmanifest_milestone = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
         new_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(new_cgmanifest)
         new_upstream_sha = extract_skia_upstream_commit_from_cgmanifest(new_cgmanifest)
-    if cgmanifest_milestone and cgmanifest_milestone != caller_milestone:
-        eprint(
-            f"   ⚠ cgmanifest.json records {cgmanifest_milestone}, "
-            f"but --milestone says {caller_milestone}"
-        )
+    if not cgmanifest_milestone:
+        raise RuntimeError(f"Could not determine new upstream milestone from {companion_head_sha[:12]}:cgmanifest.json")
+    if caller_milestone is not None and cgmanifest_milestone != caller_milestone:
+        raise RuntimeError(f"Explicit --milestone {caller_milestone} differs from companion cgmanifest {cgmanifest_milestone}")
+    caller_milestone = cgmanifest_milestone
     if not new_upstream_sha:
         raise RuntimeError(
             f"Could not determine new upstream commit from companion PR head "
@@ -356,7 +445,10 @@ def main():
     # both same-repo and fork PRs — the branch name only exists on the fork's
     # remote, but refs/pull/{N}/head is always available on origin.
     skia_base_ref = pr.get("baseRefName", "skiasharp")
-    run_git(["fetch", "origin", skia_base_ref, f"pull/{skia_pr_number}/head"], cwd=skia_root)
+    run_git(["fetch", "origin", skia_base_ref], cwd=skia_root)
+    run_git(["fetch", "origin", f"pull/{skia_pr_number}/head"], cwd=skia_root)
+    if run_git(["rev-parse", "FETCH_HEAD"], cwd=skia_root).stdout.strip() != pr["headRefOid"]:
+        raise RuntimeError("Native PR head changed since metadata was captured")
 
     # Milestone branches can advance after an update. The exact commits recorded by
     # the companion base/head are authoritative for the diff-of-diffs review.
@@ -414,6 +506,9 @@ def main():
             f"Could not resolve base SHA from PR metadata or branch refs. "
             f"baseRefOid={pr.get('baseRefOid', '')!r}, baseRefName={pr.get('baseRefName', '')!r}"
         )
+    if subprocess.run(["git", "cat-file", "-e", f"{base_sha}^{{commit}}"],
+                      cwd=skia_root, capture_output=True).returncode:
+        run_git(["fetch", "origin", base_sha], cwd=skia_root)
     pr_head_sha = pr["headRefOid"]
 
     eprint(f"   Base ({pr.get('baseRefName', 'skiasharp')}): {base_sha}")
@@ -445,8 +540,8 @@ def main():
     # defined in scripts/infra/native/shared/native-shared.cake, which is loaded
     # exclusively by the per-platform native/*/build.cake files — never by the
     # root build.cake. Running it from the repo root fails with "target not
-    # found". The cake wrapper's only other behavior is a milestone/increment
-    # version check, already covered by Phase 1 validation. (The emsdk
+    # found". The cake wrapper also performs a version check; this review
+    # independently reads the milestone from the companion cgmanifest. (The emsdk
     # activation step is a no-op for this fork: the in-tree emsdk is not fetched
     # by DEPS, so bin/activate-emsdk returns early.)
     eprint("▸ Syncing third-party dependencies (skia tools/git-sync-deps)...")
@@ -500,6 +595,8 @@ def main():
             repo_root=repo_root,
             output_dir=output_dir,
         )
+        if gen_result.get("generatorError"):
+            check_errors.append(f"Step 2 (Generated Files): {gen_result['generatorError']}")
     except Exception as exc:
         eprint(f"   ❌ Generated files check failed: {exc}")
         check_errors.append(f"Step 2 (Generated Files): {exc}")
@@ -550,6 +647,9 @@ def main():
         check_errors.append(f"Step 5 (Companion PR): {exc}")
     eprint()
 
+    source_sections = source_result if isinstance(source_result, dict) else {}
+    check_errors.extend(incomplete_results(gen_result, source_result, deps_result, companion_result))
+
     check_error = "; ".join(check_errors) if check_errors else None
 
     # =========================================================================
@@ -575,11 +675,13 @@ def main():
             "outputDir": output_dir,
         },
         "generatedFiles": gen_result or {"status": "ERROR", "error": check_error},
-        "upstreamIntegrity": (source_result or {}).get("upstreamIntegrity", {"status": "ERROR", "error": check_error}),
-        "interopIntegrity": (source_result or {}).get("interopIntegrity", {"status": "ERROR", "error": check_error}),
+        "upstreamIntegrity": source_sections.get("upstreamIntegrity", {"status": "ERROR", "error": check_error}),
+        "interopIntegrity": source_sections.get("interopIntegrity", {"status": "ERROR", "error": check_error}),
         "depsAudit": deps_result or {"status": "ERROR", "error": check_error},
         "companionPr": {
             "prNumber": skiasharp_pr_number,
+            "headSha": companion_head_sha,
+            "baseSha": companion_base_sha,
             **(companion_result or {"status": "ERROR", "error": check_error}),
         },
     }
@@ -602,8 +704,8 @@ def main():
     # Print summary
     eprint("═══ Summary ═══")
     eprint(f"  Generated Files:    {(gen_result or {}).get('status', 'ERROR')}")
-    eprint(f"  Upstream Integrity: {(source_result or {}).get('upstreamIntegrity', {}).get('status', 'ERROR')}")
-    eprint(f"  Interop Integrity:  {(source_result or {}).get('interopIntegrity', {}).get('status', 'ERROR')}")
+    eprint(f"  Upstream Integrity: {source_sections.get('upstreamIntegrity', {}).get('status', 'ERROR')}")
+    eprint(f"  Interop Integrity:  {source_sections.get('interopIntegrity', {}).get('status', 'ERROR')}")
     eprint(f"  DEPS Audit:         {(deps_result or {}).get('status', 'ERROR')}")
     eprint(f"  Companion PR:       {(companion_result or {}).get('status', 'ERROR')}")
     eprint()
@@ -611,6 +713,8 @@ def main():
     eprint(f"Generator log: {os.path.join(output_dir, 'generator-output.log')}")
     eprint()
     eprint("Next: Read raw-results.json and write summaries + build report.")
+    if check_errors:
+        raise RuntimeError(f"Review incomplete: {check_error}; see {raw_results_path}")
 
 
 if __name__ == "__main__":
