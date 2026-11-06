@@ -123,6 +123,45 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         dotnet.CleanBuildOutput(project, outputs);
     }
 
+    [Fact]
+    public void Issue_4259_WindowsNativeAssetPackagesKeepSymbolsSeparate()
+    {
+        var packageIds = new List<string>
+        {
+            "SkiaSharp.NativeAssets.Win32",
+            "SkiaSharp.NativeAssets.NanoServer",
+            "HarfBuzzSharp.NativeAssets.Win32",
+        };
+        if (PackageExists("SkiaSharp.NativeAssets.WinUI", symbols: false))
+            packageIds.Add("SkiaSharp.NativeAssets.WinUI");
+        else if (OperatingSystem.IsWindows())
+            Assert.Fail($"Missing SkiaSharp.NativeAssets.WinUI package in {dotnet.PackageDirectory}");
+
+        foreach (var id in packageIds)
+        {
+            var product = ReadPackageEntries(id, symbols: false);
+            var symbols = ReadPackageEntries(id, symbols: true);
+
+            Assert.Equal(product.Version, symbols.Version);
+            Assert.DoesNotContain(product.Entries, IsRuntimeSymbol);
+
+            var productBinaries = product.Entries
+                .Where(entry => entry.StartsWith("runtimes/", StringComparison.Ordinal) &&
+                    entry.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            var symbolPdbs = symbols.Entries
+                .Where(entry => entry.StartsWith("runtimes/", StringComparison.Ordinal) &&
+                    entry.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            Assert.NotEmpty(productBinaries);
+            Assert.NotEmpty(symbolPdbs);
+            Assert.All(productBinaries, binary => Assert.Contains(binary, symbols.Entries));
+            Assert.All(symbolPdbs, pdb =>
+                Assert.Contains(Path.ChangeExtension(pdb, ".dll").Replace('\\', '/'), symbols.Entries));
+        }
+    }
+
     private Task BuildOrPublish(string project, string command, string? rid = null) =>
         command == "build" ? dotnet.Build(project) : dotnet.Publish(project, rid);
 
@@ -148,9 +187,35 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
 
     private (string Version, Dictionary<string, string> NativeFiles) ReadPackage(string id)
     {
-        var matches = new List<(string Version, Dictionary<string, string> NativeFiles)>();
+        var package = FindPackage(id, symbols: false);
+        var native = new Dictionary<string, string>();
+        using var zip = ZipFile.OpenRead(package.Path);
+        foreach (var entry in zip.Entries.Where(e => e.FullName.StartsWith("runtimes/", StringComparison.Ordinal) &&
+            e.FullName.Contains("/native/", StringComparison.Ordinal) &&
+            (e.FullName.EndsWith(".dll", StringComparison.Ordinal) ||
+             e.FullName.EndsWith(".so", StringComparison.Ordinal) ||
+             e.FullName.EndsWith(".dylib", StringComparison.Ordinal))))
+        {
+            using var stream = entry.Open();
+            native.Add(entry.FullName, Convert.ToHexString(SHA256.HashData(stream)));
+        }
+        return (package.Version, native);
+    }
+
+    private (string Version, HashSet<string> Entries) ReadPackageEntries(string id, bool symbols)
+    {
+        var package = FindPackage(id, symbols);
+        using var zip = ZipFile.OpenRead(package.Path);
+        return (package.Version, zip.Entries
+            .Select(entry => entry.FullName.Replace('\\', '/'))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private (string Version, string Path) FindPackage(string id, bool symbols)
+    {
+        var matches = new List<(string Version, string Path)>();
         foreach (var file in Directory.EnumerateFiles(dotnet.PackageDirectory, id + ".*.nupkg", SearchOption.AllDirectories)
-            .Where(file => !file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)))
+            .Where(file => file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase) == symbols))
         {
             using var zip = ZipFile.OpenRead(file);
             using var nuspec = zip.Entries.Single(e => e.FullName.EndsWith(".nuspec", StringComparison.Ordinal)).Open();
@@ -158,21 +223,22 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
             if (metadata.Elements().Single(e => e.Name.LocalName == "id").Value != id)
                 continue;
             var version = metadata.Elements().Single(e => e.Name.LocalName == "version").Value;
-            var native = new Dictionary<string, string>();
-            foreach (var entry in zip.Entries.Where(e => e.FullName.StartsWith("runtimes/", StringComparison.Ordinal) &&
-                e.FullName.Contains("/native/", StringComparison.Ordinal) &&
-                (e.FullName.EndsWith(".dll", StringComparison.Ordinal) ||
-                 e.FullName.EndsWith(".so", StringComparison.Ordinal) ||
-                 e.FullName.EndsWith(".dylib", StringComparison.Ordinal))))
-            {
-                using var stream = entry.Open();
-                native.Add(entry.FullName, Convert.ToHexString(SHA256.HashData(stream)));
-            }
-            matches.Add((version, native));
+            matches.Add((version, file));
         }
-        Assert.True(matches.Count == 1, $"Expected one real {id} package in {dotnet.PackageDirectory}, found {matches.Count}");
+        var kind = symbols ? "symbol" : "product";
+        Assert.True(matches.Count == 1,
+            $"Expected one {kind} {id} package in {dotnet.PackageDirectory}, found {matches.Count}");
         return matches[0];
     }
+
+    private bool PackageExists(string id, bool symbols) =>
+        Directory.EnumerateFiles(dotnet.PackageDirectory, id + ".*.nupkg", SearchOption.AllDirectories)
+            .Any(file => file.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase) == symbols);
+
+    private static bool IsRuntimeSymbol(string entry) =>
+        entry.StartsWith("runtimes/", StringComparison.Ordinal) &&
+        (entry.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase) ||
+         entry.EndsWith(".dbg", StringComparison.OrdinalIgnoreCase));
 
     private static void AssertNativeOutput(string project, string family, Dictionary<string, string> expected,
         string targetFramework, string? outputDirectory = null, string[]? restoredFrameworks = null)
@@ -181,9 +247,13 @@ public class NativeAssetOutputTests(DotNet dotnet) : IClassFixture<DotNet>
         using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(project, "obj", "project.assets.json")));
         Assert.Equal((restoredFrameworks ?? [targetFramework]).Order(),
             assets.RootElement.GetProperty("project").GetProperty("frameworks").EnumerateObject().Select(p => p.Name).Order());
+        var depsPath = Path.Combine(output, "Consumer.deps.json");
+        Assert.DoesNotContain(".pdb", File.ReadAllText(depsPath), StringComparison.OrdinalIgnoreCase);
         using var runtimeConfig = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "Consumer.runtimeconfig.json")));
         Assert.Equal(targetFramework, runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("tfm").GetString());
         Assert.True(File.Exists(Path.Combine(output, family + ".dll")), $"Missing managed {family} assembly");
+        Assert.DoesNotContain(Directory.EnumerateFiles(output, "*.pdb", SearchOption.AllDirectories),
+            file => Path.GetFileName(file).Equals($"lib{family}.pdb", StringComparison.OrdinalIgnoreCase));
         var actual = Directory.EnumerateFiles(output, $"lib{family}.*", SearchOption.AllDirectories)
             .Where(file => file.EndsWith(".dll", StringComparison.Ordinal) ||
                 file.EndsWith(".so", StringComparison.Ordinal) || file.EndsWith(".dylib", StringComparison.Ordinal))
