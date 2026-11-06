@@ -587,14 +587,20 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData(SKColorType.Bgra8888, SKAlphaType.Premul)]
 		[InlineData(SKColorType.Bgra8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Opaque)]
 		[InlineData(SKColorType.Rgba8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Opaque)]
 		[InlineData(SKColorType.Rgb565, SKAlphaType.Opaque)]
 		[InlineData(SKColorType.Gray8, SKAlphaType.Opaque)]
-		public unsafe void OptimizedPixelWriteMatchesExistingPixelsSetter(SKColorType colorType, SKAlphaType alphaType)
+		public void OptimizedPixelWriteMatchesExistingPixelsSetter(SKColorType colorType, SKAlphaType alphaType)
 		{
 			var pixels = new[]
 			{
 				new SKColor(0, 0, 0, 0),
+				new SKColor(255, 0, 0, 0),
+				new SKColor(0, 255, 0, 0),
+				new SKColor(0, 0, 255, 0),
 				new SKColor(255, 255, 255, 255),
 				new SKColor(255, 0, 0, 1),
 				new SKColor(0, 255, 0, 127),
@@ -605,7 +611,7 @@ namespace SkiaSharp.Tests
 			using var linear = SKColorSpace.CreateSrgbLinear();
 			foreach (var colorSpace in new[] { null, srgb, linear })
 			{
-				var info = new SKImageInfo(3, 2, colorType, alphaType, colorSpace);
+				var info = new SKImageInfo(3, 3, colorType, alphaType, colorSpace);
 
 				using var expected = new SKBitmap(info);
 				WritePixelsWithRenderingPath(expected, pixels);
@@ -614,6 +620,42 @@ namespace SkiaSharp.Tests
 				actual.Pixels = pixels;
 
 				Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
+			}
+		}
+
+		[Theory]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Bgra8888, SKAlphaType.Opaque)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Premul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Unpremul)]
+		[InlineData(SKColorType.Rgba8888, SKAlphaType.Opaque)]
+		public void PixelWritesMatchRenderingForAllAlphaValues(SKColorType colorType, SKAlphaType alphaType)
+		{
+			var pixels = new SKColor[256 * 256];
+			for (var alpha = 0; alpha < 256; alpha++)
+			{
+				for (var channel = 0; channel < 256; channel++)
+					pixels[alpha * 256 + channel] = new SKColor((byte)channel, (byte)(255 - channel), (byte)(channel * 37), (byte)alpha);
+			}
+
+			using var srgb = SKColorSpace.CreateSrgb();
+			using var linear = SKColorSpace.CreateSrgbLinear();
+			foreach (var colorSpace in new[] { null, srgb, linear })
+			{
+				var info = new SKImageInfo(256, 256, colorType, alphaType, colorSpace);
+				foreach (var rowBytes in new[] { info.RowBytes, info.RowBytes + 16 })
+				{
+					using var expected = new SKBitmap(info, rowBytes);
+					using var actual = new SKBitmap(info, rowBytes);
+					expected.GetPixelSpan().Fill(0x5a);
+					actual.GetPixelSpan().Fill(0x5a);
+
+					WritePixelsWithRenderingPath(expected, pixels);
+					actual.Pixels = pixels;
+
+					Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
+				}
 			}
 		}
 
