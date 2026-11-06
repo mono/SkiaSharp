@@ -34,7 +34,9 @@ names.
 | `{BASE_BRANCH}` | `SKIA_SYNC_BASE_BRANCH` | Parent PR base |
 | `{PARENT_BASE_SHA}` | `SKIA_SYNC_PARENT_BASE_SHA` | Exact parent base commit used for metadata comparison |
 | `{SKIA_BASE_BRANCH}` | `SKIA_SYNC_SKIA_BASE_BRANCH` | mono/skia PR base |
-| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Exact mono/skia commit recorded by the parent base |
+| `{PARENT_SKIA_SHA}` | `SKIA_SYNC_PARENT_SKIA_SHA` | mono/skia gitlink recorded by the parent base; the old state that parent metadata (DEPS, cgmanifest) describes |
+| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Live tip of the mono/skia base branch; the native merge starting point. It equals the gitlink or descends from it when the parent lags |
+| `{SKIA_BASE_UPSTREAM_SHA}` | `SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA` | Upstream commit already merged into `{SKIA_BASE_SHA}`; the old side of the fork-patch audit |
 | `{HEAD_BRANCH}` | `SKIA_SYNC_HEAD_BRANCH` | Feature branch used in both repositories |
 | `{IS_RELEASE}` | `SKIA_SYNC_IS_RELEASE` | Whether the selected base is a release line |
 | `{BASE_UPSTREAM_SHA}` | `SKIA_SYNC_BASE_UPSTREAM_SHA` | Exact upstream commit recorded by the parent base |

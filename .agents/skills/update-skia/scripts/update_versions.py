@@ -612,7 +612,7 @@ def main() -> int:
     parser.add_argument("--upstream-ref")
     parser.add_argument("--upstream-sha")
     parser.add_argument("--parent-base-sha")
-    parser.add_argument("--skia-base-sha")
+    parser.add_argument("--parent-skia-sha", help="Skia gitlink recorded by the parent base commit")
     parser.add_argument("--artifact-dir", type=Path)
     parser.add_argument("--repo-root", type=Path)
     args = parser.parse_args()
@@ -631,7 +631,9 @@ def main() -> int:
                 "SKIA_SYNC_TARGET_UPSTREAM_SHA"
             ),
             "SKIA_SYNC_PARENT_BASE_SHA": os.environ.get("SKIA_SYNC_PARENT_BASE_SHA"),
-            "SKIA_SYNC_SKIA_BASE_SHA": os.environ.get("SKIA_SYNC_SKIA_BASE_SHA"),
+            "SKIA_SYNC_PARENT_SKIA_SHA": os.environ.get(
+                "SKIA_SYNC_PARENT_SKIA_SHA"
+            ),
         }
         missing = [name for name, value in required.items() if not value]
         if missing:
@@ -643,7 +645,7 @@ def main() -> int:
         upstream_ref = required["SKIA_SYNC_UPSTREAM_REF"]
         upstream_sha = required["SKIA_SYNC_TARGET_UPSTREAM_SHA"]
         parent_base_sha = required["SKIA_SYNC_PARENT_BASE_SHA"]
-        skia_base_sha = required["SKIA_SYNC_SKIA_BASE_SHA"]
+        skia_base_sha = required["SKIA_SYNC_PARENT_SKIA_SHA"]
         artifact_dir = Path(
             os.environ.get(
                 "SKIA_SYNC_ARTIFACT_DIR",
@@ -658,7 +660,7 @@ def main() -> int:
         upstream_ref = args.upstream_ref or f"chrome/m{target}"
         upstream_sha = args.upstream_sha
         parent_base_sha = args.parent_base_sha
-        skia_base_sha = args.skia_base_sha
+        skia_base_sha = args.parent_skia_sha
         artifact_dir = args.artifact_dir
     update_versions(
         repo_root,

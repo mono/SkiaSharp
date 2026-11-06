@@ -23,7 +23,7 @@ on:
         required: false
         type: string
       target_branch:
-        description: "Optional mono/SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
+        description: "Optional mono/SkiaSharp base branch override. A release/<major>.<milestone>.x value must match the target milestone and selects that release line with its paired mono/skia release base. Empty uses normal main/release detection."
         required: false
         type: string
 
@@ -235,7 +235,6 @@ steps:
         printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$head_branch"
         printf 'SKIA_SYNC_PLATFORM=linux\n'
         printf 'SKIA_SYNC_ARCH=x64\n'
-        printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
       } >> "$GITHUB_ENV"
   - name: Stage immutable workflow assets
     run: |

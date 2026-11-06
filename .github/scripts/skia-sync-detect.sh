@@ -25,9 +25,11 @@
 #                                               target milestone stays == main's milestone.
 #                                    * number → an exact milestone (e.g. 151); merge
 #                                               chrome/m<number>.
-#   --base-branch <branch>         Optional mono/SkiaSharp base override for manual
-#                                  validation. Production runs omit this and use normal
-#                                  main/release-line detection.
+#   --base-branch <branch>         Optional mono/SkiaSharp base override. A
+#                                  release/<major>.<milestone>.x branch must match the
+#                                  target milestone and gets the same paired mono/skia
+#                                  release base as detected routing. Any other branch is a
+#                                  manual validation base. Normal runs omit this.
 #   --output <file>                Required destination for resolved `key=value` facts.
 #   --resolve-only                 Stop after resolving and emitting sync facts. Skip the
 #                                  check for new upstream work. The agent setup uses this
@@ -175,14 +177,15 @@ fi
 
 # -- Target line: `main` (newest) vs a release/<major>.<TARGET>.x maintenance line.
 # A maintenance line lives under the SAME branch name in both mono/SkiaSharp and
-# mono/skia. We only look for one when TARGET is strictly OLDER than main's milestone;
-# the newest line is always served by `main`. The release branch itself is owned by
-# the release process (Release - Prepare workflow), NOT this sync.
+# mono/skia. A release line is considered when TARGET <= main's milestone: main keeps
+# reporting milestone N until the bump to N+1 merges, so servicing syncs for N must still
+# route to release/<major>.N.x even though TARGET == MAIN_MS. A TARGET newer than main
+# (a real bump) always goes to `main`. The release branch itself is owned by the release
+# process (Release - Prepare workflow), NOT this sync.
 #
-# The `main` (tip) mode targets the newest line too (TARGET == MAIN_MS, so the
-# release-detection block below stays skipped), but uses a DISTINCT head branch
-# (`skia-sync/main`) so a bleeding-edge tip sync never collides with a same-milestone
-# sync branch (`skia-sync/m${TARGET}`).
+# The `main` (tip) mode targets the newest line only: it never routes to a release line,
+# and uses a DISTINCT head branch (`skia-sync/main`) so a bleeding-edge tip sync never
+# collides with a same-milestone sync branch (`skia-sync/m${TARGET}`).
 IS_RELEASE=false
 BASE_BRANCH=main
 SKIA_BASE_BRANCH=skiasharp
@@ -192,6 +195,7 @@ else
   HEAD_BRANCH="skia-sync/m${TARGET}"
 fi
 RELEASE_BRANCH=""
+RELEASE_RE='^release/[0-9][0-9]*\.([0-9][0-9]*)\.x$'
 if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
   if ! git check-ref-format --branch "$BASE_BRANCH_OVERRIDE" >/dev/null; then
     echo "::error::Invalid base branch override: '$BASE_BRANCH_OVERRIDE'"
@@ -202,12 +206,22 @@ if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
     echo "::error::Base branch override '${BASE_BRANCH_OVERRIDE}' does not exist in ${GITHUB_REPOSITORY}."
     exit 1
   fi
-  BASE_BRANCH="$BASE_BRANCH_OVERRIDE"
-  HEAD_BRANCH="${HEAD_BRANCH}-${BASE_BRANCH_OVERRIDE//\//-}"
-  echo "Manual base override: ${BASE_BRANCH}"
-# `2>/dev/null` swallows the "integer expression expected" noise for a non-numeric
-# TARGET, which then falls through to the main line.
-elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
+  if [[ "$BASE_BRANCH_OVERRIDE" =~ $RELEASE_RE ]]; then
+    # An explicit release-line base has the same semantics as detected routing: paired
+    # mono/skia release base, release head branch, and a milestone that matches the line.
+    if [ "$MODE" = main ] || [ "${BASH_REMATCH[1]}" != "$TARGET" ]; then
+      echo "::error::Base branch override '${BASE_BRANCH_OVERRIDE}' is the m${BASH_REMATCH[1]} release line and cannot receive a sync of '${UPSTREAM_REF}' (m${TARGET})."
+      exit 1
+    fi
+    RELEASE_BRANCH="$BASE_BRANCH_OVERRIDE"
+  else
+    BASE_BRANCH="$BASE_BRANCH_OVERRIDE"
+    HEAD_BRANCH="${HEAD_BRANCH}-${BASE_BRANCH_OVERRIDE//\//-}"
+    echo "Manual base override: ${BASE_BRANCH}"
+  fi
+elif [ "$MODE" != main ] && [ "$TARGET" -le "$MAIN_MS" ] 2>/dev/null; then
+  # `2>/dev/null` swallows the "integer expression expected" noise for a non-numeric
+  # TARGET, which then falls through to the main line.
   RELEASE_BRANCH=$(git ls-remote --heads "https://github.com/${GITHUB_REPOSITORY}.git" \
       "refs/heads/release/*.${TARGET}.x" \
     | sed -n 's|.*refs/heads/\(release/[0-9][0-9.]*\.x\)$|\1|p' | sort -u)
@@ -219,9 +233,7 @@ elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
     exit 1
   fi
 fi
-if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
-  :
-elif [ -n "$RELEASE_BRANCH" ]; then
+if [ -n "$RELEASE_BRANCH" ]; then
   IS_RELEASE=true
   BASE_BRANCH="$RELEASE_BRANCH"
   SKIA_BASE_BRANCH="$RELEASE_BRANCH"
@@ -231,7 +243,7 @@ elif [ -n "$RELEASE_BRANCH" ]; then
     echo "::error::mono/skia branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the Release - Prepare workflow — create it before running a release sync for m${TARGET}."
     exit 1
   fi
-elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
+elif [ -z "$BASE_BRANCH_OVERRIDE" ] && [ "$MODE" != main ] && [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
   # A supported/rotation line older than main but with NO release/<major>.<TARGET>.x
   # branch has no home — do NOT merge an older milestone into main. Flag it so the work
   # check skips (fix versions.json 'support' if this milestone should still be synced).

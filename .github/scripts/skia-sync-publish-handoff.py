@@ -19,6 +19,7 @@ ENV_KEYS = (
     "SKIA_SYNC_HEAD_BRANCH",
     "SKIA_SYNC_PARENT_BASE_SHA",
     "SKIA_SYNC_SKIA_BASE_SHA",
+    "SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA",
     "SKIA_SYNC_BASE_UPSTREAM_SHA",
     "SKIA_SYNC_TARGET_UPSTREAM_SHA",
 )
@@ -41,6 +42,12 @@ REPORTS = (
 
 def git(repo, *args):
     subprocess.run(["git", "-C", str(repo), *args], check=True)
+
+
+def contains(repo, ancestor, descendant):
+    return subprocess.run(
+        ["git", "-C", str(repo), "merge-base", "--is-ancestor", ancestor, descendant]
+    ).returncode == 0
 
 
 def validate_environment(environment):
@@ -102,6 +109,12 @@ def main():
         git(repo, "bundle", "verify", bundle)
         git(repo, "fetch", "--no-tags", "--no-recurse-submodules",
             bundle, f"refs/heads/{branch}:refs/heads/{branch}")
+        # A base that advanced during the run would be silently dropped from the PR.
+        if not contains(repo, f"refs/remotes/origin/{base}", f"refs/heads/{branch}"):
+            raise ValueError(
+                f"{name} base '{base}' advanced since the sync started; "
+                "the sync head does not contain its live tip. Rerun the sync."
+            )
     environment.update(
         SKIA_SYNC_ARTIFACT_DIR=str(directory / "reports"),
         SKIA_SYNC_SKILL_DIR=str(workspace / ".agents/skills/update-skia"),

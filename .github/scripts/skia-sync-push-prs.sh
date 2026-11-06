@@ -49,6 +49,7 @@ required_validation test-output.txt test-exit-code.txt
 : "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
 : "${SKIA_SYNC_SKIA_BASE_BRANCH:?SKIA_SYNC_SKIA_BASE_BRANCH is required}"
 : "${SKIA_SYNC_SKIA_BASE_SHA:?SKIA_SYNC_SKIA_BASE_SHA is required}"
+: "${SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA:?SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA is required}"
 : "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
 : "${SKIA_SYNC_BASE_UPSTREAM_SHA:?SKIA_SYNC_BASE_UPSTREAM_SHA is required}"
 : "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
@@ -62,6 +63,7 @@ IS_RELEASE="$SKIA_SYNC_IS_RELEASE"
 BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH"
 SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH"
 SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA"
+SKIA_BASE_UPSTREAM_SHA="$SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA"
 HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH"
 BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA"
 TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA"
@@ -113,6 +115,15 @@ assert_resolved CGMANIFEST_UPSTREAM_REF "$MANIFEST_UPSTREAM_REF" SKIA_SYNC_UPSTR
 assert_resolved CGMANIFEST_MILESTONE "$MANIFEST_MILESTONE" SKIA_SYNC_TARGET "$TARGET"
 assert_resolved CGMANIFEST_UPSTREAM_VERSION "$MANIFEST_UPSTREAM_VERSION" EXPECTED_UPSTREAM_VERSION "chrome/m${TARGET}"
 
+if ! git -C "$GITHUB_WORKSPACE/externals/skia" merge-base --is-ancestor "$SKIA_BASE_SHA" "$LOCAL_SKIA_HEAD"; then
+  echo "::error::Sync head $LOCAL_SKIA_HEAD does not contain the native base $SKIA_BASE_SHA."
+  exit 1
+fi
+if ! git -C "$GITHUB_WORKSPACE/externals/skia" merge-base --is-ancestor "$TARGET_UPSTREAM_SHA" "$LOCAL_SKIA_HEAD"; then
+  echo "::error::Sync head $LOCAL_SKIA_HEAD does not contain target upstream $TARGET_UPSTREAM_SHA."
+  exit 1
+fi
+
 BRANCH="$HEAD_BRANCH"
 SS_BASE="$BASE_BRANCH"
 SKIA_BASE="$SKIA_BASE_BRANCH"
@@ -122,7 +133,7 @@ WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono
 
 python3 "$SKILL_DIR/scripts/audit_fork_patches.py" \
   --skia-root "$GITHUB_WORKSPACE/externals/skia" \
-  --old-upstream "$BASE_UPSTREAM_SHA" \
+  --old-upstream "$SKIA_BASE_UPSTREAM_SHA" \
   --new-upstream "$TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_BASE_SHA" \
   --merged-head "$BRANCH" \

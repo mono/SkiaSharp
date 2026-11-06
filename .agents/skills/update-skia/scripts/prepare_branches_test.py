@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from prepare_branches import prepare_branches
+from prepare_branches import PreparationError, prepare_branches
 
 
 def run_git(repo: Path, *args: str) -> str:
@@ -42,74 +42,91 @@ def create_history(root: Path, name: str) -> tuple[Path, str, str]:
     return repo, release_sha, main_sha
 
 
+def build_workspace(root: Path) -> dict:
+    """Parent whose `release` branch pins the old native commit; native `main` is ahead."""
+    docs, release_docs_sha, main_docs_sha = create_history(root, "docs")
+    skia, release_skia_sha, main_skia_sha = create_history(root, "skia")
+    parent = root / "parent-origin"
+
+    run_git(root, "init", "--quiet", str(parent))
+    configure_git(parent)
+    for source, destination in (
+        (docs, "docs"),
+        (skia, "externals/skia"),
+    ):
+        run_git(
+            parent,
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            str(source),
+            destination,
+        )
+
+    run_git(parent / "docs", "checkout", "--quiet", release_docs_sha)
+    run_git(
+        parent / "externals" / "skia",
+        "checkout",
+        "--quiet",
+        release_skia_sha,
+    )
+    run_git(parent, "add", ".gitmodules", "docs", "externals/skia")
+    run_git(parent, "commit", "--quiet", "-m", "release pointers")
+    release_parent_sha = run_git(parent, "rev-parse", "HEAD")
+    run_git(parent, "branch", "release")
+
+    run_git(parent / "docs", "checkout", "--quiet", main_docs_sha)
+    run_git(
+        parent / "externals" / "skia",
+        "checkout",
+        "--quiet",
+        main_skia_sha,
+    )
+    run_git(parent, "add", "docs", "externals/skia")
+    run_git(parent, "commit", "--quiet", "-m", "main pointers")
+    run_git(parent, "branch", "-M", "main")
+
+    workspace = root / "workspace"
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "protocol.file.allow=always",
+            "clone",
+            "--quiet",
+            "--recursive",
+            str(parent),
+            str(workspace),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    workspace_skia = workspace / "externals" / "skia"
+    run_git(workspace_skia, "checkout", "--quiet", release_skia_sha)
+    return dict(
+        workspace=workspace,
+        workspace_skia=workspace_skia,
+        release_parent_sha=release_parent_sha,
+        release_skia_sha=release_skia_sha,
+        main_skia_sha=main_skia_sha,
+        release_docs_sha=release_docs_sha,
+    )
+
+
 class PrepareBranchesTests(unittest.TestCase):
     def test_release_branch_realigns_all_submodules_before_branching_skia(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            docs, release_docs_sha, main_docs_sha = create_history(root, "docs")
-            skia, release_skia_sha, main_skia_sha = create_history(root, "skia")
-            parent = root / "parent-origin"
-
-            run_git(root, "init", "--quiet", str(parent))
-            configure_git(parent)
-            for source, destination in (
-                (docs, "docs"),
-                (skia, "externals/skia"),
-            ):
-                run_git(
-                    parent,
-                    "-c",
-                    "protocol.file.allow=always",
-                    "submodule",
-                    "add",
-                    str(source),
-                    destination,
-                )
-
-            run_git(parent / "docs", "checkout", "--quiet", release_docs_sha)
-            run_git(
-                parent / "externals" / "skia",
-                "checkout",
-                "--quiet",
-                release_skia_sha,
-            )
-            run_git(parent, "add", ".gitmodules", "docs", "externals/skia")
-            run_git(parent, "commit", "--quiet", "-m", "release pointers")
-            release_parent_sha = run_git(parent, "rev-parse", "HEAD")
-            run_git(parent, "branch", "release")
-
-            run_git(parent / "docs", "checkout", "--quiet", main_docs_sha)
-            run_git(
-                parent / "externals" / "skia",
-                "checkout",
-                "--quiet",
-                main_skia_sha,
-            )
-            run_git(parent, "add", "docs", "externals/skia")
-            run_git(parent, "commit", "--quiet", "-m", "main pointers")
-            run_git(parent, "branch", "-M", "main")
-
-            workspace = root / "workspace"
-            subprocess.run(
-                [
-                    "git",
-                    "-c",
-                    "protocol.file.allow=always",
-                    "clone",
-                    "--quiet",
-                    "--recursive",
-                    str(parent),
-                    str(workspace),
-                ],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-
-            workspace_skia = workspace / "externals" / "skia"
-            run_git(workspace_skia, "checkout", "--quiet", release_skia_sha)
+            fixture = build_workspace(Path(temporary_directory))
+            workspace = fixture["workspace"]
+            workspace_skia = fixture["workspace_skia"]
+            release_parent_sha = fixture["release_parent_sha"]
+            release_skia_sha = fixture["release_skia_sha"]
+            release_docs_sha = fixture["release_docs_sha"]
             self.assertIn("externals/skia", run_git(workspace, "status", "--short"))
 
             head_branch = "skia-sync/release-test"
@@ -145,6 +162,55 @@ class PrepareBranchesTests(unittest.TestCase):
                         workspace, "submodule", "status", "--recursive"
                     ).splitlines()
                 )
+            )
+
+    def test_skia_branch_starts_at_native_tip_when_parent_gitlink_lags(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = build_workspace(Path(temporary_directory))
+            workspace = fixture["workspace"]
+            workspace_skia = fixture["workspace_skia"]
+
+            with patch.dict(os.environ, {"GIT_ALLOW_PROTOCOL": "file"}):
+                prepare_branches(
+                    workspace,
+                    "release",
+                    fixture["release_parent_sha"],
+                    "main",
+                    fixture["main_skia_sha"],
+                    "skia-sync/lagging",
+                    fixture["release_skia_sha"],
+                )
+
+            self.assertEqual(
+                fixture["release_skia_sha"],
+                run_git(workspace, "ls-tree", "HEAD", "externals/skia").split()[2],
+            )
+            self.assertEqual(
+                fixture["main_skia_sha"], run_git(workspace_skia, "rev-parse", "HEAD")
+            )
+            self.assertEqual(
+                "skia-sync/lagging", run_git(workspace_skia, "branch", "--show-current")
+            )
+
+    def test_diverged_native_base_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            fixture = build_workspace(Path(temporary_directory))
+            workspace_skia = fixture["workspace_skia"]
+            # The release commit is older than main, so main's gitlink is not
+            # contained in it: a native base that does not include the parent pin.
+            with patch.dict(os.environ, {"GIT_ALLOW_PROTOCOL": "file"}):
+                with self.assertRaises(PreparationError):
+                    prepare_branches(
+                        fixture["workspace"],
+                        "main",
+                        run_git(fixture["workspace"], "rev-parse", "origin/main"),
+                        "release",
+                        fixture["release_skia_sha"],
+                        "skia-sync/diverged",
+                        fixture["main_skia_sha"],
+                    )
+            self.assertEqual(
+                "", run_git(workspace_skia, "branch", "--list", "skia-sync/diverged")
             )
 
 
