@@ -9,6 +9,10 @@ engine:
   max-continuations: 3
 model: gpt-5.6-sol
 
+# Run title is fixed at dispatch, before the detector resolves anything, so it shows the
+# requested inputs; the resolved target/branches are written to the run summary.
+run-name: "Sync - Skia Upstream (${{ github.event.inputs.target || 'rotate' }} -> ${{ github.event.inputs.target_branch || 'auto' }})"
+
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
 # it picks ONE supported line from versions.json per run, round-robin
@@ -54,7 +58,24 @@ on:
         SYNC_TARGET: ${{ github.event.inputs.target }}
         SYNC_BASE_BRANCH: ${{ github.event.inputs.target_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+      run: |
+        bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+    - name: Summarize resolved sync
+      if: always() && steps.detect.outcome == 'success'
+      env:
+        MODE: ${{ steps.detect.outputs.mode }}
+        TARGET: ${{ steps.detect.outputs.target }}
+        CURRENT: ${{ steps.detect.outputs.current }}
+        BASE: ${{ steps.detect.outputs.base_branch }}
+        SKIA_BASE: ${{ steps.detect.outputs.skia_base_branch }}
+        SKIP: ${{ steps.detect.outputs.skip }}
+      run: |
+        {
+          echo "### Skia sync: ${MODE} m${CURRENT} -> m${TARGET}"
+          echo "- mono/SkiaSharp base: \`${BASE}\`"
+          echo "- mono/skia base: \`${SKIA_BASE}\`"
+          echo "- skip: ${SKIP}"
+        } >>"$GITHUB_STEP_SUMMARY"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
