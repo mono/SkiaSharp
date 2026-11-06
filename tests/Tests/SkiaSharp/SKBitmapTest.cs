@@ -653,6 +653,50 @@ namespace SkiaSharp.Tests
 			var destination = new[] { SKColors.Magenta };
 			Assert.True(bitmap.ReadPixels(destination));
 			Assert.Equal(SKColors.Magenta, destination[0]);
+			Assert.Equal("source", Assert.Throws<ArgumentException>(() => bitmap.WritePixels(destination)).ParamName);
+			Assert.Equal("value", Assert.Throws<ArgumentException>(() => bitmap.Pixels = destination).ParamName);
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(3)]
+		[InlineData(4)]
+		[InlineData(5)]
+		public void PixelTransfersWithoutStorageMatchPixmapValidation(int length)
+		{
+			using var bitmap = new SKBitmap();
+			var info = new SKImageInfo(2, 2);
+			Assert.True(bitmap.InstallPixels(info, IntPtr.Zero));
+			using var pixmap = new SKPixmap(bitmap.Info, IntPtr.Zero, bitmap.RowBytes);
+			var colors = Enumerable.Repeat(SKColors.Magenta, length).ToArray();
+
+			if (length < 4)
+			{
+				var expected = Assert.Throws<ArgumentException>(() => pixmap.ReadPixels(colors));
+				var actual = Assert.Throws<ArgumentException>(() => bitmap.ReadPixels(colors));
+				Assert.Equal(expected.ParamName, actual.ParamName);
+			}
+			else
+			{
+				Assert.False(pixmap.ReadPixels(colors));
+				Assert.False(bitmap.ReadPixels(colors));
+			}
+
+			if (length != 4)
+			{
+				var expected = Assert.Throws<ArgumentException>(() => pixmap.WritePixels(colors));
+				var actual = Assert.Throws<ArgumentException>(() => bitmap.WritePixels(colors));
+				Assert.Equal(expected.ParamName, actual.ParamName);
+				Assert.Equal("value", Assert.Throws<ArgumentException>(() => bitmap.Pixels = colors).ParamName);
+			}
+			else
+			{
+				Assert.False(pixmap.WritePixels(colors));
+				Assert.False(bitmap.WritePixels(colors));
+				Assert.Throws<InvalidOperationException>(() => bitmap.Pixels = colors);
+			}
+
+			Assert.All(colors, color => Assert.Equal(SKColors.Magenta, color));
 		}
 
 		[Theory]

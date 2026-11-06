@@ -603,15 +603,10 @@ namespace SkiaSharp
 		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
 		public bool ReadPixels (Span<SKColor> destination)
 		{
-			var count = PixelCount;
-			if (destination.Length < count)
-				throw new ArgumentException ($"The destination must have space for Width x Height, or {count}, pixels.", nameof (destination));
-
-			if (count == 0)
-				return true;
-
-			using var source = PeekPixels ();
-			return source != null && source.ReadPixels (destination);
+			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
+			var result = pixmap.ReadPixels (destination);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		/// <summary>Replaces all the pixels from a span of unpremultiplied colors.</summary>
@@ -625,20 +620,12 @@ namespace SkiaSharp
 		/// <exception cref="ArgumentException">The span length does not equal the bitmap's width multiplied by its height.</exception>
 		public bool WritePixels (ReadOnlySpan<SKColor> source)
 		{
-			var info = Info;
-			var expected = (long)info.Width * info.Height;
-			if (expected != source.Length)
-				throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (source));
-
-			if (source.Length == 0)
-				return true;
-
-			using var target = PeekPixels ();
-			if (target == null || !target.WritePixels (source))
-				return false;
-
-			NotifyPixelsChanged ();
-			return true;
+			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
+			var result = pixmap.WritePixels (source);
+			if (result && !source.IsEmpty)
+				NotifyPixelsChanged ();
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		/// <summary>Gets a value indicating whether the bitmap has empty dimensions.</summary>
