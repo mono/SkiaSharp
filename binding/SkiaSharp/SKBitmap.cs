@@ -549,17 +549,33 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>Gets or sets all the pixels as an array of colors.</summary>
-		/// <value>The array of colors.</value>
-		/// <remarks />
-		public SKColor[] Pixels {
+		/// <summary>Gets the number of pixels in the bitmap.</summary>
+		/// <value>The width multiplied by the height.</value>
+		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
+		public int PixelCount {
 			get {
 				var info = Info;
-				var pixels = new SKColor[checked(info.Width * info.Height)];
-				fixed (SKColor* p = pixels) {
-					SkiaApi.sk_bitmap_get_pixel_colors (Handle, (uint*)p);
-					GC.KeepAlive (this);
-				}
+				return checked(info.Width * info.Height);
+			}
+		}
+
+		/// <summary>Gets or sets all the pixels as an array of colors.</summary>
+		/// <value>The array of colors.</value>
+		/// <remarks>
+		/// <para>The getter allocates an array and reads unpremultiplied colors using Skia's bulk pixel conversion rules. It does not transform the bitmap's color space. Rounding can differ from <see cref="GetPixel" /> when converting premultiplied or higher-precision pixels.</para>
+		/// <para>Assigned colors are unpremultiplied. The setter replaces the pixels using Skia's pixel conversion rules, converting to the bitmap's color type, alpha type, and color space without drawing or blending with existing pixels. An unpremultiplied destination preserves RGB components even when alpha is zero.</para>
+		/// <para>As with native Skia pixel uploads, an opaque alpha type is a promise about the input, not a request to force stored alpha to 255. Supply opaque colors when the bitmap's alpha type is <see cref="SKAlphaType.Opaque" />.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentNullException">The assigned array is <see langword="null" />.</exception>
+		/// <exception cref="ArgumentException">The assigned array length does not equal the bitmap's width multiplied by its height.</exception>
+		/// <exception cref="InvalidOperationException">A nonempty bitmap has no accessible pixel storage, or Skia cannot convert its pixels.</exception>
+		/// <seealso cref="ReadPixels(Span{SKColor})" />
+		/// <seealso cref="WritePixels(ReadOnlySpan{SKColor})" />
+		public SKColor[] Pixels {
+			get {
+				var pixels = new SKColor[PixelCount];
+				if (!ReadPixels (pixels))
+					throw new InvalidOperationException ("Unable to convert the bitmap's pixels to colors.");
 				return pixels;
 			}
 			set {
@@ -571,21 +587,45 @@ namespace SkiaSharp
 				if (expected != value.Length)
 					throw new ArgumentException ($"The number of pixels must equal Width x Height, or {expected}.", nameof (value));
 
-				fixed (SKColor* v = value) {
-					var tempInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-					using var temp = new SKBitmap ();
-					temp.InstallPixels (tempInfo, (IntPtr)v);
-
-					using var shader = temp.ToShader ();
-
-					using var canvas = new SKCanvas (this);
-					using var paint = new SKPaint {
-						Shader = shader,
-						BlendMode = SKBlendMode.Src
-					};
-					canvas.DrawPaint (paint);
-				}
+				if (!WritePixels (value))
+					throw new InvalidOperationException ("Unable to convert the supplied colors to the bitmap's format.");
 			}
+		}
+
+		/// <summary>Copies all the pixels into a span of unpremultiplied colors.</summary>
+		/// <param name="destination">The span to receive the colors in row-major order. It must have space for at least <see cref="PixelCount" /> colors.</param>
+		/// <returns><see langword="true" /> if all pixels were copied; otherwise, <see langword="false" /> if pixel storage is inaccessible or Skia cannot convert the pixels.</returns>
+		/// <remarks>
+		/// <para>Uses Skia's bulk conversion rules without transforming the bitmap's color space. Rounding can differ from <see cref="GetPixel" /> for premultiplied and higher-precision pixels.</para>
+		/// <para>Any elements beyond the bitmap's pixel count are left unchanged. Reading an empty bitmap succeeds without changing the destination. No managed color array is allocated. The destination must not overlap the bitmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentException">The destination is too small to hold all the pixels.</exception>
+		/// <exception cref="OverflowException">The number of pixels exceeds <see cref="int.MaxValue" />.</exception>
+		public bool ReadPixels (Span<SKColor> destination)
+		{
+			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
+			var result = pixmap.ReadPixels (destination);
+			GC.KeepAlive (this);
+			return result;
+		}
+
+		/// <summary>Replaces all the pixels from a span of unpremultiplied colors.</summary>
+		/// <param name="source">The colors in row-major order. The length must equal <see cref="PixelCount" />.</param>
+		/// <returns><see langword="true" /> if all pixels were written; otherwise, <see langword="false" /> if pixel storage is inaccessible or Skia cannot convert the colors.</returns>
+		/// <remarks>
+		/// <para>Uses Skia's pixel conversion rules to convert to the bitmap's color type, alpha type, and color space without drawing or blending. Unpremultiplied storage preserves RGB even when alpha is zero.</para>
+		/// <para>Supply opaque colors for an opaque bitmap; the opaque alpha type is an input promise, not a request to force stored alpha to 255. The bitmap is notified after a successful write.</para>
+		/// <para>The colors are copied synchronously and are not retained or modified. Writing an empty span to an empty bitmap succeeds. The source must not overlap the bitmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentException">The span length does not equal the bitmap's width multiplied by its height.</exception>
+		public bool WritePixels (ReadOnlySpan<SKColor> source)
+		{
+			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
+			var result = pixmap.WritePixels (source);
+			if (result && !source.IsEmpty)
+				NotifyPixelsChanged ();
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		/// <summary>Gets a value indicating whether the bitmap has empty dimensions.</summary>
