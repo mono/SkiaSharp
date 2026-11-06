@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using SkiaSharp.Internals;
 
 namespace SkiaSharp
 {
@@ -190,9 +191,14 @@ namespace SkiaSharp
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
-		/// <remarks />
+		/// <remarks>Uses the read and exception behavior of <see cref="Read(IntPtr, int)" />. A <see langword="null" /> buffer skips bytes.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative or exceeds the length of a non-null <paramref name="buffer" />.</exception>
+		/// <exception cref="IOException">The native stream returns an invalid byte count.</exception>
 		public int Read (byte[] buffer, int size)
 		{
+			if (size < 0 || (buffer != null && size > buffer.Length))
+				throw new ArgumentOutOfRangeException (nameof (size));
+
 			fixed (byte* b = buffer) {
 				return Read ((IntPtr)b, size);
 			}
@@ -202,12 +208,21 @@ namespace SkiaSharp
 		/// <param name="buffer">The buffer to read into.</param>
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually read.</returns>
-		/// <remarks />
+		/// <remarks>Uses the native stream read operation and does not retry short reads. A zero buffer pointer skips bytes.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative.</exception>
+		/// <exception cref="IOException">The native stream returns an invalid byte count.</exception>
 		public int Read (IntPtr buffer, int size)
 		{
-			var result = (int)SkiaApi.sk_stream_read (Handle, (void*)buffer, (IntPtr)size);
+			if (size < 0)
+				throw new ArgumentOutOfRangeException (nameof (size));
+
+			var nativeSize = (IntPtr)size;
+			// Check the full unsigned result before narrowing it to this API's int return type.
+			var result = Utils.FromNativeSize (SkiaApi.sk_stream_read (Handle, (void*)buffer, nativeSize));
 			GC.KeepAlive (this);
-			return result;
+			if (result > (ulong)size)
+				throw new IOException ("The stream returned an invalid byte count.");
+			return (int)result;
 		}
 
 		/// <summary>Attempt to peek at <paramref name="size" /> bytes.</summary>
@@ -215,8 +230,12 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes to read.</param>
 		/// <returns>Returns the number of bytes actually peeked/copied.</returns>
 		/// <remarks />
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative.</exception>
 		public int Peek (IntPtr buffer, int size)
 		{
+			if (size < 0)
+				throw new ArgumentOutOfRangeException (nameof (size));
+
 			var result = (int)SkiaApi.sk_stream_peek (Handle, (void*)buffer, (IntPtr)size);
 			GC.KeepAlive (this);
 			return result;
@@ -226,8 +245,12 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes to skip.</param>
 		/// <returns>Returns the actual number bytes that could be skipped.</returns>
 		/// <remarks />
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative.</exception>
 		public int Skip (int size)
 		{
+			if (size < 0)
+				throw new ArgumentOutOfRangeException (nameof (size));
+
 			var result = (int)SkiaApi.sk_stream_skip (Handle, (IntPtr)size);
 			GC.KeepAlive (this);
 			return result;
@@ -244,12 +267,23 @@ namespace SkiaSharp
 		}
 
 		/// <summary>Seeks to an absolute position in the stream.</summary>
-		/// <param name="position">The absolute position.</param>
+		/// <param name="position">The nonnegative absolute position, in bytes.</param>
 		/// <returns><see langword="true" /> if seeking is supported and the seek was successful; otherwise, <see langword="false" />.</returns>
-		/// <remarks>If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).</remarks>
-		public bool Seek (int position)
+		/// <remarks>The native stream determines how seeking past its end is handled.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="position" /> is negative.</exception>
+		public bool Seek (int position) => Seek ((long)position);
+
+		/// <summary>Seeks to an absolute position in the stream using a 64-bit offset.</summary>
+		/// <param name="position">The nonnegative absolute position, in bytes.</param>
+		/// <returns><see langword="true" /> if seeking is supported and the seek was successful; otherwise, <see langword="false" />.</returns>
+		/// <remarks>The native stream determines how seeking past its end is handled. The position must fit in the native pointer-sized unsigned integer.</remarks>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="position" /> is negative, or exceeds <see cref="UInt32.MaxValue" /> in a 32-bit process.</exception>
+		public bool Seek (long position)
 		{
-			var result = SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
+			if (position < 0 || (!PlatformConfiguration.Is64Bit && position > UInt32.MaxValue))
+				throw new ArgumentOutOfRangeException (nameof (position));
+
+			var result = SkiaApi.sk_stream_seek (Handle, Utils.ToNativeSize ((ulong)position));
 			GC.KeepAlive (this);
 			return result;
 		}
@@ -319,16 +353,26 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets the current position in the stream. If this is not supported, the position will be reported as 0.</summary>
 		/// <value>The current position in the stream, or 0 if not supported.</value>
-		/// <remarks />
+		/// <remarks>Use <see cref="Position64" /> for positions greater than <see cref="Int32.MaxValue" />.</remarks>
+		/// <exception cref="OverflowException">The current position is greater than <see cref="Int32.MaxValue" />.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The assigned position is negative.</exception>
 		public int Position {
+			get => checked ((int)Position64);
+			set => Seek (value);
+		}
+
+		/// <summary>Gets or sets the current position in the stream as a 64-bit integer. If this is not supported, the position will be reported as 0.</summary>
+		/// <value>The current position in bytes, or 0 if not supported.</value>
+		/// <remarks>Setting this property calls <see cref="Seek(long)" />. Queries the native stream position, which is unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented.</remarks>
+		/// <exception cref="OverflowException">The native position is greater than <see cref="Int64.MaxValue" />.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The assigned position is negative, or exceeds <see cref="UInt32.MaxValue" /> in a 32-bit process.</exception>
+		public long Position64 {
 			get {
-				var result = (int)SkiaApi.sk_stream_get_position (Handle);
+				var result = Utils.FromNativeSize (SkiaApi.sk_stream_get_position (Handle));
 				GC.KeepAlive (this);
-				return result;
+				return checked ((long)result);
 			}
-			set {
-				Seek (value);
-			}
+			set => Seek (value);
 		}
 
 		/// <summary>Gets a value indicating whether this stream can report its total length.</summary>
@@ -344,12 +388,19 @@ namespace SkiaSharp
 
 		/// <summary>Gets the total length of the stream. If this is not supported, the length will be reported as 0.</summary>
 		/// <value>The total length of the stream, or 0 if not supported.</value>
-		/// <remarks />
-		public int Length {
+		/// <remarks>Use <see cref="Length64" /> for lengths greater than <see cref="Int32.MaxValue" />.</remarks>
+		/// <exception cref="OverflowException">The stream length is greater than <see cref="Int32.MaxValue" />.</exception>
+		public int Length => checked ((int)Length64);
+
+		/// <summary>Gets the total length of the stream as a 64-bit integer. If this is not supported, the length will be reported as 0.</summary>
+		/// <value>The total length of the stream in bytes, or 0 if not supported.</value>
+		/// <remarks>Queries the native stream length, which is unsigned and pointer-sized; values greater than <see cref="Int64.MaxValue" /> cannot be represented.</remarks>
+		/// <exception cref="OverflowException">The native length is greater than <see cref="Int64.MaxValue" />.</exception>
+		public long Length64 {
 			get {
-				var result = (int)SkiaApi.sk_stream_get_length (Handle);
+				var result = Utils.FromNativeSize (SkiaApi.sk_stream_get_length (Handle));
 				GC.KeepAlive (this);
-				return result;
+				return checked ((long)result);
 			}
 		}
 
@@ -616,8 +667,12 @@ namespace SkiaSharp
 		/// <param name="size">The number of bytes from the buffer to write.</param>
 		/// <returns><see langword="true" /> if the write succeeded; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="size" /> is negative or exceeds the length of a non-null <paramref name="buffer" />.</exception>
 		public virtual bool Write (byte[] buffer, int size)
 		{
+			if (size < 0 || (buffer != null && size > buffer.Length))
+				throw new ArgumentOutOfRangeException (nameof (size));
+
 			fixed (byte* b = buffer) {
 				var result = SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
 				GC.KeepAlive (this);

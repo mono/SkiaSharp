@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -231,6 +232,75 @@ namespace SkiaSharp.Tests
 			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
+		[Theory]
+		[InlineData(0)]
+		[InlineData(5)]
+		public void EmptyRemainderSucceedsButPositiveExactLengthFails(int position)
+		{
+			using var source = new MemoryStream();
+			source.Position = position;
+			using var managed = new SKManagedStream(source);
+			using var native = new SKMemoryStream();
+
+			using var sourceData = SKData.Create(source);
+			using var managedData = SKData.Create((SKStream)managed);
+			using var nativeData = SKData.Create((SKStream)native);
+			using var sourceZero = SKData.Create(source, 0);
+			using var managedZero = SKData.Create((SKStream)managed, 0);
+			using var nativeZero = SKData.Create((SKStream)native, 0);
+
+			Assert.All(new[] { sourceData, managedData, nativeData, sourceZero, managedZero, nativeZero }, data =>
+			{
+				Assert.NotNull(data);
+				Assert.Equal(0, data.Size);
+			});
+			Assert.Null(SKData.Create(source, 1));
+			Assert.Null(SKData.Create((SKStream)managed, 1));
+			Assert.Null(SKData.Create((SKStream)native, 1));
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void ManagedStreamMetadataIsReadOncePerCreation(bool exactLength)
+		{
+			using var stream = new CountingMetadataStream(OddData);
+			stream.Position = 2;
+
+			using var data = exactLength ? SKData.Create(stream, 3) : SKData.Create(stream);
+
+			Assert.Equal(new byte[] { 5, 7, 9 }, data.ToArray());
+			Assert.Equal(1, stream.LengthReads);
+			Assert.Equal(1, stream.PositionReads);
+		}
+
+		private sealed class CountingMetadataStream : MemoryStream
+		{
+			public CountingMetadataStream(byte[] data) : base(data, writable: false) { }
+
+			public int LengthReads { get; private set; }
+			public int PositionReads { get; private set; }
+
+			public override long Length
+			{
+				get
+				{
+					LengthReads++;
+					return base.Length;
+				}
+			}
+
+			public override long Position
+			{
+				get
+				{
+					PositionReads++;
+					return base.Position;
+				}
+				set => base.Position = value;
+			}
+		}
+
 		[Fact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
@@ -253,7 +323,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Reference implementation: the previous (buffered) SaveTo path — copy native memory into a
-		// pooled managed buffer with Marshal.Copy, then write that buffer to the stream. Used as the
+		// managed buffer with Marshal.Copy, then write that buffer to the stream. Used as the
 		// oracle to prove the current (span-based) SaveTo is byte-for-byte identical.
 		private static unsafe void SaveToBuffered(SKData data, Stream target)
 		{
@@ -300,6 +370,520 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected.ToArray(), actual.ToArray());
 			Assert.Equal(bytes, actual.ToArray());
 			Assert.Equal(size, actual.Length);
+		}
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(true, 7)]
+		[InlineData(false, 1)]
+		[InlineData(false, 7)]
+		public void CreateFromStream_HandlesShortReads(bool canSeek, int maxBytesPerRead)
+		{
+			var bytes = new byte[256];
+			for (var i = 0; i < bytes.Length; i++)
+				bytes[i] = (byte)(i + 1);
+
+			using var stream = new ConfigurableTestStream(bytes, canSeek: canSeek, maxBytesPerRead: maxBytesPerRead);
+			using var data = SKData.Create(stream);
+
+			Assert.NotNull(data);
+			Assert.Equal(bytes.Length, data.Size);
+			Assert.Equal(bytes, data.ToArray());
+		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void CreateFromStreamWithLengthHandlesChunkBoundariesAndEarlyEnd(bool canSeek)
+		{
+			var bytes = new byte[SKData.CopyBufferSize * 2 + 17];
+			new Random(42).NextBytes(bytes);
+			using var stream = new ConfigurableTestStream(bytes, canSeek: canSeek, maxBytesPerRead: 997);
+			using var data = SKData.Create(stream, bytes.Length);
+
+			Assert.NotNull(data);
+			Assert.Equal(bytes, data.ToArray());
+			Assert.InRange(stream.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+
+			using var early = new ConfigurableTestStream(bytes, canSeek: canSeek,
+				maxBytesPerRead: 997, earlyEndPosition: SKData.CopyBufferSize + 3);
+			Assert.Null(SKData.Create(early, bytes.Length));
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(1)]
+		[InlineData(SKData.CopyBufferSize - 1)]
+		[InlineData(SKData.CopyBufferSize)]
+		[InlineData(SKData.CopyBufferSize + 1)]
+		[InlineData(SKData.CopyBufferSize * 3)]
+		[InlineData(2097152)]
+		[InlineData(3145728)]
+		[InlineData(10485760)]
+		public void CreateFromUnknownLengthStreamReadsToEndAcrossChunkBoundaries(int size)
+		{
+			var bytes = new byte[size];
+			for (var i = 0; i < bytes.Length; i++)
+				bytes[i] = (byte)(i * 31 + 7);
+
+			foreach (var maxRead in new[] { int.MaxValue, 997 })
+			{
+				using var actualStream = new ConfigurableTestStream(bytes, canSeek: false, maxBytesPerRead: maxRead);
+				using var actual = SKData.Create(actualStream);
+
+				Assert.NotNull(actual);
+				Assert.Equal(bytes.Length, actual.Size);
+				Assert.Equal(bytes, actual.ToArray());
+				Assert.True(actualStream.CanRead);
+				Assert.Equal(1, actualStream.ZeroReadCount);
+				Assert.InRange(actualStream.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+			}
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthStreamPreservesOffsetAndEarlyEnd()
+		{
+			var bytes = new byte[3 * 1024 * 1024];
+			new Random(42).NextBytes(bytes);
+			using var inner = new ConfigurableTestStream(bytes, maxBytesPerRead: 997, earlyEndPosition: 2 * 1024 * 1024 + 17);
+			inner.Position = 7;
+			using var stream = new NonSeekableReadOnlyStream(inner);
+			using var data = SKData.Create(stream);
+
+			Assert.Equal(2 * 1024 * 1024 + 10, data.Size);
+			Assert.True(data.AsSpan().SequenceEqual(bytes.AsSpan(7, (int)data.Size)));
+			Assert.Equal(2 * 1024 * 1024 + 17, inner.Position);
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthStreamOwnsDataIndependently()
+		{
+			var bytes = new byte[2 * 1024 * 1024];
+			bytes.AsSpan().Fill(123);
+			using var firstStream = new ConfigurableTestStream(bytes, canSeek: false);
+			using var first = SKData.Create(firstStream);
+
+			bytes.AsSpan().Fill(234);
+			using var secondStream = new ConfigurableTestStream(bytes, canSeek: false);
+			using var second = SKData.Create(secondStream);
+
+			Assert.Equal(bytes, second.ToArray());
+			bytes.AsSpan().Fill(123);
+			Assert.Equal(bytes, first.ToArray());
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void CreateFromUnknownLengthSeekableStreamReadsToEnd(bool managedWrapper)
+		{
+			var bytes = new byte[2 * 1024 * 1024 + 17];
+			new Random(42).NextBytes(bytes);
+			using var stream = new ConfigurableTestStream(bytes, maxBytesPerRead: 997, reportedLength: -1);
+			using var managed = new SKManagedStream(stream);
+			// Guard the regression before invoking a factory that would otherwise use an unsigned-max size.
+			if (managedWrapper)
+				Assert.False(managed.HasLength);
+			using var data = managedWrapper ? SKData.Create((SKStream)managed) : SKData.Create(stream);
+
+			Assert.Equal(bytes, data.ToArray());
+			Assert.Equal(bytes.Length, stream.Position);
+		}
+
+		[Theory]
+		[InlineData(0, 0)]
+		[InlineData(5, 0)]
+		[InlineData(SKData.CopyBufferSize * 2 + 17, 1)]
+		public void CreateFromManagedFrontBufferedUnknownLengthReadsRemainingData(int size, int prefixLength)
+		{
+			var bytes = new byte[size];
+			new Random(42).NextBytes(bytes);
+			using var source = new ConfigurableTestStream(bytes, canSeek: false);
+			using var buffered = new SKFrontBufferedStream(source, 4096);
+			using var stream = new SKManagedStream(buffered);
+			if (prefixLength > 0)
+				Assert.Equal(bytes[0], stream.ReadByte());
+
+			// Fail safely on the capability bug before the factory could attempt an unsigned-max allocation.
+			Assert.False(stream.HasLength);
+			Assert.Equal(0L, stream.Length64);
+			Assert.Equal(prefixLength, stream.Position64);
+
+			using var data = SKData.Create((SKStream)stream);
+
+			Assert.NotNull(data);
+			Assert.Equal(bytes.AsSpan(prefixLength).ToArray(), data.ToArray());
+			Assert.Equal(size, stream.Position64);
+			Assert.True(stream.IsAtEnd);
+			Assert.True(source.CanRead);
+			Assert.InRange(source.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+			Assert.False(source.InfiniteLoopDetected);
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(int.MaxValue)]
+		public void CreateFromUnknownLengthStreamRejectsInvalidCountsAfterFullChunks(int invalidReturn)
+		{
+			using var stream = new FailingAfterReadStream(SKData.CopyBufferSize * 3, invalidReturn);
+			Assert.Throws<IOException>(() => SKData.Create(stream));
+		}
+
+		[Fact]
+		public void CreateFromUnknownLengthStreamPropagatesExceptionAfterFullChunks()
+		{
+			using var stream = new FailingAfterReadStream(SKData.CopyBufferSize * 3);
+			Assert.Throws<IOException>(() => SKData.Create(stream));
+		}
+
+		private sealed class FailingAfterReadStream : MemoryStream
+		{
+			private readonly int? invalidReturn;
+
+			public FailingAfterReadStream(int length, int? invalidReturn = null)
+				: base(new byte[length], writable: false)
+			{
+				this.invalidReturn = invalidReturn;
+			}
+
+			public override bool CanSeek => false;
+
+			public override int Read(byte[] buffer, int offset, int count) =>
+				Position == Length ? Fail(count) : base.Read(buffer, offset, count);
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+			public override int Read(Span<byte> buffer) =>
+				Position == Length ? Fail(buffer.Length) : base.Read(buffer);
+#endif
+
+			private int Fail(int count) =>
+				invalidReturn.HasValue
+					? invalidReturn == int.MaxValue ? count + 1 : invalidReturn.Value
+					: throw new IOException("Simulated failure after reading full chunks.");
+		}
+
+		[Fact]
+		public void CreateFromSeekableStreamRejectsEarlyEndAndHandlesPositionPastLength()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80 };
+			using (var earlyStream = new ConfigurableTestStream(bytes, canSeek: true, maxBytesPerRead: 3, earlyEndPosition: 5))
+			{
+				using var data = SKData.Create(earlyStream);
+				Assert.Null(data);
+				Assert.Equal(5, earlyStream.Position);
+				Assert.True(earlyStream.CanRead);
+			}
+
+			using (var pastEndStream = new MemoryStream(bytes))
+			{
+				pastEndStream.Position = 20;
+				using var data = SKData.Create(pastEndStream);
+				Assert.NotNull(data);
+				Assert.Equal(0, data.Size);
+			}
+
+			using (var offsetEarlyStream = new ConfigurableTestStream(bytes, canSeek: true, maxBytesPerRead: 2, earlyEndPosition: 6))
+			{
+				offsetEarlyStream.Position = 2;
+				using var data = SKData.Create(offsetEarlyStream);
+				Assert.Null(data);
+				Assert.Equal(6, offsetEarlyStream.Position);
+				Assert.True(offsetEarlyStream.CanRead);
+			}
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void KnownLengthEmptyReadFailsWithoutRetry(bool managedWrapper)
+		{
+			using var inner = new ConfigurableTestStream(OddData, earlyEndPosition: 0);
+			using var stream = new SKManagedStream(inner);
+
+			using var data = managedWrapper ? SKData.Create((SKStream)stream) : SKData.Create(inner);
+
+			Assert.Null(data);
+			Assert.Equal(0, inner.Position);
+			Assert.Equal(1, inner.TotalReadCalls);
+			Assert.Equal(1, inner.ZeroReadCount);
+			Assert.True(inner.CanRead);
+		}
+
+		[Fact]
+		public void CreateRejectsNegativeSizesAndLengths()
+		{
+			using var ms = new MemoryStream(OddData);
+			using var skStream = new SKMemoryStream(OddData);
+
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(-1));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(-1L));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(ms, -1));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(ms, -1L));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(skStream, -1));
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.Create(skStream, -1L));
+		}
+
+		[Fact]
+		public void CreateFromSKStream_HandlesPartiallyConsumedAndNonSeekableStreams()
+		{
+			using (var ms = new MemoryStream(OddData))
+			using (var skStream = new SKManagedStream(ms))
+			{
+				Assert.Equal(1, skStream.ReadByte());
+				Assert.Equal(3, skStream.ReadByte());
+
+				using var data = SKData.Create((SKStream)skStream);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 5, 7, 9 }, data.ToArray());
+			}
+
+			using (var inner = new ConfigurableTestStream(OddData, canSeek: false))
+			using (var skStream = new SKManagedStream(inner))
+			{
+				using var data = SKData.Create((SKStream)skStream);
+				Assert.NotNull(data);
+				Assert.Equal(OddData, data.ToArray());
+			}
+		}
+
+		[Theory]
+		[InlineData(int.MaxValue)]
+		[InlineData(997)]
+		public void CreateFromSKStreamBoundsNativeReadRequests(int maxBytesPerRead)
+		{
+			var bytes = new byte[SKData.CopyBufferSize * 2 + 17];
+			new Random(42).NextBytes(bytes);
+			using var inner = new ConfigurableTestStream(bytes, maxBytesPerRead: maxBytesPerRead);
+			inner.Position = 7;
+			using var stream = new SKManagedStream(inner);
+			using var data = SKData.Create((SKStream)stream);
+
+			Assert.NotNull(data);
+			Assert.True(data.AsSpan().SequenceEqual(bytes.AsSpan(7)));
+			Assert.Equal(bytes.Length, inner.Position);
+			Assert.InRange(inner.MaxRequestedReadCount, 1, SKData.CopyBufferSize);
+		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void CreateFromManagedSKStreamPropagatesReadFailures(bool canSeek)
+		{
+			using var inner = new FailingAfterShortReadStream(canSeek, failOnSeek: false);
+			using var stream = new SKManagedStream(inner, disposeManagedStream: true);
+
+			var exception = Assert.Throws<IOException>(() => SKData.Create((SKStream)stream));
+
+			Assert.Same(inner.Failure, exception);
+			Assert.Equal(1, inner.Position);
+			Assert.True(inner.CanRead);
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void EarlyEndDoesNotResetAndOnlySucceedsForUnknownLength(bool knownLength)
+		{
+			using var inner = new FailingAfterShortReadStream(canSeek: knownLength, failOnSeek: true);
+			using var stream = new SKManagedStream(inner);
+
+			using var data = SKData.Create((SKStream)stream);
+
+			if (knownLength)
+				Assert.Null(data);
+			else
+			{
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 10 }, data.ToArray());
+			}
+			Assert.Equal(0, inner.SeekCalls);
+			Assert.Equal(1, inner.Position);
+			Assert.True(inner.CanRead);
+		}
+
+		[Theory]
+		[InlineData(0)]
+		[InlineData(2)]
+		public void CreateFromFrontBufferedManagedStreamKeepsReadFailureOnManagedStack(int bufferSize)
+		{
+			using var inner = new FailingAfterShortReadStream(canSeek: true, failOnSeek: false);
+			using var managed = new SKManagedStream(inner);
+			using var buffered = new SKFrontBufferedManagedStream((SKStream)managed, bufferSize);
+
+			var exception = Assert.Throws<IOException>(() => SKData.Create((SKStream)buffered));
+
+			Assert.Same(inner.Failure, exception);
+			Assert.Equal(1, inner.Position);
+			Assert.True(inner.CanRead);
+			Assert.NotNull(exception.StackTrace);
+			Assert.DoesNotContain("SkiaSharp.DelegateProxies.", exception.StackTrace);
+		}
+
+		private sealed class FailingAfterShortReadStream : MemoryStream
+		{
+			private readonly bool canSeek;
+			private readonly bool failOnSeek;
+			private int reads;
+
+			public FailingAfterShortReadStream(bool canSeek, bool failOnSeek)
+				: base(new byte[] { 10, 20 }, writable: false)
+			{
+				this.canSeek = canSeek;
+				this.failOnSeek = failOnSeek;
+			}
+
+			public IOException Failure { get; } = new IOException("Read or seek failed after a short read.");
+
+			public int SeekCalls { get; private set; }
+
+			public override bool CanSeek => canSeek;
+
+			public override int Read(byte[] buffer, int offset, int count)
+			{
+				if (++reads == 1)
+					return base.Read(buffer, offset, Math.Min(count, 1));
+				if (failOnSeek)
+					return 0;
+				throw Failure;
+			}
+
+			public override long Position
+			{
+				get => base.Position;
+				set
+				{
+					SeekCalls++;
+					if (failOnSeek && reads > 0)
+						throw Failure;
+					base.Position = value;
+				}
+			}
+		}
+
+		[Fact]
+		public void CreateFromSKStreamRejectsEarlyEndAndPreservesFrontBufferedPosition()
+		{
+			var bytes = new byte[] { 10, 20, 30, 40, 50, 60, 70, 80 };
+
+			using (var inner = new ConfigurableTestStream(bytes, canSeek: true, earlyEndPosition: 5))
+			using (var skStream = new SKManagedStream(inner))
+			{
+				using var data = SKData.Create((SKStream)skStream);
+				Assert.Null(data);
+				Assert.Equal(5, inner.Position);
+				Assert.True(inner.CanRead);
+			}
+
+			using (var ms = new MemoryStream(bytes))
+			using (var fb = new SKFrontBufferedManagedStream(ms, 4, disposeUnderlyingStream: false))
+			{
+				Assert.Equal(10, fb.ReadByte());
+				Assert.Equal(20, fb.ReadByte());
+
+				using var data = SKData.Create((SKStream)fb);
+				Assert.NotNull(data);
+				Assert.Equal(new byte[] { 30, 40, 50, 60, 70, 80 }, data.ToArray());
+			}
+		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(int.MaxValue)]
+		public void CreateFromStream_WhenStreamReturnsInvalidByteCount_ThrowsIOException(int invalidReturn)
+		{
+			using (var hostile = new HostileReadReturnStream(invalidReturn))
+			{
+				Assert.Throws<IOException>(() => SKData.Create(hostile));
+			}
+
+			using (var hostile = new HostileReadReturnStream(invalidReturn))
+			{
+				Assert.Throws<IOException>(() => SKData.Create(hostile, 32));
+			}
+
+			using (var hostile = new HostileReadReturnStream(invalidReturn))
+			using (var nonSeekable = new NonSeekableReadOnlyStream(hostile))
+			{
+				Assert.Throws<IOException>(() => SKData.Create(nonSeekable));
+			}
+		}
+	}
+
+	// Allocation capture inspects the global registry, so no other test collection may run concurrently.
+	[Collection(HandleDictionaryThreadingCollection.Name)]
+	public class SKDataDisposalTest : SKTest
+	{
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void CreateFromStream_WhenReadThrows_DisposesAllocatedDataImmediately(bool managedWrapper)
+		{
+			using var source = new AllocationObservingReadStream();
+			using var managed = new SKManagedStream(source);
+			try
+			{
+				var exception = Assert.Throws<IOException>(() =>
+					managedWrapper ? SKData.Create((SKStream)managed) : SKData.Create(source, 1024));
+
+				Assert.Same(source.Failure, exception);
+				Assert.NotNull(source.AllocatedData);
+				SKHandleDictionaryTestHelpers.AssertDeregistered(source.AllocatedHandle, source.AllocatedData);
+				Assert.Equal(1, source.AllocatedHandle.GetReferenceCount(isVirtual: false));
+				Assert.True(source.CanRead);
+			}
+			finally
+			{
+				source.AllocatedData?.Dispose();
+				if (source.AllocatedHandle != IntPtr.Zero)
+					SkiaApi.sk_data_unref(source.AllocatedHandle);
+			}
+		}
+
+		private sealed class AllocationObservingReadStream : MemoryStream
+		{
+			private readonly SKData[] existingData;
+
+			public AllocationObservingReadStream() : base(new byte[1024], writable: false)
+			{
+				HandleDictionary.instancesLock.EnterReadLock();
+				try
+				{
+					existingData = HandleDictionary.instances.Values.Select(weak => weak.Target).OfType<SKData>().ToArray();
+				}
+				finally
+				{
+					HandleDictionary.instancesLock.ExitReadLock();
+				}
+			}
+
+			public IOException Failure { get; } = new IOException("Read failed after allocating SKData.");
+			public SKData AllocatedData { get; private set; }
+			public IntPtr AllocatedHandle { get; private set; }
+
+			public override int Read(byte[] buffer, int offset, int count) => Fail();
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+			public override int Read(Span<byte> buffer) => Fail();
+#endif
+
+			private int Fail()
+			{
+				HandleDictionary.instancesLock.EnterReadLock();
+				try
+				{
+					AllocatedData = Assert.Single(HandleDictionary.instances.Values.Select(weak => weak.Target).OfType<SKData>(),
+						data => !data.IsDisposed && !existingData.Contains(data));
+					AllocatedHandle = AllocatedData.Handle;
+					// Retain the native object so its reference count can be checked safely after wrapper disposal.
+					((ISKReferenceCounted)AllocatedData).SafeRef();
+					Assert.Equal(2, AllocatedHandle.GetReferenceCount(isVirtual: false));
+				}
+				finally
+				{
+					HandleDictionary.instancesLock.ExitReadLock();
+				}
+				throw Failure;
+			}
 		}
 	}
 }
