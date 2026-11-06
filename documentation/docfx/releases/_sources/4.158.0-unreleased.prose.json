@@ -1,0 +1,36 @@
+{
+  "theme": "Skia m158 engine update",
+  "highlights_headline": "The upcoming 4.158 line adopts Skia m158 while preserving the existing managed binding surface.",
+  "highlights_body": "The collected changes also correct calling conventions in source-generated native imports. Native HarfBuzz remains at 14.4.0; its package revision changes do not represent an engine upgrade.",
+  "breaking": [
+    {
+      "title": "Check Graphite Metal deployment targets",
+      "body": "Graphite Metal adopts an iOS and tvOS runtime minimum of 15; raise deployment targets for applications using this backend where necessary. Its macOS minimum remains 12. Retain any higher managed or framework requirements.",
+      "prs": [5542]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m158",
+          "detail": "Advances the native renderer through m157 to m158 without adding C bridge exports or changing the managed binding surface.",
+          "prs": [5542, 5634]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Explicit cdecl imports",
+          "detail": "Source-generated LibraryImport declarations now use the same cdecl convention as the existing import and delegate paths, correcting an ABI mismatch that can affect Windows x86 calls.",
+          "prs": [5565]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

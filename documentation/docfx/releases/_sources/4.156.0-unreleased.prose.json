@@ -1,0 +1,30 @@
+{
+  "theme": "Path and glyph rendering fixes",
+  "highlights_headline": "The upcoming 4.156 update improves native path rasterization, glyph replay validation, and Graphite readback.",
+  "highlights_body": "These same-milestone fixes leave managed wrappers, generated bindings, and package version inputs unchanged.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Clipped paths and coverage masks",
+          "detail": "Corrects Ganesh device-space path bounds and coverage-mask subset clamping, plus Graphite clip keys and wedge miter bounds. Convex antialiased rasterization also gains buffer-overflow and fixed-point arithmetic guards; those raster guards are disabled in custom builds defining SK_LEGACY_ALPHA_RUNS.",
+          "prs": [5617, 5631]
+        },
+        {
+          "lead": "Validated glyph replay",
+          "detail": "Validates serialized Slug positions, transforms, bounds, and flags, bounds direct-mask offsets, and preserves creation-time float rounding during replay. Unsuitable glyph data retains rendering fallbacks, including when glyph-atlas bilinear filtering is unavailable.",
+          "prs": [5617, 5624]
+        },
+        {
+          "lead": "Complete Graphite readback pixels",
+          "detail": "Corrects pixel-size and row-stride handling for GPU-to-CPU transfers from alpha textures to RGBx destinations, ensuring every destination pixel bit is written with opaque output.",
+          "prs": [5631]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
