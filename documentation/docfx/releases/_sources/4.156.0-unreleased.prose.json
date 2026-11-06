@@ -1,0 +1,30 @@
+{
+  "theme": "Path and glyph rendering reliability",
+  "highlights_headline": "Upcoming m156 fixes improve clipped paths, glyph replay and Graphite readback.",
+  "highlights_body": "These native-engine corrections leave the managed API unchanged.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Clipped path rendering",
+          "detail": "Corrects Ganesh device-space path bounds and software coverage-mask clamping, plus Graphite clip keys and wedge miter bounds. Fixes convex anti-aliased rasterization buffer overflows and fixed-point overflow for edges far outside the clip, except when built with SK_LEGACY_ALPHA_RUNS.",
+          "prs": [5617, 5631]
+        },
+        {
+          "lead": "Validated glyph replay",
+          "detail": "Validates serialized Slug positions, matrices, bounds and flags, bounds direct-mask offsets, and preserves creation-time rounding during replay. Retains rendering fallbacks for unsuitable glyph data and handles replay when glyph-atlas bilinear filtering is unavailable.",
+          "prs": [5617, 5624]
+        },
+        {
+          "lead": "Graphite alpha-to-RGBx readback",
+          "detail": "Corrects GPU-to-CPU transfer pixel sizing when reading alpha textures into RGBx destinations, ensuring every destination pixel bit is written.",
+          "prs": [5631]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

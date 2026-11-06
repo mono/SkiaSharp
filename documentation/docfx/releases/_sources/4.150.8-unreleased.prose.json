@@ -1,6 +1,6 @@
 {
-  "theme": "Region and texture reliability",
-  "highlights_headline": "The upcoming 4.150.8 update fixes region allocation and OpenGL texture sampling without changing managed APIs.",
+  "theme": "Safer rasterization and texture sampling",
+  "highlights_headline": "Upcoming servicing fixes improve raster-pipeline failure handling, conic regions and texture sampling.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,13 +8,13 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Safe conic region allocation",
-          "detail": "Region construction budgets scanline storage for subdivided conics and rejects accumulation overflow, preventing an undersized buffer and out-of-bounds writes.",
-          "prs": [5543]
+          "lead": "Raster and region safety",
+          "detail": "Prevents a partially constructed runtime-shader raster pipeline from executing after stage construction fails. Corrects conic-region buffer sizing and rejects edge-count overflow to prevent out-of-bounds writes.",
+          "prs": [5633, 5543]
         },
         {
-          "lead": "Correct OpenGL texture boundaries",
-          "detail": "Disable GLES-invalid BGRA-as-RGBx upload capabilities and preserve nearest-filtered texture subset clamps when magnification or fractional mappings could sample neighboring texels. One-to-one integer-relative mappings retain their fast path.",
+          "lead": "Texture uploads and subset boundaries",
+          "detail": "Disables unsupported RGBA uploads to BGRA textures interpreted as RGBx on GLES. Preserves nearest-filtered texture subset boundaries under magnification and fractional mappings without dropping the integer-mapping fast path.",
           "prs": [5543]
         }
       ]

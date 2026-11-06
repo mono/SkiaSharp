@@ -1,0 +1,77 @@
+{
+  "format": 6,
+  "version": "4.158.0",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": {
+    "version": "15.0.0",
+    "api_diff_link": "harfbuzzsharp/15.0.0/index.md",
+    "prs": []
+  },
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [
+    {
+      "label": "HarfBuzzSharp API diff",
+      "href": "harfbuzzsharp/15.0.0/index.md"
+    }
+  ],
+  "tallies": {
+    "product": 1,
+    "mixed": 0,
+    "internal": 4
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5634": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5634",
+      "title": "[M158] Update SkiaSharp to Skia milestone 158",
+      "body": "[M158] Update SkiaSharp to Skia milestone 158 (#5634)\n\nRequires: https://github.com/mono/skia/pull/438\nContext: https://github.com/mono/SkiaSharp/pull/5637\nChanges: https://github.com/mono/skia/compare/ce0fc683a40c6ba84d55072f31aa48d55c8f2131...f93fd1e432b85086477a6a1c21c1e560673d4a14\n\nAdopt the m158 native engine as the 4.158 product line, keeping package,\nassembly, native-library and governance identities consistent with the\nselected Skia revision. Preserve the existing managed binding surface\nwhile consuming the upstream engine update through the fork's C bridge.\n\n~~ Pin the landed native merge without changing the reviewed tree ~~\n\nAdvance externals/skia from ce0fc683a40c6ba84d55072f31aa48d55c8f2131\nto the actual mono/skia merge f93fd1e432b85086477a6a1c21c1e560673d4a14.\nThe native companion integrates chrome/m158 through\n75584a96108b2bf0b1c74b0536126fa4917b64a8 while retaining the fork's\ndependency policy, C bridge and platform compatibility adaptations.\n\nThe dependent repin in #5637 changes only the gitlink and matching\ncgmanifest commitHash. The landed native commit has two parents and\ndirectly includes reviewed b8af0ba51c9409bb2087e86a7461349c803b7170.\nBoth native commits have tree 435f794aa44e8ff7902239fdf24913783eda4837,\nso recording the landed SHA does not substitute different native source\nfor the reviewed and built source.\n\nThe producing sync reports a passing Linux x64 native source build,\nmanaged binding build and unfiltered console solution. Binding\nregeneration reported no generated changes; this parent diff changes no\nmanaged wrappers, generated bindings or C API declarations.\n\n~~ Keep the 4.158 package line and native identity synchronized ~~\n\nChange the Skia release and libSkiaSharp milestone from 157 to 158.\nKeep the C API increment at zero and set the native SONAME to 158.0.0:\nthe milestone changes even though this update adds no C bridge exports.\n\nAdvance the SkiaSharp assembly/file version to 4.158.0.0 and the\nSkiaSharp-family NuGet rows in VERSIONS.txt to 4.158.0. Set the Azure\nSKIASHARP_VERSION variable to the same numeric package version so CI\ndoes not identify the new milestone's packages as the previous line.\nThese are source version inputs, not a declaration that packages have\nbeen published.\n\n~~ Reserve the next HarfBuzzSharp milestone revision bucket ~~\n\nKeep native HarfBuzz at 14.4.0, its SONAME at 0.61440.0 and the\nHarfBuzzSharp assembly version at 1.0.0.0. Advance its file and NuGet\nversions from 14.4.0.200 to 14.4.0.300.\n\nThe version policy reserves 100 revision values per Skia milestone\nwhile the native HarfBuzz version stays unchanged. Moving to the next\nbucket distinguishes the m158 package set without implying a native\nHarfBuzz upgrade or consuming the previous milestone's servicing range.\n\n~~ Record the exact upstream and Vulkan-Headers governance identities ~~\n\nUpdate the Skia governance entry from chrome/m157 to chrome/m158 and\nrecord upstream revision 75584a96108b2bf0b1c74b0536126fa4917b64a8.\nKeep that upstream identity distinct from the mono/skia fork merge:\nthe git registration and submodule both use the actual landed fork SHA.\n\nThe native update advances Vulkan-Headers from 1.4.365 to 1.4.366.\nRecord revision 73814d006638aa00bd553215b054f0f02e457e22 in the\ndependency registration, reviewed-identity URL and header-version source.\nThis keeps the manifest's version and revision evidence aligned with the\nselected native DEPS pin rather than retaining the previous header\nidentity after the engine update.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5627": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5627",
+      "title": "Show requested inputs in Skia sync run title and resolved sync in summary",
+      "body": "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5626": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5626",
+      "title": "Fix Skia sync release routing and native base starting point",
+      "body": "* Fix Skia sync release routing and native base starting point\n\nRoute same-milestone servicing syncs and explicit release-line overrides to the\npaired release branches, start the native merge from the live base tip instead of\na lagging parent gitlink, and stop publication when a base advances mid-run.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Infer target from release override; require release milestone match\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5620": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5620",
+      "title": "Detect incomplete NuGet shipments in release audits",
+      "body": "* Detect incomplete NuGet shipments in release audits\n\nCheck each shipment's source-controlled shipping package IDs and exact family versions, discover publication without the SkiaSharp anchor, and block Finish and replacement cuts until publication is complete. Reuse the completeness guard in Finish and expose missing versus unavailable evidence.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep publication documentation focused on operator guidance\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Use exact shipping inputs for historical package inventories\n\nExclude version rows whose projects were not yet included in the shipment's pack filter. Cover project inclusion changes with a committed-source fixture, so a newer VERSIONS entry does not falsely mark an older shipment partial.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Use tracked solution-filter casing in publishing tests\n\nMatch SkiaSharpSource.Windows.slnf so the inventory assertion also runs on case-sensitive Linux filesystems.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep intermediate unpublished stable cuts visible in release reports\n\nShow the latest complete shipment alongside partial publication and retain older missing stable cuts for review without changing release action gates.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Add task-focused release audit checks and milestone ranges\n\nSelect Upstream, Prepare, Finish, or NuGet without fetching unrelated checks. Keep the full audit as the default and retain all prerequisite gates for Prepare. Expand inclusive same-major ranges, preserve per-line failures, and distinguish unchecked facts from healthy results.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Assert Finish reporting independently of console table wrapping\n\nUse the explicit release-action field instead of relying on a host-specific table row layout.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Trim release audit documentation to usage and safety requirements\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5615": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5615",
+      "title": "Update .NET SDK pins to 10.0.403",
+      "body": "Align repository, CI, Docker, and integration-test SDK pins without changing workloads, package versions, or Xcode. Use the published Alpine 3.24 SDK images and refer to authoritative version files in developer documentation.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}
