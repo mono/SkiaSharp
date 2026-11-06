@@ -19,6 +19,23 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	private const string Folder = "Basic/Maui";
 	private const string Project = "SkiaSharpSample/SkiaSharpSample.csproj";
 
+	[Fact]
+	public async Task WindowsAppiumLaunchesTheNpmCommandShim()
+	{
+		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows npm shims require cmd.exe.");
+		var directory = Path.Combine(root, "appium shim");
+		Directory.CreateDirectory(directory);
+		await File.WriteAllTextAsync(Path.Combine(directory, "appium.cmd"), "@echo %*\r\n", TestContext.Current.CancellationToken);
+		using var process = Utils.Appium.StartServer(4723, directory);
+		var output = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+		var errors = process.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+		await process.WaitForExitAsync(TestContext.Current.CancellationToken)
+			.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+		Assert.Equal(0, process.ExitCode);
+		Assert.Equal("", await errors);
+		Assert.Equal("--address 127.0.0.1 --port 4723 --log-timestamp", (await output).Trim());
+	}
+
 	private static string AppOutput(string directory, string folder = Folder) =>
 		Path.GetFullPath(Path.Combine(directory, "samples", folder, "SkiaSharpSample", "bin", "Debug", "net10.0-ios", "iossimulator-arm64"));
 
@@ -304,6 +321,80 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		});
 	}
 
+	[Theory]
+	[InlineData("mac", "net10.0-macos", "osx-arm64")]
+	[InlineData("maccatalyst", "net10.0-maccatalyst", "maccatalyst-arm64")]
+	public async Task DesktopMacRunUsesTheBuiltBundleAndRejectsMissingOrAmbiguousApps(
+		string platform, string framework, string rid)
+	{
+		var apps = Path.Combine(root, "sample-apps");
+		var directory = Path.GetFullPath(Path.Combine(apps, platform, "arm64", Folder));
+		var output = Path.Combine(directory, "samples", Folder, "SkiaSharpSample",
+			"bin", "Debug", framework, rid);
+		Directory.CreateDirectory(output);
+		await using var fixture = Fixture(AppiumMode.Run, apps);
+		Task ForbiddenBuild(SampleWorkspace _) => throw new InvalidOperationException("Run must not build.");
+		string FindApp(SampleWorkspace workspace) => MacRunningApp.FindApp(Path.Combine(
+			workspace.Root, "samples", Folder, "SkiaSharpSample", "bin", "Debug", framework, rid));
+		var prepared = await fixture.PrepareWorkspace($"{platform}/arm64", Folder, Project, ForbiddenBuild);
+		Assert.Throws<FileNotFoundException>(() => FindApp(prepared));
+		var bundle = Path.Combine(output, "Built.app");
+		Directory.CreateDirectory(Path.Combine(bundle, "Contents"));
+		File.WriteAllText(Path.Combine(bundle, "Contents", "Info.plist"), "fixture-plist");
+		Assert.Equal(bundle, FindApp(prepared));
+		Directory.CreateDirectory(Path.Combine(output, "Other.app", "Contents"));
+		File.WriteAllText(Path.Combine(output, "Other.app", "Contents", "Info.plist"), "fixture-plist");
+		Assert.Throws<FileNotFoundException>(() => FindApp(prepared));
+	}
+
+	[Fact]
+	public async Task DesktopWindowsRunFindsOnlyTheExactBuiltExecutable()
+	{
+		const string folder = "Basic/WinUI";
+		const string project = "SkiaSharpSample/SkiaSharpSample.csproj";
+		var apps = Path.Combine(root, "sample-apps");
+		Directory.CreateDirectory(Path.Combine(apps, "windows", "x64", folder));
+		await using var fixture = Fixture(AppiumMode.Run, apps);
+		Task ForbiddenBuild(SampleWorkspace _) => throw new InvalidOperationException("Run must not build.");
+		var prepared = await fixture.PrepareWorkspace("windows/x64", folder, project, ForbiddenBuild);
+		var output = Path.Combine(prepared.Root, "samples", folder, "SkiaSharpSample",
+			"bin", "Debug", "net10.0-windows10.0.19041.0", "win10-x64");
+		Directory.CreateDirectory(output);
+		File.WriteAllText(Path.Combine(output, "Foreign.exe"), "not this app");
+		Assert.Throws<FileNotFoundException>(() => WindowsRunningApp.FindApp(output, project));
+		var executable = Path.Combine(output, "SkiaSharpSample.exe");
+		File.WriteAllText(executable, "built exe");
+		Assert.Equal(executable, WindowsRunningApp.FindApp(output, project));
+	}
+
+	[Theory]
+	[InlineData(120, 80, 800, 600, 120, 80, 800, 600, 320, 280, 320, 280)]
+	[InlineData(100, 50, 400, 300, 200, 100, 800, 600, 300, 200, 600, 400)]
+	[InlineData(-400, 25, 800, 600, -800, 50, 1200, 900, -200, 125, -500, 200)]
+	[InlineData(0, 0, 1424, 822, 136, 128, 1424, 822, 427, 424, 563, 552)]
+	public void WindowsPointerCoordinatesStayOnTheOwnedPhysicalWindow(
+		int lx, int ly, int lw, int lh, int px, int py, int pw, int ph,
+		int x, int y, int expectedX, int expectedY)
+	{
+		var mapped = WindowsWindow.ToPhysical(new(x, y), new(lx, ly, lw, lh), new(px, py, pw, ph));
+		Assert.Equal(new System.Drawing.Point(expectedX, expectedY), mapped);
+	}
+
+	[Fact]
+	public void WindowsPointerCoordinatesRejectUnusableBounds() =>
+		Assert.Throws<ArgumentOutOfRangeException>(() =>
+			WindowsWindow.ToPhysical(new(10, 10), new(0, 0, 0, 100), new(0, 0, 100, 100)));
+
+	[Fact]
+	public void WindowsDpiContextRestoresAfterFailure()
+	{
+		Assert.SkipUnless(OperatingSystem.IsWindows(), "Windows DPI context requires Windows.");
+		var previous = WindowsWindow.GetThreadDpiAwarenessContext();
+		Assert.Throws<InvalidOperationException>(() => WindowsWindow.WithPhysicalDpi<int>(
+			() => throw new InvalidOperationException("test failure")));
+		Assert.Equal(previous, WindowsWindow.GetThreadDpiAwarenessContext());
+	}
+
 	[Fact]
 	public async Task AndroidSuccessfulBuildIsNotRepeatedWhenApkOutputIsMissing()
 	{
@@ -530,6 +621,30 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 		var failure = Assert.Throws<InvalidOperationException>(() => operations.Find("canvas"));
 		Assert.Equal("The owned Appium session is not ready.", failure.Message);
+	}
+
+	[Fact]
+	public void WindowsComparisonExcludesOnlyTheCompositorEdgesAndKeepsTheRawImage()
+	{
+		using var workspace = Workspace();
+		var app = new WindowsRunningApp(workspace, "Sample.exe", "Sample");
+		using var bitmap = new SKBitmap(1422, 721);
+		bitmap.Erase(SKColors.Blue);
+		for (var x = 0; x < bitmap.Width; x++)
+			bitmap.SetPixel(x, bitmap.Height - 1, SKColors.Red);
+		for (var y = 0; y < bitmap.Height; y++)
+			bitmap.SetPixel(bitmap.Width - 1, y, SKColors.Red);
+		bitmap.SetPixel(1420, 719, SKColors.Green);
+		using var image = SKImage.FromBitmap(bitmap);
+		using var comparison = app.TransformComparison(image);
+		using var pixels = SKBitmap.FromImage(comparison);
+		Assert.Equal(new SKSizeI(1421, 720), comparison.Info.Size);
+		Assert.Equal(SKColors.Blue, pixels.GetPixel(0, 0));
+		Assert.Equal(SKColors.Green, pixels.GetPixel(1420, 719));
+		Assert.Equal(new SKSizeI(1422, 721), image.Info.Size);
+		Assert.Equal(SKColors.Red, bitmap.GetPixel(1421, 720));
+		Assert.Equal(SKRectI.Empty, app.ComparisonInsets(new(976, 527)));
+		Assert.Equal(SKRectI.Empty, app.ComparisonInsets(new(1422, 720)));
 	}
 
 	[Fact]

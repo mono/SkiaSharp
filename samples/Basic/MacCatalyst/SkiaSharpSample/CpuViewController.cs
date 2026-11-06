@@ -31,6 +31,7 @@ public class CpuViewController : UIViewController
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
+		skiaView.AccessibilityIdentifier = "basic-canvas-cpu";
 		skiaView.PaintSurface += OnPaintSurface;
 	}
 

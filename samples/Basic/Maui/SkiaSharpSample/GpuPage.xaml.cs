@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using Microsoft.Maui.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -74,6 +75,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	SKPoint touchPos;
 	bool touchActive;
+	bool animationActive;
 
 	public GpuPage()
 	{
@@ -83,12 +85,19 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
+#if WINDOWS
+		Shell.Current.PropertyChanged -= OnShellPropertyChanged;
+		Shell.Current.PropertyChanged += OnShellPropertyChanged;
+#endif
 		StartAnimation();
 	}
 
 	protected override void OnDisappearing()
 	{
 		base.OnDisappearing();
+#if WINDOWS
+		Shell.Current.PropertyChanged -= OnShellPropertyChanged;
+#endif
 		StopAnimation();
 	}
 
@@ -106,6 +115,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	void StartAnimation()
 	{
+		animationActive = true;
 		// Force-restart: toggle off then on to re-arm the native render loop
 		// after Shell navigation detaches/reattaches the native GL view
 		skiaView.HasRenderLoop = false;
@@ -113,15 +123,31 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		fpsLabel.Text = "FPS: --";
 		Dispatcher.Dispatch(() =>
 		{
+			if (!animationActive)
+				return;
+#if WINDOWS
+			skiaView.HasRenderLoop = !Shell.Current.FlyoutIsPresented;
+#else
 			skiaView.HasRenderLoop = true;
+#endif
 		});
 	}
 
 	void StopAnimation()
 	{
+		animationActive = false;
 		skiaView.HasRenderLoop = false;
 		fpsCounter.Stop();
 	}
+
+#if WINDOWS
+	void OnShellPropertyChanged(object? sender, PropertyChangedEventArgs e)
+	{
+		if (e.PropertyName == nameof(Shell.FlyoutIsPresented))
+			// Yield the UI-thread render loop so the native flyout can animate and receive input.
+			skiaView.HasRenderLoop = animationActive && !Shell.Current.FlyoutIsPresented;
+	}
+#endif
 
 	private void OnTouch(object sender, SKTouchEventArgs e)
 	{

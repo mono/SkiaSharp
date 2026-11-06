@@ -102,6 +102,8 @@ half4 main(float2 fragCoord) {
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
+		skiaView.AccessibilityIdentifier = "basic-canvas-gpu-gl";
+		fpsLabel.AccessibilityIdentifier = "basic-gpu-gl-fps";
 		skiaView.PaintSurface += OnPaintSurface;
 
 		// Style FPS label as pill

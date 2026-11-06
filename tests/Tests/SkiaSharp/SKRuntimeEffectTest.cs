@@ -761,6 +761,8 @@ namespace SkiaSharp.Tests
 
 			protected abstract void CreateSurface(int width, int height);
 
+			protected virtual int TextureChannelTolerance => 0;
+
 			[Fact]
 			public void LocalCoordinatesAreSuccessful()
 			{
@@ -1009,7 +1011,7 @@ namespace SkiaSharp.Tests
 					Assert.True(Surface.ReadPixels(Info, (IntPtr)a, Info.RowBytes, 0, 0));
 
 				Assert.Equal(backgroundColor, actual[100 * Info.Width + 100]);
-				Assert.Equal(shirtColor, actual[230 * Info.Width + 300]);
+				AssertSimilarColor(shirtColor, actual[230 * Info.Width + 300], TextureChannelTolerance);
 			}
 
 			[Fact]
@@ -1123,6 +1125,9 @@ namespace SkiaSharp.Tests
 		[Collection(Visual.GpuRenderingCollection.Name)]
 		public unsafe class Gpu : TestEffectTests, IDisposable
 		{
+			// Half-precision texture sampling can round an 8-bit channel by one.
+			protected override int TextureChannelTolerance => 1;
+
 			GlContext glContext;
 			GRContext grContext;
 

@@ -78,6 +78,48 @@ stages:
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             additionalArgs: --runGroup=Android --skipExternals="all"
 
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_build_windows
+            displayName: Build Appium apps (Windows desktop)
+            phase: build
+            platform: windows
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            additionalArgs: --runGroup=Windows --skipExternals="all"
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_build_mac
+            displayName: Build Appium apps (Mac desktop)
+            phase: build
+            platform: mac
+            buildAgent: ${{ parameters.buildAgentMac }}
+            additionalArgs: --runGroup=Mac --skipExternals="all"
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_windows
+            displayName: Appium (Windows desktop)
+            platform: windows
+            dependsOn: [samples_appium_build_windows]
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            additionalArgs: --runGroup=Windows --skipExternals="all"
+            preBuildSteps:
+              - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform Windows
+                displayName: Install Appium 3 and WinAppDriver
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_mac
+            displayName: Appium (Mac desktop)
+            platform: mac
+            dependsOn: [samples_appium_build_mac]
+            buildAgent: ${{ parameters.buildAgentMac }}
+            additionalArgs: --runGroup=Mac --skipExternals="all"
+            preBuildSteps:
+              - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform Mac
+                displayName: Install Appium 3 and mac2
+
         - ${{ each ios in parameters.iosSimulators }}:
           - template: /scripts/azure-templates-jobs-sample-appium.yml@self
             parameters:

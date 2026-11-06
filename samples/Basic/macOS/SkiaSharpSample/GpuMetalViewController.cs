@@ -101,6 +101,8 @@ half4 main(float2 fragCoord) {
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
+		skiaView.AccessibilityIdentifier = "basic-canvas-gpu-metal";
+		fpsLabel.AccessibilityIdentifier = "basic-gpu-metal-fps";
 		skiaView.PaintSurface += OnPaintSurface;
 		skiaView.Paused = true;
 		skiaView.EnableSetNeedsDisplay = false;
