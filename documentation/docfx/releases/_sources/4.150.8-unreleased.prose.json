@@ -1,6 +1,6 @@
 {
-  "theme": "Region and texture reliability",
-  "highlights_headline": "The upcoming 4.150.8 update fixes region allocation and OpenGL texture sampling without changing managed APIs.",
+  "theme": "Raster and texture corrections",
+  "highlights_headline": "SkiaSharp 4.150.8 brings raster-pipeline safety and texture-sampling fixes to the m150 line.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,13 +8,13 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Safe conic region allocation",
-          "detail": "Region construction budgets scanline storage for subdivided conics and rejects accumulation overflow, preventing an undersized buffer and out-of-bounds writes.",
-          "prs": [5543]
+          "lead": "Safer region and runtime-shader processing",
+          "detail": "Corrects region-buffer sizing for subdivided conics and checks accumulation overflow. Failed runtime-shader stage construction no longer leaves executable partial pipelines with unresolved branch offsets; transformed shader child failures propagate correctly.",
+          "prs": [5543, 5633]
         },
         {
-          "lead": "Correct OpenGL texture boundaries",
-          "detail": "Disable GLES-invalid BGRA-as-RGBx upload capabilities and preserve nearest-filtered texture subset clamps when magnification or fractional mappings could sample neighboring texels. One-to-one integer-relative mappings retain their fast path.",
+          "lead": "Texture uploads and subset edges",
+          "detail": "Disables an unsupported GLES upload format for BGRA textures interpreted as RGBx. Nearest-filtered texture subsets retain clamps when magnification or fractional coordinates could otherwise sample neighboring texels, while preserving the integer-aligned fast path.",
           "prs": [5543]
         }
       ]

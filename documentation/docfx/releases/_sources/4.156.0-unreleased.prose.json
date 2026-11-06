@@ -1,0 +1,30 @@
+{
+  "theme": "Path and glyph rendering corrections",
+  "highlights_headline": "SkiaSharp 4.156.0 gains upstream fixes for clipped paths, glyph replay and Graphite readback.",
+  "highlights_body": "These updates retain Skia milestone 156 and leave managed wrappers and generated bindings unchanged.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Clipped paths and coverage masks",
+          "detail": "Corrects Ganesh device-space path bounds and coverage-mask subset clamping, plus Graphite clip-key packing and wedge miter bounds. Convex anti-aliased rasterization fixes prevent run-buffer overflow around clip gaps; custom builds defining SK_LEGACY_ALPHA_RUNS do not enable that new raster behavior.",
+          "prs": [5617, 5631]
+        },
+        {
+          "lead": "Validated glyph replay",
+          "detail": "Validates serialized Slug positions, transforms, bounds and flags, preserves creation-time rounding, and bounds direct-mask offsets. Ganesh and Graphite reject unsuitable replay data when glyph-atlas bilinear sampling is unavailable, retaining rendering fallbacks.",
+          "prs": [5617, 5624]
+        },
+        {
+          "lead": "Complete Graphite readback pixels",
+          "detail": "Fixes the destination pixel-size mismatch when transferring an alpha texture to an RGBx color type, preventing incorrect row stepping and unwritten destination bytes.",
+          "prs": [5631]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

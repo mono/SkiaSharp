@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 1,
     "internal": 1
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5633": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5633",
+      "title": "[Skia] Sync m150 raster pipeline safety fix",
+      "body": "[Skia] Sync m150 raster pipeline safety fix (#5633)\n\nNative PR: https://github.com/mono/skia/pull/437\nChanges: https://github.com/mono/skia/compare/95bed8d58d692e6268f05682f0a4926f41aaf5fb...23cff64ff5f5cade78b60ceb952b25a3d7d9efd7\n\nUpdate the Skia gitlink and component manifest to landed native merge\n23cff64ff5f5cade78b60ceb952b25a3d7d9efd7, incorporating upstream\n31238c6efe from chrome/m150.\n\nFailed runtime-shader stage construction could leave unresolved branch\noffsets in a partially populated Raster Pipeline. The upstream fix\nneutralizes pending branches to fall-through on failure and propagates\nSkTransformShader child failures instead of executing a partial pipeline.\n\nPreserve release-line dependency pins and versions. Independent binding\nregeneration matches all four maintained Skia outputs; no managed API\nor generated-binding changes are required.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5589": {
       "url": "https://github.com/mono/SkiaSharp/pull/5589",
       "title": "[Build] Backport Windows SDK ANGLE resource compiler to 4.150",
