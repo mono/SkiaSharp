@@ -15,12 +15,6 @@ namespace SkiaSharp
 	using GCHandle = GCHandleProxy;
 #endif
 
-	// helper delegates
-
-	internal delegate Delegate GetMultiDelegateDelegate (Type index);
-
-	internal delegate object UserDataDelegate ();
-
 	internal static partial class DelegateProxies
 	{
 		// normal delegates
@@ -56,66 +50,39 @@ namespace SkiaSharp
 		public static IntPtr CreateUserData (object userData, bool makeWeak = false)
 		{
 			userData = makeWeak ? new WeakReference (userData) : userData;
-			var del = new UserDataDelegate (() => userData);
-			Create (del, out _, out var ctx);
+			Create (userData, out _, out var ctx);
 			return ctx;
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static T GetUserData<T> (IntPtr contextPtr, out GCHandle gch)
-		{
-			var del = Get<UserDataDelegate> (contextPtr, out gch);
-			var value = del.Invoke ();
-			return value is WeakReference weak ? (T)weak.Target : (T)value;
-		}
+		public static T GetUserData<T> (IntPtr contextPtr, out GCHandle gch) =>
+			UnwrapUserData<T> (Get<object> (contextPtr, out gch));
+
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		private static T UnwrapUserData<T> (object value) =>
+			value is WeakReference weak ? (T)weak.Target : (T)value;
 
 		// multi-value delegates
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static IntPtr CreateMulti<T1, T2> (T1 wrappedDelegate1, T2 wrappedDelegate2)
 			where T1 : Delegate
-			where T2 : Delegate
-		{
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T1))
-					return wrappedDelegate1;
-				if (type == typeof (T2))
-					return wrappedDelegate2;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
-			return ctx;
-		}
+			where T2 : Delegate =>
+			CreateMultiUserData (wrappedDelegate1, wrappedDelegate2, null, false);
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static IntPtr CreateMulti<T1, T2, T3> (T1 wrappedDelegate1, T2 wrappedDelegate2, T3 wrappedDelegate3)
 			where T1 : Delegate
 			where T2 : Delegate
-			where T3 : Delegate
-		{
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T1))
-					return wrappedDelegate1;
-				if (type == typeof (T2))
-					return wrappedDelegate2;
-				if (type == typeof (T3))
-					return wrappedDelegate3;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
-			return ctx;
-		}
+			where T3 : Delegate =>
+			CreateMultiUserData (wrappedDelegate1, wrappedDelegate2, wrappedDelegate3, null, false);
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static T GetMulti<T> (IntPtr contextPtr, out GCHandle gch)
 			where T : Delegate
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			return (T)multi.Invoke (typeof (T));
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			return multi.GetDelegate<T> ();
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -123,9 +90,9 @@ namespace SkiaSharp
 			where T1 : Delegate
 			where T2 : Delegate
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			wrappedDelegate1 = (T1)multi.Invoke (typeof (T1));
-			wrappedDelegate2 = (T2)multi.Invoke (typeof (T2));
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			wrappedDelegate1 = multi.GetDelegate<T1> ();
+			wrappedDelegate2 = multi.GetDelegate<T2> ();
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -134,10 +101,10 @@ namespace SkiaSharp
 			where T2 : Delegate
 			where T3 : Delegate
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			wrappedDelegate1 = (T1)multi.Invoke (typeof (T1));
-			wrappedDelegate2 = (T2)multi.Invoke (typeof (T2));
-			wrappedDelegate3 = (T3)multi.Invoke (typeof (T3));
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			wrappedDelegate1 = multi.GetDelegate<T1> ();
+			wrappedDelegate2 = multi.GetDelegate<T2> ();
+			wrappedDelegate3 = multi.GetDelegate<T3> ();
 		}
 
 		// multi-value delegate with user data
@@ -147,18 +114,8 @@ namespace SkiaSharp
 			where T : Delegate
 		{
 			userData = makeWeak ? new WeakReference (userData) : userData;
-			var userDataDelegate = new UserDataDelegate (() => userData);
-
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T))
-					return wrappedDelegate;
-				if (type == typeof (UserDataDelegate))
-					return userDataDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
+			var multi = new MultiUserData (wrappedDelegate, typeof (T), userData: userData);
+			Create (multi, out _, out var ctx);
 			return ctx;
 		}
 
@@ -168,20 +125,8 @@ namespace SkiaSharp
 			where T2 : Delegate
 		{
 			userData = makeWeak ? new WeakReference (userData) : userData;
-			var userDataDelegate = new UserDataDelegate (() => userData);
-
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T1))
-					return wrappedDelegate1;
-				if (type == typeof (T2))
-					return wrappedDelegate2;
-				if (type == typeof (UserDataDelegate))
-					return userDataDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
+			var multi = new MultiUserData (wrappedDelegate1, typeof (T1), wrappedDelegate2, typeof (T2), userData: userData);
+			Create (multi, out _, out var ctx);
 			return ctx;
 		}
 
@@ -192,39 +137,25 @@ namespace SkiaSharp
 			where T3 : Delegate
 		{
 			userData = makeWeak ? new WeakReference (userData) : userData;
-			var userDataDelegate = new UserDataDelegate (() => userData);
-
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T1))
-					return wrappedDelegate1;
-				if (type == typeof (T2))
-					return wrappedDelegate2;
-				if (type == typeof (T3))
-					return wrappedDelegate3;
-				if (type == typeof (UserDataDelegate))
-					return userDataDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
+			var multi = new MultiUserData (wrappedDelegate1, typeof (T1), wrappedDelegate2, typeof (T2), wrappedDelegate3, typeof (T3), userData);
+			Create (multi, out _, out var ctx);
 			return ctx;
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static TUserData GetMultiUserData<TUserData> (IntPtr contextPtr, out GCHandle gch)
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			return GetUserData<TUserData> (multi);
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			return multi.GetUserData<TUserData> ();
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static void GetMultiUserData<T, TUserData> (IntPtr contextPtr, out T wrappedDelegate, out TUserData userData, out GCHandle gch)
 			where T : Delegate
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			wrappedDelegate = (T)multi.Invoke (typeof (T));
-			userData = GetUserData<TUserData> (multi);
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			wrappedDelegate = multi.GetDelegate<T> ();
+			userData = multi.GetUserData<TUserData> ();
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -232,10 +163,10 @@ namespace SkiaSharp
 			where T1 : Delegate
 			where T2 : Delegate
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			wrappedDelegate1 = (T1)multi.Invoke (typeof (T1));
-			wrappedDelegate2 = (T2)multi.Invoke (typeof (T2));
-			userData = GetUserData<TUserData> (multi);
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			wrappedDelegate1 = multi.GetDelegate<T1> ();
+			wrappedDelegate2 = multi.GetDelegate<T2> ();
+			userData = multi.GetUserData<TUserData> ();
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -244,19 +175,50 @@ namespace SkiaSharp
 			where T2 : Delegate
 			where T3 : Delegate
 		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			wrappedDelegate1 = (T1)multi.Invoke (typeof (T1));
-			wrappedDelegate2 = (T2)multi.Invoke (typeof (T2));
-			wrappedDelegate3 = (T3)multi.Invoke (typeof (T3));
-			userData = GetUserData<TUserData> (multi);
+			var multi = Get<MultiUserData> (contextPtr, out gch);
+			wrappedDelegate1 = multi.GetDelegate<T1> ();
+			wrappedDelegate2 = multi.GetDelegate<T2> ();
+			wrappedDelegate3 = multi.GetDelegate<T3> ();
+			userData = multi.GetUserData<TUserData> ();
 		}
 
-		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		private static TUserData GetUserData<TUserData> (GetMultiDelegateDelegate multi)
+		private sealed class MultiUserData
 		{
-			var userDataDelegate = (UserDataDelegate)multi.Invoke (typeof (UserDataDelegate));
-			var value = userDataDelegate.Invoke ();
-			return value is WeakReference weak ? (TUserData)weak.Target : (TUserData)value;
+			public readonly Delegate Delegate1;
+			public readonly Delegate Delegate2;
+			public readonly Delegate Delegate3;
+			public readonly Type Type1;
+			public readonly Type Type2;
+			public readonly Type Type3;
+			public readonly object UserData;
+
+			public MultiUserData (Delegate d1, Type t1, Delegate d2 = null, Type t2 = null, Delegate d3 = null, Type t3 = null, object userData = null)
+			{
+				Delegate1 = d1;
+				Type1 = t1;
+				Delegate2 = d2;
+				Type2 = t2;
+				Delegate3 = d3;
+				Type3 = t3;
+				UserData = userData;
+			}
+
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
+			public T GetDelegate<T> ()
+				where T : Delegate
+			{
+				if (typeof (T) == Type1)
+					return (T)Delegate1;
+				if (typeof (T) == Type2)
+					return (T)Delegate2;
+				if (typeof (T) == Type3)
+					return (T)Delegate3;
+				throw new ArgumentOutOfRangeException (nameof (T));
+			}
+
+			[MethodImpl (MethodImplOptions.AggressiveInlining)]
+			public T GetUserData<T> () =>
+				UnwrapUserData<T> (UserData);
 		}
 	}
 
