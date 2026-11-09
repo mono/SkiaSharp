@@ -23,6 +23,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -61,8 +62,64 @@
                       VerticalAlignment="Center" />
         </Grid>
 
+        <!-- Asset toolbar: font picker + source-image strip. The selected font and
+             image are injected into snippets as the `typeface` and `image` variables. -->
+        <Grid Grid.Row="1"
+              Background="{StaticResource PanelBackground}"
+              BorderBrush="{StaticResource PanelBorder}"
+              BorderThickness="0,0,0,1"
+              Padding="20,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8"
+                        VerticalAlignment="Center">
+                <TextBlock Text="Font"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextSecondary}"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="FontCombo"
+                          MinWidth="150"
+                          SelectionChanged="OnFontChanged"
+                          VerticalAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Margin="24,0,0,0"
+                        VerticalAlignment="Center">
+                <TextBlock Text="Image"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextSecondary}"
+                           VerticalAlignment="Center" />
+                <Border x:Name="ImageStripHost"
+                        Width="320"
+                        Height="48"
+                        Background="Transparent"
+                        PointerPressed="OnImageStripPressed"
+                        VerticalAlignment="Center">
+                    <fiddle:ImageStripCanvas x:Name="ImageStrip" />
+                </Border>
+            </StackPanel>
+
+            <TextBlock Grid.Column="2"
+                       Text="image · typeface available in Draw"
+                       FontSize="10"
+                       Foreground="{StaticResource TextSecondary}"
+                       Opacity="0.7"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center" />
+        </Grid>
+
         <!-- Body: split editor / preview -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
@@ -131,7 +188,7 @@
                                    Foreground="{StaticResource TextSecondary}"
                                    VerticalAlignment="Center" />
                         <TextBlock Grid.Column="1"
-                                   Text="(SKCanvas canvas, int width, int height, double t) · runs every frame"
+                                   Text="(canvas, width, height, t, image, typeface) · runs every frame"
                                    FontSize="10"
                                    Foreground="{StaticResource TextSecondary}"
                                    VerticalAlignment="Center"
@@ -202,7 +259,7 @@
         </Grid>
 
         <!-- Footer / actions -->
-        <Grid Grid.Row="2"
+        <Grid Grid.Row="3"
               Background="{StaticResource PanelBackground}"
               BorderBrush="{StaticResource PanelBorder}"
               BorderThickness="0,1,0,0"
