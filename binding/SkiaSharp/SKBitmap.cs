@@ -609,6 +609,25 @@ namespace SkiaSharp
 			return result;
 		}
 
+		/// <summary>Copies a source rectangle into a tightly packed span of unpremultiplied colors.</summary>
+		/// <param name="destination">The span to receive the rectangle in row-major order. It must have space for at least the rectangle's width multiplied by its height.</param>
+		/// <param name="sourceRect">The rectangle to read from this bitmap.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" /> if there is no overlap, storage is inaccessible, or conversion fails.</returns>
+		/// <remarks>
+		/// <para>Uses the same conversion and color-space rules as <see cref="ReadPixels(Span{SKColor})" />. Buffer sizing and the packed destination row width use the requested rectangle before clipping. Elements outside the overlap and any extra destination elements are unchanged.</para>
+		/// <para>Empty rectangles return <see langword="false" />. No managed color array is allocated. The destination must not overlap this bitmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentOutOfRangeException">The rectangle has an inverted horizontal or vertical extent.</exception>
+		/// <exception cref="ArgumentException">The destination is too small for the requested rectangle.</exception>
+		/// <exception cref="OverflowException">The rectangle's dimensions, pixel count, or packed row size exceed <see cref="int.MaxValue" />.</exception>
+		public bool ReadPixels (Span<SKColor> destination, SKRectI sourceRect)
+		{
+			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
+			var result = pixmap.ReadPixels (destination, sourceRect);
+			GC.KeepAlive (this);
+			return result;
+		}
+
 		/// <summary>Replaces all the pixels from a span of unpremultiplied colors.</summary>
 		/// <param name="source">The colors in row-major order. The length must equal <see cref="PixelCount" />.</param>
 		/// <returns><see langword="true" /> if all pixels were written; otherwise, <see langword="false" /> if pixel storage is inaccessible or Skia cannot convert the colors.</returns>
@@ -623,6 +642,27 @@ namespace SkiaSharp
 			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
 			var result = pixmap.WritePixels (source);
 			if (result && !source.IsEmpty)
+				NotifyPixelsChanged ();
+			GC.KeepAlive (this);
+			return result;
+		}
+
+		/// <summary>Copies a tightly packed span of unpremultiplied colors into a destination rectangle.</summary>
+		/// <param name="source">The colors in row-major order. The length must equal the rectangle's width multiplied by its height.</param>
+		/// <param name="destinationRect">The rectangle in this bitmap at which to place the colors.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" /> if there is no overlap, storage is inaccessible, or conversion fails.</returns>
+		/// <remarks>
+		/// <para>Uses the same conversion and color-space rules as <see cref="WritePixels(ReadOnlySpan{SKColor})" />, without scaling or blending. Buffer sizing and the packed source row width use the requested rectangle before clipping. Negative rectangle coordinates skip leading source pixels. Pixels outside the overlap and row padding are unchanged.</para>
+		/// <para>Empty rectangles return <see langword="false" />. The source is copied synchronously, is not retained or modified, and must not overlap this bitmap's pixel storage. The bitmap is notified after a successful write.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentOutOfRangeException">The rectangle has an inverted horizontal or vertical extent.</exception>
+		/// <exception cref="ArgumentException">The source length does not equal the requested rectangle's pixel count.</exception>
+		/// <exception cref="OverflowException">The rectangle's dimensions or packed row size exceed <see cref="int.MaxValue" />.</exception>
+		public bool WritePixels (ReadOnlySpan<SKColor> source, SKRectI destinationRect)
+		{
+			using var pixmap = new SKPixmap (Info, GetPixels (), RowBytes);
+			var result = pixmap.WritePixels (source, destinationRect);
+			if (result)
 				NotifyPixelsChanged ();
 			GC.KeepAlive (this);
 			return result;

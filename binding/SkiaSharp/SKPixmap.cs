@@ -417,6 +417,32 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>Copies a source rectangle into a tightly packed span of unpremultiplied colors.</summary>
+		/// <param name="destination">The span to receive the requested rectangle in row-major order. It must have space for at least the rectangle's width multiplied by its height.</param>
+		/// <param name="sourceRect">The rectangle to read from this pixmap.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" /> if there is no overlap, storage is inaccessible, or conversion fails.</returns>
+		/// <remarks>
+		/// <para>Uses the same conversion and color-space rules as <see cref="ReadPixels(Span{SKColor})" />. The destination row width is the requested rectangle's width, even when clipping reduces the overlap. Elements outside the overlap, including any extra destination elements, are unchanged.</para>
+		/// <para>Buffer sizing is checked before clipping. Empty rectangles return <see langword="false" />. No managed color array is allocated. The destination must not overlap this pixmap's pixel storage.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentOutOfRangeException">The rectangle has an inverted horizontal or vertical extent.</exception>
+		/// <exception cref="ArgumentException">The destination is too small for the requested rectangle.</exception>
+		/// <exception cref="OverflowException">The rectangle's dimensions, pixel count, or packed row size exceed <see cref="int.MaxValue" />.</exception>
+		public bool ReadPixels (Span<SKColor> destination, SKRectI sourceRect)
+		{
+			var destinationInfo = GetColorSpanInfo (sourceRect, nameof (sourceRect));
+			var count = checked(destinationInfo.Width * destinationInfo.Height);
+			if (destination.Length < count)
+				throw new ArgumentException ($"The destination must have space for {count} pixels.", nameof (destination));
+
+			if (count == 0 || GetPixels () == IntPtr.Zero)
+				return false;
+
+			fixed (SKColor* p = destination) {
+				return ReadPixels (destinationInfo, (IntPtr)p, destinationInfo.RowBytes, sourceRect.Left, sourceRect.Top);
+			}
+		}
+
 		/// <summary>Copies the pixels from the image into the specified buffer.</summary>
 		/// <param name="dstInfo">The image information describing the destination pixel buffer.</param>
 		/// <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
@@ -495,6 +521,43 @@ namespace SkiaSharp
 				var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
 				return WritePixels (sourceInfo, (IntPtr)p, sourceInfo.RowBytes);
 			}
+		}
+
+		/// <summary>Copies a tightly packed span of unpremultiplied colors into a destination rectangle.</summary>
+		/// <param name="source">The colors in row-major order. The length must equal the rectangle's width multiplied by its height.</param>
+		/// <param name="destinationRect">The rectangle in this pixmap at which to place the colors.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" /> if there is no overlap, storage is inaccessible, or conversion fails.</returns>
+		/// <remarks>
+		/// <para>Uses the same conversion and color-space rules as <see cref="WritePixels(ReadOnlySpan{SKColor})" />, without scaling or blending. The source row width is the requested rectangle's width, even when clipping reduces the overlap. Negative rectangle coordinates skip leading source pixels. Pixels outside the overlap and destination row padding are unchanged.</para>
+		/// <para>Buffer sizing is checked before clipping. Empty rectangles return <see langword="false" />. The source is copied synchronously, is not retained or modified, and must not overlap this pixmap's pixel storage.</para>
+		/// <para>This method does not notify an owning bitmap. Call <see cref="SKBitmap.NotifyPixelsChanged" /> after modifying a bitmap through its pixmap.</para>
+		/// </remarks>
+		/// <exception cref="ArgumentOutOfRangeException">The rectangle has an inverted horizontal or vertical extent.</exception>
+		/// <exception cref="ArgumentException">The source length does not equal the requested rectangle's pixel count.</exception>
+		/// <exception cref="OverflowException">The rectangle's dimensions or packed row size exceed <see cref="int.MaxValue" />.</exception>
+		public bool WritePixels (ReadOnlySpan<SKColor> source, SKRectI destinationRect)
+		{
+			var sourceInfo = GetColorSpanInfo (destinationRect, nameof (destinationRect));
+			var expected = (long)sourceInfo.Width * sourceInfo.Height;
+			if (source.Length != expected)
+				throw new ArgumentException ($"The number of pixels must equal {expected}.", nameof (source));
+
+			if (source.IsEmpty)
+				return false;
+
+			fixed (SKColor* p = source) {
+				return WritePixels (sourceInfo, (IntPtr)p, sourceInfo.RowBytes, destinationRect.Left, destinationRect.Top);
+			}
+		}
+
+		private static SKImageInfo GetColorSpanInfo (SKRectI rectangle, string paramName)
+		{
+			if (rectangle.Right < rectangle.Left || rectangle.Bottom < rectangle.Top)
+				throw new ArgumentOutOfRangeException (paramName, "The rectangle must not have inverted extents.");
+
+			var width = checked(rectangle.Right - rectangle.Left);
+			var height = checked(rectangle.Bottom - rectangle.Top);
+			return new SKImageInfo (width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
 		}
 
 		/// <summary>Copies and converts pixels from a buffer into this pixmap at the specified destination coordinates.</summary>

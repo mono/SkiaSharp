@@ -126,6 +126,13 @@ namespace SkiaSharp.Tests
 			Span<SKColor> readback = stackalloc SKColor[4];
 			Assert.True(pixmap.ReadPixels(readback));
 			Assert.Equal(expected.Pixels, readback.ToArray());
+			var rectangle = new SKRectI(0, 0, info.Width, info.Height);
+			actual.GetPixelSpan().Fill(0x5a);
+			Assert.True(pixmap.WritePixels(original, rectangle));
+			Assert.Equal(expected.GetPixelSpan().ToArray(), actual.GetPixelSpan().ToArray());
+			readback.Clear();
+			Assert.True(pixmap.ReadPixels(readback, rectangle));
+			Assert.Equal(expected.Pixels, readback.ToArray());
 		}
 
 		[Fact]
@@ -209,6 +216,9 @@ namespace SkiaSharp.Tests
 			Assert.False(pixmap.ReadPixels(destination));
 			Assert.Equal(SKColors.Magenta, destination[0]);
 			Assert.False(pixmap.WritePixels(new[] { SKColors.Red }));
+			Assert.False(pixmap.ReadPixels(destination, new SKRectI(0, 0, 1, 1)));
+			Assert.False(pixmap.WritePixels(new[] { SKColors.Red }, new SKRectI(0, 0, 1, 1)));
+			Assert.Equal(SKColors.Magenta, destination[0]);
 			Assert.Equal(new byte[] { 0x5a, 0x5a, 0x5a, 0x5a }, bytes.ToArray());
 		}
 
@@ -286,6 +296,22 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedBitmap.GetPixelSpan().ToArray(), destinationBitmap.GetPixelSpan().ToArray());
 				Assert.Equal(sourceBytes, sourceBitmap.GetPixelSpan().ToArray());
 			}
+
+			if (dstX <= int.MaxValue - 3 && dstY <= int.MaxValue - 2)
+			{
+				var rectangle = SKRectI.Create(dstX, dstY, 3, 2);
+				for (var useBitmap = 0; useBitmap < 2; useBitmap++)
+				{
+					destinationBitmap.GetPixelSpan().Fill(0x5a);
+					destinationBitmap.Erase(SKColors.Magenta);
+					var result = useBitmap == 1
+						? destinationBitmap.WritePixels(colors, rectangle)
+						: destination.WritePixels(colors, rectangle);
+					Assert.Equal(overlaps, result);
+					Assert.Equal(expectedBitmap.GetPixelSpan().ToArray(), destinationBitmap.GetPixelSpan().ToArray());
+					Assert.Equal(colors, sourceBitmap.Pixels);
+				}
+			}
 		}
 
 		[Theory]
@@ -296,6 +322,8 @@ namespace SkiaSharp.Tests
 		[InlineData(0, 2)]
 		[InlineData(int.MinValue, 0)]
 		[InlineData(0, int.MinValue)]
+		[InlineData(int.MaxValue - 4, 0)]
+		[InlineData(0, int.MaxValue - 3)]
 		public void ReadPixelsClipsWithoutChangingTheDestinationLayout(int srcX, int srcY)
 		{
 			var sourceInfo = new SKImageInfo(3, 2, SKColorType.Rgba8888, SKAlphaType.Unpremul);
@@ -340,6 +368,155 @@ namespace SkiaSharp.Tests
 				Assert.Equal(overlaps, result);
 				Assert.Equal(expectedBitmap.GetPixelSpan().ToArray(), destinationBitmap.GetPixelSpan().ToArray());
 			}
+
+			var rectangle = SKRectI.Create(srcX, srcY, 4, 3);
+			for (var useBitmap = 0; useBitmap < 2; useBitmap++)
+			{
+				var readback = new SKColor[14];
+				readback.AsSpan().Fill(SKColors.Magenta);
+				var result = useBitmap == 1
+					? sourceBitmap.ReadPixels(readback.AsSpan(1), rectangle)
+					: source.ReadPixels(readback.AsSpan(1), rectangle);
+				Assert.Equal(overlaps, result);
+				Assert.Equal(expected, readback.AsSpan(1, 12).ToArray());
+				Assert.Equal(SKColors.Magenta, readback[0]);
+				Assert.Equal(SKColors.Magenta, readback[13]);
+			}
+		}
+
+		[Fact]
+		public unsafe void RectangleColorSpansWorkWithoutBitmap()
+		{
+			var info = new SKImageInfo(3, 3, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+			var storage = stackalloc byte[48];
+			var bytes = new Span<byte>(storage, 48);
+			bytes.Fill(0x5a);
+			using var pixmap = new SKPixmap(info, (IntPtr)storage, 16);
+			Assert.True(pixmap.Erase(SKColors.Magenta));
+			Span<SKColor> source = stackalloc SKColor[] { SKColors.Red, SKColors.Blue, SKColors.Green, new SKColor(17, 89, 203, 0) };
+			var original = source.ToArray();
+			var rectangle = new SKRectI(1, 1, 3, 3);
+
+			Assert.True(pixmap.WritePixels(source, rectangle));
+			Assert.Equal(original, source.ToArray());
+			source.Clear();
+			Span<SKColor> destination = stackalloc SKColor[5];
+			destination.Fill(SKColors.Yellow);
+			Assert.True(pixmap.ReadPixels(destination, rectangle));
+			Assert.Equal(original, destination.Slice(0, 4).ToArray());
+			Assert.Equal(SKColors.Yellow, destination[4]);
+			Assert.Equal(SKColors.Magenta, pixmap.GetPixelColor(0, 0));
+			Assert.Equal(SKColors.Magenta, pixmap.GetPixelColor(0, 2));
+			for (var y = 0; y < 3; y++)
+				Assert.Equal(new byte[] { 0x5a, 0x5a, 0x5a, 0x5a }, bytes.Slice(y * 16 + 12, 4).ToArray());
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void RectangleColorSpansValidateSizeBeforeClipping(bool missingStorage)
+		{
+			var info = new SKImageInfo(2, 2, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+			using var bitmap = missingStorage ? new SKBitmap() : new SKBitmap(info);
+			if (missingStorage)
+				Assert.True(bitmap.InstallPixels(info, IntPtr.Zero));
+			else
+				bitmap.Erase(SKColors.Blue);
+			using var pixmap = new SKPixmap(bitmap.Info, bitmap.GetPixels(), bitmap.RowBytes);
+			var original = missingStorage ? Array.Empty<byte>() : bitmap.GetPixelSpan().ToArray();
+
+			foreach (var rectangle in new[] { new SKRectI(-1, -1, 2, 1), new SKRectI(10, 10, 13, 12) })
+			{
+				foreach (var length in new[] { 0, 2, 5, 6, 7 })
+				{
+					var colors = new SKColor[length];
+					colors.AsSpan().Fill(SKColors.Magenta);
+					if (length < 6)
+					{
+						Assert.Equal("destination", Assert.Throws<ArgumentException>(() => pixmap.ReadPixels(colors, rectangle)).ParamName);
+						Assert.Equal("destination", Assert.Throws<ArgumentException>(() => bitmap.ReadPixels(colors, rectangle)).ParamName);
+					}
+					else
+					{
+						Assert.Equal(!missingStorage && rectangle.Left < 0, pixmap.ReadPixels(colors, rectangle));
+						Assert.Equal(!missingStorage && rectangle.Left < 0, bitmap.ReadPixels(colors, rectangle));
+					}
+					if (length != 6)
+					{
+						Assert.Equal("source", Assert.Throws<ArgumentException>(() => pixmap.WritePixels(colors, rectangle)).ParamName);
+						Assert.Equal("source", Assert.Throws<ArgumentException>(() => bitmap.WritePixels(colors, rectangle)).ParamName);
+					}
+					else
+					{
+						Assert.Equal(!missingStorage && rectangle.Left < 0, pixmap.WritePixels(colors, rectangle));
+						Assert.Equal(!missingStorage && rectangle.Left < 0, bitmap.WritePixels(colors, rectangle));
+					}
+				}
+			}
+			if (!missingStorage)
+				Assert.Equal(original, bitmap.GetPixelSpan().ToArray());
+		}
+
+		[Theory]
+		[InlineData(2, 0, 1, 1)]
+		[InlineData(0, 2, 1, 1)]
+		public void RectangleColorSpansRejectInvertedRectangles(int left, int top, int right, int bottom)
+		{
+			using var bitmap = new SKBitmap(2, 2);
+			using var pixmap = bitmap.PeekPixels();
+			var rectangle = new SKRectI(left, top, right, bottom);
+			var colors = Array.Empty<SKColor>();
+
+			Assert.Equal("sourceRect", Assert.Throws<ArgumentOutOfRangeException>(() => pixmap.ReadPixels(colors, rectangle)).ParamName);
+			Assert.Equal("sourceRect", Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.ReadPixels(colors, rectangle)).ParamName);
+			Assert.Equal("destinationRect", Assert.Throws<ArgumentOutOfRangeException>(() => pixmap.WritePixels(colors, rectangle)).ParamName);
+			Assert.Equal("destinationRect", Assert.Throws<ArgumentOutOfRangeException>(() => bitmap.WritePixels(colors, rectangle)).ParamName);
+		}
+
+		[Theory]
+		[InlineData(0, 0, 0, 2)]
+		[InlineData(1, 1, 3, 1)]
+		[InlineData(0, 0, 0, 0)]
+		public void EmptyRectangleColorSpansReturnFalse(int left, int top, int right, int bottom)
+		{
+			using var bitmap = new SKBitmap(2, 2);
+			bitmap.Erase(SKColors.Blue);
+			using var pixmap = bitmap.PeekPixels();
+			var rectangle = new SKRectI(left, top, right, bottom);
+			var empty = Array.Empty<SKColor>();
+			var destination = new[] { SKColors.Magenta };
+
+			Assert.False(pixmap.ReadPixels(destination, rectangle));
+			Assert.False(bitmap.ReadPixels(destination, rectangle));
+			Assert.False(pixmap.WritePixels(empty, rectangle));
+			Assert.False(bitmap.WritePixels(empty, rectangle));
+			Assert.Throws<ArgumentException>(() => pixmap.WritePixels(destination, rectangle));
+			Assert.Throws<ArgumentException>(() => bitmap.WritePixels(destination, rectangle));
+			Assert.Equal(SKColors.Magenta, destination[0]);
+			Assert.All(bitmap.Pixels, color => Assert.Equal(SKColors.Blue, color));
+		}
+
+		[Fact]
+		public void RectangleColorSpansCheckDimensionAndPixelCountOverflow()
+		{
+			using var bitmap = new SKBitmap(2, 2);
+			using var pixmap = bitmap.PeekPixels();
+			var colors = Array.Empty<SKColor>();
+			foreach (var rectangle in new[] {
+				new SKRectI(int.MinValue, 0, int.MaxValue, 1),
+				new SKRectI(0, int.MinValue, 1, int.MaxValue),
+			})
+			{
+				Assert.Throws<OverflowException>(() => pixmap.ReadPixels(colors, rectangle));
+				Assert.Throws<OverflowException>(() => bitmap.ReadPixels(colors, rectangle));
+				Assert.Throws<OverflowException>(() => pixmap.WritePixels(colors, rectangle));
+				Assert.Throws<OverflowException>(() => bitmap.WritePixels(colors, rectangle));
+			}
+			var huge = new SKRectI(0, 0, 65536, 65536);
+			Assert.Throws<OverflowException>(() => pixmap.ReadPixels(colors, huge));
+			Assert.Throws<OverflowException>(() => bitmap.ReadPixels(colors, huge));
+			Assert.Throws<ArgumentException>(() => pixmap.WritePixels(colors, huge));
+			Assert.Throws<ArgumentException>(() => bitmap.WritePixels(colors, huge));
 		}
 
 		[Fact]
