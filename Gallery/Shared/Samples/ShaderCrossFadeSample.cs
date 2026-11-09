@@ -129,15 +129,11 @@ half4 main(float2 fragCoord) {
 	protected override async Task OnUpdate(CancellationToken token)
 	{
 		await Task.Delay(16, token);
-		lock (SyncRoot)
+		if (animating)
 		{
-			token.ThrowIfCancellationRequested();
-			if (animating)
-			{
-				time += 0.016f * speed;
-				// Ping-pong threshold between 0 and 1
-				threshold = (MathF.Sin(time) + 1f) / 2f;
-			}
+			time += 0.016f * speed;
+			// Ping-pong threshold between 0 and 1
+			threshold = (MathF.Sin(time) + 1f) / 2f;
 		}
 	}
 

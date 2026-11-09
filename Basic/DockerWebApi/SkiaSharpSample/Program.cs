@@ -3,7 +3,6 @@ using SkiaSharp;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHealthChecks();
 var app = builder.Build();
-using var typeface = SKTypeface.FromFile(Path.Combine(AppContext.BaseDirectory, "NotoSans-Regular.ttf"));
 
 app.MapHealthChecks("/health");
 
@@ -16,7 +15,6 @@ app.MapGet("/", () => Results.Text(
 app.MapGet("/api/images/{text?}", (string? text) =>
 {
 	text ??= "SkiaSharp";
-	app.Logger.LogInformation("Rendering {Text}", text);
 
 	var info = new SKImageInfo(800, 600);
 	using var surface = SKSurface.Create(info);
@@ -52,7 +50,7 @@ app.MapGet("/api/images/{text?}", (string? text) =>
 
 	// Centered text
 	using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-	using var font = new SKFont(typeface, width * 0.10f);
+	using var font = new SKFont { Size = width * 0.10f };
 	canvas.DrawText(text, center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 
 	// Encode to PNG

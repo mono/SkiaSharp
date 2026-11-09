@@ -15,7 +15,7 @@ public readonly record struct SampleCategory(
 
 /// <summary>
 /// Central registry for sample metadata — categories, icons, filtering, sorting, and "new" detection.
-/// Shared across Blazor, Uno, and .NET MAUI hosts.
+/// Shared across Blazor and Uno hosts.
 /// </summary>
 public static class SampleManager
 {
@@ -53,15 +53,10 @@ public static class SampleManager
 		new(Documents,       "#607D8B", "bi-file-earmark-richtext", "\uf383"),
 	];
 
-	private static readonly SampleCategory[] SortedCategories = AllCategories
-		.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
-		.ThenBy(c => c.Name, StringComparer.Ordinal)
-		.ToArray();
-
 	private static readonly Dictionary<string, SampleCategory> CategoryMap =
 		AllCategories.ToDictionary(c => c.Name);
 
-	public static IReadOnlyList<SampleCategory> GetCategories() => SortedCategories;
+	public static IReadOnlyList<SampleCategory> GetCategories() => AllCategories;
 
 	public static SampleCategory GetCategoryFor(string categoryName) =>
 		CategoryMap.TryGetValue(categoryName, out var cat)
@@ -169,24 +164,12 @@ public static class SampleManager
 	public static int GetSampleCount(string categoryName, IEnumerable<SampleBase> allSamples) =>
 		allSamples.Count(s => s.Category == categoryName);
 
-	/// <summary>Count the categories in the current result set.</summary>
-	public static Dictionary<string, int> GetCategoryCounts(IEnumerable<SampleBase> samples)
-	{
-		var counts = new Dictionary<string, int>(StringComparer.Ordinal);
-		foreach (var sample in samples)
-		{
-			counts.TryGetValue(sample.Category, out var count);
-			counts[sample.Category] = count + 1;
-		}
-		return counts;
-	}
-
 	// ---------------------------------------------------------------
 	// Tag infrastructure
 	// ---------------------------------------------------------------
 
 	/// <summary>
-	/// Count tags in the provided sample set.
+	/// Compute tag → sample count for the full corpus.
 	/// </summary>
 	public static Dictionary<string, int> GetTagCounts(IEnumerable<SampleBase> samples)
 	{
@@ -211,20 +194,16 @@ public static class SampleManager
 	}
 
 	/// <summary>
-	/// Sort tags by their displayed member name, then by full API identity.
+	/// Get all unique tags from the corpus, grouped by kind and sorted by count desc.
 	/// </summary>
-	public static IReadOnlyList<string> OrderTags(IEnumerable<string> tags) =>
-		tags.OrderBy(t => KnownApis.GetDisplayName(t), StringComparer.OrdinalIgnoreCase)
-			.ThenBy(t => t, StringComparer.Ordinal)
-			.ToArray();
-
-	/// <summary>Get unique tags and corpus counts in displayed-name order.</summary>
 	public static IReadOnlyList<(string Tag, int Count, TagKind Kind)> GetAllTags(IEnumerable<SampleBase> samples)
 	{
 		var counts = GetTagCounts(samples);
-		return OrderTags(counts.Keys)
-			.Select(tag => (Tag: tag, Count: counts[tag], Kind: KnownApis.Classify(tag)))
-			.ToArray();
+		return counts
+			.Select(kv => (Tag: kv.Key, Count: kv.Value, Kind: KnownApis.Classify(kv.Key)))
+			.OrderByDescending(t => t.Count)
+			.ThenBy(t => t.Tag)
+			.ToList();
 	}
 
 	/// <summary>
