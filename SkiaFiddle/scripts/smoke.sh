@@ -59,18 +59,12 @@ command -v python3 >/dev/null 2>&1 || { echo "smoke.sh: python3 not found" >&2; 
 command -v node    >/dev/null 2>&1 || { echo "smoke.sh: node not found" >&2; exit 1; }
 command -v npm     >/dev/null 2>&1 || { echo "smoke.sh: npm not found" >&2; exit 1; }
 
-# Ensure Playwright is installed in scripts/node_modules
-if [[ ! -d "$SCRIPT_DIR/node_modules/playwright" ]]; then
-    echo "smoke.sh: installing Playwright (first run) ..." >&2
-    (cd "$SCRIPT_DIR" && npm install --silent --no-audit --no-fund) >&2
-fi
+# Ensure Playwright matches package.json
+(cd "$SCRIPT_DIR" && npm install --silent --no-audit --no-fund) >&2
 
-# Ensure Chromium binary is present
+# Ensure the matching Chromium binary is present
 export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
-if ! ls "$PLAYWRIGHT_BROWSERS_PATH"/chromium-* >/dev/null 2>&1; then
-    echo "smoke.sh: installing Playwright Chromium (first run) ..." >&2
-    (cd "$SCRIPT_DIR" && node_modules/.bin/playwright install chromium) >&2
-fi
+(cd "$SCRIPT_DIR" && node_modules/.bin/playwright install chromium) >&2
 
 # Pick a free port if not provided
 if [[ -z "$PORT" ]]; then
