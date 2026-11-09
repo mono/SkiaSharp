@@ -1,19 +1,16 @@
 {
-  "theme": "Ganesh failure handling",
-  "highlights_headline": "Upcoming 4.150.6 changes improve Ganesh flush status and GPU-buffer upload failure handling.",
-  "highlights_body": null,
+  "theme": "Ganesh GPU failure handling",
+  "highlights_headline": "SkiaSharp 4.150.6 improves how Ganesh handles failed GPU work, including buffer uploads under memory pressure.",
+  "highlights_body": "This Skia m150 servicing release leaves the managed API surface unchanged.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "GPU failures propagate instead of exposing stale data",
-          "detail": "Tracks render-task execution separately from success and checks buffer-upload failures under memory pressure. Affected work can fail rather than draw stale buffer contents; managed flush signatures remain unchanged.",
-          "prs": [
-            5258,
-            5323
-          ]
+          "lead": "More accurate GPU failure handling",
+          "detail": "Ganesh distinguishes render-task execution from success so flush status reflects failed tasks or intermediate GPU submissions. Additional buffer-upload checks make affected work fail instead of drawing stale buffer contents under memory pressure. This does not guarantee detection of every upload failure.",
+          "prs": [5258, 5323]
         }
       ]
     }
@@ -21,5 +18,10 @@
   "contributor_summaries": {},
   "preview_summaries": {},
   "harfbuzz_summary": null,
-  "release_summaries": {}
+  "release_summaries": {
+    "v4.150.6": {
+      "headline": "SkiaSharp 4.150.6 improves Ganesh GPU failure handling on Skia m150.",
+      "body": "It corrects flush status after failed GPU work and adds buffer-upload checks under memory pressure. The managed API surface is unchanged."
+    }
+  }
 }
