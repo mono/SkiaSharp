@@ -1,6 +1,6 @@
 {
-  "theme": "Failed flush cache cleanup",
-  "highlights_headline": "SkiaSharp 4.152.4 clears uniquely held Ganesh cache entries after failed flushes.",
+  "theme": "Failed flush cache correction",
+  "highlights_headline": "SkiaSharp 4.152.4 corrects Ganesh cache cleanup after failed GPU flushes.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,11 +8,9 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Failed flushes no longer leave reusable uninitialized cache textures",
-          "detail": "Drops uniquely held thread-safe-cache entries after unsuccessful GPU work so later draws cannot reuse those entries. Entries still held elsewhere are not removed.",
-          "prs": [
-            5287
-          ]
+          "lead": "Avoid reusing uninitialized textures after a failed flush",
+          "detail": "Ganesh now evicts uniquely held thread-safe-cache entries when render-task execution, instantiation, or preFlush fails, preventing later cache hits on those entries. Entries still held elsewhere are not removed.",
+          "prs": [5287]
         }
       ]
     }
@@ -20,5 +18,10 @@
   "contributor_summaries": {},
   "preview_summaries": {},
   "harfbuzz_summary": null,
-  "release_summaries": {}
+  "release_summaries": {
+    "v4.152.4": {
+      "headline": "SkiaSharp 4.152.4 corrects Ganesh cache cleanup after failed GPU flushes.",
+      "body": "The fix evicts uniquely held thread-safe-cache entries to prevent later reuse of uninitialized textures; entries still held elsewhere are not removed. Managed APIs and the bundled HarfBuzz dependency are unchanged."
+    }
+  }
 }
