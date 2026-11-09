@@ -10,38 +10,26 @@ namespace SkiaSharpSample;
 
 public class DrawingPage : Box
 {
-	private static readonly (string Name, SKColor Light, SKColor Dark)[] ColorOptions = new[]
+	private static readonly (string Name, SKColor Color)[] ColorOptions = new[]
 	{
-		("Black", SKColors.Black, SKColors.White),
-		("Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
-		("Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
-		("Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
-		("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
-		("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+		("Black", SKColors.Black),
+		("Red", new SKColor(0xE5, 0x39, 0x35)),
+		("Blue", new SKColor(0x1E, 0x88, 0xE5)),
+		("Green", new SKColor(0x43, 0xA0, 0x47)),
+		("Orange", new SKColor(0xFB, 0x8C, 0x00)),
+		("Purple", new SKColor(0x8E, 0x24, 0xAA)),
 	};
-
-	private static bool IsDarkMode
-	{
-		get
-		{
-			var settings = Gtk.Settings.GetDefault();
-			if (settings == null)
-				return false;
-			if (settings.GtkApplicationPreferDarkTheme)
-				return true;
-			var themeName = settings.GtkThemeName;
-			return themeName?.Contains("dark", StringComparison.OrdinalIgnoreCase) ?? false;
-		}
-	}
-
-	private static SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
 	private SKDrawingArea drawingSkiaView;
 	private Scale brushScale;
 	private Label brushSizeLabel;
+	private Box drawingToolbox;
+	private readonly List<(Button Button, CssProvider Style)> swatches = new();
+	private int selectedColorIndex;
+	private uint layoutCallback;
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 	private SKPathBuilder? currentBuilder;
-	private SKColor currentColor;
+	private SKColor currentColor = SKColors.Black;
 	private float brushSize = 4f;
 	private SKPoint cursorPosition;
 	private bool isCursorOver;
@@ -52,8 +40,6 @@ public class DrawingPage : Box
 	{
 		Hexpand = true;
 		Vexpand = true;
-
-		currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 
 		var builder = MainWindow.LoadBuilder("DrawingPage.ui");
 		var overlay = (Overlay)builder.GetObject("drawingOverlay");
@@ -67,34 +53,47 @@ public class DrawingPage : Box
 
 		SetupGestures();
 		SetupToolbox(builder);
+		OnMap += OnMapped;
+		OnUnmap += OnUnmapped;
 
 		Append(overlay);
 	}
 
 	private void SetupToolbox(Builder builder)
 	{
-		var drawingToolbox = (Box)builder.GetObject("drawingToolbox");
+		drawingToolbox = (Box)builder.GetObject("drawingToolbox");
+		drawingToolbox.AddCssClass("drawing-toolbox");
+		var swatchBox = Box.New(Orientation.Horizontal, 8);
+		drawingToolbox.Append(swatchBox);
 
 		// Create circular color swatch buttons
-		foreach (var (name, light, dark) in ColorOptions)
+		for (var i = 0; i < ColorOptions.Length; i++)
 		{
 			var btn = Button.New();
+			btn.Valign = Align.Center;
+			btn.SetTooltipText(ColorOptions[i].Name);
 			var provider = new CssProvider();
-			provider.LoadFromData(
-				$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); min-width: 28px; min-height: 28px; padding: 0; border-radius: 14px; border: 2px solid rgba(0,0,0,0.2); }}",
-				-1);
 			btn.GetStyleContext().AddProvider(provider, 600);
-			var capturedLight = light;
-			var capturedDark = dark;
-			btn.OnClicked += (sender, args) => currentColor = IsDarkMode ? capturedDark : capturedLight;
-			drawingToolbox.Append(btn);
+			swatches.Add((btn, provider));
+			var index = i;
+			btn.OnClicked += (sender, args) =>
+			{
+				selectedColorIndex = index;
+				UpdatePalette();
+			};
+			swatchBox.Append(btn);
 		}
+		UpdatePalette();
+
+		var brushControls = Box.New(Orientation.Horizontal, 8);
+		brushControls.Halign = Align.Center;
+		drawingToolbox.Append(brushControls);
 
 		// Brush size slider
 		brushScale = Scale.NewWithRange(Orientation.Horizontal, 1, 50, 1);
 		brushScale.SetValue(brushSize);
 		brushScale.DrawValue = false;
-		brushScale.SetSizeRequest(120, -1);
+		brushScale.SetSizeRequest(140, -1);
 		var scaleProvider = new CssProvider();
 		scaleProvider.LoadFromData(
 			"scale { min-height: 20px; } " +
@@ -106,33 +105,76 @@ public class DrawingPage : Box
 		adj.OnValueChanged += (s, a) =>
 		{
 			brushSize = (float)brushScale.GetValue();
-			brushSizeLabel.SetLabel($"{brushSize:0}px");
+			brushSizeLabel.SetLabel($"{brushSize:0}");
 			drawingSkiaView.QueueDraw();
 		};
-		drawingToolbox.Append(brushScale);
+		brushControls.Append(brushScale);
 
 		// Brush size label
-		brushSizeLabel = Label.New($"{brushSize:0}px");
+		brushSizeLabel = Label.New($"{brushSize:0}");
+		brushSizeLabel.SetSizeRequest(24, -1);
 		var labelProvider = new CssProvider();
-		labelProvider.LoadFromData("label { color: white; font-size: 11px; }", -1);
+		labelProvider.LoadFromData("label { color: white; font-size: 13px; }", -1);
 		brushSizeLabel.GetStyleContext().AddProvider(labelProvider, 600);
-		drawingToolbox.Append(brushSizeLabel);
+		brushControls.Append(brushSizeLabel);
 
 		// Floating clear button (top-right overlay)
 		var clearBtn = (Button)builder.GetObject("btnClear");
 		clearBtn.OnClicked += OnClearClicked;
 		var clearCss = new CssProvider();
 		clearCss.LoadFromData(
-			"button { background-color: rgba(30, 30, 30, 0.6); border-radius: 18px; padding: 6px 16px; color: white; border: none; }",
+			"button { background: rgba(30, 30, 30, 0.8); border-radius: 16px; padding: 6px 16px; color: white; border: none; font-size: 13px; }",
 			-1);
 		clearBtn.GetStyleContext().AddProvider(clearCss, 600);
 
 		// Translucent dark background for the floating toolbox
 		var toolboxCss = new CssProvider();
 		toolboxCss.LoadFromData(
-			"box { background-color: rgba(30, 30, 30, 0.8); border-radius: 24px; padding: 12px 20px; }",
+			"box.drawing-toolbox { background-color: rgba(30, 30, 30, 0.8); border: 1px solid rgba(255,255,255,0.267); border-radius: 24px; padding: 12px 16px; }",
 			-1);
 		drawingToolbox.GetStyleContext().AddProvider(toolboxCss, 600);
+	}
+
+	private void UpdatePalette()
+	{
+		currentColor = ColorOptions[selectedColorIndex].Color;
+		for (var i = 0; i < swatches.Count; i++)
+		{
+			var color = ColorOptions[i].Color;
+			var border = i == selectedColorIndex ? "dodgerblue" : "transparent";
+			swatches[i].Style.LoadFromData(
+				$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); min-width: 30px; min-height: 30px; padding: 0; border-radius: 18px; border: 3px solid {border}; }}",
+				-1);
+		}
+		drawingSkiaView.QueueDraw();
+	}
+
+	private void OnMapped(Widget sender, EventArgs args)
+	{
+		UpdatePalette();
+		var lastWidth = -1;
+		layoutCallback = AddTickCallback((widget, clock) =>
+		{
+			var width = GetWidth();
+			if (width != lastWidth)
+			{
+				drawingToolbox.SetOrientation(width < 600 ? Orientation.Vertical : Orientation.Horizontal);
+				lastWidth = width;
+			}
+			return true;
+		});
+	}
+
+	private void OnUnmapped(Widget sender, EventArgs args)
+	{
+		if (layoutCallback != 0)
+		{
+			RemoveTickCallback(layoutCallback);
+			layoutCallback = 0;
+		}
+		currentBuilder?.Dispose();
+		currentBuilder = null;
+		isCursorOver = false;
 	}
 
 	private void SetupGestures()
@@ -167,7 +209,7 @@ public class DrawingPage : Box
 		{
 			var newSize = Math.Max(1f, Math.Min(50f, brushSize + (args.Dy < 0 ? 1f : -1f)));
 			brushScale.SetValue(newSize);
-			return false;
+			return true;
 		};
 		drawingSkiaView.AddController(scrollController);
 	}
@@ -175,7 +217,7 @@ public class DrawingPage : Box
 	private void OnDrawingPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		canvas.Clear(CanvasBackground);
+		canvas.Clear(SKColors.White);
 
 		using var paint = new SKPaint
 		{
@@ -241,6 +283,7 @@ public class DrawingPage : Box
 		if (currentBuilder != null)
 		{
 			strokes.Add((currentBuilder.Detach(), currentColor, brushSize));
+			currentBuilder.Dispose();
 			currentBuilder = null;
 			drawingSkiaView.QueueDraw();
 		}
@@ -254,5 +297,19 @@ public class DrawingPage : Box
 		currentBuilder?.Dispose();
 		currentBuilder = null;
 		drawingSkiaView.QueueDraw();
+	}
+
+	public override void Dispose()
+	{
+		OnUnmapped(this, EventArgs.Empty);
+		OnMap -= OnMapped;
+		OnUnmap -= OnUnmapped;
+		drawingSkiaView.PaintSurface -= OnDrawingPaintSurface;
+		foreach (var (path, _, _) in strokes)
+			path.Dispose();
+		strokes.Clear();
+		foreach (var (_, style) in swatches)
+			style.Dispose();
+		base.Dispose();
 	}
 }
