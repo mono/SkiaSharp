@@ -424,7 +424,10 @@ namespace SkiaSharp
 		/// <param name="srcX">The source x-coordinate to start reading from.</param>
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks />
+		/// <remarks>
+		/// <para>The requested source rectangle is clipped to this pixmap. Negative source coordinates leave the corresponding leading destination pixels unchanged. Returns <see langword="false" /> if there is no overlap or the destination pointer, stride, or conversion is invalid.</para>
+		/// <para>The caller must provide enough destination memory for the supplied dimensions and stride; an unmanaged pointer does not carry an allocation length.</para>
+		/// </remarks>
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
@@ -447,16 +450,23 @@ namespace SkiaSharp
 		/// <param name="srcX">The source x-coordinate to start reading from.</param>
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks />
-		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY) =>
-			ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY);
+		/// <remarks>The source rectangle is clipped to this pixmap. Pixels outside the overlap and destination row padding are unchanged.</remarks>
+		/// <exception cref="ArgumentNullException">The destination pixmap is <see langword="null" />.</exception>
+		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY)
+		{
+			_ = pixmap ?? throw new ArgumentNullException (nameof (pixmap));
+			var result = ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY);
+			GC.KeepAlive (pixmap);
+			return result;
+		}
 
 		/// <summary>Copies the pixels from the image into the specified pixmap.</summary>
 		/// <param name="pixmap">The pixmap to read the pixel data into.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks />
+		/// <remarks>The source rectangle is clipped to this pixmap. Pixels outside the overlap and destination row padding are unchanged.</remarks>
+		/// <exception cref="ArgumentNullException">The destination pixmap is <see langword="null" />.</exception>
 		public bool ReadPixels (SKPixmap pixmap) =>
-			ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0);
+			ReadPixels (pixmap, 0, 0);
 
 		// WritePixels
 
@@ -480,19 +490,73 @@ namespace SkiaSharp
 			if (source.Length == 0)
 				return true;
 
-			var pixels = GetPixels ();
-			if (pixels == IntPtr.Zero)
-				return false;
-
 			fixed (SKColor* p = source) {
 				// SKColor and native BGRA8888 use packed 0xAARRGGBB values.
 				var sourceInfo = new SKImageInfo (info.Width, info.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-				using var sourcePixmap = new SKPixmap (sourceInfo, (IntPtr)p);
-				var result = sourcePixmap.ReadPixels (info, pixels, RowBytes);
-				GC.KeepAlive (this);
-				return result;
+				return WritePixels (sourceInfo, (IntPtr)p, sourceInfo.RowBytes);
 			}
 		}
+
+		/// <summary>Copies and converts pixels from a buffer into this pixmap at the specified destination coordinates.</summary>
+		/// <param name="srcInfo">The image information describing the source buffer.</param>
+		/// <param name="srcPixels">The source pixel buffer.</param>
+		/// <param name="srcRowBytes">The number of bytes per row in the source buffer.</param>
+		/// <param name="dstX">The destination x-coordinate at which to place the source.</param>
+		/// <param name="dstY">The destination y-coordinate at which to place the source.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" /> if there is no overlap, storage or stride is invalid, or Skia cannot convert the pixels.</returns>
+		/// <remarks>
+		/// <para>Copies synchronously without drawing or blending. The source rectangle is clipped to this pixmap. Negative destination coordinates skip the corresponding leading source pixels. Pixels outside the overlap and destination row padding are unchanged.</para>
+		/// <para>The caller must provide enough source memory for the supplied dimensions and stride. The source must not overlap this pixmap's pixel storage.</para>
+		/// <para>This method does not notify an owning bitmap. Call <see cref="SKBitmap.NotifyPixelsChanged" /> after modifying a bitmap through its pixmap.</para>
+		/// </remarks>
+		public bool WritePixels (SKImageInfo srcInfo, IntPtr srcPixels, int srcRowBytes, int dstX, int dstY)
+		{
+			if (srcPixels == IntPtr.Zero || srcInfo.IsEmpty || srcInfo.RowBytes64 <= 0 ||
+				srcRowBytes < srcInfo.RowBytes64 || srcRowBytes % srcInfo.BytesPerPixel != 0)
+				return false;
+
+			var pixels = GetPixels ();
+			if (pixels == IntPtr.Zero || dstX == int.MinValue || dstY == int.MinValue)
+				return false;
+
+			using var source = new SKPixmap (srcInfo, srcPixels, srcRowBytes);
+			// Reversing the read's source offset places the source at the requested destination.
+			var result = source.ReadPixels (Info, pixels, RowBytes, -dstX, -dstY);
+			GC.KeepAlive (this);
+			return result;
+		}
+
+		/// <summary>Copies and converts pixels from a buffer into this pixmap starting at the origin.</summary>
+		/// <param name="srcInfo">The image information describing the source buffer.</param>
+		/// <param name="srcPixels">The source pixel buffer.</param>
+		/// <param name="srcRowBytes">The number of bytes per row in the source buffer.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" />.</returns>
+		/// <remarks>Clips to this pixmap without blending. The caller owns the source memory and must provide enough storage for its dimensions and stride. Source and destination storage must not overlap. An owning bitmap is not notified.</remarks>
+		public bool WritePixels (SKImageInfo srcInfo, IntPtr srcPixels, int srcRowBytes) =>
+			WritePixels (srcInfo, srcPixels, srcRowBytes, 0, 0);
+
+		/// <summary>Copies and converts pixels from a pixmap into this pixmap at the specified destination coordinates.</summary>
+		/// <param name="source">The source pixmap.</param>
+		/// <param name="dstX">The destination x-coordinate at which to place the source.</param>
+		/// <param name="dstY">The destination y-coordinate at which to place the source.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" />.</returns>
+		/// <remarks>Clips to this pixmap without blending. Negative destination coordinates skip leading source pixels. Pixels outside the overlap and row padding are unchanged. Source and destination storage must not overlap. An owning bitmap is not notified.</remarks>
+		/// <exception cref="ArgumentNullException">The source pixmap is <see langword="null" />.</exception>
+		public bool WritePixels (SKPixmap source, int dstX, int dstY)
+		{
+			_ = source ?? throw new ArgumentNullException (nameof (source));
+			var result = WritePixels (source.Info, source.GetPixels (), source.RowBytes, dstX, dstY);
+			GC.KeepAlive (source);
+			return result;
+		}
+
+		/// <summary>Copies and converts pixels from a pixmap into this pixmap starting at the origin.</summary>
+		/// <param name="source">The source pixmap.</param>
+		/// <returns><see langword="true" /> if the overlapping pixels were copied; otherwise, <see langword="false" />.</returns>
+		/// <remarks>Clips to this pixmap without blending. Pixels outside the overlap and row padding are unchanged. Source and destination storage must not overlap. An owning bitmap is not notified.</remarks>
+		/// <exception cref="ArgumentNullException">The source pixmap is <see langword="null" />.</exception>
+		public bool WritePixels (SKPixmap source) =>
+			WritePixels (source, 0, 0);
 
 		// Encode
 
