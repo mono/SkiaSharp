@@ -1,120 +1,40 @@
 {
-  "theme": "Skia m154 and packaged docs",
-  "highlights_headline": "SkiaSharp 4.154.0 updates to Skia m154 and ships source-authored XML API documentation with managed assemblies.",
-  "highlights_body": "It corrects native glyph-atlas and GPU failure handling. Review the HarfBuzzSharp enum migrations and the removal of RAW/DNG decoding before upgrading.",
+  "theme": "Documented APIs and GPU reliability",
+  "highlights_headline": "SkiaSharp 4.154.0 packages compiler XML documentation and improves GPU failure handling on Skia m154.",
+  "highlights_body": "This release also synchronizes HarfBuzz enum values and Uno WebAssembly native assets. Built-in RAW/DNG decoding is no longer available.",
   "breaking": [
-    {
-      "title": "HarfBuzz combining-class spelling corrected",
-      "body": "Replace UnicodeCombiningClass.CCC133 with CCC132. The numeric value remains 132; no compatibility alias is retained.",
-      "prs": [
-        5057
-      ]
-    },
-    {
-      "title": "HarfBuzz aggregate glyph flag removed",
-      "body": "GlyphFlags.Defined is no longer exposed. Combine the concrete flags required by your application instead. The aggregate BufferFlags.Defined and SerializeFlag.Defined masks are not introduced.",
-      "prs": [
-        5057
-      ]
-    },
-    {
-      "title": "Built-in RAW and DNG decoding removed",
-      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
-      "prs": [
-        5190
-      ]
-    }
+    {"title": "Decode RAW and DNG images outside SkiaSharp", "body": "Built-in DNG development and PIEX-based embedded RAW-preview decoding are disabled. Use an external RAW decoder and pass decoded pixels or an extracted JPEG to SkiaSharp. Standalone JPEG decoding remains available; SKEncodedImageFormat.Dng is retained for compatibility but does not indicate codec support.", "prs": [5190]},
+    {"title": "Use the corrected HarfBuzz combining-class name", "body": "Replace UnicodeCombiningClass.CCC133 with CCC132. The numeric value remains 132, but there is no compatibility alias for the old name.", "prs": [5057]},
+    {"title": "Combine concrete HarfBuzz glyph flags", "body": "GlyphFlags.Defined is removed. Combine the concrete flags needed by your application instead of relying on an aggregate mask of all flags known to a particular HarfBuzz version.", "prs": [5057]},
+    {"title": "Stop referencing generated Blazor imports", "body": "The generated SkiaSharp.Views.Blazor._Imports type is no longer shipped after the canvas components moved to source-controlled C#. Remove direct references to this generated imports artifact and reference the canvas components instead; existing canvas markup and rendering behavior are unchanged.", "prs": [5064]}
   ],
   "categories": [
-    {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "Skia updated to m154",
-          "detail": "Includes upstream Ganesh clipping, Graphite triangle-strip, and SVG color-filter improvements while preserving existing C exports.",
-          "prs": [
-            4945
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "HarfBuzz enum values match the bundled engine",
-          "detail": "Synchronizes supported buffer, cluster, glyph, and baseline-tag values with HarfBuzz 14.2.1. Callback-heavy API families and new unwrapped native types remain excluded.",
-          "prs": [
-            5057
-          ]
-        },
-        {
-          "lead": "API documentation travels with reference assemblies",
-          "detail": "NuGet packages include matching compiler XML beside implementation and reference assemblies, making source-authored API guidance available to package consumers.",
-          "prs": [
-            5064,
-            5078,
-            5066,
-            5080,
-            5053
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Glyph-atlas updates and failed GPU work handled consistently",
-          "detail": "Avoids stale glyph-atlas reuse and propagates failed prerequisite flushes through existing null/false contracts. Failed uploads drop affected draws, and failed flushes clear uniquely held cache entries.",
-          "prs": [
-            5054,
-            5114,
-            5253
-          ]
-        },
-        {
-          "lead": "Uno WebAssembly uses matching HarfBuzz native assets",
-          "detail": "The Uno views package depends on the matching HarfBuzz WebAssembly assets rather than an older implicit archive missing required symbols.",
-          "prs": [
-            5057
-          ]
-        },
-        {
-          "lead": "Windows HarfBuzz binaries pass BinSkim BA2007",
-          "detail": "Consumers no longer need to baseline the disabled-critical-warnings error in libHarfBuzzSharp.dll. The native exports and shaping behavior are unchanged; other existing BinSkim warnings are unaffected.",
-          "prs": [
-            5111
-          ]
-        }
-      ]
-    }
+    {"heading": "Engine", "bullets": [
+      {"lead": "Skia m154", "detail": "Updates the renderer to milestone 154 while preserving the existing C exports and managed P/Invoke surface. Native HarfBuzz remains 14.2.1; its .400 package revision distinguishes this milestone's package set.", "prs": [4945]}
+    ]},
+    {"heading": "API Surface", "bullets": [
+      {"lead": "Packaged IntelliSense documentation", "detail": "Ships source-authored compiler XML beside implementation and reference assemblies, with matching documentation in lib and ref assets. Packages with reference assemblies are checked for missing or mismatched XML sidecars.", "prs": [5064, 5066, 5080]},
+      {"lead": "HarfBuzz enum coverage", "detail": "Synchronizes supported buffer, cluster, glyph and baseline-tag values with the bundled HarfBuzz 14.2.1 source, without introducing new managed types or exposing callback-heavy native API families.", "prs": [5057]}
+    ]},
+    {"heading": "Bug Fixes", "bullets": [
+      {"lead": "GPU text and failed-work handling", "detail": "Corrects partial glyph-atlas generation tracking and propagates failed render tasks and prerequisite flushes through existing failure contracts. Checked GPU-buffer upload failures reject affected draws, and failed flushes evict uniquely held cache entries that could reference uninitialized textures.", "prs": [5054, 5114, 5253]},
+      {"lead": "Uno WebAssembly native assets", "detail": "The Uno WinUI views package depends on matching HarfBuzz WebAssembly assets, preventing link failures caused by pairing current managed imports with Uno's older implicit native archive.", "prs": [5057]},
+      {"lead": "Windows HarfBuzz BinSkim compatibility", "detail": "Corrects the BA2007 disabled-compiler-warnings error in libHarfBuzzSharp.dll on x86, x64 and ARM64 without changing its native exports.", "prs": [5111]}
+    ]}
   ],
   "contributor_summaries": {
-    "azchohfi": "Corrected Windows HarfBuzz warning suppression so consuming applications pass BinSkim BA2007"
+    "azchohfi": "Corrected the Windows HarfBuzz BinSkim BA2007 compiler-warning configuration."
   },
   "preview_summaries": {
-    "v4.154.0-preview.1.26454.9": "Preview 1 opened the Skia m154 line while retaining native HarfBuzz 14.2.1.",
-    "v4.154.0-preview.2.26471.11": "Preview 2 added packaged compiler XML, synchronized HarfBuzz enums, and corrected glyph-atlas, GPU-upload, Windows BinSkim, and Uno WebAssembly issues.",
-    "v4.154.0-rc.1.26479.14": "The release candidate removed built-in RAW/DNG decoding and embedded RAW-preview extraction."
+    "v4.154.0-preview.1.26454.9": "Opened the Skia m154 line while retaining native HarfBuzz 14.2.1 and the existing managed binding surface.",
+    "v4.154.0-preview.2.26471.11": "Added packaged compiler XML and synchronized HarfBuzz enums, including the CCC132 rename and removal of GlyphFlags.Defined. Also corrected GPU failure handling and native assets, and removed the generated Blazor _Imports artifact.",
+    "v4.154.0-rc.1.26479.14": "Disabled built-in RAW/DNG decoding and embedded RAW-preview extraction; applications needing those formats must decode them externally."
   },
-  "harfbuzz_summary": "Synchronizes supported enums with native HarfBuzz 14.2.1, correcting CCC133 to CCC132 and removing GlyphFlags.Defined. Adds source-authored compiler XML and fixes Windows BinSkim BA2007 and Uno WebAssembly native-asset matching; the .400 package revision does not upgrade the engine.",
+  "harfbuzz_summary": "Synchronizes supported enum values with HarfBuzz 14.2.1, including the CCC133-to-CCC132 rename and removal of GlyphFlags.Defined. Also fixes Windows BinSkim BA2007 compatibility, matches Uno WebAssembly native assets and supplies compiler XML documentation.",
   "release_summaries": {
-    "v4.154.0-preview.1.26454.9": {
-      "headline": "Preview 1 opened the Skia m154 line while retaining native HarfBuzz 14.2.1.",
-      "body": null
-    },
-    "v4.154.0-preview.2.26471.11": {
-      "headline": "Preview 2 added packaged compiler XML, synchronized HarfBuzz enums, and corrected glyph-atlas, GPU-upload, Windows BinSkim, and Uno WebAssembly issues.",
-      "body": null
-    },
-    "v4.154.0-rc.1.26479.14": {
-      "headline": "The release candidate removed built-in RAW/DNG decoding and embedded RAW-preview extraction.",
-      "body": null
-    },
-    "v4.154.0": {
-      "headline": "SkiaSharp 4.154.0 clears uniquely held Ganesh cache entries after failed flushes.",
-      "body": null
-    }
+    "v4.154.0-preview.1.26454.9": {"headline": "Preview 1 opens the Skia m154 line while retaining native HarfBuzz 14.2.1.", "body": null},
+    "v4.154.0-preview.2.26471.11": {"headline": "Preview 2 adds packaged compiler XML and synchronizes HarfBuzz enum values.", "body": "It also corrects glyph-atlas and GPU-upload failures, Windows HarfBuzz BinSkim compatibility and Uno WebAssembly native-asset selection. Update uses of CCC133 to CCC132 and replace GlyphFlags.Defined with concrete flags. The generated Blazor _Imports type is no longer shipped."},
+    "v4.154.0-rc.1.26479.14": {"headline": "The release candidate removes built-in RAW/DNG decoding and embedded RAW-preview extraction.", "body": "Decode those formats externally before passing pixels or an extracted JPEG to SkiaSharp."},
+    "v4.154.0": {"headline": "SkiaSharp 4.154.0 clears uniquely held Ganesh cache entries after failed flushes.", "body": null}
   }
 }

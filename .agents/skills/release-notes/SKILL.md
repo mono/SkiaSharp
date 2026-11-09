@@ -265,8 +265,12 @@ Use only those PRs and only their HarfBuzz-facing effects. Do not attribute Skia
 font-manager fixes to HarfBuzz merely because the products ship together, or mistake
 a package revision for a native engine upgrade.
 
-When that PR subset is empty, set the value to `null`; the renderer supplies its
-no-binding-changes text. Omit the field when the HarfBuzz block is absent, such as an
+When that PR subset is empty, check the linked public-package API diff before
+declaring no binding changes; normally set the value to `null`. A verified
+co-shipping public-package/API-diff change can still warrant a summary: a later cut
+can first publish work merged earlier, so an empty PR range does not prove that the
+package is unchanged. Describe only that verified difference, not an inferred change
+from a version bump. Omit the field when the HarfBuzz block is absent, such as an
 unreleased head. Do not repeat the SkiaSharp highlights or enumerate the same PRs again.
 Good: "Adds variable-font shaping and an HBColor value type, and updates bundled
 HarfBuzz to 8.3.0" when the subset establishes those changes. An unrelated SkiaSharp
@@ -318,12 +322,13 @@ For a local end-to-end run, Prepare collects API diffs, facts, index data, and t
 page list; then author prose using the workflow above and render:
 
 ```bash
-.agents/skills/release-notes/scripts/prepare.sh --min-version 4.151.0 --max-version 4.151.0
+.agents/skills/release-notes/scripts/prepare.sh
 # Write prose.json for each page in output/files-to-polish.txt.
 .agents/skills/release-notes/scripts/render.sh
 ```
 
-Omit version bounds to prepare every eligible line. Prepare is incremental; `--force`
+Omit version bounds to prepare every eligible line in both package families; their
+configured history floors skip older regeneration. Prepare is incremental; `--force`
 rebuilds cached API diffs and rewrites unchanged data. Use it when that refresh is
 needed, not as an extra Polish step. Hosted agents must not run Prepare again.
 

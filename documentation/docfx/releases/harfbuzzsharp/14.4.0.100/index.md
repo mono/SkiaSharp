@@ -1,6 +1,6 @@
 # API diff: 14.4.0.100
 
-> Back to [release notes](../14.4.0.100.md).
+> Back to [release notes](../../index.md).
 
 ## HarfBuzzSharp
 

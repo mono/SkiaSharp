@@ -1,87 +1,35 @@
 {
-  "theme": "Skia and HarfBuzz upgrades",
-  "highlights_headline": "SkiaSharp 4.155.0 previews Skia m155 with HarfBuzz 14.4.0.",
-  "highlights_body": "The bundled shaping engine changes cross-direction mark positioning and improves malformed-font handling. RAW/DNG decoding is retired; Ganesh failed-flush cleanup and Linux font-family matching are corrected.",
+  "theme": "HarfBuzz refresh and font matching",
+  "highlights_headline": "SkiaSharp 4.155.0 combines Skia m155 with HarfBuzz 14.4.0 and Linux font-matching corrections.",
+  "highlights_body": "The release improves failed-flush cache cleanup and updates HarfBuzz shaping behavior. Built-in RAW/DNG decoding and embedded RAW-preview extraction are disabled.",
   "breaking": [
-    {
-      "title": "Built-in RAW and DNG decoding removed",
-      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
-      "prs": [
-        5162
-      ]
-    },
-    {
-      "title": "HarfBuzz mark positioning can change",
-      "body": "HarfBuzz 14.4 intentionally changes cross-direction mark positioning for DirectWrite and Core Text compatibility. Review text layouts and rendering baselines that depend on the previous shaping output.",
-      "prs": [
-        5135
-      ]
-    }
+    {"title": "Decode RAW and DNG images outside SkiaSharp", "body": "The bundled DNG SDK and PIEX decoding routes are disabled, including extraction of embedded JPEG previews from RAW files. Use an external decoder and pass pixels or an extracted JPEG to SkiaSharp. SKEncodedImageFormat.Dng remains for compatibility, but no replacement RAW backend is included.", "prs": [5162]},
+    {"title": "Review cross-direction mark positioning", "body": "HarfBuzz 14.4.0 intentionally changes cross-direction mark positioning for DirectWrite and Core Text compatibility. Review text layouts and rendering baselines that depend on the previous mark positions when upgrading.", "prs": [5135]}
   ],
   "categories": [
-    {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "Skia updated to m155",
-          "detail": "Advances the renderer while preserving rotation-scale text-run bounds and the existing managed and C API surface.",
-          "prs": [
-            5081
-          ]
-        },
-        {
-          "lead": "HarfBuzz updated to 14.4.0",
-          "detail": "Includes glyph-position saturation, malformed-font crash and hang fixes, and shaping and subsetting performance work.",
-          "prs": [
-            5135
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "OpenType tag enums",
-          "detail": "Adds OpenTypeBitsTag and OpenTypeNumberTag enum values. Raw OpenType fetch functions remain internal; no Face wrappers are introduced.",
-          "prs": [
-            5135
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Failed-flush cache cleanup and Linux font ranking",
-          "detail": "Clears uniquely held cache entries after a failed Ganesh flush. Fontconfig checks family acceptability only on the first valid sorted candidate instead of accepting a lower-ranked substitute.",
-          "prs": [
-            5286
-          ]
-        }
-      ]
-    }
+    {"heading": "Engine", "bullets": [
+      {"lead": "Skia m155", "detail": "Updates the bundled renderer to milestone 155 while preserving the managed API and the explicit bounds behavior of rotation-scale text runs.", "prs": [5081]},
+      {"lead": "HarfBuzz 14.4.0", "detail": "Updates the shaping engine with intentional cross-direction mark-positioning changes, glyph-position saturation, malformed-font crash and hang fixes, and shaping and subsetting performance work. HarfBuzzSharp packages start a new 14.4.0 revision line.", "prs": [5135]}
+    ]},
+    {"heading": "API Surface", "bullets": [
+      {"lead": "OpenType tag enums", "detail": "Adds OpenTypeBitsTag and OpenTypeNumberTag enum values for the updated native source. The raw fetch functions remain internal; no Face wrappers are introduced.", "prs": [5135]}
+    ]},
+    {"heading": "Bug Fixes", "bullets": [
+      {"lead": "Linux font-family candidate matching", "detail": "Checks family acceptability only on the first valid sorted fontconfig candidate, rather than accepting a lower-ranked metric-compatible substitute and preventing the caller from trying its next requested family.", "prs": [5286]},
+      {"lead": "Failed-flush cache cleanup", "detail": "Drops uniquely held Ganesh thread-safe-cache entries after a failed flush so later draws cannot reuse those entries' uninitialized textures.", "prs": [5286]}
+    ]}
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.155.0-preview.1.26471.14": "Preview 1 opened the Skia m155 line without changing the managed API surface.",
-    "v4.155.0-preview.2.26479.13": "Preview 2 updated HarfBuzz to 14.4.0 and removed built-in RAW/DNG decoding and embedded RAW-preview extraction.",
-    "v4.155.0-rc.1.26512.8": "The release candidate corrected Ganesh cache cleanup after failed flushes and Linux fontconfig first-candidate matching."
+    "v4.155.0-preview.1.26471.14": "Opened the Skia m155 line without changing the managed API surface.",
+    "v4.155.0-preview.2.26479.13": "Updated HarfBuzz to 14.4.0 with intentional cross-direction mark-positioning changes and new OpenType tag enums. Disabled built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+    "v4.155.0-rc.1.26512.8": "Corrected Ganesh cache cleanup after failed flushes and Linux fontconfig first-candidate matching."
   },
-  "harfbuzz_summary": "Updates the native shaping engine to HarfBuzz 14.4.0, including cross-direction mark-positioning changes, glyph-position saturation, malformed-font fixes, and performance work. Adds OpenTypeBitsTag and OpenTypeNumberTag enums without public raw-fetch wrappers.",
+  "harfbuzz_summary": "Updates native HarfBuzz to 14.4.0, including cross-direction mark-positioning changes, glyph-position saturation and malformed-font fixes. Adds OpenTypeBitsTag and OpenTypeNumberTag enums while keeping the raw fetch functions internal.",
   "release_summaries": {
-    "v4.155.0-preview.1.26471.14": {
-      "headline": "Preview 1 opened the Skia m155 line without changing the managed API surface.",
-      "body": null
-    },
-    "v4.155.0-preview.2.26479.13": {
-      "headline": "Preview 2 updated HarfBuzz to 14.4.0 and removed built-in RAW/DNG decoding and embedded RAW-preview extraction.",
-      "body": null
-    },
-    "v4.155.0-rc.1.26512.8": {
-      "headline": "The release candidate corrected Ganesh cache cleanup after failed flushes and Linux fontconfig first-candidate matching.",
-      "body": null
-    }
+    "v4.155.0-preview.1.26471.14": {"headline": "Preview 1 opens the Skia m155 line without changing the managed API surface.", "body": null},
+    "v4.155.0-preview.2.26479.13": {"headline": "Preview 2 updates HarfBuzz to 14.4.0 and removes built-in RAW/DNG decoding.", "body": "Embedded RAW-preview extraction is also disabled; decode those formats externally. HarfBuzzSharp adds OpenType tag enums while keeping raw fetch functions internal. Review text-layout baselines for the intentional cross-direction mark-positioning changes."},
+    "v4.155.0-rc.1.26512.8": {"headline": "The release candidate corrects Ganesh cache cleanup and Linux fontconfig matching.", "body": "Failed flushes discard uniquely held cache entries, and sorted font matching checks only the first valid candidate."},
+    "v4.155.0": {"headline": "SkiaSharp 4.155.0 promotes the release candidate to stable without additional collected product changes.", "body": null}
   }
 }
