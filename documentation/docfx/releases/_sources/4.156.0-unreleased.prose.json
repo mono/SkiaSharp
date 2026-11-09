@@ -1,0 +1,30 @@
+{
+  "theme": "Path and glyph correctness",
+  "highlights_headline": "Upcoming 4.156 updates correct clipped paths, glyph replay, and Graphite pixel readback without changing managed APIs.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "More robust path rasterization and clipping",
+          "detail": "Corrects convex-path rasterization at clip boundaries and guards against fixed-point overflow and invalid run lengths. Also fixes Ganesh path bounds and coverage-mask clamping, plus Graphite clip keys and wedge miter bounds.",
+          "prs": [5631, 5617]
+        },
+        {
+          "lead": "Validated glyph replay",
+          "detail": "Validates serialized Slug positions, transforms, bounds, and flags, preserves creation-time rounding during direct-mask replay, and bounds mask offsets. Retains rendering fallbacks when glyph data or atlas filtering is unsuitable.",
+          "prs": [5624, 5617]
+        },
+        {
+          "lead": "Graphite alpha-to-RGBx readback corrected",
+          "detail": "Uses an opaque RGBA destination when reading an alpha texture into an RGBx color type, preventing incorrect row stepping and unwritten pixel bytes.",
+          "prs": [5631]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
