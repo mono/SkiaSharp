@@ -15,8 +15,8 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
-    "mixed": 0,
+    "product": 2,
+    "mixed": 1,
     "internal": 1
   },
   "breaking_candidates": [],
@@ -24,6 +24,22 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5633": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5633",
+      "title": "[Skia] Sync m150 raster pipeline safety fix",
+      "body": "[Skia] Sync m150 raster pipeline safety fix (#5633)\n\nNative PR: https://github.com/mono/skia/pull/437\nChanges: https://github.com/mono/skia/compare/95bed8d58d692e6268f05682f0a4926f41aaf5fb...23cff64ff5f5cade78b60ceb952b25a3d7d9efd7\n\nUpdate the Skia gitlink and component manifest to landed native merge\n23cff64ff5f5cade78b60ceb952b25a3d7d9efd7, incorporating upstream\n31238c6efe from chrome/m150.\n\nFailed runtime-shader stage construction could leave unresolved branch\noffsets in a partially populated Raster Pipeline. The upstream fix\nneutralizes pending branches to fall-through on failure and propagates\nSkTransformShader child failures instead of executing a partial pipeline.\n\nPreserve release-line dependency pins and versions. Independent binding\nregeneration matches all four maintained Skia outputs; no managed API\nor generated-binding changes are required.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5589": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5589",
+      "title": "[Build] Backport Windows SDK ANGLE resource compiler to 4.150",
+      "body": "Backport mono/SkiaSharp#5537 (f515dd58d9782a208a569532512db736838c7a22) to release/4.150.x. Replace the Chromium GCS rc.exe download with the same guarded, idempotent rc.py patch so Windows SDK rc.exe consumes the preprocessed resource input while header dependency tracking is preserved.\n\nKeep the release branch System.IO.File calls: its Cake bootstrap does not provide main\u2019s FileReadText/FileWriteText helpers. No other bootstrap behavior changes.\n\nValidated: Cake dry run; seven checks against Chromium build a18493935f13d1b0992c78f5615a5d10336d60c0 rc.py, including repeat application, unmatched-shape rejection, preserved preprocessing, and Windows path/error propagation; Python compilation; git diff --check. Windows native compilation requires Windows CI and was not run on this macOS host.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
     "5543": {
       "url": "https://github.com/mono/SkiaSharp/pull/5543",
       "title": "[Skia] Sync m150 region and texture fixes",

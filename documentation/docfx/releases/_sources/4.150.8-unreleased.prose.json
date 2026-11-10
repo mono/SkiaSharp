@@ -1,24 +1,13 @@
 {
-  "theme": "Region and texture corrections",
-  "highlights_headline": "The upcoming 4.150.8 servicing release corrects region buffer sizing and GPU texture handling in Skia m150.",
+  "theme": "Raster and texture corrections",
+  "highlights_headline": "The next m150 servicing update corrects region construction, texture sampling and failed runtime-shader pipelines.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Safe region sizing for conics",
-          "detail": "Corrects scanline-transition allocation for subdivided conics in SkRegion::setPath and rejects accumulation overflow, preventing a heap out-of-bounds write.",
-          "prs": [5543]
-        },
-        {
-          "lead": "Correct texture uploads and subset sampling",
-          "detail": "Disables GLES-invalid RGBA uploads for BGRA textures interpreted as RGBx. Nearest-filtered texture subsets retain shader clamps where magnification or fractional mappings could sample neighboring texels, while preserving the touching-edge fast path for one-to-one integer-relative mappings.",
-          "prs": [5543]
-        }
-      ]
-    }
+    {"heading": "Bug Fixes", "bullets": [
+      {"lead": "Safer region and shader construction", "detail": "Budgets region storage for subdivided conics and checks accumulation overflow. Failed runtime-shader stage construction no longer leaves unresolved branches executable in a partial Raster Pipeline.", "prs": [5543, 5633]},
+      {"lead": "Texture uploads and subset edges", "detail": "Disables an unsupported GLES upload format for BGRA textures interpreted as RGBx, and preserves nearest-filtered texture subset clamps when sampling could reach neighboring texels.", "prs": [5543]}
+    ]}
   ],
   "contributor_summaries": {},
   "preview_summaries": {}

@@ -631,6 +631,7 @@ namespace SkiaSharpGenerator
 					writer.WriteLine($"\t\t#if !USE_DELEGATES");
 					writer.WriteLine($"\t\t#if USE_LIBRARY_IMPORT");
 					writer.WriteLine($"\t\t[LibraryImport ({config.DllName})]");
+					writer.WriteLine("\t\t[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]");
 					if (!string.IsNullOrEmpty(retAttr))
 						writer.WriteLine($"\t\t{retAttr}");
 					writer.WriteLine($"\t\tinternal static partial {returnType} {name} ({string.Join(", ", paramsListWithFuncPointers)});");

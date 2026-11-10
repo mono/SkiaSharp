@@ -17,6 +17,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_metrics_get_position (hb_font_t font, OpenTypeMetricsTag metrics_tag, Int32* position);
 		#else // !USE_LIBRARY_IMPORT
@@ -39,6 +40,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void hb_ot_metrics_get_position_with_fallback (hb_font_t font, OpenTypeMetricsTag metrics_tag, Int32* position);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -58,6 +60,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial Single hb_ot_metrics_get_variation (hb_font_t font, OpenTypeMetricsTag metrics_tag);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -77,6 +80,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial Int32 hb_ot_metrics_get_x_variation (hb_font_t font, OpenTypeMetricsTag metrics_tag);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -96,6 +100,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial Int32 hb_ot_metrics_get_y_variation (hb_font_t font, OpenTypeMetricsTag metrics_tag);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

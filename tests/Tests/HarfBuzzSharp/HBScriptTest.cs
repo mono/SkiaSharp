@@ -5,6 +5,50 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBScriptTest : HBTest
 	{
+		public static TheoryData<Script, string> UpdatedScripts => new TheoryData<Script, string> {
+			{ Script.Elymaic, "Elym" },
+			{ Script.Nandinagari, "Nand" },
+			{ Script.NyiakengPuachueHmong, "Hmnp" },
+			{ Script.Wancho, "Wcho" },
+			{ Script.Chorasmian, "Chrs" },
+			{ Script.DivesAkuru, "Diak" },
+			{ Script.KhitanSmallScript, "Kits" },
+			{ Script.Yezidi, "Yezi" },
+			{ Script.CyproMinoan, "Cpmn" },
+			{ Script.OldUyghur, "Ougr" },
+			{ Script.Tangsa, "Tnsa" },
+			{ Script.Toto, "Toto" },
+			{ Script.Vithkuqi, "Vith" },
+			{ Script.Math, "Zmth" },
+			{ Script.Kawi, "Kawi" },
+			{ Script.NagMundari, "Nagm" },
+			{ Script.Garay, "Gara" },
+			{ Script.GurungKhema, "Gukh" },
+			{ Script.KiratRai, "Krai" },
+			{ Script.OlOnal, "Onao" },
+			{ Script.Sunuwar, "Sunu" },
+			{ Script.Todhri, "Todr" },
+			{ Script.TuluTigalari, "Tutg" },
+			{ Script.BeriaErfe, "Berf" },
+			{ Script.Sidetic, "Sidt" },
+			{ Script.TaiYo, "Tayo" },
+			{ Script.TolongSiki, "Tols" },
+			{ Script.Jurchen, "Jurc" },
+			{ Script.ProtoCuneiform, "Pcun" },
+			{ Script.Seal, "Seal" },
+		};
+
+		[Theory]
+		[MemberData(nameof(UpdatedScripts))]
+		public void UpdatedScriptsMatchNativeTags(Script script, string tag)
+		{
+			Assert.Equal((uint)Tag.Parse(tag), (uint)script);
+			Assert.Equal(tag, script.ToString());
+			Assert.Equal(script, Script.Parse(tag));
+			Assert.True(Script.TryParse(tag, out var parsed));
+			Assert.Equal(script, parsed);
+		}
+
 		[Fact]
 		public void ShouldCreateScriptFromString()
 		{

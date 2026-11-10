@@ -1,0 +1,25 @@
+{
+  "theme": "GPU rendering correctness fixes",
+  "highlights_headline": "SkiaSharp 4.157.0 development brings upstream rendering and Vulkan fixes without changing managed APIs or package versions.",
+  "highlights_body": "The unreleased changes correct reflected hairline caps and GPU text-atlas selection, and add a targeted workaround for affected Mali device-loss cleanup.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "More reliable hairlines and GPU text",
+          "detail": "Corrects oversized square caps on zero-length hairlines under reflected transforms and suppresses non-finite cap calculations. Ganesh rounds interpolated atlas indices before selecting textures for ordinary and LCD text, avoiding sampling from the wrong atlas.",
+          "prs": [5670]
+        },
+        {
+          "lead": "Targeted Mali device-loss workaround",
+          "detail": "Adds a 1 ms delay to affected Ganesh and Graphite Vulkan device-loss cleanup paths for ARM proprietary drivers with versions at least 42 and below 56, whose waits can finish before device destruction is safe. Behavior on affected physical Mali devices was not specifically proven by the integration tests.",
+          "prs": [5670]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

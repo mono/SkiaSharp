@@ -16,14 +16,30 @@
   "api_links": [],
   "tallies": {
     "product": 0,
-    "mixed": 0,
-    "internal": 1
+    "mixed": 1,
+    "internal": 2
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5661": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5661",
+      "title": "Fix Alpine apk bootstrap artifact pin",
+      "body": "Use the available Alpine 3.21 apk-tools-static 2.14.13-r0 archive and its verified SHA-256. The previous 2.14.6-r3 archive now returns HTTP 404, preventing musl build images from bootstrapping.\n\n\n(cherry picked from commit 55c03c000afa46e4d3b659fb80b2ae70e3af26d5)\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5586": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5586",
+      "title": "[release/4.154.x] Use Windows SDK resource compiler for ANGLE",
+      "body": "Backport only the resource-compiler fix from mono/SkiaSharp#5537 (f515dd58d9782a208a569532512db736838c7a22). Remove the Chromium rc.exe GCS download, preserving preprocessing and header dependency tracking while compiling resources with the Windows SDK compiler. Retain expected-shape checks and idempotent writes.\n\nUse this servicing branch's System.IO.File read/write helpers instead of the newer Cake helpers. Leave LLVM/bootstrap code and all dependency pins unchanged.\n\nValidation: dotnet cake native/winui-angle/build.cake --dryrun passed; pinned chromium/6275 build a18493935f13d1b0992c78f5615a5d10336d60c0 rc.py transformation compiled, rejected missing anchors, and remained byte/mtime identical across repeated applications; git diff --check passed. Windows x86/x64/arm64 native builds are unavailable on macOS; original PR public AzDO build 1657048 is historical evidence only.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
     "5496": {
       "url": "https://github.com/mono/SkiaSharp/pull/5496",
       "title": "Bump to the next version (4.154.2) after release",

@@ -60,7 +60,7 @@ RUN case "${BUILD_ARCH}" in \
     && echo "export GCC_LIB_DIR=${ROOTFS_DIR}/usr/lib/gcc/${TOOLCHAIN_ARCH}/${GCC_VER}" >> /etc/skia-env
 
 # Install the .NET SDK (needed for Cake build scripts).
-ARG DOTNET_SDK_VERSION=10.0.401
+ARG DOTNET_SDK_VERSION=10.0.403
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
     && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
@@ -74,8 +74,8 @@ ENV CC=clang CXX=clang++
 # SSL_CERT_FILE is needed because apk.static (musl) can't find Azure Linux's CA bundle.
 # Bootstrap from the official package CDN, not the GitLab package registry.
 # This is the x86_64 host tool, regardless of the target sysroot architecture.
-ARG APK_STATIC_VERSION=2.14.6-r3
-ARG APK_STATIC_SHA256=f0e0d34d6a8f1f9d8704bae6612b4627b96f13cd20db759e9b43085135cd234f
+ARG APK_STATIC_VERSION=2.14.13-r0
+ARG APK_STATIC_SHA256=7c9a784c1c2544e71e3de83b6be62a6e2c3ae7749248425ff8561dfdbece3b08
 ARG ALPINE_VERSION=3.21
 RUN . /etc/skia-env \
     && APK_DIR="$(mktemp -d)" \

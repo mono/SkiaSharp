@@ -2,21 +2,17 @@
   "$comment": "Shared version-comparison overrides for API diffs AND release notes. See documentation/dev/release-notes-and-api-diffs.md (the behavior spec). OVERRIDE-ONLY: list a line only when it needs a non-default comparison baseline (compare_to) or is superseded (status + superseded_by), or to force emission of a never-stable line. By default, preview-only lines compare with the preceding emitted line while stable lines roll up from the preceding stable; the inverse 'supersedes' back-link is DERIVED from superseded_by and must not be set here. Top level is keyed by FAMILY (spec 1.5): 'skiasharp' for SkiaSharp-versioned packages and 'harfbuzzsharp' for HarfBuzzSharp-versioned packages. Each family is then keyed by line core (X.Y.Z). The separate top-level 'support' block (read only by the release-notes engine) declares the SkiaSharp supported release paths (stable + preview) that drive the TOC/index grouping.",
   "support": {
     "$comment": "SkiaSharp's SUPPORTED release paths, used only by the release-notes TOC/index grouping. SkiaSharp ships NuGet packages on two paths (it is NOT a multi-tier channel product), so this is two lists of 'major.minor' lines (the SkiaSharp MINOR number IS the Chrome/Skia milestone). 'stable' = the supported stable line(s): normally the current Chrome Stable milestone, or the Chrome Extended-stable milestone during the promotion gap (when a preview is about to go stable). 'preview' = the in-flight preview/RC line(s): normally the Chrome Beta milestone, or newer when previewing ahead in Dev/Canary. Release Finish proposes additions and same-line preview-to-stable promotions from the exact public SkiaSharp package version; it never infers membership from Chromium Dash and never removes any other line. Maintainers explicitly remove lines when support ends. The security audit's heads-up check (.agents/skills/security-audit/scripts/query-milestone-schedule.py) compares these lists to live Chrome channels and reports drift for review. Every other 3.x+ line is OUT OF SUPPORT; 1.x/2.x lines are OBSOLETE. Empty/absent block => every 3.x+ line is treated as supported (legacy behavior).",
-    "stable": [
-      "4.150",
-      "4.151",
-      "4.152",
-      "4.153",
-      "4.154"
-    ],
+    "stable": [],
     "preview": [
-      "4.155",
-      "4.156"
+      "4.156",
+      "4.157",
+      "4.158"
     ]
   },
   "history_floor": {
-    "$comment": "PERFORMANCE floor (spec §1.4), read by BOTH engines. A per-family minimum line core BELOW which no page is regenerated and no API diff is emitted, so a full '--all' run skips the obsolete back-catalogue it would otherwise rebuild from the NuGet feed every run. It is NOT a delete: pages and API-diff folders already committed below the floor are left exactly as they are (the Cake engine also skips CLEARING them), so history stays intact — it is simply not rebuilt. Baselines are unaffected: a floored line can still be downloaded as a baseline (e.g. 3.116.0 still diffs against 2.88.9) — both via an explicit compare_to override AND as the implicit predecessor of the lowest emitted line (the floor line resolves its below-floor baseline from the pre-floor emittable set and downloads it for comparison only, so it never regenerates against an empty 0.0.0.0 assembly). Absent/empty => no floor (legacy: every line is regenerated). Raise it over time as old lines stop needing refreshes; lower or remove it to rebuild history.",
-    "skiasharp": "3.0.0"
+    "$comment": "PERFORMANCE floor (spec §1.4), read by BOTH engines. A per-family minimum line core BELOW which release facts are not regenerated and no API diff is emitted. SkiaSharp 4.156.0 co-ships with HarfBuzzSharp 14.4.0.100, so these floors keep regeneration at m156 and newer without deleting committed history. The Cake engine also skips CLEARING below-floor API-diff folders. The offline Markdown renderer may still render cached historical inputs. Baselines are unaffected: a below-floor line can still be downloaded for comparison (e.g. 4.156.0 compares against 4.155.0), through an explicit compare_to override or the implicit predecessor of the lowest emitted line. Absent/empty => no floor (legacy: every line is regenerated). Raise it over time as old lines stop needing refreshes; lower or remove it to rebuild history.",
+    "skiasharp": "4.156.0",
+    "harfbuzzsharp": "14.4.0.100"
   },
   "skiasharp": {
     "3.0.0": {
@@ -60,5 +56,11 @@
       "$comment": "Compares against previous 4.x release"
     }
   },
-  "harfbuzzsharp": {}
+  "harfbuzzsharp": {
+    "14.2.1.500": {
+      "status": "superseded",
+      "superseded_by": "14.4.0",
+      "$comment": "The first m155 preview shipped this package before the HarfBuzz 14.4.0 update. Retain its published API record, but skip it as a baseline for subsequent releases."
+    }
+  }
 }

@@ -353,6 +353,7 @@ class PushValidationPreflightTests(ValidationFixture):
             "SKIA_SYNC_BASE_BRANCH": "main",
             "SKIA_SYNC_SKIA_BASE_BRANCH": "skiasharp",
             "SKIA_SYNC_SKIA_BASE_SHA": "fork-base",
+            "SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA": "old-upstream",
             "SKIA_SYNC_HEAD_BRANCH": "skia-sync/m152",
             "SKIA_SYNC_BASE_UPSTREAM_SHA": "old-upstream",
             "SKIA_SYNC_TARGET_UPSTREAM_SHA": "new-upstream",

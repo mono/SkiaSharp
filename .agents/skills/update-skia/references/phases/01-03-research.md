@@ -40,7 +40,8 @@ Fetch:
 - `upstream/{UPSTREAM_REF}` in mono/skia.
 - The base branch's recorded `upstream_merge_commit`, by SHA.
 
-Export the exact parent-base submodule pointer as `SKIA_SYNC_SKIA_BASE_SHA`; use it instead of a
+Automation exports the native base tip as `SKIA_SYNC_SKIA_BASE_SHA` (the parent gitlink is
+`SKIA_SYNC_PARENT_SKIA_SHA`, and it must be an ancestor of the tip); use these exact SHAs instead of a
 moving remote branch ref in later integrity checks.
 
 Use the base branch's recorded commit, not a milestone label:
@@ -93,6 +94,12 @@ accept-target, or compatibility-roll decision backed by source/fork evidence. Ph
 this report during conflict resolution; Phase 07 updates it when a build disproves a decision.
 Treat enabled/commented state and revision choice as separate decisions: preserving the fork's
 dependency shape does not by itself prove that an upstream revision roll is safe.
+
+Before assigning accept-target or starting Phase 03, record source-backed semantic versions at
+both exact dependency revisions and compare them using the dependency's own version scheme.
+Obtain this evidence before hydrating proposed merged pins. Preserve a newer fork pin unless a
+reviewed compatibility requirement justifies the downgrade and accounts for lost fork/security
+fixes. Missing evidence blocks acceptance.
 
 The final table must contain: dependency, base URL/SHA/state, final URL/SHA/state, decision,
 cgmanifest component (or `not tracked`), authoritative version source, derived semantic version,

@@ -1,4 +1,5 @@
 trigger:
+  batch: true
   branches:
     include:
       - main
@@ -14,8 +15,9 @@ trigger:
 pr: none
 
 schedules:
-  - cron: "0 0 * * *"
-    displayName: Daily midnight build for main
+  # Saturday 23:00 PST / Sunday 00:00 PDT, away from peak shared-pool demand.
+  - cron: "0 7 * * 0"
+    displayName: Sunday 07:00 UTC build for main
     branches:
       include:
         - main

@@ -291,6 +291,14 @@ $packageSource = Assert-ReleasePackageSource `
     -Release $release `
     -PackageSource $packageSource
 Write-ReleaseStatus ready "SkiaSharp $Version was built from $($packageSource.Commit) on $($packageSource.Branch)."
+$expectedPackages = Get-ReleaseExpectedPackages -Root $root -Commit $packageSource.Commit -PublicVersion $Version
+$publication = Get-NuGetPublication -ExpectedPackages $expectedPackages
+if ($publication.State -ne 'complete') {
+    $details = @($publication.MissingPackages | ForEach-Object { "$($_.Id) $($_.Version)" })
+    $details += @($publication.UnavailablePackages | ForEach-Object { "$($_.Id) $($_.Version): $($_.Message)" })
+    throw "Cannot Finish $Version`: publication is $($publication.State) ($($publication.PublishedCount)/$($publication.ExpectedCount) public). $($details -join '; ')"
+}
+Write-ReleaseStatus ready "All $($publication.ExpectedCount) shipping packages are public."
 Set-ReleaseFinishOutput -Release $release -PublicVersion $Version -SourceCommit $packageSource.Commit
 
 # 2. Inspect and converge immutable GitHub state.

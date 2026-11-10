@@ -16,7 +16,7 @@
   "api_links": [],
   "tallies": {
     "product": 0,
-    "mixed": 0,
+    "mixed": 1,
     "internal": 1
   },
   "breaking_candidates": [],
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5584": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5584",
+      "title": "[4.152] Use Windows SDK resource compiler for ANGLE",
+      "body": "Backport the resource-compiler fix from mono/SkiaSharp#5537 (f515dd58d9782a208a569532512db736838c7a22) to release/4.152.x. Remove the Chromium rc.exe GCS download and patch branch-pinned rc.py to use Windows SDK rc.exe, preserving preprocessing and dependency tracking with explicit shape validation and idempotent writes. Use servicing's existing System.IO APIs; retain all other bootstrap logic and dependency pins.\n\nValidation: dotnet cake native/winui-angle/build.cake --dryrun passed. Transformation validated against Chromium build a18493935f13d1b0992c78f5615a5d10336d60c0 (ANGLE chromium/6275), including Python syntax, unchanged helper ASTs, repeated application and rejected unexpected shapes. Windows native x86/x64/arm64 end-to-end validation remains pending CI; unavailable on macOS. Historical public AzDO build 1657048 validates the original fix, not this backport.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
     "5497": {
       "url": "https://github.com/mono/SkiaSharp/pull/5497",
       "title": "Bump to the next version (4.152.6) after release",

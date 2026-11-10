@@ -17,6 +17,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_meta_get_entry_tags (hb_face_t face, UInt32 start_offset, UInt32* entries_count, OpenTypeMetaTag* entries);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -36,6 +37,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial hb_blob_t hb_ot_meta_reference_entry (hb_face_t face, OpenTypeMetaTag meta_tag);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

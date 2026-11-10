@@ -1,5 +1,5 @@
 # Stage 1: Build libfuzzer-dotnet from source so the final fuzzing container stays free of the C/C++ compiler toolchain.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.401-azurelinux3.0 AS builder
+FROM mcr.microsoft.com/dotnet/sdk:10.0.403-azurelinux3.0 AS builder
 
 RUN tdnf install -y clang gcc compiler-rt glibc-devel kernel-headers binutils \
     && tdnf clean all
@@ -13,7 +13,7 @@ RUN curl -fsSL -o /tmp/libfuzzer-dotnet.cc "$LIBFUZZER_DOTNET_URL" \
     && rm /tmp/libfuzzer-dotnet.cc
 
 # Stage 2: Runtime environment for running `dotnet cake --target=fuzzing`.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.401-azurelinux3.0
+FROM mcr.microsoft.com/dotnet/sdk:10.0.403-azurelinux3.0
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_NOLOGO=1 \

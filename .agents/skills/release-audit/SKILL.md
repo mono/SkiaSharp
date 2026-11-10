@@ -18,7 +18,7 @@ Use the repository command as the source of release facts:
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
 ```
 
-The command is read-only and reports:
+The full command is read-only and reports:
 
 - maintenance and specific release branches;
 - exact public NuGet provenance, tags, and GitHub Releases;
@@ -28,9 +28,27 @@ The command is read-only and reports:
 - pending next-milestone transitions; and
 - dependency-ordered Finish, build, publication, sync, and Prepare actions.
 
+Report `Publication` and missing ID/version pairs for both families. The expected
+set comes from the shipment's source `scripts/VERSIONS.txt` and pack filter.
+Do not offer Finish or a new cut for partial/unavailable publication.
+
 Use `-Json` when coordinating several lines. Exit `0` means no action, `1`
 means work or inconsistency remains, and `2` means a required check was
 unavailable. Never reinterpret exit `2` as healthy.
+
+## Choose the question
+
+Use `-Check Upstream` for new upstream commits/sync PRs, `-Check Prepare` for
+bases ready to cut, `-Check Finish` for unfinished public shipments, or
+`-Check NuGet` for exact shipping-package availability. Omit it for `All`.
+Prepare checks all release gates; other checks skip unrelated collection.
+
+```powershell
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.150-4.156 -Check Upstream -Json
+```
+
+Report only the requested view. Null facts were not checked; exit `0` applies
+only to the selected check. Retain all blockers in the `Prepare` view.
 
 ## Resolve requested lines
 
@@ -42,14 +60,17 @@ Accept these natural selectors:
 | `4.150-4.155` or `4.150..4.155` | Inclusive numeric range |
 | `4.15*` | Matching discovered release lines plus current/pending `main` |
 
-For a numeric range, expand each minor. For a wildcard, discover unique lines
+Pass a numeric range directly to the script. It checks every included line,
+returns a JSON array, preserves per-line failures, and exits with the highest
+per-line code. For a wildcard, discover unique lines
 from release branches, exact public NuGet versions, exact tags, current
 `main`, and the immediately following `skia-sync/mN -> main` transition.
 Do not invent empty lines beyond current or pending evidence.
 
 ## Run and aggregate
 
-Run independent line audits in parallel:
+For an exact line or numeric range, use one invocation. Run independently
+discovered wildcard lines in parallel:
 
 ```powershell
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 `
@@ -84,6 +105,11 @@ packages need tags/Releases; show Publish or Prepare only when emitted by the
 audit. If none is emitted, say so, rather than substituting a sync action.
 Keep partial builds, unavailable checks, provenance errors, and newer
 failed/canceled reruns explicit.
+
+Show the latest complete and partial shipments and every unresolved stable cut,
+including those marked `superseded`. Use each cut's own count/build/BAR; older
+missing cuts need review, not automatic publication. Unused preview/RC branches
+may remain in JSON only.
 
 ### 2. Branch readiness — get the base ready for Prepare
 

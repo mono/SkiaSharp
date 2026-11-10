@@ -52,6 +52,21 @@ def find_mapping_values(value, key):
 
 
 class FixerWorkflowSafetyTests(unittest.TestCase):
+    def test_dotnet_runtime_directory_is_private_and_exported_before_agent_startup(self):
+        for workflow in FIXER_WORKFLOWS:
+            with self.subTest(workflow=workflow):
+                source_step = load_frontmatter(workflow)["steps"][0]
+                self.assertEqual("Prepare sandbox .NET runtime directory", source_step["name"])
+                script = source_step["run"]
+                self.assertIn("mktemp -d /tmp/gh-aw/dotnet-runtime.XXXXXX", script)
+                self.assertIn('chmod 700 "$RUNTIME_DIR"', script)
+                self.assertIn('printf \'XDG_RUNTIME_DIR=%s\\n\' "$RUNTIME_DIR" >> "$GITHUB_ENV"', script)
+                agent_steps = load_lock(workflow)["jobs"]["agent"]["steps"]
+                emitted_step = next(step for step in agent_steps if step.get("name") == source_step["name"])
+                self.assertEqual(script, emitted_step["run"])
+                prompt = (WORKFLOW_DIR / f"{workflow}.md").read_text(encoding="utf-8")
+                self.assertIn("First run `dotnet tool list --local` inside the agent sandbox", prompt)
+
     def test_tooling_workflow_runs_for_agentic_source_changes(self):
         workflow = yaml.load(
             TOOLING_WORKFLOW.read_text(encoding="utf-8"),

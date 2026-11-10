@@ -17,6 +17,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_color_get_svg_document_count (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -36,6 +37,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_get_svg_document_glyph_range (hb_face_t face, UInt32 svg_document_index, UInt32* start_glyph_id, UInt32* end_glyph_id);
 		#else // !USE_LIBRARY_IMPORT
@@ -58,6 +60,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_color_glyph_get_layers (hb_face_t face, UInt32 glyph, UInt32 start_offset, UInt32* layer_count, OpenTypeColorLayer* layers);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -77,6 +80,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_glyph_get_svg_document_index (hb_face_t face, UInt32 glyph, UInt32* svg_document_index);
 		#else // !USE_LIBRARY_IMPORT
@@ -99,6 +103,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_glyph_has_paint (hb_face_t face, UInt32 glyph);
 		#else // !USE_LIBRARY_IMPORT
@@ -121,6 +126,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial hb_blob_t hb_ot_color_glyph_reference_png (hb_font_t font, UInt32 glyph);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -140,6 +146,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial hb_blob_t hb_ot_color_glyph_reference_svg (hb_face_t face, UInt32 glyph);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -159,6 +166,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_has_layers (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
@@ -181,6 +189,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_has_paint (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
@@ -203,6 +212,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_has_palettes (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
@@ -225,6 +235,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_has_png (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
@@ -247,6 +258,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static partial bool hb_ot_color_has_svg (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
@@ -269,6 +281,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial OpenTypeNameId hb_ot_color_palette_color_get_name_id (hb_face_t face, UInt32 color_index);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -288,6 +301,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_color_palette_get_colors (hb_face_t face, UInt32 palette_index, UInt32 start_offset, UInt32* color_count, HBColor* colors);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -307,6 +321,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_color_palette_get_count (hb_face_t face);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -326,6 +341,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial OpenTypeColorPaletteFlags hb_ot_color_palette_get_flags (hb_face_t face, UInt32 palette_index);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -345,6 +361,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial OpenTypeNameId hb_ot_color_palette_get_name_id (hb_face_t face, UInt32 palette_index);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

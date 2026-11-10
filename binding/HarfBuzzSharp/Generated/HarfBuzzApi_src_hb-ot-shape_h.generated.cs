@@ -17,6 +17,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_shape_get_buffer_format_serial ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -36,6 +37,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void hb_ot_shape_glyphs_closure (hb_font_t font, hb_buffer_t buffer, Feature* features, UInt32 num_features, hb_set_t glyphs);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -55,6 +57,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void hb_ot_shape_plan_collect_lookups (hb_shape_plan_t shape_plan, UInt32 table_tag, hb_set_t lookup_indexes);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -74,6 +77,7 @@ namespace HarfBuzzSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (HARFBUZZ)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial UInt32 hb_ot_shape_plan_get_feature_tags (hb_shape_plan_t shape_plan, UInt32 start_offset, UInt32* tag_count, UInt32* tags);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

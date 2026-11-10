@@ -107,7 +107,8 @@ After the final full solution passes, complete every deterministic gate against 
 mono/skia tree before moving to Phase 11:
 
 1. Ensure every post-merge mono/skia adaptation is committed and the worktree is clean.
-2. From the parent root, run the metadata finalizer:
+2. From the parent root, rerun Phase 06's complete version-helper command. In automation, the
+   resolved inputs come from the environment, so this shorter invocation is sufficient:
 
    ```bash
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
@@ -120,7 +121,8 @@ mono/skia tree before moving to Phase 11:
 
    ```bash
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
-     --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+     --skia-root "${GITHUB_WORKSPACE:-$PWD}/externals/skia" \
+     --old-upstream "$SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA" \
      --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
      --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
      --merged-head HEAD \

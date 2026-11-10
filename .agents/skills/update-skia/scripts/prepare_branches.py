@@ -71,7 +71,14 @@ def prepare_branches(
     skia_base_branch: str,
     skia_base_sha: str,
     head_branch: str,
+    parent_skia_sha: str | None = None,
 ) -> None:
+    """Create matched branches.
+
+    The parent branch starts at the parent base and its submodule at the parent gitlink
+    (``parent_skia_sha``, defaulting to ``skia_base_sha``). The mono/skia branch starts at
+    ``skia_base_sha``, the native base tip, which may be ahead of the gitlink.
+    """
     repo_root = repo_root.resolve()
     skia_root = repo_root / "externals" / "skia"
 
@@ -108,6 +115,12 @@ def prepare_branches(
     skia_base_sha = git_output(
         skia_root, "rev-parse", "--verify", f"{skia_base_sha}^{{commit}}"
     )
+    parent_skia_sha = git_output(
+        skia_root,
+        "rev-parse",
+        "--verify",
+        f"{parent_skia_sha or skia_base_sha}^{{commit}}",
+    )
     require_ancestor(repo_root, parent_base_sha, f"origin/{base_branch}")
     require_ancestor(skia_root, skia_base_sha, f"origin/{skia_base_branch}")
 
@@ -118,10 +131,24 @@ def prepare_branches(
         raise PreparationError(
             f"{parent_base_sha} does not contain the externals/skia submodule."
         )
-    if tree_entry[2] != skia_base_sha:
+    if tree_entry[2] != parent_skia_sha:
         raise PreparationError(
-            "Resolved Skia base does not match the parent gitlink: "
-            f"{skia_base_sha} != {tree_entry[2]}"
+            "Resolved Skia gitlink does not match the parent base: "
+            f"{parent_skia_sha} != {tree_entry[2]}"
+        )
+    if (
+        git(
+            skia_root,
+            "merge-base",
+            "--is-ancestor",
+            parent_skia_sha,
+            skia_base_sha,
+            check=False,
+        ).returncode
+        != 0
+    ):
+        raise PreparationError(
+            f"Parent gitlink {parent_skia_sha} is not contained in Skia base {skia_base_sha}."
         )
 
     git(repo_root, "checkout", "-b", head_branch, parent_base_sha)
@@ -140,9 +167,9 @@ def prepare_branches(
         )
 
     actual_skia_sha = git_output(skia_root, "rev-parse", "HEAD")
-    if actual_skia_sha != skia_base_sha:
+    if actual_skia_sha != parent_skia_sha:
         raise PreparationError(
-            f"Skia is at {actual_skia_sha}, expected {skia_base_sha}."
+            f"Skia is at {actual_skia_sha}, expected {parent_skia_sha}."
         )
 
     git(skia_root, "checkout", "-b", head_branch, skia_base_sha)
@@ -169,6 +196,9 @@ def main() -> int:
     parser.add_argument(
         "--skia-base-sha", default=os.environ.get("SKIA_SYNC_SKIA_BASE_SHA")
     )
+    parser.add_argument(
+        "--parent-skia-sha", default=os.environ.get("SKIA_SYNC_PARENT_SKIA_SHA")
+    )
     parser.add_argument("--head-branch", default=os.environ.get("SKIA_SYNC_HEAD_BRANCH"))
     args = parser.parse_args()
 
@@ -191,6 +221,7 @@ def main() -> int:
             args.skia_base_branch,
             args.skia_base_sha,
             args.head_branch,
+            args.parent_skia_sha,
         )
     except PreparationError as error:
         parser.exit(1, f"error: {error}\n")
