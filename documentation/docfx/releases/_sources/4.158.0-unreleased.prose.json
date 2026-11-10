@@ -1,50 +1,22 @@
 {
-  "theme": "GPU correctness and text shaping",
-  "highlights_headline": "SkiaSharp 4.158.0 development improves GPU rendering correctness and updates HarfBuzzSharp to HarfBuzz 15.0.0.",
-  "highlights_body": "The unreleased changes correct reflected hairline caps and text-atlas selection, improve affected Vulkan device-loss cleanup, and bound Graphite clip recording. HarfBuzzSharp also gains 30 named script constants.",
+  "theme": "Stronger per process hash seeds",
+  "highlights_headline": "Upcoming SkiaSharp changes use operating-system randomness for the shared hash-code seed.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Bug Fixes",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "More reliable hairlines and GPU text",
-          "detail": "Corrects oversized square caps on zero-length hairlines under reflected transforms, guards against non-finite cap calculations, and rounds Ganesh text-atlas indices to avoid selecting the wrong texture for ordinary and LCD text.",
-          "prs": [5669]
-        },
-        {
-          "lead": "Targeted Vulkan device-loss workaround",
-          "detail": "Adds a 1 ms delay on affected Ganesh and Graphite device-loss cleanup paths for ARM proprietary Vulkan drivers from version 42.0 up to, but not including, 56.0. Ordinary successful submissions are not delayed; affected-device behavior was not specifically verified in the integration review.",
-          "prs": [5669]
-        },
-        {
-          "lead": "Bounded Graphite clip recording",
-          "detail": "Flushes based on effective undrawn clip elements to keep recording within render-pass limits. A draw whose clips cannot fit even in a fresh pass is rejected and logged rather than overflowing the pass structures.",
-          "prs": [5669]
-        }
-      ]
-    },
-    {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "HarfBuzz updated to 15.0.0",
-          "detail": "Updates the bundled HarfBuzz engine and aligns HarfBuzzSharp and its NativeAssets package versions at 15.0.0, while retaining the HarfBuzzSharp assembly version at 1.0.0.0.",
-          "prs": [5554]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "More named HarfBuzz script values",
-          "detail": "Adds 30 HarfBuzzSharp Script constants, including Jurchen, ProtoCuneiform and Seal, for 179 named values matching the native script list. Existing fields, values, parsing, numeric conversions and horizontal-direction lookup remain intact.",
-          "prs": [5554]
+          "lead": "Hash-code initialization updated",
+          "detail": "The HashCode polyfill shared by SkiaSharp and HarfBuzzSharp now seeds from RandomNumberGenerator rather than System.Random. Hash codes remain stable within a process and randomized between processes; first use now loads cryptography support and has additional initialization cost.",
+          "prs": [5408]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
+  "contributor_summaries": {
+    "rolfbjarne": "Replaced the shared hash-code seed with operating-system randomness and added analyzer checks for shipped code."
+  },
   "preview_summaries": {}
 }

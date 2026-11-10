@@ -1,24 +1,59 @@
 {
-  "theme": "Raster and GPU readback reliability",
-  "highlights_headline": "SkiaSharp 4.157.0 previews Skia m157 with path rasterization, GPU clipping and readback corrections.",
-  "highlights_body": "The line also makes the cdecl convention explicit on generated LibraryImport declarations. HarfBuzzSharp's .200 package revision still bundles native HarfBuzz 14.4.0.",
+  "theme": "Skia m157 rendering corrections",
+  "highlights_headline": "SkiaSharp 4.157 updates to Skia m157 with raster, glyph and GPU rendering corrections.",
+  "highlights_body": "The line also makes LibraryImport calling conventions explicit. Later collected fixes improve reflected hairlines, text-atlas selection and affected Vulkan device-loss cleanup without changing managed API signatures.",
   "breaking": [],
   "categories": [
-    {"heading": "Engine", "bullets": [
-      {"lead": "Skia m157", "detail": "Updates the bundled renderer to milestone 157 while preserving existing managed wrappers and C exports. Graphite Metal uses iOS/tvOS 15 and macOS 12 runtime minimums.", "prs": [5542]}
-    ]},
-    {"heading": "Bug Fixes", "bullets": [
-      {"lead": "Path and glyph replay correctness", "detail": "Corrects clipped convex anti-aliased path rasterization, device-space bounds and coverage-mask clamping. Validates direct-mask Slug data and replay, fixes Graphite clip keys and wedge inflation, and initializes Vulkan render-pass pointers.", "prs": [5630, 5612]},
-      {"lead": "Complete Graphite RGBx readback", "detail": "Corrects the pixel-size and row-stride mismatch when transferring alpha textures into RGBx destinations so destination bytes are not left unwritten.", "prs": [5630]},
-      {"lead": "Explicit LibraryImport calling convention", "detail": "Generated LibraryImport declarations now specify cdecl, matching the existing DllImport and delegate paths. This corrects an ABI mismatch relevant to Windows x86; runtime verification of the reported optimized-call stack-growth symptom remains outstanding.", "prs": [5565]}
-    ]}
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m157 with unchanged managed signatures",
+          "detail": "Updates the native renderer to milestone 157 while retaining the existing binding surface and glyph-bounds guard. HarfBuzzSharp moves to package revision 14.4.0.200; native HarfBuzz remains 14.4.0.",
+          "prs": [5542]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Correct raster bounds and GPU transfers",
+          "detail": "Fixes convex antialiased path overflow across clip gaps, Ganesh device-space bounds and coverage-mask clamping, Graphite clip-key packing and wedge inflation, and alpha-to-RGBx readback stride. Also initializes Vulkan render-pass pointers correctly.",
+          "prs": [5612, 5630]
+        },
+        {
+          "lead": "Validated glyph replay",
+          "detail": "Validates direct-mask Slug data during deserialization and drawing, and corrects unsupported fractional replay so unsuitable glyph data does not bypass rendering constraints.",
+          "prs": [5612, 5630]
+        },
+        {
+          "lead": "Stable hairlines and text-atlas selection",
+          "detail": "Corrects oversized square caps on zero-length hairlines under reflected transforms and guards non-finite cap calculations. Rounds Ganesh atlas indices to avoid selecting the wrong texture for ordinary and LCD text.",
+          "prs": [5670]
+        },
+        {
+          "lead": "Targeted Vulkan device-loss cleanup workaround",
+          "detail": "Adds a 1 ms delay on affected Ganesh and Graphite device-loss cleanup paths for ARM proprietary Vulkan drivers from version 42 up to, but not including, 56. The integration review did not specifically establish affected physical-device behavior.",
+          "prs": [5670]
+        },
+        {
+          "lead": "Explicit cdecl imports",
+          "detail": "Generated LibraryImport declarations now explicitly use cdecl, matching DllImport and delegate paths across SkiaSharp and HarfBuzzSharp. This addresses an ABI mismatch relevant to Windows x86; runtime verification of the reported optimized-call stack growth remains outstanding.",
+          "prs": [5565]
+        }
+      ]
+    }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.157.0-preview.1.26556.1": "Introduced Skia m157 with raster, glyph-replay, GPU-clipping and Graphite readback corrections. Generated LibraryImport declarations now explicitly use cdecl."
+    "v4.157.0-preview.1.26556.1": "Preview 1 introduces Skia m157, corrects raster and GPU readback behavior, and validates glyph replay. It also makes LibraryImport declarations explicitly cdecl; HarfBuzzSharp's 14.4.0.200 package revision retains native HarfBuzz 14.4.0."
   },
-  "harfbuzz_summary": "Generated HarfBuzz LibraryImport declarations now explicitly specify cdecl to match the existing import and delegate paths. The .200 package revision does not upgrade the native HarfBuzz 14.4.0 engine.",
+  "harfbuzz_summary": "HarfBuzzSharp's generated LibraryImport declarations now explicitly specify cdecl, matching the existing import and delegate conventions. Package revision 14.4.0.200 does not upgrade the native HarfBuzz 14.4.0 engine.",
   "release_summaries": {
-    "v4.157.0-preview.1.26556.1": {"headline": "Preview 1 introduces Skia m157 with raster, glyph-replay and Graphite readback corrections.", "body": "Generated LibraryImport declarations now explicitly use cdecl. HarfBuzzSharp moves to package revision 14.4.0.200 without changing the native HarfBuzz version."}
+    "v4.157.0-preview.1.26556.1": {
+      "headline": "Preview 1 introduces Skia m157 with raster, glyph-replay and Graphite readback corrections.",
+      "body": "Generated LibraryImport declarations now explicitly use cdecl. HarfBuzzSharp moves to package revision 14.4.0.200 without changing the native HarfBuzz version."
+    }
   }
 }
