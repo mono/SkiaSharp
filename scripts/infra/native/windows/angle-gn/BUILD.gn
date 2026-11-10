@@ -10,9 +10,12 @@ config("skiasharp") {
       "/guard:cf",
       "/GS",
     ]
-    ldflags = [
-      "/guard:cf",
-      "/LIBPATH:${spectre_lib_root}/${current_cpu}",
-    ]
+    ldflags = [ "/guard:cf" ]
+
+    # The Spectre libraries are desktop CRT libraries. UWP must link the store
+    # (_APP) CRT that vcvarsall selects for winuwp.
+    if (current_os != "winuwp") {
+      ldflags += [ "/LIBPATH:${spectre_lib_root}/${current_cpu}" ]
+    }
   }
 }

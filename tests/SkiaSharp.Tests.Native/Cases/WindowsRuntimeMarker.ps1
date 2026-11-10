@@ -1,6 +1,6 @@
 <#
-Checks native Windows PDBs for the existing objr_spectre or objd_spectre runtime build marker. The managed WinUI
-projection is excluded. This verifies marker presence only: it does not prove compiler mitigation, CFG configuration
+Checks native Windows PDBs for the existing objr_spectre or objd_spectre runtime build marker. The managed
+projections and UWP artifacts, which link the store CRT that has no Spectre runtime libraries, are excluded. This verifies marker presence only: it does not prove compiler mitigation, CFG configuration
 or complete Spectre protection. Files are scanned in bounded chunks, including markers crossing chunk boundaries.
 #>
 
@@ -12,7 +12,7 @@ Import-Module "$PSScriptRoot/Helpers.psm1"
 
 Assert-NativeRoot $NativeRoot
 
-# The managed projection is excluded from the native runtime-marker policy.
+# Managed projections and store-CRT UWP artifacts are excluded from the native runtime-marker policy.
 # Marker presence identifies a runtime build; it does not prove compiler mitigation.
 foreach ($artifact in Get-WindowsArtifacts $NativeRoot | Where-Object RuntimeMarker) {
     $pdb = [IO.Path]::ChangeExtension($artifact.Path, '.pdb')
