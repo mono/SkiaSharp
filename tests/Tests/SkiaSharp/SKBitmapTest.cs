@@ -719,6 +719,37 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void PixelColorSpansPreserveReadValuesButConvertWritesToLinearColorSpace()
+		{
+			using var linear = SKColorSpace.CreateSrgbLinear();
+			var info = new SKImageInfo(1, 1, SKColorType.Bgra8888, SKAlphaType.Unpremul, linear);
+			using var bitmap = new SKBitmap(info);
+			var source = new SKColor(128, 128, 128);
+			var rectangle = new SKRectI(0, 0, 1, 1);
+			Span<SKColor> colors = stackalloc SKColor[1];
+			colors[0] = source;
+
+			Assert.True(bitmap.WritePixels(colors));
+			var stored = new SKColor(55, 55, 55);
+			Assert.Equal(stored, bitmap.GetPixel(0, 0));
+			colors.Clear();
+			Assert.True(bitmap.ReadPixels(colors));
+			Assert.Equal(stored, colors[0]);
+			colors.Clear();
+			Assert.True(bitmap.ReadPixels(colors, rectangle));
+			Assert.Equal(stored, colors[0]);
+			Assert.Equal(stored, Assert.Single(bitmap.Pixels));
+
+			colors[0] = source;
+			Assert.True(bitmap.WritePixels(colors, rectangle));
+			Assert.Equal(stored, bitmap.GetPixel(0, 0));
+
+			Assert.True(bitmap.ReadPixels(colors));
+			Assert.True(bitmap.WritePixels(colors));
+			Assert.Equal(new SKColor(10, 10, 10), bitmap.GetPixel(0, 0));
+		}
+
+		[Fact]
 		public void IncorrectPixelSizeThrowsWhenWriting()
 		{
 			SKColor[] sourcePixels;

@@ -501,6 +501,7 @@ namespace SkiaSharp
 		/// <returns><see langword="true" /> if all pixels were written; otherwise, <see langword="false" /> if pixel storage is inaccessible or Skia cannot convert the colors.</returns>
 		/// <remarks>
 		/// <para>Uses Skia's pixel conversion rules to convert to the pixmap's color type, alpha type, and color space without drawing or blending. Unpremultiplied storage preserves RGB even when alpha is zero.</para>
+		/// <para>Input colors are interpreted as default/sRGB. Reads preserve stored color-space values, so reading and writing the same colors on a non-sRGB pixmap is not an identity operation.</para>
 		/// <para>Supply opaque colors for an opaque pixmap; the opaque alpha type is an input promise, not a request to force stored alpha to 255.</para>
 		/// <para>The colors are copied synchronously and are not retained or modified. Writing an empty span to an empty pixmap succeeds. The source must not overlap the pixmap's pixel storage.</para>
 		/// <para>This method does not notify an owning bitmap of the change. Call <see cref="SKBitmap.NotifyPixelsChanged" /> after modifying a bitmap through its pixmap.</para>
