@@ -144,9 +144,11 @@ function New-NativeArtifact(
 
 function Get-AppleArtifacts([string] $NativeRoot) {
     foreach ($platform in 'osx', 'ios', 'iossimulator', 'tvos', 'tvossimulator', 'maccatalyst') {
+        # The iOS and tvOS device frameworks are built from the arm64 device archive only.
+        $arches = if ($platform -in 'ios', 'tvos') { @('arm64') } else { @('x86_64', 'arm64') }
         foreach ($name in 'libSkiaSharp', 'libHarfBuzzSharp') {
             if ($platform -eq 'osx') {
-                New-NativeArtifact $NativeRoot "$platform/$name.dylib" AppleArtifacts MachO $name @('x86_64', 'arm64')
+                New-NativeArtifact $NativeRoot "$platform/$name.dylib" AppleArtifacts MachO $name $arches
             } else {
                 $framework = "$platform/$name.framework"
                 $binary = if ($platform -eq 'maccatalyst') {
@@ -154,7 +156,7 @@ function Get-AppleArtifacts([string] $NativeRoot) {
                 } else {
                     "$framework/$name"
                 }
-                New-NativeArtifact $NativeRoot $binary AppleArtifacts MachO $name @('x86_64', 'arm64')
+                New-NativeArtifact $NativeRoot $binary AppleArtifacts MachO $name $arches
                 if ($platform -eq 'maccatalyst') {
                     $current = "$framework/Versions/Current/$name"
                     New-NativeArtifact $NativeRoot "$framework/$name" ArtifactCoverage Alias -AliasOf $binary
@@ -163,7 +165,7 @@ function Get-AppleArtifacts([string] $NativeRoot) {
                 }
             }
 
-            foreach ($arch in 'x86_64', 'arm64') {
+            foreach ($arch in $arches) {
                 $archive = "$platform/$name/$arch.xcarchive"
                 if ($platform -eq 'osx') {
                     $binary = "$archive/Products/@rpath/$name.dylib"
