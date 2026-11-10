@@ -72,26 +72,19 @@ function Get-WindowsArtifacts([string] $NativeRoot) {
             $paths += @(
                 'nanoserver/x64/libSkiaSharp.dll', 'nanoserver/x64/libHarfBuzzSharp.dll'
                 'winui/any/SkiaSharp.Views.WinUI.Native.Projection.dll'
-                'uwp/any/SkiaSharp.Views.UWP.Native.Projection.dll'
             )
-            foreach ($platform in 'winui', 'uwp') {
-                $view = if ($platform -ceq 'winui') { 'SkiaSharp.Views.WinUI.Native' } else { 'SkiaSharp.Views.UWP.Native' }
-                foreach ($arch in 'x86', 'x64', 'arm64') {
-                    foreach ($name in $view, 'libEGL', 'libGLESv2') {
-                        $paths += "$platform/$arch/$name.dll"
-                    }
+            foreach ($arch in 'x86', 'x64', 'arm64') {
+                foreach ($name in 'SkiaSharp.Views.WinUI.Native', 'libEGL', 'libGLESv2') {
+                    $paths += "winui/$arch/$name.dll"
                 }
             }
         }
 
         foreach ($path in $paths) {
-            # UWP AppContainer binaries must use the store (_APP) CRT, which has no Spectre runtime libraries.
-            $uwp = $path -like 'uwp/*'
             [pscustomobject]@{
                 Path = [IO.Path]::GetFullPath((Join-Path $root $path))
-                RuntimeMarker = !$uwp -and $path -notlike 'winui/any/*'
+                RuntimeMarker = $path -notlike 'winui/any/*'
                 Direct3D = $path -like 'windows/*/libSkiaSharp.dll'
-                AppCrt = $uwp -and $path -notlike 'uwp/any/*'
             }
         }
     }
