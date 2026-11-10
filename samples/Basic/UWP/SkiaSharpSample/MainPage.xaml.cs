@@ -21,7 +21,8 @@ public sealed partial class MainPage : Page
 
 	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
 	{
-		if (args.SelectedItem is NavigationViewItem item)
+		// Use the typed container: under NativeAOT, SelectedItem (object) does not resolve to NavigationViewItem.
+		if (args.SelectedItemContainer is NavigationViewItemBase item)
 		{
 			Type pageType = item.Tag?.ToString() switch
 			{
