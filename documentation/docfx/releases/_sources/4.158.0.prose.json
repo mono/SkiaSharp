@@ -1,18 +1,55 @@
 {
-  "theme": "Skia m158 engine preview",
-  "highlights_headline": "SkiaSharp 4.158.0 previews the Skia m158 engine update without changing the managed binding surface.",
-  "highlights_body": null,
+  "theme": "Skia m158 and shaping updates",
+  "highlights_headline": "SkiaSharp 4.158 introduces Skia m158, with subsequent collected updates improving GPU correctness and expanding HarfBuzz script constants.",
+  "highlights_body": "Preview 1 preserves the managed API surface and co-ships HarfBuzzSharp 14.4.0.300 with native HarfBuzz 14.4.0. Later collected changes upgrade HarfBuzz to 15.0.0, add 30 named scripts, and correct clipping, text-atlas sampling and reflected hairlines. Those later changes are not part of Preview 1.",
   "breaking": [],
   "categories": [
-    {"heading": "Engine", "bullets": [
-      {"lead": "Skia m158", "detail": "Updates the bundled renderer to milestone 158 while retaining the existing managed wrappers and C API declarations. The milestone update itself retains native HarfBuzz 14.4.0 and reserves the .300 package revision bucket rather than upgrading that engine.", "prs": [5634]}
-    ]}
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia milestone 158",
+          "detail": "Updates the bundled renderer to Skia m158 without changing managed wrappers or C bridge declarations. Preview 1 pairs it with HarfBuzzSharp package revision 14.4.0.300, not a native HarfBuzz upgrade.",
+          "prs": [5634]
+        },
+        {
+          "lead": "Later HarfBuzz 15 engine update",
+          "detail": "Collected after Preview 1, the HarfBuzz update moves the native engine and package version to 15.0.0 while retaining assembly version 1.0.0.0. Removal of the unused internal font-face setter import does not remove a public managed member.",
+          "prs": [5554]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Thirty additional named HarfBuzz scripts",
+          "detail": "The later HarfBuzz update adds Script fields including Jurchen, ProtoCuneiform and Seal, plus 27 previously omitted constants. It preserves the existing struct API, field values, parsing and numeric conversions.",
+          "prs": [5554]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Later GPU rendering corrections",
+          "detail": "Corrects reflected zero-length hairline caps and Ganesh text-atlas sampler selection. Graphite bounds clip recording per render pass, rejecting and logging a draw whose clips cannot fit a fresh pass instead of overflowing its structures.",
+          "prs": [5669]
+        },
+        {
+          "lead": "Affected Mali Vulkan cleanup workaround",
+          "detail": "A post-preview update adds a 1 ms delay on relevant Ganesh and Graphite device-loss teardown paths for ARM proprietary driver versions 42 through versions below 56. Ordinary successful submissions are not delayed by this workaround.",
+          "prs": [5669]
+        }
+      ]
+    }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.158.0-preview.1.26556.2": "Introduced Skia m158 without managed binding changes. The milestone update retained native HarfBuzz 14.4.0 and advanced its package revision to 14.4.0.300."
+    "v4.158.0-preview.1.26556.2": "Preview 1 introduced Skia m158 without changing the managed API surface. It co-shipped HarfBuzzSharp 14.4.0.300 with native HarfBuzz still at 14.4.0; the HarfBuzz 15 update and later GPU fixes were not included."
   },
-  "harfbuzz_summary": null,
+  "harfbuzz_summary": "Preview 1 co-ships HarfBuzzSharp 14.4.0.300 with native HarfBuzz 14.4.0 and no public API diff. The later collected HarfBuzz update advances the engine and packages to 15.0.0 and adds 30 named Script fields while preserving existing values and the struct-based API.",
   "release_summaries": {
     "v4.158.0-preview.1.26556.2": {
       "headline": "SkiaSharp 4.158.0 Preview 1 updates the bundled renderer to Skia m158.",
