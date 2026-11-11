@@ -1140,18 +1140,9 @@ Assert-True (-not [bool] (
         Where-Object { $_ -match '^release create .*--draft(?:\s|=|$)' }
 )) 'Finish unexpectedly created a draft release.'
 
-# Exercises release-backed support tiers without querying live NuGet state.
-$script:SupportCatalogueCalls = 0
-$script:SupportPublicVersions = @(
-    '4.99.0', '4.148.0', '4.150.0', '4.150.1', '4.150.1.1',
-    '4.152.0', '4.153.0-preview.1.26430.2', '4.154.0-rc.1.26430.3'
-)
+# Exercises additive support membership without querying the public catalogue.
 function global:Invoke-RestMethod {
-    param($Uri, $TimeoutSec)
-    Assert-Equal 'https://api.nuget.org/v3-flatcontainer/skiasharp/index.json' $Uri `
-        'Support discovery queried a different package catalogue.'
-    $script:SupportCatalogueCalls++
-    [pscustomobject] @{ versions = $script:SupportPublicVersions }
+    throw 'Support membership unexpectedly queried the public catalogue.'
 }
 $supportConfig = @'
 {
@@ -1197,13 +1188,12 @@ $rcSupport = Get-UpdatedReleaseSupport -Text $previewSupport -Release $rcRelease
 $rcDocument = $rcSupport | ConvertFrom-Json
 Assert-Equal @('4.151', '4.152', '4.153') @($rcDocument.support.preview) `
     'An RC release did not append its line.'
-Assert-Equal 0 $script:SupportCatalogueCalls 'Preview/RC support queried stable versions.'
 
 $promotedRelease = Get-ReleaseIdentity '4.152.0'
 $promotedSupport = Get-UpdatedReleaseSupport -Text $rcSupport -Release $promotedRelease
 $promotedDocument = $promotedSupport | ConvertFrom-Json
-Assert-Equal @('4.150', '4.152') @($promotedDocument.support.stable) `
-    'Stable support did not select the newest two distinct public stable lines numerically.'
+Assert-Equal @('4.148', '4.150', '4.152') @($promotedDocument.support.stable) `
+    'A stable promotion did not preserve more than two supported stable lines.'
 Assert-Equal @('4.151', '4.153') @($promotedDocument.support.preview) `
     'A stable release removed a preview line other than its own.'
 Assert-Equal $promotedSupport (Get-UpdatedReleaseSupport -Text $promotedSupport -Release $promotedRelease) `
@@ -1228,17 +1218,14 @@ Assert-Equal $true $promotedDocument.unrelated.enabled `
 $patchSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.150.1.1')
 Assert-Equal $promotedSupport $patchSupport `
     'Finishing an older stable patch displaced a newer stable line.'
-$script:SupportPublicVersions += @('4.155.0', '4.156.0', '4.156.1', '4.157.0-preview.1.1')
-$rolledSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.156.1')
-$rolledDocument = $rolledSupport | ConvertFrom-Json
-Assert-Equal @('4.155', '4.156') @($rolledDocument.support.stable) `
-    'Stable support did not roll forward using public lines absent from the configuration.'
-Assert-Equal @('4.151', '4.153') @($rolledDocument.support.preview) `
-    'Rolling stable support changed unrelated preview lines.'
-Assert-Equal $rolledSupport (Get-UpdatedReleaseSupport -Text $rolledSupport -Release $promotedRelease) `
-    'Finishing an older shipment displaced the current stable pair.'
-
-$script:SupportPublicVersions = @('4.152.0', '4.152.1', '4.152.1.1')
+$olderSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.149.0')
+$olderDocument = $olderSupport | ConvertFrom-Json
+Assert-Equal @('4.148', '4.150', '4.152', '4.149') @($olderDocument.support.stable) `
+    'Adding an older shipment removed or reordered supported stable lines.'
+Assert-Equal @('4.151', '4.153') @($olderDocument.support.preview) `
+    'Adding an older stable shipment changed unrelated preview lines.'
+Assert-Equal $olderSupport (Get-UpdatedReleaseSupport -Text $olderSupport -Release (Get-ReleaseIdentity '4.149.1')) `
+    'A patch added a duplicate supported line.'
 $inlineConfig = @'
 {
   "support": {
@@ -1267,19 +1254,6 @@ Assert-Equal @() @($emptyPromotionDocument.support.preview) `
     'Promotion did not empty the sole preview tier.'
 Assert-Equal $emptyPromotion (Get-UpdatedReleaseSupport -Text $emptyPromotion -Release $promotedRelease) `
     'Rerunning after promotion from the sole preview tier failed.'
-$script:SupportPublicVersions += @('4.155.0', '4.156.0', '4.157.0-rc.1.1')
-$rebuiltSupport = Get-UpdatedReleaseSupport -Text $emptyPromotionConfig -Release $promotedRelease |
-    ConvertFrom-Json
-Assert-Equal @('4.155', '4.156') @($rebuiltSupport.support.stable) `
-    'An empty stable tier was not rebuilt from the newest public stable lines.'
-$script:SupportPublicVersions += @('5.1.0', '5.2.0-preview.1.1')
-$majorSupport = Get-UpdatedReleaseSupport -Text $rolledSupport -Release (Get-ReleaseIdentity '5.1.0') |
-    ConvertFrom-Json
-Assert-Equal @('4.156', '5.1') @($majorSupport.support.stable) `
-    'Stable support did not order release lines across a major-version boundary.'
-function global:Invoke-RestMethod { throw 'Support catalogue unavailable.' }
-Assert-Throws { Get-UpdatedReleaseSupport -Text $rolledSupport -Release $promotedRelease } `
-    'Support catalogue unavailable' 'Stable support silently ignored a public discovery failure.'
 Remove-Item Function:\Invoke-RestMethod
 
 # Exercises issue-template release parsing, selection, and text surgery.

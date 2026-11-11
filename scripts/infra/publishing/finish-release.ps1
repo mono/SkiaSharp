@@ -148,19 +148,8 @@ function Get-UpdatedReleaseSupport([string] $Text, [pscustomobject] $Release) {
             $changed = $true
         }
     } else {
-        $latestStable = @(
-            Get-NuGetPackageVersions -PackageId 'SkiaSharp' |
-                Where-Object { $_ -match '^\d+\.\d+\.\d+(?:\.\d+)?$' } |
-                ForEach-Object {
-                    $version = [version] $_
-                    "$($version.Major).$($version.Minor)"
-                } |
-                Sort-Object -Property { [version] $_ } -Descending -Unique |
-                Select-Object -First 2 |
-                Sort-Object -Property { [version] $_ }
-        )
-        if (($stable -join ',') -ne ($latestStable -join ',')) {
-            $support.stable = $latestStable
+        if ($stable -notcontains $line) {
+            $support.stable = @($stable) + $line
             $changed = $true
         }
         if ($preview -contains $line) {
@@ -194,12 +183,12 @@ function Update-ReleaseSupport([pscustomobject] $Release) {
     $action = if ($Release.IsPrerelease) {
         "Add $line to the preview support tier after publishing its preview/RC release."
     } else {
-        "Refresh stable support to the two newest distinct SkiaSharp lines with stable packages on NuGet.org and remove $line from preview."
+        "Promote $line to the stable support tier after publishing its stable release."
     }
     $body = @"
 ## Description
 
-$action Preview/RC releases preserve stable support. Stable support follows SkiaSharp's own public shipments, independently of Chrome channels and documentation regeneration floors.
+$action Existing supported lines are retained; only maintainers remove lines when support ends. Support follows SkiaSharp's own public shipments, independently of Chrome channels and documentation regeneration floors.
 
 **Related issues**
 
@@ -220,7 +209,7 @@ None - release support metadata only.
 
 ## Testing
 
-The publishing tests cover preview/RC additions, the rolling stable pair, older shipments and patches, idempotency, and preservation of unrelated configuration.
+The publishing tests cover preview, RC, stable promotion, idempotency, preservation of more than two supported stable lines, and unrelated configuration.
 
 ## Checklist
 

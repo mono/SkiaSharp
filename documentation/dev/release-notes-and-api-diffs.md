@@ -813,21 +813,22 @@ SkiaSharp minor *is* the Chrome/Skia milestone):
 }
 ```
 
-- **`stable`** — the newest two distinct SkiaSharp `major.minor` lines that actually
-  shipped stable packages on NuGet.org: **our stable N and N-1**, not Chrome's current
-  stable milestones. Preview-only lines do not count; patches on the same line occupy
-  only one slot.
+- **`stable`** — the supported SkiaSharp `major.minor` lines that actually shipped
+  stable packages on NuGet.org, not Chrome's current stable milestones. There is no
+  automatic limit on the number of supported lines; only maintainers remove them.
+  Preview-only lines do not count, and patches do not duplicate a line.
 - **`preview`** — the in-flight SkiaSharp preview/RC line(s).
 
 Either field may be a single string or a list. An absent or empty block makes every 3.x+
 line render as top-level/supported (the legacy flat layout), so the feature is purely
 additive.
 
-**Release-driven membership; rolling stable support.** Release Finish proposes a focused
+**Release-driven membership; manual retirement.** Release Finish proposes a focused
 PR from the exact public SkiaSharp package version: previews and RCs add their line to
-`preview` without changing stable support. Stable releases recompute `stable` from the
-two newest distinct public stable lines and remove only the released line from `preview`.
-Finishing an older shipment cannot displace a newer actual stable line. SkiaSharp does not
+`preview` without changing stable support. Stable releases add their line to `stable`
+and remove only the same line from `preview`. All other supported lines are preserved,
+even when more than two stable lines remain; maintainers explicitly remove lines when
+support ends. Finishing an older shipment cannot displace another supported line. SkiaSharp does not
 ship every Chrome milestone and may lag behind Chrome, so membership comes from NuGet.org,
 never Chromium Dash. The `history_floor` values control regeneration work, not support:
 the current floors remain SkiaSharp `4.156.0` and HarfBuzzSharp `14.4.0.100`, even while
