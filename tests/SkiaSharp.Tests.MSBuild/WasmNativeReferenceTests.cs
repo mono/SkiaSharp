@@ -25,6 +25,7 @@ public class WasmNativeReferenceTests
             Directory.CreateDirectory(Path.GetDirectoryName(targets)!);
             File.Copy(Path.Combine(profile.RepositoryDirectory, relative.Replace('/', Path.DirectorySeparatorChar)), targets);
             var archives = Path.Combine(profile.Root, "output", "native", "wasm", $"lib{family}.a");
+            // Retired versions are decoys: supported frameworks must never select them.
             foreach (var version in new[] { "3.1.34", "3.1.56", "5.0.6", "6.0.2" })
             foreach (var feature in new[] { "st", "mt", "st,simd", "mt,simd" })
             {
@@ -97,14 +98,16 @@ public class WasmNativeReferenceTests
                     new XElement("TargetFrameworkVersion", framework),
                     new XElement(sdk, "true")),
                 new XElement("Import", new XAttribute("Project", targets)),
-                new XElement("Target", new XAttribute("Name", "PrepareForBuild")),
-                new XElement("Target", new XAttribute("Name", "Build"),
-                    new XAttribute("DependsOnTargets", "PrepareForBuild")));
+                new XElement("Target", new XAttribute("Name", "PrepareForBuild")));
             var directory = profile.NewProject($"{family}-{packaged}-{framework}-{sdk}", project.ToString());
             using var references = JsonDocument.Parse(await profile.EvaluateNativeFileReferences(directory));
             Assert.Empty(references.RootElement.GetProperty("Items").GetProperty("NativeFileReference").EnumerateArray());
-            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => profile.Build(directory));
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => profile.PrepareForBuild(directory));
             Assert.Contains($"{family} WebAssembly native assets require .NET 9.0 or later.", error.Message);
+
+            project.Descendants(sdk).Single().Value = "false";
+            var nonWasm = profile.NewProject($"{family}-{packaged}-{framework}-{sdk}-non-wasm", project.ToString());
+            await profile.PrepareForBuild(nonWasm);
         }
     }
 }

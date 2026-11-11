@@ -66,6 +66,10 @@ public sealed class DotNet : IDisposable
             "-getItem:Content,EmccExportedRuntimeMethod,EmccExportedFunction",
             "-getProperty:EmccExtraLDFlags"], TimeSpan.FromMinutes(1));
 
+    public Task PrepareForBuild(string directory) =>
+        RunCommand(directory, ["msbuild", "Consumer.csproj", "--nologo",
+            "-target:PrepareForBuild", "-nodeReuse:false"], TimeSpan.FromMinutes(1));
+
     private Task<string> Run(string directory, string command, string? rid = null, string? framework = null,
         string? outputDirectory = "output", string? diagnosticLabel = null)
     {
