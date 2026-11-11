@@ -1,20 +1,30 @@
 {
-  "theme": "Skia m158 and text shaping",
-  "highlights_headline": "SkiaSharp 4.158 introduces Skia m158, with later collected GPU fixes and a HarfBuzz 15.0.0 update.",
-  "highlights_body": "Preview 1 retains the managed API surface and native HarfBuzz 14.4.0. Subsequent collected work corrects hairline and text rendering, bounds Graphite clip recording and expands HarfBuzzSharp's named script constants.",
+  "theme": "Skia m158 and HarfBuzz 15",
+  "highlights_headline": "SkiaSharp 4.158.0 previews Skia m158 alongside HarfBuzz 15.0.0 and expanded script constants.",
+  "highlights_body": "Preview 2 adds GPU correctness fixes for reflected hairlines, text-atlas selection, Graphite clipping and affected Mali Vulkan device-loss paths. SkiaSharp's managed API surface remains unchanged; HarfBuzzSharp gains 30 named Script fields.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m158",
-          "detail": "Updates the bundled renderer to milestone 158 without adding C bridge exports or changing the managed SkiaSharp API. Preview 1 pairs it with HarfBuzzSharp package revision 14.4.0.300, retaining native HarfBuzz 14.4.0.",
+          "lead": "Skia milestone 158",
+          "detail": "Updates the bundled rendering engine to Skia m158 without changing SkiaSharp's managed APIs or C bridge declarations.",
           "prs": [5634]
         },
         {
-          "lead": "Later HarfBuzz 15.0.0 update",
-          "detail": "Subsequent collected work upgrades bundled HarfBuzz and resets HarfBuzzSharp and NativeAssets package versions to 15.0.0, while retaining assembly version 1.0.0.0. This upgrade is not part of Preview 1.",
+          "lead": "HarfBuzz 15.0.0",
+          "detail": "Updates the bundled HarfBuzz engine and HarfBuzzSharp packages to 15.0.0. This is a native engine upgrade, unlike Preview 1's 14.4.0.300 package revision, which retained HarfBuzz 14.4.0.",
+          "prs": [5554, 5634]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Thirty additional named scripts",
+          "detail": "HarfBuzzSharp.Script adds Jurchen, ProtoCuneiform, Seal and 27 previously omitted constants. Existing fields and values, parsing, numeric conversions and horizontal-direction lookup remain intact.",
           "prs": [5554]
         }
       ]
@@ -23,42 +33,32 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Correct reflected hairlines and GPU text",
-          "detail": "Later collected fixes preserve device-space square-cap size for zero-length hairlines under reflected transforms, guard non-finite calculations, and round ordinary and LCD text-atlas indices to avoid selecting the wrong texture.",
+          "lead": "Hairline and text rendering",
+          "detail": "Corrects zero-length square-capped hairline sizing under reflected transforms and rounds Ganesh text-atlas indices before sampler selection to avoid choosing the wrong atlas.",
           "prs": [5669]
         },
         {
-          "lead": "Targeted Vulkan device-loss cleanup workaround",
-          "detail": "Adds a 1 ms delay on affected Ganesh and Graphite loss paths for ARM proprietary drivers from 42.0 up to, but not including, 56.0, without delaying ordinary successful submissions. Affected-device behavior was not specifically established by the integration review.",
+          "lead": "GPU clipping and device-loss handling",
+          "detail": "Bounds Graphite clip recording per render pass, rejecting and logging draws whose clips cannot fit a fresh pass instead of overflowing. Adds a delay only on affected device-loss paths for ARM proprietary Vulkan drivers from version 42 up to, but not including, 56.",
           "prs": [5669]
-        },
-        {
-          "lead": "Bounded Graphite clip recording",
-          "detail": "Flushes based on effective undrawn clip elements to stay within render-pass limits. A draw whose clips cannot fit even in a fresh pass is rejected and logged rather than overflowing pass structures.",
-          "prs": [5669]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "More named HarfBuzz scripts",
-          "detail": "The later HarfBuzz update adds 30 Script constants, including Jurchen, ProtoCuneiform and Seal, for 179 named values. Existing values, parsing, numeric conversions and horizontal-direction lookup remain intact; removing an unused internal deprecated import removes no public managed member.",
-          "prs": [5554]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.158.0-preview.1.26556.2": "Preview 1 introduces the Skia m158 engine without changing the managed API surface. HarfBuzzSharp moves to package revision 14.4.0.300 while native HarfBuzz remains 14.4.0; the HarfBuzz 15.0.0 update and subsequent GPU fixes are outside this shipment."
+    "v4.158.0-preview.2.26560.5": "Preview 2 adds HarfBuzz 15.0.0 and 30 HarfBuzzSharp.Script constants. It also corrects reflected hairlines, text-atlas selection and Graphite clip recording, and adds a targeted Mali Vulkan device-loss workaround.",
+    "v4.158.0-preview.1.26556.2": "Preview 1 introduces Skia m158 without changing SkiaSharp's managed API surface. HarfBuzzSharp moves to package revision 14.4.0.300 while its native engine remains at 14.4.0."
   },
-  "harfbuzz_summary": "Preview 1's HarfBuzzSharp 14.4.0.300 package retains native HarfBuzz 14.4.0 and has no public API diff. Later collected work updates HarfBuzz and its packages to 15.0.0 and adds 30 named Script constants without changing the existing struct-based programming model.",
+  "harfbuzz_summary": "Updates the bundled engine and HarfBuzzSharp packages to 15.0.0 and adds 30 named Script fields, including Jurchen, ProtoCuneiform and Seal. Existing Script fields and values remain unchanged, as do parsing, numeric conversions and horizontal-direction lookup.",
   "release_summaries": {
     "v4.158.0-preview.1.26556.2": {
       "headline": "SkiaSharp 4.158.0 Preview 1 updates the bundled renderer to Skia m158.",
       "body": "The managed API surface is unchanged. HarfBuzzSharp packages move to revision 14.4.0.300 while the bundled HarfBuzz engine stays at 14.4.0."
+    },
+    "v4.158.0-preview.2.26560.5": {
+      "headline": "Preview 2 adds HarfBuzz 15.0.0 and GPU rendering corrections to the Skia m158 line.",
+      "body": "HarfBuzzSharp gains 30 named Script fields. Rendering fixes cover reflected hairlines, text-atlas selection and Graphite clip recording, with a targeted device-loss workaround for affected Mali Vulkan drivers."
     }
   }
 }
