@@ -177,9 +177,13 @@ Nested reusable calls use a run-specific child group to avoid deadlocking
 their Finish caller.
 
 Finish also computes a support PR: preview/RC adds the line to
-`support.preview`; stable adds it to `support.stable` and removes only the
-same line from preview. Already-correct state is a no-op. Retirement of another
-line always requires a maintainer decision.
+`support.preview` without changing stable support. Stable releases recompute
+`support.stable` as the newest two distinct SkiaSharp `major.minor` lines with
+stable packages on NuGet.org and remove only the released line from preview.
+Preview-only lines are excluded; multiple patches occupy one slot, and finishing
+an older shipment cannot displace a newer stable line. Already-correct state is
+a no-op. This is SkiaSharp's own stable N/N-1 policy, independent of Chrome's
+current channels and the documentation regeneration floors in `history_floor`.
 
 After the GitHub Release, Finish dispatches release-note/API-diff generation;
 stable releases also dispatch issue-template version updates. These workflows
