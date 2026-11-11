@@ -1,22 +1,22 @@
 {
-  "theme": "Stronger per process hash seeds",
-  "highlights_headline": "Upcoming SkiaSharp changes use operating-system randomness for the shared hash-code seed.",
-  "highlights_body": null,
+  "theme": "Stronger hash seed generation",
+  "highlights_headline": "Unreleased changes use operating-system cryptographic randomness to seed hash codes in SkiaSharp and HarfBuzzSharp.",
+  "highlights_body": "Hash codes remain randomized between processes and stable within a process.",
   "breaking": [],
   "categories": [
     {
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Hash-code initialization updated",
-          "detail": "The HashCode polyfill shared by SkiaSharp and HarfBuzzSharp now seeds from RandomNumberGenerator rather than System.Random. Hash codes remain stable within a process and randomized between processes; first use now loads cryptography support and has additional initialization cost.",
+          "lead": "Cryptographically generated hash seeds",
+          "detail": "The shared HashCode polyfill now uses RandomNumberGenerator instead of System.Random in both assemblies. Hash codes remain stable within a process; first use now initializes cryptographic randomness.",
           "prs": [5408]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "rolfbjarne": "Replaced the shared hash-code seed with operating-system randomness and added analyzer checks for shipped code."
+    "rolfbjarne": "Replaced the shared hash seed generator with operating-system cryptographic randomness and added analyzer checks for shipped code"
   },
   "preview_summaries": {}
 }
