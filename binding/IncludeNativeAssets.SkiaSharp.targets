@@ -76,13 +76,6 @@
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
-    <!--
-      net8.x (emsdk 3.1.34) uses the built-in `-sUSE_WEBGPU=1`; net9.0+ uses
-      Dawn's emdawnwebgpu port. Discriminate on $(TargetFramework) directly —
-      $(TargetFrameworkVersion) is populated by a later SDK import so it's still
-      empty here (hence the ItemGroup below carries its own != '' guard).
-    -->
-    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
     <!-- Normalize to forward slashes: emcc swallows Windows backslashes in
          library paths. The port is staged into the
          WASM native output next to the libSkiaSharp*.a files. -->
@@ -95,8 +88,7 @@
       js-library Content (see _SkiaSharpAddEmdawnwebgpuJsLibraries), so no source or compile flag reaches the
       app's link.
     -->
-    <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
-    <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' != 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s USE_WEBGPU=1</EmccExtraLDFlags>
+    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
@@ -109,16 +101,20 @@
     <!-- emdawnwebgpu allocates refcounted WGPUTexture handles; the managed
          interop releases them via the C ABI's wgpuTextureRelease, so export it
          as Module._wgpuTextureRelease. -->
-    <EmccExportedFunction Include="_wgpuTextureRelease" Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'" />
+    <EmccExportedFunction Include="_wgpuTextureRelease" />
     <!-- Skia's DawnBackendContext needs a real WGPUInstance* — the emdawnwebgpu
          port's wgpuCreateInstance returns one. Export it as Module._wgpuCreateInstance
          so the managed WebGPU shim can call it instead of falling back to a fake
          handle (a bogus pointer would hang inside wgpu::Instance::AddRef). -->
-    <EmccExportedFunction Include="_wgpuCreateInstance" Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'" />
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <EmccExportedFunction Include="_wgpuCreateInstance" />
     <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
     <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\6.0.2\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0'))" />
   </ItemGroup>
+
+  <Target Name="_SkiaSharpCheckWasmTfm" BeforeTargets="PrepareForBuild"
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '9.0'))">
+    <Error Text="SkiaSharp WebAssembly native assets require .NET 9.0 or later. Please update your project to target net9.0 or newer." />
+  </Target>
 
   <!-- Workaround for https://github.com/dotnet/runtime/issues/109289 -->
   <Target Name="RuntimeIssue109289_Workaround"
@@ -147,7 +143,7 @@
   -->
   <Target Name="_SkiaSharpAddEmdawnwebgpuJsLibraries"
           BeforeTargets="_BrowserWasmWriteRspForLinking"
-          Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <ItemGroup>
       <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_enum_tables.js" Kind="js-library" />
       <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_struct_info.js" Kind="js-library" />
