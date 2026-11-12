@@ -9,12 +9,7 @@ string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("E
 string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "").ToLower()
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
-// Graphite/Dawn/WebGPU need Skia's is_canvaskit path, which requires the newer
-// WebGPU headers only present in emsdk >= 3.1.51. Older emsdk matrices build
-// raster + ganesh only; Ganesh (WebGL) stays enabled either way.
-bool SUPPORT_GRAPHITE = SUPPORT_GPU &&
-    (string.IsNullOrEmpty(EMSCRIPTEN_VERSION) ||
-     string.CompareOrdinal(EMSCRIPTEN_VERSION, "3.1.51") >= 0);
+bool SUPPORT_GRAPHITE = SUPPORT_GPU;
 
 // Skia's Graphite backend needs Dawn's `emdawnwebgpu` Emscripten port (the
 // built-in `-sUSE_WEBGPU=1` port is gone). The WASM native build fetches a
@@ -80,7 +75,7 @@ void SyncEmdawnwebgpuPort()
     // emdawnwebgpu's library_webgpu.js declares __deps: ['$stackSave',
     // '$stackRestore', ...] against emscripten's JS library system. That works
     // on newer emsdks where those names exist as `$`-form aliases, but emsdk
-    // 3.1.56 (shipped with .NET 10 WASM SDK) has stackSave and stackRestore
+    // 3.1.56 (shipped with .NET 9/10 WASM SDKs) has stackSave and stackRestore
     // only as bare WASM_SYSTEM_EXPORTS — no `$` alias — so the ports mechanism
     // resolves them but a bare `--js-library` load bombs at compiler.mjs with
     // "undefined symbol: $stackSave". Rewrite those two to their bare names so
@@ -190,7 +185,6 @@ Task("libSkiaSharp")
         (SUPPORT_GRAPHITE ? $"skiasharp_emdawnwebgpu_dir='{EMDAWN_ROOT}' " : "") +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
-        $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
         $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
