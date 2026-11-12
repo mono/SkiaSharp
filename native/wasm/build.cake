@@ -75,7 +75,7 @@ void SyncEmdawnwebgpuPort()
     // emdawnwebgpu's library_webgpu.js declares __deps: ['$stackSave',
     // '$stackRestore', ...] against emscripten's JS library system. That works
     // on newer emsdks where those names exist as `$`-form aliases, but emsdk
-    // 3.1.56 (shipped with .NET 10 WASM SDK) has stackSave and stackRestore
+    // 3.1.56 (shipped with .NET 9/10 WASM SDKs) has stackSave and stackRestore
     // only as bare WASM_SYSTEM_EXPORTS — no `$` alias — so the ports mechanism
     // resolves them but a bare `--js-library` load bombs at compiler.mjs with
     // "undefined symbol: $stackSave". Rewrite those two to their bare names so

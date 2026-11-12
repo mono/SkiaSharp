@@ -11,9 +11,9 @@ namespace SkiaSharp.Tests.Visual
 	/// <see cref="GpuPolicy"/> reports Dawn as not built anywhere but the browser,
 	/// so every other host skips before reaching this code. Bring-up walks
 	/// <c>JSHost.DotnetInstance → Module → WebGPU → importJs{Device,Queue,Texture}</c>
-	/// (the Emscripten-internal manager tables that vend integer handles for
-	/// WGPU* objects across the C ABI) and dispatches JS method calls through a
-	/// single variadic helper installed on <c>globalThis.__skiaCallMember</c>.
+	/// to import refcounted WGPU* handles across the C ABI. JavaScript helpers
+	/// are installed on <c>globalThis.skiaSharpWebGpu</c>, with the runtime's
+	/// module exposed as <c>globalThis.skiaSharpModule</c>.
 	///
 	/// <para>
 	/// Not compiled on <c>net48</c> (JSHost is unavailable there); the base
