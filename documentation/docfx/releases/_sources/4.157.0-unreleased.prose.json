@@ -1,0 +1,30 @@
+{
+  "theme": "GPU geometry and clipping",
+  "highlights_headline": "The upcoming 4.157.0 release corrects transformed GPU geometry, Ganesh empty flushes, and Graphite clip-stack capacity handling.",
+  "highlights_body": "The native corrections retain Skia m157 without changing managed APIs or generated bindings.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Transformed ellipse and rounded-rectangle geometry",
+          "detail": "Corrects mixed matrix-axis coefficients when transforming rounded-rectangle radii and ellipse and rounded-rectangle stroke widths. Corner radii are clamped to half the transformed bounds to prevent overlap.",
+          "prs": [5688]
+        },
+        {
+          "lead": "Ganesh empty-flush handling",
+          "detail": "Advances draw tokens and catches up flush tokens after empty flushes so atlas work scheduled during one flush is not treated as pending later.",
+          "prs": [5688]
+        },
+        {
+          "lead": "Graphite clip-stack capacity",
+          "detail": "Counts clip elements that still need recording without double-counting recorded clips, and accepts passes exactly at capacity. Draws whose full effective clip stack cannot fit in a fresh pass are warned about and skipped instead of exceeding render-step capacity.",
+          "prs": [5688]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

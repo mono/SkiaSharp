@@ -1,9 +1,30 @@
 {
-  "theme": "Next servicing line opened",
-  "highlights_headline": "The 4.156.1 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "GPU rendering correctness",
+  "highlights_headline": "The upcoming 4.156.1 servicing release corrects Ganesh geometry and flush handling and Graphite clip-capacity accounting.",
+  "highlights_body": "These native fixes retain Skia m156 and do not change the managed API.",
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Transformed ellipse and rounded-rectangle geometry",
+          "detail": "Corrects matrix-axis mapping for rounded-rectangle radii and ellipse and rounded-rectangle stroke widths. Transformed corner radii are clamped to half the device-space bounds to prevent overlapping corners.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Ganesh empty-flush handling",
+          "detail": "Keeps draw and flush tokens synchronized after an empty flush so atlas work from one flush is not treated as pending in a later flush.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Graphite clip-stack capacity",
+          "detail": "Accounts for clips still needing recording without double-counting recorded clips. A draw whose full effective clip stack cannot fit in a fresh pass is warned about and skipped rather than exceeding render-step capacity.",
+          "prs": [5687]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
