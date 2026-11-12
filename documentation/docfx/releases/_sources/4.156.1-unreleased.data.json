@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 0,
     "internal": 1
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5711": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5711",
+      "title": "[skia-sync] Merge upstream chrome/m156 bug fixes",
+      "body": "[Skia] Sync m156 Vulkan wait and displacement fixes (#5711)\n\nContext: https://github.com/mono/skia/pull/450\nContext: https://github.com/mono/SkiaSharp/pull/5716\nChanges: https://github.com/mono/skia/compare/cb6f6ce6bf3aa7102bbffa49e4b760d948d68918...712ea097151d4951652dee046a8944376fd8df1b\n\nAdvance externals/skia and its Component Governance registration to native\nmerge 712ea097151d4951652dee046a8944376fd8df1b, incorporating chrome/m156 at\n8e7863a6ff2ee1dbc6ec0631b61f3631852c8878. Keep this a servicing sync for\nrelease/4.156.x: package versions, C API signatures, managed APIs and\ndependency pins remain unchanged.\n\n~~ Propagate failed Vulkan synchronous waits internally ~~\n\nA successful queue submission could be reported as successful synchronous\nsubmission even when the subsequent fence wait failed. Make\nGrVkPrimaryCommandBuffer::forceSync return whether vkWaitForFences succeeded,\nand require both queue submission and synchronization to succeed in\nGrVkGpu::submitCommandBuffer.\n\nRetain the VK_TIMEOUT retry, diagnostics and existing cleanup path.\nAsynchronous submission behavior is unchanged. The C API already returns a\nboolean, but GRContext.Submit remains void and discards that result; this\nupdate does not introduce a managed failure return or exception.\n\n~~ Keep displacement offsets consistent with filter bounds ~~\n\nHalf-precision displacement arithmetic could round differently from the\nfloat-precision bounds calculations, making sampling disagree with the\ncomputed filter bounds.\n\nUse float2 for the scale uniform and displacement offset arithmetic in the\nruntime effect and SkSL helper. Carry the corresponding generated shader\nrepresentations together; color-channel selection remains half precision\nand the existing SkV2 uniform assignment remains compatible.\n\n~~ Record the completed native merge without changing reviewed sources ~~\n\nRepin both the gitlink and mono/skia manifest hash to the completed native\nmerge rather than the temporary reviewed head. The merge has two parents,\ndirectly includes reviewed commit\n796c0cc256ba1252fd0e755f5d8ec9f2dff9b608, and has the identical tree\n3b4bc4c2a8d1fb836d51e84b827f172f58498c31.\n\nKeep upstream_merge_commit at the incorporated upstream commit rather than\nthe fork merge SHA. The repin changes ancestry and commit identity, not\nnative source contents; independently regenerated binding trees matched\nthe reviewed source, and the repin does not require different declarations.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5687": {
       "url": "https://github.com/mono/SkiaSharp/pull/5687",
       "title": "[M156] Integrate Ganesh rendering and Graphite clip fixes",

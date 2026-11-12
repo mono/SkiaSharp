@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 2,
+    "product": 3,
     "mixed": 0,
     "internal": 7
   },
@@ -32,6 +32,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5712": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5712",
+      "title": "[skia-sync] Merge upstream chrome/m158 bug fixes",
+      "body": "[M158] Sync Vulkan synchronization and displacement fixes (#5712)\n\nRequires: https://github.com/mono/skia/pull/451\nContext: https://github.com/mono/SkiaSharp/pull/5715\nChanges: https://github.com/mono/skia/compare/600a5886625b49b5955f23c1ab1e45b68933d0dd...c8c6d08ae1ce0578c4e440dd2fe7449460f513f5\n\nBring the chrome/m158 Vulkan fence-wait and displacement-precision fixes\ninto release/4.158.x. Keep package versions and the public API unchanged;\nthis is a same-milestone native correctness update.\n\n~~ Propagate synchronous Vulkan fence-wait failures in native submission ~~\n\nNative Ganesh previously returned queue submission success even when the\nsubsequent synchronous vkWaitForFences failed. The void forceSync()\nhelper could not propagate that wait failure to the submission result.\n\nThe native update makes forceSync() return a bool and combines the wait\nresult with queue submission success when CPU synchronization is\nrequested. An absent fence is already complete; an actual wait succeeds\nonly on VK_SUCCESS. Retain the VK_TIMEOUT retry for signal-interrupted\ndrivers, submission cleanup and asynchronous submission behavior.\n\nThis corrects native Ganesh's failure reporting without adding a managed\nresult: GRContext.Submit remains void, and the C bridge and managed\nsignatures are unchanged.\n\n~~ Align displacement offsets with fp32 filter bounds ~~\n\nHalf-precision displacement scale and offset arithmetic could round\ndifferently from the fp32 filter-bounds calculation and sample a\ndifferent location. Use float2 for the scale uniform, helper parameter\nand displacement vector so offset arithmetic matches the bounds\nprecision. Keep displacement colors and channel selectors at half\nprecision; both generated shader variants follow the updated helper.\n\n~~ Record landed native ancestry without changing reviewed sources ~~\n\nAdvance externals/skia and its Component Governance registration from\n600a5886625b49b5955f23c1ab1e45b68933d0dd to actual native merge\nc8c6d08ae1ce0578c4e440dd2fe7449460f513f5. Record exact upstream commit\n2d58f195f426c41bd856208ddb85ea8f93c88295 while retaining milestone 158\nand upstream_ref chrome/m158.\n\nThe dependent repin in #5715 changes the gitlink and matching manifest\nhash from reviewed head 038363ac1db8b60d2455922f6af6558e34eabfd3 to the\nlanded merge. That merge has two parents, directly includes the reviewed\nhead and shares its exact tree,\ne4a986dde9cafacbbdddd92b617f753ea0293ea5. Preserve this ancestry so\nfuture syncs can identify already integrated upstream commits.\n\nThe source review found the complete seven-file native delta identical\nto the upstream fixes, with 72 non-interop fork patches and 106 interop\nfiles preserved and DEPS unchanged. Independent regeneration matched the\nfive managed binding directories. The parent diff changes the gitlink\nand manifest provenance, not wrappers, generated bindings, tests,\ndependency versions or package/ABI version inputs.\n\nTree equality preserves the reviewed native content; it is not a new\nruntime test run or proof of affected-device Vulkan failure-path and\ndisplacement-boundary coverage.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5702": {
       "url": "https://github.com/mono/SkiaSharp/pull/5702",
       "title": "[skia-sync] Merge upstream chrome/m158 bug fixes",
