@@ -23,6 +23,7 @@
     <!-- Ordinary desktop dependencies preserve clean no-RID builds and Framework AnyCPU support. -->
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos')) or !$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" Condition="!$(TargetFramework.Contains('-'))" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
@@ -33,7 +34,7 @@
     <PropertyGroup>
       <_RuntimeJsonPath>$(IntermediateOutputPath)runtime.json</_RuntimeJsonPath>
     </PropertyGroup>
-    <GenerateSkiaSharpRuntimeGraph Runtimes="@(SkiaSharpNativeRuntime)" Boundaries="@(SkiaSharpNativeRuntimeBoundary)" Version="$(PackageVersion)" OutputPath="$(_RuntimeJsonPath)" />
+    <GenerateNativeRuntimeGraph Library="$(PackagingGroup)" Runtimes="@(NativeRuntime)" Boundaries="@(NativeRuntimeBoundary)" Version="$(PackageVersion)" OutputPath="$(_RuntimeJsonPath)" />
     <ItemGroup>
       <FileWrites Include="$(_RuntimeJsonPath)" />
       <None Include="$(_RuntimeJsonPath)" PackagePath="runtime.json" Pack="true" />

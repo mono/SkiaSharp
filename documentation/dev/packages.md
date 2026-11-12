@@ -25,10 +25,10 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
 ## Core Managed Packages
 
 These contain the managed C# assemblies. In this experimental source version,
-`SkiaSharp` retains ordinary Windows/macOS native dependencies so plain
-applications work without a RID, and adds RID-specific desktop/server packages
-through a package-root `runtime.json`. `HarfBuzzSharp` retains its existing
-TFM-conditional NativeAssets dependencies. Workload-specific assets and
+`SkiaSharp` and `HarfBuzzSharp` include ordinary Windows/macOS/Linux native
+dependencies for neutral TFMs so plain applications work without a RID.
+Both also ship a package-root `runtime.json` for RID-specific dependencies.
+Workload-specific assets and
 WebAssembly retain their existing packaging model; see
 [Auto-Included NativeAssets](#auto-included-nativeassets).
 
@@ -78,16 +78,16 @@ Optional packages for hardware-accelerated rendering via specific GPU APIs.
 Most platforms have a pair of NativeAssets packages containing pre-built native binaries:
 
 - `SkiaSharp.NativeAssets.{Platform}` — supplies `libSkiaSharp` directly for workload platforms, or through compatibility dependencies for desktop/server platforms
-- `HarfBuzzSharp.NativeAssets.{Platform}` — contains `libHarfBuzzSharp`
+- `HarfBuzzSharp.NativeAssets.{Platform}` — supplies `libHarfBuzzSharp` through the same workload or desktop compatibility model
 
-HarfBuzzSharp's packaging is unchanged. It does **not** have Linux.NoDependencies,
-NanoServer, or WinUI variants. SkiaSharp's Win32, macOS, Linux and
-Linux.NoDependencies names remain ordinary compatibility packages; their
+Both libraries' Win32, macOS and Linux names remain ordinary compatibility
+packages. SkiaSharp also has Linux.NoDependencies; HarfBuzzSharp does **not**
+have NoDependencies, NanoServer or WinUI variants. Compatibility packages'
 exact-version dependencies restore every runtime pack in the selected family.
-For example, Win32 depends on all three Windows architectures. A modern
-RID-selected `SkiaSharp` application also restores the relevant
-`SkiaSharp.NativeAssets.{Platform}.<rid>` pack through `runtime.json`. Its ordinary desktop
-dependencies are still downloaded; the SDK filters native assets for deployment.
+For example, Win32 depends on all three Windows architectures. Modern
+RID-selected applications use `SkiaSharp.NativeAssets.{Platform}.<rid>` or
+`HarfBuzzSharp.NativeAssets.{Platform}.<rid>`. Ordinary desktop dependencies are
+still downloaded; the SDK filters native assets for deployment.
 
 Apple native assets built from this source require macOS 12+, iOS 15+, tvOS 15+
 or Mac Catalyst 15+. This raises the previous macOS 11 and iOS/tvOS/Catalyst 14
@@ -102,9 +102,9 @@ apply when consuming the assets from older or platform-neutral managed TFMs.
 
 | Package | Description |
 |---------|-------------|
-| **SkiaSharp.NativeAssets.Win32**<br/>**HarfBuzzSharp.NativeAssets.Win32** | Windows (x64, x86, arm64). SkiaSharp compatibility package; HarfBuzzSharp still auto-includes its original native package. |
-| **SkiaSharp.NativeAssets.macOS**<br/>**HarfBuzzSharp.NativeAssets.macOS** | macOS universal binary (Intel + Apple Silicon). SkiaSharp compatibility/workload package; HarfBuzzSharp packaging unchanged. |
-| **SkiaSharp.NativeAssets.Linux**<br/>**HarfBuzzSharp.NativeAssets.Linux** | Linux glibc (x64, x86, arm, arm64, riscv64, loongarch64), musl (same except x86), plus Bionic x64/arm64. SkiaSharp defaults are RID-selected; HarfBuzzSharp must still be added manually. Default glibc/musl builds require fontconfig (`libfontconfig.so.1`) for system font enumeration. |
+| **SkiaSharp.NativeAssets.Win32**<br/>**HarfBuzzSharp.NativeAssets.Win32** | Windows (x64, x86, arm64). Compatibility packages, included by neutral and Windows TFMs. |
+| **SkiaSharp.NativeAssets.macOS**<br/>**HarfBuzzSharp.NativeAssets.macOS** | macOS universal binary (Intel + Apple Silicon). Compatibility/workload packages, included by neutral and macOS TFMs. |
+| **SkiaSharp.NativeAssets.Linux**<br/>**HarfBuzzSharp.NativeAssets.Linux** | Linux glibc (x64, x86, arm, arm64, riscv64, loongarch64), musl (same except x86), plus Bionic x64/arm64. Both are included by neutral TFMs. Default SkiaSharp glibc/musl builds require fontconfig (`libfontconfig.so.1`) for system font enumeration. |
 | **SkiaSharp.NativeAssets.Linux.NoDependencies** | Linux (same architectures as above, glibc + musl). **SkiaSharp only. Must add manually.** No fontconfig, no third-party deps — only requires libc/libm/libpthread/libdl. **Designed for minimal containers.** Fonts must be loaded explicitly. |
 | **SkiaSharp.NativeAssets.NanoServer** | Windows Nano Server containers (x64 only). **SkiaSharp only. Must add manually.** |
 | **SkiaSharp.NativeAssets.WinUI** | ANGLE rendering surface for WinUI 3 apps (x64, x86, arm64). **SkiaSharp only.** Contains `SkiaSharp.Views.WinUI.Native.dll`, `libEGL.dll`, and `libGLESv2.dll` for hardware-accelerated OpenGL ES — this is **not** a Skia binary. Auto-included by SkiaSharp.Views.WinUI. |
@@ -127,14 +127,16 @@ Do not suppress undefined-symbol errors.
 
 ### Auto-Included NativeAssets
 
-#### Experimental SkiaSharp desktop/server selection
+#### Desktop/server selection
 
-The core package retains its managed assemblies and ships a generated
+Each core package retains its managed assemblies and ships a generated
 package-root `runtime.json`. For each supported desktop/server RID it adds an
 **exact-version** dependency on `SkiaSharp.NativeAssets.{Platform}.<rid>`,
 such as `SkiaSharp.NativeAssets.Win32.win-x64`,
 `SkiaSharp.NativeAssets.macOS.osx-arm64` or
-`SkiaSharp.NativeAssets.Linux.linux-x64`. The unsuffixed names remain the
+`SkiaSharp.NativeAssets.Linux.linux-x64`, with equivalent `HarfBuzzSharp`
+package names. Each library uses its own exact package version.
+The unsuffixed names remain the
 compatibility packages. The inventory is
 `binding/NativeAssets.Inventory.props`: Windows x86/x64/arm64, macOS x64/arm64,
 Linux glibc x86/x64/arm/arm64/riscv64/loongarch64, musl
@@ -147,9 +149,12 @@ There is no x86 musl runtime pack; its graph entry blocks an incompatible glibc
 x86 fallback rather than claiming support for an unbuilt artifact.
 
 This is an experimental, unofficial use of NuGet's package runtime graph.
-The core package preserves ordinary Win32/macOS dependencies for neutral TFMs,
-and Win32 dependencies for Windows TFMs. A clean no-RID Windows/macOS
-application or test therefore works without additional project properties.
+Both core packages include ordinary Win32/macOS/Linux dependencies for neutral
+TFMs, and Win32 dependencies for Windows TFMs. A clean no-RID
+Windows/macOS/Linux application or test therefore works without additional
+project properties. Linux still needs the native library's system prerequisites;
+the default SkiaSharp library requires fontconfig. Minimal containers should
+explicitly select SkiaSharp's NoDependencies variant.
 No-RID output retains the desktop native assets in runtime subdirectories,
 and .NET uses the dependency file to load the appropriate host asset.
 
@@ -162,9 +167,14 @@ dotnet publish -r linux-x64 --self-contained false
 ```
 
 Use `linux-musl-x64` rather than `linux-x64` for Alpine. A RID-selected restore
-adds the corresponding runtime package, including Linux, and the SDK deploys
-only matching native assets. This filters output, not downloads: ordinary
-Windows/macOS dependencies still restore for a Linux deployment.
+adds the corresponding runtime dependency and the SDK deploys only matching
+native assets. This filters output, not downloads: neutral TFMs restore the
+ordinary Windows/macOS/Linux families even for a single-RID deployment.
+Shared package targets prefer an exact-RID native asset over another desktop
+leaf for the same library. This prevents a compatible glibc fallback from
+winning a filename conflict against an exact musl pack. They act only when an
+exact asset exists; WinUI/ANGLE, other native libraries and portable no-RID
+output are not filtered.
 `RuntimeIdentifiers` can pre-restore several RIDs, but an ordinary console
 build/publish still needs a selected `RuntimeIdentifier` to produce RID-specific
 output. Apple universal builds instead dispatch one inner build per RID.
@@ -182,7 +192,7 @@ packages in Android workload applications. Tizen entries likewise keep
 workload-native delivery separate; Apple/mobile/WASM assets still use their
 existing workload packages rather than this desktop inventory.
 
-#### Unchanged workload and HarfBuzzSharp selection
+#### Platform-TFM selection
 
 The following retain TFM-conditional dependencies:
 
@@ -192,6 +202,7 @@ The following retain TFM-conditional dependencies:
 | HarfBuzzSharp.NativeAssets.macOS | macOS or neutral TFMs, including .NET Framework and .NET Standard |
 | SkiaSharp.NativeAssets.Win32 | Windows or neutral TFMs, including .NET Framework and .NET Standard |
 | SkiaSharp.NativeAssets.macOS | macOS or neutral TFMs, including .NET Framework and .NET Standard |
+| SkiaSharp.NativeAssets.Linux<br/>HarfBuzzSharp.NativeAssets.Linux | Neutral TFMs, including .NET Framework and .NET Standard |
 | SkiaSharp.NativeAssets.Android<br/>HarfBuzzSharp.NativeAssets.Android | Android TFM (`net8.0-android`) |
 | SkiaSharp.NativeAssets.iOS<br/>HarfBuzzSharp.NativeAssets.iOS | iOS TFM (`net8.0-ios`) |
 | SkiaSharp.NativeAssets.MacCatalyst<br/>HarfBuzzSharp.NativeAssets.MacCatalyst | Mac Catalyst TFM (`net8.0-maccatalyst`) |
@@ -200,7 +211,6 @@ The following retain TFM-conditional dependencies:
 
 **Must be added manually** (not auto-included):
 
-- `HarfBuzzSharp.NativeAssets.Linux` — for Linux server/desktop; SkiaSharp's default Linux pack is RID-selected
 - `SkiaSharp.NativeAssets.Linux.NoDependencies` — for minimal Linux containers (SkiaSharp only)
 - `SkiaSharp.NativeAssets.WebAssembly` / `HarfBuzzSharp.NativeAssets.WebAssembly` — for Blazor/Uno WASM. `SkiaSharp.NativeAssets.WebAssembly` is auto-included by `SkiaSharp.Views.Blazor`, and the Uno.Sdk adds it to Uno Platform apps; `HarfBuzzSharp.NativeAssets.WebAssembly` must always be added manually.
 - `SkiaSharp.NativeAssets.NanoServer` — for Windows Nano Server (SkiaSharp only)
@@ -210,7 +220,7 @@ The following retain TFM-conditional dependencies:
 
 | Scenario | Package | Why |
 |----------|---------|-----|
-| Standard Linux server/desktop | `SkiaSharp` with a Linux RID; optional `SkiaSharp.NativeAssets.Linux` compatibility reference | Full fontconfig integration for system font access |
+| Standard Linux server/desktop | `SkiaSharp`; optionally `HarfBuzzSharp` for text shaping | Linux natives included by default for neutral TFMs; no RID needed |
 | Docker containers (Debian/Ubuntu) | `SkiaSharp.NativeAssets.Linux.NoDependencies` | No system library dependencies beyond glibc |
 | Alpine Docker containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Includes `linux-musl-*` variants, no deps |
 | Minimal/distroless containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Zero third-party deps |
@@ -227,16 +237,16 @@ not depend on package-reference order or
 runtime-graph merge order. Unreplaced RIDs, application content and other
 libraries' native assets are untouched.
 
-**Restore limitation:** the default fontconfig pack can still be downloaded via
-the core graph when NoDependencies is explicitly referenced. It is excluded from
+**Restore limitation:** the ordinary Linux dependency downloads default
+fontconfig packs even when NoDependencies is explicitly referenced. They are excluded from
 deployment, not from restore. Bionic currently shares the same artifact in both
 flavors. NoDependencies removes fontconfig, not the platform C runtime, and fonts
 must be loaded explicitly.
 
 ### .NET Framework and packages.config
 
-`net462` and `net48` retain ordinary dependencies from `SkiaSharp` to the Win32
-and macOS compatibility packages; no RID or UCRI is required for their AnyCPU
+`net462` and `net48` have ordinary dependencies from both core packages to the
+Win32, macOS and Linux compatibility packages; no RID is required for their AnyCPU
 native loader. The compatibility dependencies install all family runtime packs.
 Each pack supplies both `build/<tfm>` and `buildTransitive/<tfm>` copy targets.
 Windows binaries are copied to `x86/`, `x64/` and `arm64/`; Linux packs retain
@@ -253,7 +263,8 @@ and add the runtime packs' `build/<tfm>` imports to the project. Keep those
 imports under source control. Libraries do not substitute for the executable's
 package installation/copy targets.
 
-Set `ShouldIncludeNativeSkiaSharp=false` to opt out of the Framework native
+Set `ShouldIncludeNativeSkiaSharp=false` or
+`ShouldIncludeNativeHarfBuzzSharp=false` to opt out of that library's Framework native
 copy targets when supplying binaries yourself. This disables copying, not
 NuGet dependency restore. Explicit Linux.NoDependencies retains the same
 folder layout and suppresses default Linux copies even if both flavors are
@@ -276,6 +287,8 @@ there is **no project per RID**. The same inventory generates the core graph and
 compatibility nuspec dependencies after the package version is finalized.
 Compatibility dependencies are pack-only, so building the repository does not
 require unpublished runtime packages to exist on a NuGet feed.
+The driver produces 18 default packs for each library and 13 SkiaSharp-only
+NoDependencies packs: 49 runtime packages in total, plus available symbol companions.
 
 From the repository root, pack all runtime packs or a selected family/RID:
 
@@ -283,10 +296,14 @@ From the repository root, pack all runtime packs or a selected family/RID:
 dotnet msbuild binding/NativeAssets.Runtime.proj -t:PackRuntimeAssets
 dotnet msbuild binding/NativeAssets.Runtime.proj -t:PackRuntimeAssets -p:NativeRuntimeFamily=Windows
 dotnet msbuild binding/NativeAssets.Runtime.proj -t:PackRuntimeAssets -p:NativeRuntimeRid=linux-musl-x64
+dotnet msbuild binding/NativeAssets.Runtime.proj -t:PackRuntimeAssets -p:NativeLibrary=HarfBuzzSharp
 dotnet pack binding/SkiaSharp.NativeAssets.RuntimePack/SkiaSharp.NativeAssets.RuntimePack.csproj -p:NativeRuntimeRid=win-x64
 ```
 
-The driver defaults to both flavors where available. Add
+The driver defaults to both libraries and both flavors where available. Select
+one library with `-p:NativeLibrary=SkiaSharp` or
+`-p:NativeLibrary=HarfBuzzSharp`; the direct pack project defaults to SkiaSharp.
+Add
 `-p:NativeRuntimeFlavor=Default` or `-p:NativeRuntimeFlavor=NoDependencies` to
 select one. The direct project defaults to `Default`. Use the **same
 `VersionSuffix`** for core, compatibility and runtime packs; exact dependencies

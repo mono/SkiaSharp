@@ -2,7 +2,8 @@
 
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'SkiaSharp.NativeAssets.RuntimePack'">
     <NativeRuntimeFlavor Condition="'$(NativeRuntimeFlavor)' == ''">Default</NativeRuntimeFlavor>
-    <BaseIntermediateOutputPath>obj\$(NativeRuntimeRid)\$(NativeRuntimeFlavor)\</BaseIntermediateOutputPath>
+    <NativeLibrary Condition="'$(NativeLibrary)' == ''">SkiaSharp</NativeLibrary>
+    <BaseIntermediateOutputPath>obj\$(NativeLibrary)\$(NativeRuntimeRid)\$(NativeRuntimeFlavor)\</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.props" />

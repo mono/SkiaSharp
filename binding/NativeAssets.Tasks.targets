@@ -1,9 +1,10 @@
 <Project>
-  <UsingTask TaskName="GenerateSkiaSharpRuntimeGraph" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="GenerateNativeRuntimeGraph" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <Runtimes ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
       <Boundaries ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
       <Version ParameterType="System.String" Required="true" />
+      <Library ParameterType="System.String" Required="true" />
       <OutputPath ParameterType="System.String" Required="true" />
     </ParameterGroup>
     <Task>
@@ -11,15 +12,15 @@
       <Using Namespace="System.Linq" />
       <Code Type="Fragment" Language="cs"><![CDATA[
         Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
-        var entries = Runtimes.Select(r => "    \"" + r.ItemSpec + "\": { \"SkiaSharp\": { \"" + r.GetMetadata("PackageId") + "\": \"[" + Version + "]\" } }")
-          .Concat(Boundaries.Select(r => "    \"" + r.ItemSpec + "\": { \"SkiaSharp\": {} }"));
+        var entries = Runtimes.Select(r => "    \"" + r.ItemSpec + "\": { \"" + Library + "\": { \"" + r.GetMetadata("PackageId") + "\": \"[" + Version + "]\" } }")
+          .Concat(Boundaries.Select(r => "    \"" + r.ItemSpec + "\": { \"" + Library + "\": {} }"));
         File.WriteAllText(OutputPath, "{\n  \"runtimes\": {\n" + string.Join(",\n", entries) + "\n  }\n}\n");
       ]]></Code>
     </Task>
   </UsingTask>
 
   <!-- Compatibility packages have pack-only dependencies: unpublished runtime packs must not be restored to build this repository. -->
-  <UsingTask TaskName="GenerateSkiaSharpCompatibilityNuspec" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="GenerateNativeCompatibilityNuspec" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <Runtimes ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
       <Frameworks ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
@@ -61,7 +62,7 @@
           var project = XDocument.Load(template.GetMetadata("FullPath")).Root;
           foreach (var runtime in Runtimes) {
             var runtimeId = runtime.GetMetadata(NoDependencies ? "NoDependenciesPackageId" : "PackageId");
-            var guard = "$" + "(_SkiaSharpFrameworkNative_" + runtimeId.Replace('.', '_').Replace('-', '_') + ")";
+            var guard = "$" + "(_NativeAssetsFramework_" + runtimeId.Replace('.', '_').Replace('-', '_') + ")";
             var target = "build\\" + framework.ItemSpec + "\\" + runtimeId + ".targets";
             var cached = "$" + "(NuGetPackageRoot)" + runtimeId.ToLowerInvariant() + "\\" + version + "\\" + target;
             var legacy = directory + "..\\..\\..\\" + runtimeId + "." + version + "\\" + target;
@@ -102,9 +103,10 @@
     </Task>
   </UsingTask>
 
-  <UsingTask TaskName="GenerateSkiaSharpFrameworkNativeTarget" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="GenerateFrameworkNativeTarget" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <Rid ParameterType="System.String" Required="true" />
+      <Library ParameterType="System.String" Required="true" />
       <PackageId ParameterType="System.String" Required="true" />
       <FileName ParameterType="System.String" Required="true" />
       <FrameworkDirectory ParameterType="System.String" Required="true" />
@@ -116,8 +118,8 @@
       <Code Type="Fragment" Language="cs"><![CDATA[
         XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
         var directory = "$" + "(MSBuildThisFileDirectory)";
-        var condition = "'" + "$" + "(ShouldIncludeNativeSkiaSharp)' != 'false'";
-        var guard = "_SkiaSharpFrameworkNative_" + PackageId.Replace('.', '_').Replace('-', '_');
+        var condition = "'" + "$" + "(ShouldIncludeNative" + Library + ")' != 'false'";
+        var guard = "_NativeAssetsFramework_" + PackageId.Replace('.', '_').Replace('-', '_');
         var project = new XElement(ns + "Project",
           new XElement(ns + "Import", new XAttribute("Project", directory + "..\\" + PackageId + ".targets")),
           new XElement(ns + "ItemGroup", new XAttribute("Condition", condition),

@@ -2,10 +2,10 @@
   <Import Project="NativeAssets.Inventory.props" />
   <Import Project="NativeAssets.Tasks.targets" />
   <ItemGroup>
-    <_CompatibilityRuntime Include="@(SkiaSharpNativeRuntime->WithMetadataValue('Family', '$(NativeRuntimeFamily)'))" />
-    <PackageFile Include="$(MSBuildThisFileDirectory)SkiaSharp\buildTransitive\SkiaSharp.NativeAssets.targets" PackagePath="buildTransitive\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' != 'NoDependencies'" />
+    <_CompatibilityRuntime Include="@(NativeRuntime->WithMetadataValue('Family', '$(NativeRuntimeFamily)'))" />
+    <PackageFile Include="$(MSBuildThisFileDirectory)NativeAssets.Runtime.targets" PackagePath="buildTransitive\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' != 'NoDependencies'" />
     <PackageFile Include="$(MSBuildThisFileDirectory)SkiaSharp\buildTransitive\SkiaSharp.NoDependencies.targets" PackagePath="buildTransitive\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'" />
-    <PackageFile Include="$(MSBuildThisFileDirectory)SkiaSharp\buildTransitive\SkiaSharp.NativeAssets.targets" PackagePath="build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' != 'NoDependencies'" />
+    <PackageFile Include="$(MSBuildThisFileDirectory)NativeAssets.Runtime.targets" PackagePath="build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' != 'NoDependencies'" />
     <PackageFile Include="$(MSBuildThisFileDirectory)SkiaSharp\buildTransitive\SkiaSharp.NoDependencies.targets" PackagePath="build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'" />
   </ItemGroup>
   <Target Name="_GenerateCompatibilityNuspec" BeforeTargets="GenerateNuspec"
@@ -29,7 +29,7 @@
       <_CompatibilityMetadata Include="icon" Value="$(PackageIcon)" />
       <_CompatibilityMetadata Include="readme" Value="$(PackageReadmeFile)" />
     </ItemGroup>
-    <GenerateSkiaSharpCompatibilityNuspec Runtimes="@(_CompatibilityRuntime)" Frameworks="@(_TargetFrameworks)"
+    <GenerateNativeCompatibilityNuspec Runtimes="@(_CompatibilityRuntime)" Frameworks="@(_TargetFrameworks)"
         Files="@(_PackageFiles)" Metadata="@(_CompatibilityMetadata)" NoDependencies="$(_CompatibilityNoDependencies)" OutputPath="$(NuspecFile)"
         RepositoryUrl="$(RepositoryUrl)" RepositoryBranch="$(RepositoryBranch)" RepositoryCommit="$(RepositoryCommit)" />
     <ItemGroup>

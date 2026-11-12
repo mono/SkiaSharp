@@ -1,0 +1,45 @@
+<Project>
+  <PropertyGroup>
+    <_NativeAssetsResolvePackageAssets Condition="'$(UsingMicrosoftNETSdk)' == 'true'">ResolvePackageAssets</_NativeAssetsResolvePackageAssets>
+    <_NativeRuntimeExcludedPackageIds>||</_NativeRuntimeExcludedPackageIds>
+  </PropertyGroup>
+
+  <!-- RID fallback is evaluated per package; do not let a glibc leaf win over an exact musl leaf. -->
+  <Target Name="_SelectExactNativeRuntimeAssets"
+          BeforeTargets="ResolveLockFileCopyLocalFiles;_HandlePackageFileConflicts;GenerateBuildDependencyFile"
+          DependsOnTargets="$(_NativeAssetsResolvePackageAssets)"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(RuntimeIdentifier)' != ''">
+    <ItemGroup>
+      <_NativeRuntimeCandidate Include="@(NativeCopyLocalItems)"
+                               Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(NativeCopyLocalItems.NuGetPackageId)', '(?i)^(SkiaSharp|HarfBuzzSharp)[.]NativeAssets[.](Win32[.]win-|macOS([.]osx-|$)|Linux[.](NoDependencies[.])?linux-)'))">
+        <Library>$([System.Text.RegularExpressions.Regex]::Match('%(NativeCopyLocalItems.NuGetPackageId)', '(?i)^(SkiaSharp|HarfBuzzSharp)').Value.ToLowerInvariant())</Library>
+      </_NativeRuntimeCandidate>
+      <_NativeRuntimeExactLibrary Include="@(_NativeRuntimeCandidate->'%(Library)')"
+                                 Condition="$([System.String]::Copy('%(_NativeRuntimeCandidate.NuGetPackageId)').ToLowerInvariant().EndsWith('.$(RuntimeIdentifier)'))" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_NativeRuntimeExactLibraries>|@(_NativeRuntimeExactLibrary, '|')|</_NativeRuntimeExactLibraries>
+    </PropertyGroup>
+    <ItemGroup>
+      <_NativeRuntimeExcludedPackage Include="@(_NativeRuntimeCandidate->'%(NuGetPackageId)')"
+                                     Condition="$(_NativeRuntimeExactLibraries.Contains('|%(_NativeRuntimeCandidate.Library)|')) and !$([System.String]::Copy('%(_NativeRuntimeCandidate.NuGetPackageId)').ToLowerInvariant().EndsWith('.$(RuntimeIdentifier)'))" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_NativeRuntimeExcludedPackageIds>|@(_NativeRuntimeExcludedPackage, '|')|</_NativeRuntimeExcludedPackageIds>
+      <_NativeRuntimeExcludedPackageIds>$(_NativeRuntimeExcludedPackageIds.ToLowerInvariant())</_NativeRuntimeExcludedPackageIds>
+    </PropertyGroup>
+    <ItemGroup>
+      <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(NativeCopyLocalItems.NuGetPackageId)' != '' and $(_NativeRuntimeExcludedPackageIds.Contains('|$([System.String]::Copy('%(NativeCopyLocalItems.NuGetPackageId)').ToLowerInvariant())|'))" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' != '' and $(_NativeRuntimeExcludedPackageIds.Contains('|$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').ToLowerInvariant())|'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SelectExactNativeRuntimePublishAssets"
+          AfterTargets="_ResolveCopyLocalAssetsForPublish"
+          BeforeTargets="_HandlePackageFileConflictsForPublish;GeneratePublishDependencyFile"
+          DependsOnTargets="_SelectExactNativeRuntimeAssets">
+    <ItemGroup>
+      <_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssets)" Condition="'%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)' != '' and $(_NativeRuntimeExcludedPackageIds.Contains('|$([System.String]::Copy('%(_ResolvedCopyLocalPublishAssets.NuGetPackageId)').ToLowerInvariant())|'))" />
+    </ItemGroup>
+  </Target>
+</Project>
