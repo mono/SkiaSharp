@@ -230,7 +230,7 @@ def render(data, prose):
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        if hb.get("prs"):
+        if hb.get("prs") or (prose.get("harfbuzz_summary") or "").strip():
             # Summary only: the API diff is in the banner and the community credit
             # is in the contributor table, so this section stays a clean narrative
             # instead of dumping every HarfBuzz-touching build PR.
@@ -701,11 +701,9 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
         intro = (
             "Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose "
             "minor version is the Chrome/Skia milestone it builds on. Two release "
-            "lines are supported at a time — a **stable** line for production and a "
-            "**preview** line for the milestone currently being stabilized — "
-            "mirroring "
-            "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) "
-            "(stable / extended-stable and beta). Everything else stays published "
+            "paths are supported — **stable** for production and **preview** for "
+            "testing ahead of stable releases. Each path can include multiple "
+            "supported milestone lines, as listed below. Everything else stays published "
             "for reference but is no longer serviced.")
     else:
         intro = "Release notes for all SkiaSharp versions."
@@ -777,10 +775,9 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
         lines.extend([
             "## Support overview",
             "",
-            "- **Stable** — the line we recommend for production apps. Tracks "
-            "Chrome's Stable / Extended Stable channel.",
-            "- **Preview** — prerelease NuGets for the next milestone, so you can "
-            "test ahead of its stable release. Tracks Chrome's Beta channel.",
+            "- **Stable** — supported stable releases recommended for production apps.",
+            "- **Preview** — supported prerelease NuGets for testing ahead of "
+            "their stable releases.",
             "- **Out of support** — older 3.x / 4.x lines, still listed below for "
             "reference but no longer serviced.",
             "- **Obsolete** — SkiaSharp 1.x and 2.x, no longer maintained.",

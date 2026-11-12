@@ -7,13 +7,15 @@
     "kind": "preview",
     "date": null,
     "nuget_url": null,
-    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.158.0-preview.1.26556.2",
+    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.158.0-preview.2.26560.5",
     "github_release_url": null
   },
   "harfbuzz": {
-    "version": "14.4.0.300",
-    "api_diff_link": "harfbuzzsharp/14.4.0.300/index.md",
-    "prs": []
+    "version": "15.0.0",
+    "api_diff_link": "harfbuzzsharp/15.0.0/index.md",
+    "prs": [
+      5554
+    ]
   },
   "supersedes": [],
   "superseded_by": null,
@@ -24,22 +26,37 @@
     },
     {
       "label": "HarfBuzzSharp API diff",
-      "href": "harfbuzzsharp/14.4.0.300/index.md"
+      "href": "harfbuzzsharp/15.0.0/index.md"
     }
   ],
   "tallies": {
-    "product": 1,
+    "product": 3,
     "mixed": 0,
-    "internal": 4
+    "internal": 9
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [
     {
+      "key": "v4.158.0-preview.2.26560.5",
+      "label": "Preview 2",
+      "date": "November 9, 2026",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.158.0-preview.1.26556.2...v4.158.0-preview.2.26560.5",
+      "prs": [
+        5669,
+        5672,
+        5659,
+        5653,
+        5658,
+        5651,
+        5554
+      ]
+    },
+    {
       "key": "v4.158.0-preview.1.26556.2",
       "label": "Preview 1",
       "date": "November 6, 2026",
-      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.157.0-preview.1.26556.1...v4.158.0-preview.1.26556.2",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.157.0-rc.1.26560.6...v4.158.0-preview.1.26556.2",
       "prs": [
         5634,
         5627,
@@ -56,10 +73,10 @@
       "public_version": "4.158.0-preview.1.26556.2",
       "channel": "preview",
       "label": "Preview 1 (Build 26556.2)",
-      "previous_tag": "v4.157.0-preview.1.26556.1",
+      "previous_tag": "v4.157.0-rc.1.26560.6",
       "target_sha": "2622cee0fce079938bbb72b52ee91e3a0e112de7",
       "date": "2026-11-06",
-      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.157.0-preview.1.26556.1...v4.158.0-preview.1.26556.2",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.157.0-rc.1.26560.6...v4.158.0-preview.1.26556.2",
       "prs": [
         5615,
         5620,
@@ -78,9 +95,100 @@
           "kind": "ai"
         }
       ]
+    },
+    {
+      "tag": "v4.158.0-preview.2.26560.5",
+      "core_version": "4.158.0",
+      "public_version": "4.158.0-preview.2.26560.5",
+      "channel": "preview",
+      "label": "Preview 2 (Build 26560.5)",
+      "previous_tag": "v4.158.0-preview.1.26556.2",
+      "target_sha": "1d60a943354c45a01cde759afdd02b00ff9132b0",
+      "date": "2026-11-09",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.158.0-preview.1.26556.2...v4.158.0-preview.2.26560.5",
+      "prs": [
+        5554,
+        5651,
+        5653,
+        5658,
+        5659,
+        5669,
+        5672
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        },
+        {
+          "display": "@github-actions[bot]",
+          "kind": "automation"
+        }
+      ]
     }
   ],
   "prs": {
+    "5669": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5669",
+      "title": "[M158] Adopt upstream GPU correctness fixes",
+      "body": "[M158] Adopt upstream GPU correctness fixes (#5669)\n\nContext: https://github.com/mono/skia/pull/439\nContext: https://github.com/mono/SkiaSharp/pull/5675\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1671411\nChanges: https://github.com/google/skia/compare/75584a96108b2bf0b1c74b0536126fa4917b64a8...361c8326695a06b7492fb6eeeff803c0c92a2447\n\nAdopt the merged m158 GPU bug fixes without a milestone or package-version\ntransition. Update the native gitlink and Component Governance identities;\nthe companion native PR carries the implementation changes.\n\n~~ Respect affected ARM Vulkan device-loss teardown timing ~~\n\nSome Mali drivers report idle completion before device teardown is safe.\nAdopt the Ganesh and Graphite workaround that adds a 1 ms delay on the\nrelevant loss paths for ARM proprietary drivers from 42.0 through versions\nbelow 56.0, rather than delaying ordinary successful submissions.\n\n~~ Preserve hairline cap scale under reflected transforms ~~\n\nA negative determinant previously selected a local-space unit outset for\nzero-length square-capped hairlines, allowing reflected scales to enlarge\nthe cap. Adopt the signed inverse-determinant calculation and finite-result\nguard for singular matrices and overflow.\n\n~~ Select text-atlas samplers despite interpolation imprecision ~~\n\nGanesh's flat-varying hint is not a guarantee. Adopt rounding before the\ninteger sampler-index comparison in ordinary and LCD atlas lookups so\ninterpolation error does not select the wrong atlas.\n\n~~ Bound Graphite clip recording within a render pass ~~\n\nAccount for effective undrawn clip elements when deciding to flush.\nBecause flushing resets clip recording, reject and log a draw whose clips\ncannot fit a fresh pass instead of overflowing the pass structures.\nThe native update includes DeviceTestClipRenderStepLimits.\n\n~~ Pin the actual native merge without changing the reviewed tree ~~\n\nPin mono/skia merge 7329f82be5f66b326acdfadbc87a62793e6d6dba rather\nthan leaving the parent on the temporary reviewed branch head. Its two\nparents include reviewed head 365bf08330f18bbe64c5e9f84f251262afe7f371,\nand both commits have tree 3bf18d50473a78bcfe982206ef0810e825aad412.\n\nKeep the gitlink and mono/skia commitHash aligned while recording exact\nupstream commit 361c8326695a06b7492fb6eeeff803c0c92a2447 separately.\nRetain chrome/m158 and milestone 158; no managed declarations or version\ninputs change in this parent PR.\n\nBuild 1671411 succeeded for the pre-repin parent source, including the\nsingle Mac Catalyst retry after an agent-side .NET setup permission error.\nIndependent regeneration matched the generated bindings. The repin changes\nnative commit identity, not its tree; affected-device Vulkan loss behavior\nwas not specifically established by the integration review.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5672": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5672",
+      "title": "Refresh 4.15x release documentation and set the m156 support floor",
+      "body": "Complete release notes and API records for all published 4.150\u20134.158 versions before freezing older regeneration. Retire pre-m156 support and use the matching HarfBuzz history floor while preserving historical comparisons and artifacts.\n\nCorrect published co-release metadata on cached/scoped runs, fix HarfBuzz API landing links, retain the superseded m155 preview record, and document verified package API changes even when their PRs merged earlier.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5659": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5659",
+      "title": "Fix Alpine apk bootstrap artifact pin",
+      "body": "Use the available Alpine 3.21 apk-tools-static 2.14.13-r0 archive and its verified SHA-256. The previous 2.14.6-r3 archive now returns HTTP 404, preventing musl build images from bootstrapping.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5653": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5653",
+      "title": "Update release support for 4.155, 4.157, and 4.158",
+      "body": "* Update 4.155 release support tier\n\n* Consolidate release support for 4.155, 4.157, and 4.158\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5658": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5658",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5651": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5651",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5554": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5554",
+      "title": "Update HarfBuzz to 15.0.0 and complete script constants",
+      "body": "Update HarfBuzz to 15.0.0 and complete script constants (#5554)\n\nRequires: https://github.com/mono/skia/pull/419\nChanges: https://github.com/harfbuzz/harfbuzz/compare/36cb489cb02ce4b92099669ba9f9bea348eff93f...35f656a1a2bab548ea7f54a6dd3fba2b09680d14\n\nKeep the native HarfBuzz revision, packaged library identity and managed\nbindings aligned while adopting 15.0.0. Complete the manually maintained\nScript constants without replacing their existing struct-based API.\n\n~~ Align the native upgrade with its package identity ~~\n\nAdopt HarfBuzz revision 35f656a1a2bab548ea7f54a6dd3fba2b09680d14\nthrough mono/skia#419. The native companion updates DEPS and the GN source\ninventory for the added headers and test sources, including the change\nfrom OT/Layout/types.hh to hb-ot-dual.hh.\n\nPin externals/skia and its matching governance registration to native\ncommit fb69790c17977edad0142d277435ec5514dd0f2d. Record HarfBuzz\n15.0.0 and its exact revision and version-header evidence in cgmanifest.\n\nAdvance the native SONAME from 0.61440.0 to 0.61500.0. Reset the\nHarfBuzzSharp file and NativeAssets package versions from 14.4.0.300 to\n15.0.0: a native version upgrade establishes a new revision-zero bucket,\nrather than continuing the previous version's milestone servicing range.\nKeep the HarfBuzzSharp assembly version at 1.0.0.0 and retain the m158\nSkiaSharp product versions.\n\nThe rebased source passed the macOS ARM64 native build and unfiltered\nnet10.0 console solution, including existing shaping and subsetting tests.\n\n~~ Regenerate the deprecated font-face setter import ~~\n\nHarfBuzz moves hb_font_set_face from hb-font.h to hb-deprecated.h and marks\nit deprecated in favor of hb_font_create. The binding configuration\nalready excludes hb-deprecated.h, so regeneration removes the unused\ninternal hb_font_set_face declarations and delegate path.\n\nDo not restore the import by hand or widen deprecated-header generation:\nFont(Face) already constructs fonts through hb_font_create, and this\nremoval does not remove a public managed member. The current-head\nbinding-generation determinism check passes after regeneration.\n\n~~ Complete named scripts without changing the Script programming model ~~\n\nThe native script list advanced while Script.fields.cs remained manually\nmaintained. Regenerating interop alone cannot repair that gap:\nhb_script_t deliberately maps to UInt32 with generation disabled because\nHarfBuzzSharp exposes a custom Script struct, not a generated enum.\n\nAdd 30 documented static readonly fields: Jurchen, ProtoCuneiform and Seal\nfrom the updated native list, plus 27 previously omitted constants.\nPreserve the 149 existing field declarations and values. The resulting\n179 named tag values match the HB_TAG entries in the selected native\nhb-script-list.h.\n\nKeep the struct's parsing, numeric conversions and horizontal-direction\nlookup intact. Document the manual synchronization requirement beside the\ngenerator mapping so future native updates do not mistake disabled enum\ngeneration for complete script coverage.\n\nAdd a theory case for each new field, asserting its numeric tag,\nToString output, Parse result and successful TryParse round-trip against\nthe native-backed parser.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5634": {
       "url": "https://github.com/mono/SkiaSharp/pull/5634",
       "title": "[M158] Update SkiaSharp to Skia milestone 158",

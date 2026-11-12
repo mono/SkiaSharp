@@ -60,7 +60,7 @@
 
 ## SkiaSharp.Views.Uno.WinUI
 
-- [SkiaSharp.Views.Windows](SkiaSharp.Views.Uno.WinUI/SkiaSharp.Views.Windows.md)
+- [SkiaSharp.Views.Windows](SkiaSharp.Views.Uno.WinUI/SkiaSharp.Views.Windows.md) — ⚠️ breaking
 
 ## SkiaSharp.Views.WPF
 

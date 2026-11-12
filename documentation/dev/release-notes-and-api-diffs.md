@@ -115,9 +115,9 @@ emits both SkiaSharp-versioned and HarfBuzzSharp-versioned diff folders (§3.3/�
 {
   "skiasharp":      { "4.147.0": { "status": "superseded", "superseded_by": "4.148.0" },
                       "4.148.0": { "compare_to": "3.119.4" } },
-  "harfbuzzsharp":  { },
-  "support":        { "stable": ["4.148"], "preview": ["4.150"] },
-  "history_floor":  { "skiasharp": "3.0.0" }
+  "harfbuzzsharp":  { "14.2.1.500": { "status": "superseded", "superseded_by": "14.4.0" } },
+  "support":        { "stable": ["4.155", "4.156"], "preview": ["4.157", "4.158"] },
+  "history_floor":  { "skiasharp": "4.156.0", "harfbuzzsharp": "14.4.0.100" }
 }
 ```
 
@@ -126,6 +126,10 @@ there are no standalone HarfBuzzSharp release-notes pages anymore (§1.5/§4.5).
 `harfbuzzsharp` remains the override surface for the HarfBuzzSharp **API-diff**
 folders, whose package versions can differ from SkiaSharp's. An absent or empty
 bucket means "no overrides — pure defaults" for that bucket.
+
+HarfBuzzSharp `14.2.1.500` is retained as a superseded m155 preview: it shipped
+before the `14.4.0` native upgrade. Its override preserves that preview's API
+record without using it as a baseline for subsequent releases.
 
 Alongside the override buckets the file carries non-family top-level keys:
 
@@ -223,17 +227,19 @@ of a `release/<ver>` branch: a stale or abandoned preview branch that is not lis
 page.
 
 **History floor (a performance skip, not a rule change).** The top-level
-`history_floor` block in `versions.json` optionally sets a per-bucket minimum line core
-(e.g. `{"skiasharp": "3.0.0"}`). A line **below** the floor is not regenerated and not
-re-emitted, so a full regeneration skips the obsolete back-catalogue (every 1.x/2.x
-line) it would otherwise rebuild from the NuGet feed on every run. It is **not** a
+`history_floor` block in `versions.json` optionally sets a per-bucket minimum line core.
+The current floors are `{"skiasharp": "4.156.0", "harfbuzzsharp": "14.4.0.100"}`:
+HarfBuzzSharp 14.4.0.100 co-ships with the SkiaSharp 4.156.0 previews. A line **below** its family's
+floor has no release facts or API diffs regenerated, so a full preparation skips the
+older back-catalogue it would otherwise rebuild from the NuGet feed. The offline
+Markdown renderer may still render its cached historical inputs. It is **not** a
 deletion: pages and API-diff folders already committed below the floor are left exactly
 as they are — the Cake engine skips *clearing* them symmetrically with skipping their
 *emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
-are unaffected: a floored line can still be downloaded as a baseline (e.g. `3.116.0`
-still diffs against `2.88.9`) — both via an explicit `compare_to` override **and** as the
+are unaffected: an older line can still be downloaded as a baseline (e.g. `4.156.0`
+still diffs against `4.155.0`) — both via an explicit `compare_to` override **and** as the
 *implicit predecessor* of the lowest emitted line. That lowest line (the floor line
-itself, e.g. `3.0.0`) has no emitted predecessor — its natural baseline sits below the
+itself, e.g. `4.156.0`) has no emitted predecessor — its natural baseline sits below the
 floor — so the API-diff engine resolves it from the pre-floor emittable set and downloads
 it **for comparison only** (never emitting the below-floor line's own page). Without this,
 the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its entire API
@@ -802,33 +808,33 @@ SkiaSharp minor *is* the Chrome/Skia milestone):
 
 ```json
 "support": {
-  "stable": ["4.148"],
-  "preview": ["4.150"]
+  "stable": ["4.155", "4.156"],
+  "preview": ["4.157", "4.158"]
 }
 ```
 
-- **`stable`** — the supported stable line(s): normally the current **Chrome Stable**
-  milestone, or the **Chrome Extended-stable** milestone during the *promotion gap* (when
-  a `preview` line is about to go stable).
-- **`preview`** — the in-flight preview/RC line(s): normally the **Chrome Beta** milestone,
-  or newer when previewing ahead in Dev/Canary.
+- **`stable`** — the supported SkiaSharp `major.minor` lines that actually shipped
+  stable packages on NuGet.org, not Chrome's current stable milestones. There is no
+  automatic limit on the number of supported lines; only maintainers remove them.
+  Preview-only lines do not count, and patches do not duplicate a line.
+- **`preview`** — the in-flight SkiaSharp preview/RC line(s).
 
 Either field may be a single string or a list. An absent or empty block makes every 3.x+
 line render as top-level/supported (the legacy flat layout), so the feature is purely
 additive.
 
-**Release-driven membership; policy-driven removal.** Release Finish proposes a focused
+**Release-driven membership; manual retirement.** Release Finish proposes a focused
 PR from the exact public SkiaSharp package version: previews and RCs add their line to
-`preview`, while stable releases add their line to `stable` and remove only that same
-line from `preview`. It never removes another supported line. Maintainers explicitly
-remove lines when support ends. The values *correspond to* Chrome's channels, but the block
-is a **release-backed, human-curated grouping for the docs site**, not a mirror of the live
-channels. SkiaSharp does not ship every Chrome milestone, so membership is derived only from
-versions that actually reached NuGet.org and never from Chromium Dash. Release Finish makes
-the safe monotonic additions and same-line promotion; support retirement remains an explicit
-editorial decision.
+`preview` without changing stable support. Stable releases add their line to `stable`
+and remove only the same line from `preview`. All other supported lines are preserved,
+even when more than two stable lines remain; maintainers explicitly remove lines when
+support ends. Finishing an older shipment cannot displace another supported line. SkiaSharp does not
+ship every Chrome milestone and may lag behind Chrome, so membership comes from NuGet.org,
+never Chromium Dash. The `history_floor` values control regeneration work, not support:
+the current floors remain SkiaSharp `4.156.0` and HarfBuzzSharp `14.4.0.100`, even while
+SkiaSharp `4.155` remains supported.
 
-**Drift is detected, not auto-fixed.** The security audit's milestone heads-up
+**Chrome drift is advisory, not support policy.** The security audit's milestone heads-up
 (`.agents/skills/security-audit/scripts/query-milestone-schedule.py`, Step 3) already
 fetches the live Chrome channels, so it also compares this block to them and emits an
 `ok` / `warn` / `drift` verdict in its `support` output section. With `E ≤ S ≤ B` = Chrome
@@ -892,6 +898,11 @@ The source of truth stays in Cake: for published lines, Cake reads the
 the in-flight unpublished line, it falls back to the working tree's `scripts/VERSIONS.txt`
 values so the next page can link the HarfBuzz API-diff folder before the package is on
 the feed.
+
+When the active SkiaSharp line already has a public package, Cake reads its
+published dependency even if API diffs are cached or outside the requested scope.
+The working tree can already target the next HarfBuzz engine on that same
+SkiaSharp line; it must not overwrite the published co-release mapping.
 
 Cake **merges** the sidecar instead of overwriting it blindly. A scoped or incremental
 run only recomputes the lines it actually processed, so it loads the committed object,
@@ -1224,10 +1235,11 @@ When `data.harfbuzz.version` exists, `release-notes-render.py` emits:
 
 Then it renders exactly one paragraph:
 
-- If `data.harfbuzz.prs` is non-empty, the paragraph is the AI-authored
-  `prose.harfbuzz_summary`. The prose schema allows `harfbuzz_summary` to be a string
-  or `null`, and validation requires a non-empty string only in this case.
-- If `data.harfbuzz.prs` is empty, the renderer emits the fixed line:
+- A non-empty `prose.harfbuzz_summary` supplies the paragraph. Validation requires
+  it when `data.harfbuzz.prs` is non-empty. It may also describe independently
+  verified public-package/API-diff changes when no HarfBuzz PRs were collected in
+  this SkiaSharp range: a later cut can first co-ship changes merged earlier.
+- If neither a summary nor HarfBuzz PRs are present, the renderer emits the fixed line:
   *No HarfBuzzSharp binding changes shipped in this release — it rebuilds the same
   HarfBuzz as the previous line.*
 

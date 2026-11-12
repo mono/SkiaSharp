@@ -1,30 +1,22 @@
 {
-  "theme": "HarfBuzz update and script coverage",
-  "highlights_headline": "The next release updates HarfBuzzSharp to HarfBuzz 15.0.0 and adds 30 named script constants.",
-  "highlights_body": "The update keeps the existing Script struct API and HarfBuzzSharp assembly version while moving its packages to version 15.0.0.",
+  "theme": "Stronger hash seed generation",
+  "highlights_headline": "The shared hash-code implementation now seeds its per-process randomization from the operating system's cryptographic random generator.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "HarfBuzz 15.0.0",
-          "detail": "Updates the bundled HarfBuzz engine to 15.0.0 and moves HarfBuzzSharp packages from 14.4.0.300 to 15.0.0. The HarfBuzzSharp assembly version remains 1.0.0.0.",
-          "prs": [5554]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "Complete named script coverage",
-          "detail": "Adds 30 Script fields, including Jurchen, ProtoCuneiform and Seal, bringing the named constants to 179. Existing field values, parsing, numeric conversions and horizontal-direction lookup remain unchanged.",
-          "prs": [5554]
+          "lead": "Cryptographic hash seeding",
+          "detail": "The HashCode polyfill shared by SkiaSharp and HarfBuzzSharp replaces System.Random with RandomNumberGenerator. Hash codes remain stable within a process and randomized between processes; first use now initializes the cryptography dependency.",
+          "prs": [5408]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
+  "contributor_summaries": {
+    "rolfbjarne": "Replaced the shared hash seed with cryptographic randomness and added analyzer guards for shipped code."
+  },
   "preview_summaries": {}
 }
