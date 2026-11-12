@@ -427,6 +427,7 @@ and optional pre-publication BAR/CI package testing. See
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
 | Merge Skia update | `/merge-skia-update` | "merge the Skia bump", "land the Skia sync PRs" |
+| Upstream a focused fork fix | `/upstream-skia` | "upstream this fix", "prepare a Skia Gerrit CL", "rebase our CL" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |
 | Create/improve skill | `/skill-creator` | "create a new skill", "improve skill X" |
