@@ -1,9 +1,30 @@
 {
-  "theme": "Next servicing line opened",
-  "highlights_headline": "The 4.156.1 servicing line is open, with no consumer-facing changes collected yet.",
+  "theme": "GPU rendering corrections",
+  "highlights_headline": "SkiaSharp 4.156.1 corrects GPU rendering and clip handling while retaining Skia m156 and the managed API surface.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Correct transformed curves",
+          "detail": "Corrects transformed ellipse and rounded-rectangle stroke widths and corner radii, and clamps corner radii to prevent overlap.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Avoid stale Ganesh atlas work",
+          "detail": "Empty flushes no longer leave stale token comparisons that make earlier atlas work appear pending in later flushes.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Respect Graphite clip capacity",
+          "detail": "Counts the full effective clip stack when starting a render pass without double-counting recorded clips. Draws that cannot fit are warned about and skipped rather than exceeding pass capacity.",
+          "prs": [5687]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

@@ -1,22 +1,32 @@
 {
-  "theme": "Stronger hash seed generation",
-  "highlights_headline": "The shared hash-code implementation now seeds its per-process randomization from the operating system's cryptographic random generator.",
-  "highlights_body": null,
+  "theme": "Engine maintenance update",
+  "highlights_headline": "SkiaSharp 4.158.0 incorporates upstream Skia m158 bug fixes.",
+  "highlights_body": "The shared hash-code implementation also switches to operating-system cryptographic randomness for its per-process seed.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Refresh Skia m158 fixes",
+          "detail": "Updates the bundled engine with upstream fixes from chrome/m158.",
+          "prs": [5702]
+        }
+      ]
+    },
     {
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Cryptographic hash seeding",
-          "detail": "The HashCode polyfill shared by SkiaSharp and HarfBuzzSharp replaces System.Random with RandomNumberGenerator. Hash codes remain stable within a process and randomized between processes; first use now initializes the cryptography dependency.",
+          "lead": "Use cryptographic hash seeding",
+          "detail": "The shared HashCode implementation in SkiaSharp and HarfBuzzSharp now obtains its seed from RandomNumberGenerator rather than System.Random. Hash codes remain stable within a process and randomized between processes; first use now initializes cryptographic randomness.",
           "prs": [5408]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "rolfbjarne": "Replaced the shared hash seed with cryptographic randomness and added analyzer guards for shipped code."
+    "rolfbjarne": "Switched the shared hash-code seed to operating-system cryptographic randomness and added analyzer checks for shipped code."
   },
   "preview_summaries": {}
 }
