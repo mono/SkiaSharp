@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
     "internal": 1
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5687": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5687",
+      "title": "[M156] Integrate Ganesh rendering and Graphite clip fixes",
+      "body": "[M156] Integrate Ganesh rendering and Graphite clip fixes (#5687)\n\nContext: https://github.com/mono/skia/pull/444\nContext: https://github.com/mono/SkiaSharp/pull/5698\nChanges: https://github.com/mono/skia/compare/d1717dc22ef2203b7fc9bf0e01078b37b1a4af6b...cb6f6ce6bf3aa7102bbffa49e4b760d948d68918\n\nAdvance externals/skia and its Component Governance registration to the\nactual mono/skia merge cb6f6ce6bf3aa7102bbffa49e4b760d948d68918. Record\nupstream 24e65cdd9b6421351dde22acd81dc604bd8073b8 on chrome/m156 while\nretaining milestone 156 and the servicing line's version identities.\n\nThe merged native tree equals reviewed head\n8c8de9aa05950b0b251924873c361a5441997b54. The dependent repin changes\ncommit identity and provenance, not the native source that was reviewed.\nC API declarations and DEPS are unchanged; independent regeneration\nfound no binding differences. No managed API or release version changes.\n\n~~ Avoid stale atlas work after empty Ganesh flushes ~~\n\nEmpty flushes could leave per-flush token comparisons stale. Advance\nthe draw token when GrOpFlushState resets and catch the flush token up,\nso work scheduled during one flush is not treated as pending later.\n\n~~ Correct transformed ellipse and rounded-rectangle geometry ~~\n\nFix the matrix-axis mapping of rrect radii and ellipse/rrect stroke\nwidths, and remove the redundant quarter-turn swap. Clamp transformed\ncorner radii to half the device-space bounds to prevent corner overlap.\n\n~~ Keep Graphite clip draws within pass capacity ~~\n\nAccount for clip elements that still need recording without counting\nalready-recorded DrawListLayer clips twice. A fresh pass must fit the\ndraw and its full effective clip stack; warn and skip a draw that cannot\nfit rather than exceeding render-step capacity.\n\nThe upstream DeviceTestClipRenderStepLimits regression exercises\naccumulating and reused clip stacks, an oversized stack, and a normal\ndraw after restoring it, asserting that a recording can still be made.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5678": {
       "url": "https://github.com/mono/SkiaSharp/pull/5678",
       "title": "Bump to the next version (4.156.1) after release",

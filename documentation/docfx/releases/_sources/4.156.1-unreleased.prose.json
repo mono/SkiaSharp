@@ -1,9 +1,30 @@
 {
-  "theme": "Next servicing line opened",
-  "highlights_headline": "The 4.156.1 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "GPU rendering corrections",
+  "highlights_headline": "SkiaSharp 4.156.1 includes GPU rendering corrections for transformed shapes, flush handling, and native clip recording.",
+  "highlights_body": "These fixes retain the Skia m156 engine and leave the managed API unchanged.",
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Correct transformed ellipses and rounded rectangles",
+          "detail": "Corrects transformed stroke widths and rounded-rectangle radii, including quarter-turn transforms. Corner radii are clamped to half the device-space bounds to prevent overlap.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Keep Ganesh atlas work aligned with flushes",
+          "detail": "Fixes stale flush tracking after empty GPU flushes so atlas work from one flush is not treated as pending in a later flush.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Bound native Graphite clip recording",
+          "detail": "The bundled engine accounts for pending clips when checking render-pass capacity and avoids double-counting recorded clips. A draw whose full clip stack cannot fit in a fresh pass is warned about and skipped rather than exceeding capacity.",
+          "prs": [5687]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

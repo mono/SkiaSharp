@@ -1,0 +1,36 @@
+{
+  "format": 6,
+  "version": "4.157.0",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": null,
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [],
+  "tallies": {
+    "product": 1,
+    "mixed": 0,
+    "internal": 0
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5688": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5688",
+      "title": "[M157] Integrate Ganesh rendering and Graphite clip fixes",
+      "body": "[M157] Integrate Ganesh rendering and Graphite clip fixes (#5688)\n\nRequires: https://github.com/mono/skia/pull/445\nContext: https://github.com/mono/SkiaSharp/pull/5699\nChanges: https://github.com/mono/skia/compare/24c21cc82f1f03e03740b742309c7a5e0d50beb3...d06aa926d8e17ccc2976658a9a18256a1c7f6629\n\nBring the m157 GPU correctness fixes into release/4.157.x without changing\nmanaged APIs, generated bindings or the servicing line's version identities.\n\n~~ Avoid stale atlas work after empty Ganesh flushes ~~\n\nEmpty flushes could leave per-flush token comparisons stale. Advance\nthe draw token when GrOpFlushState resets and catch the flush token up,\nso work scheduled during one flush is not treated as pending later.\n\n~~ Correct transformed ellipse and rounded-rectangle geometry ~~\n\nOff-diagonal matrix coefficients were mixed between rows when mapping\nrrect radii and ellipse/rrect stroke widths. Correct those transforms\nand remove the redundant quarter-turn swap: the corrected mapping\nalready produces device-space axes.\n\nClamp corner radii to half the transformed bounds to prevent overlap.\nDocument the rect-preserving and similarity assumptions behind the\nmapping shortcuts.\n\n~~ Keep Graphite clip draws within pass capacity ~~\n\nFlush checks omitted clip elements that still needed recording. Count\nthem without counting already-recorded DrawListLayer clips twice.\nBecause a flush resets clips to undrawn, a fresh pass must fit the draw\nand its full effective clip stack. Warn and skip a draw that cannot fit\nrather than exceeding render-step capacity. Allow capacity assertions\nto accept a pass exactly at its limit.\n\nDeviceTestClipRenderStepLimits exercises accumulating and reused clip\nstacks, an oversized stack, and a normal draw after restoring it,\nasserting that a recording can still be made.\n\n~~ Record landed native ancestry without changing reviewed content ~~\n\nUpdate externals/skia and its Component Governance registration to\nd06aa926d8e17ccc2976658a9a18256a1c7f6629. Record upstream chrome/m157\nat fef60e46c522b87e5802ddf0a215a763dd5e0483 while retaining milestone 157.\n\nThe native merge directly contains reviewed head\n87950a45740362dbb4f5bff22e25a05f0f8936d1 and has the identical tree,\n3df572a4f085f94771a95608850bb21792bfa6bb. The dependent repin updates\nonly the gitlink and matching manifest SHA, not the reviewed native source.\n\nC API declarations and native DEPS remain unchanged. Independent binding\nregeneration matched the committed outputs, so no wrapper or generated\ndeclaration changes are needed.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    }
+  }
+}

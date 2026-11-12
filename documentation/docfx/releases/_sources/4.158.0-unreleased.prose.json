@@ -1,22 +1,32 @@
 {
-  "theme": "Stronger hash seed generation",
-  "highlights_headline": "The shared hash-code implementation now seeds its per-process randomization from the operating system's cryptographic random generator.",
-  "highlights_body": null,
+  "theme": "Engine fixes and hash initialization",
+  "highlights_headline": "SkiaSharp 4.158.0 incorporates upstream Skia m158 bug fixes.",
+  "highlights_body": "The shared hash-code helper in SkiaSharp and HarfBuzzSharp also changes its per-process seed source while preserving within-process stability.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Refresh Skia m158 bug fixes",
+          "detail": "Updates the bundled renderer with upstream fixes from the chrome/m158 branch while retaining milestone 158.",
+          "prs": [5702]
+        }
+      ]
+    },
     {
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Cryptographic hash seeding",
-          "detail": "The HashCode polyfill shared by SkiaSharp and HarfBuzzSharp replaces System.Random with RandomNumberGenerator. Hash codes remain stable within a process and randomized between processes; first use now initializes the cryptography dependency.",
+          "lead": "Use operating-system randomness for hash initialization",
+          "detail": "The shared HashCode helper in SkiaSharp and HarfBuzzSharp now uses RandomNumberGenerator for its per-process seed. Hashes remain randomized between processes and stable within a process. First use now loads System.Security.Cryptography and has additional startup cost.",
           "prs": [5408]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "rolfbjarne": "Replaced the shared hash seed with cryptographic randomness and added analyzer guards for shipped code."
+    "rolfbjarne": "Updated shared hash-code initialization to use cryptographic randomness and added analyzer checks for randomness in shipped code."
   },
   "preview_summaries": {}
 }
