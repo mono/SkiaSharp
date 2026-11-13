@@ -85,7 +85,7 @@ Task("libSkiaSharp")
             win_toolchain_version +
             win_vcvars_version +
             win_sdk_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DSK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
 
