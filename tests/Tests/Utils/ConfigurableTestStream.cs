@@ -1,0 +1,133 @@
+using System;
+using System.IO;
+
+namespace SkiaSharp.Tests
+{
+	public sealed class ConfigurableTestStream : Stream
+	{
+		private readonly byte[] data;
+		private readonly bool canSeek;
+		private readonly int maxBytesPerRead;
+		private readonly int earlyEndPosition;
+		private readonly long reportedLength;
+		private readonly int maxZeroReadsAfterEof;
+		private long position;
+		private int consecutiveZeroReads;
+		private bool disposed;
+
+		public ConfigurableTestStream(
+			byte[] data,
+			bool canSeek = true,
+			int maxBytesPerRead = int.MaxValue,
+			int earlyEndPosition = -1,
+			long? reportedLength = null,
+			int maxZeroReadsAfterEof = 16)
+		{
+			this.data = data ?? throw new ArgumentNullException(nameof(data));
+			this.canSeek = canSeek;
+			this.maxBytesPerRead = maxBytesPerRead;
+			this.earlyEndPosition = earlyEndPosition;
+			this.reportedLength = reportedLength ?? data.Length;
+			this.maxZeroReadsAfterEof = maxZeroReadsAfterEof;
+		}
+
+		public int TotalReadCalls { get; private set; }
+		public int ZeroReadCount { get; private set; }
+		public int MaxRequestedReadCount { get; private set; }
+		public bool InfiniteLoopDetected { get; private set; }
+		public bool NegativePositionAttempted { get; private set; }
+
+		public override bool CanRead => !disposed;
+		public override bool CanSeek => !disposed && canSeek;
+		public override bool CanWrite => false;
+
+		public override long Length =>
+			canSeek ? reportedLength : throw new NotSupportedException();
+
+		public override long Position
+		{
+			get => canSeek ? position : throw new NotSupportedException();
+			set
+			{
+				if (!canSeek)
+					throw new NotSupportedException();
+
+				consecutiveZeroReads = 0;
+				if (value < 0)
+				{
+					NegativePositionAttempted = true;
+					position = 0;
+					return;
+				}
+
+				position = value;
+			}
+		}
+
+		public override void Flush()
+		{
+		}
+
+		public override int Read(byte[] buffer, int offset, int count)
+		{
+			TotalReadCalls++;
+			if (count > MaxRequestedReadCount)
+				MaxRequestedReadCount = count;
+
+			if (count <= 0)
+				return 0;
+
+			var logicalEnd = earlyEndPosition >= 0
+				? Math.Min(data.Length, earlyEndPosition)
+				: data.Length;
+
+			if (position >= logicalEnd)
+			{
+				ZeroReadCount++;
+				consecutiveZeroReads++;
+				if (consecutiveZeroReads > maxZeroReadsAfterEof)
+				{
+					InfiniteLoopDetected = true;
+					position = Math.Max(position, reportedLength);
+				}
+				return 0;
+			}
+
+			consecutiveZeroReads = 0;
+			var available = (int)Math.Min(logicalEnd - position, int.MaxValue);
+			var toCopy = Math.Min(Math.Min(count, maxBytesPerRead), available);
+			Buffer.BlockCopy(data, (int)position, buffer, offset, toCopy);
+			position += toCopy;
+			return toCopy;
+		}
+
+		public override long Seek(long offset, SeekOrigin origin)
+		{
+			if (!canSeek)
+				throw new NotSupportedException();
+
+			var target = origin switch
+			{
+				SeekOrigin.Begin => offset,
+				SeekOrigin.Current => position + offset,
+				SeekOrigin.End => reportedLength + offset,
+				_ => throw new ArgumentOutOfRangeException(nameof(origin)),
+			};
+
+			Position = target;
+			return position;
+		}
+
+		public override void SetLength(long value) =>
+			throw new NotSupportedException();
+
+		public override void Write(byte[] buffer, int offset, int count) =>
+			throw new NotSupportedException();
+
+		protected override void Dispose(bool disposing)
+		{
+			disposed = true;
+			base.Dispose(disposing);
+		}
+	}
+}
