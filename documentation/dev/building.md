@@ -286,11 +286,11 @@ HarfBuzzSharp packages to the supplied artifacts, so missing packages cannot
 fall back to public versions. User NuGet caches and input packages are not modified.
 
 Single-target theory inputs explicitly cover `net10.0` and `net11.0`, independently
-of the selected SDK: eight default-package rows and 36 RID rows (44 total).
-For each family and framework, build and publish first verify the default package
-includes Win32/macOS native assets and **no Linux native assets**. With an explicit
-`NativeAssets.Linux` reference, the nine-case matrix below verifies that Linux
-assets are included and that RID selection behaves as expected.
+of the selected SDK. For each family and framework, build and publish verify
+that the default package includes Windows, macOS and Linux native assets.
+Both libraries also execute native calls on the first no-RID build.
+An explicit `NativeAssets.Linux` reference remains supported; the matrix below
+checks that it preserves the defaults and that RID selection behaves as expected.
 
 For each family and framework, the suite tests `build`, `publish`, and
 `publish -r linux-x64` against three project configurations:
@@ -304,12 +304,13 @@ For each family and framework, the suite tests `build`, `publish`, and
 Plural `RuntimeIdentifiers` are restore targets, **not an output allow-list**.
 The tests compare native paths and hashes with the actual input packages,
 rather than accepting only a successful MSBuild exit code.
-Linux assets are explicitly referenced; this suite does not change package
-dependencies or filtering behavior. No fake packages or mock CLI are used.
+The suite also verifies both libraries' exact-version runtime graphs, legacy
+Framework copy targets, and that SkiaSharp NoDependencies replacement leaves
+HarfBuzzSharp native assets intact. No fake packages or mock CLI are used.
 
 Four additional theory cases cover each family with `build` and `publish` of a
-real console project declaring `TargetFrameworks=net10.0;net11.0`, for **48 tests**
-in total. The outer build omits `--framework` and `-o`, validating both normal
+real console project declaring `TargetFrameworks=net10.0;net11.0`.
+The outer build omits `--framework` and `-o`, validating both normal
 per-framework output trees. Publish selects each framework separately with
 `--framework` and distinct output directories, then rechecks both trees to catch
 cross-framework overwrites. These cases validate eight framework outputs,

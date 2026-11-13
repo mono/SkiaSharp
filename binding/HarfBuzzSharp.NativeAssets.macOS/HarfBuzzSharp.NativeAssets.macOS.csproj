@@ -3,19 +3,25 @@
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMPrevious)-macos$(TPVmacOSPrevious);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <NativeRuntimeFamily>macOS</NativeRuntimeFamily>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
+    <PackageNotes>Compatibility package with exact-version dependencies on both macOS runtime packs. Each pack contains the unthinned universal dylib; the compatibility package preserves its workload/Framework asset.</PackageNotes>
   </PropertyGroup>
   <ItemGroup>
-    <PackageFile Include="..\..\output\native\osx\libHarfBuzzSharp*" PackagePath="runtimes\osx\native\%(Filename)%(Extension)" />
-    <PackageSymbolFile Include="..\..\output\native\osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM" />
-    <PackageSymbolFile Include="..\..\output\native\osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM" />
+    <PackageFile Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native\libHarfBuzzSharp.dylib" />
+    <PackageSymbolFile Include="..\..\output\native\osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM\%(RecursiveDir)%(Filename)%(Extension)" />
+    <PackageSymbolFile Include="..\..\output\native\osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <Target Name="_ValidateMacOSCompatibilityAsset" BeforeTargets="_GetPackageFiles">
+    <Error Condition="!Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib')" Text="Required macOS workload artifact is missing: output\native\osx\libHarfBuzzSharp.dylib." />
+  </Target>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
       <TfmSpecificPackageFile Include="buildTransitive\macos\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
       <TfmSpecificPackageFile Include="buildTransitive\net4\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+      <TfmSpecificPackageFile Include="buildTransitive\net4\HarfBuzzSharp.targets" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>

@@ -6,7 +6,6 @@
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
@@ -15,15 +14,31 @@
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <!-- Platform-TFM packages: these use platform-specific build systems (ABI folders, framework bundles, static linking) -->
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Android\SkiaSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.iOS\SkiaSharp.NativeAssets.iOS.csproj" Condition="$(TargetFramework.Contains('-ios'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
-    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos')) or !$(TargetFramework.Contains('-'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
+    <!-- Ordinary desktop dependencies preserve clean no-RID builds and Framework AnyCPU support. -->
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.macOS\SkiaSharp.NativeAssets.macOS.csproj" Condition="$(TargetFramework.Contains('-macos')) or !$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" Condition="!$(TargetFramework.Contains('-'))" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
+  <Import Project="..\NativeAssets.Inventory.props" />
+  <Import Project="..\NativeAssets.Tasks.targets" />
+  <Target Name="_GenerateRuntimeJson" BeforeTargets="_GetPackageFiles" DependsOnTargets="CollectAssemblyVersionInfo">
+    <PropertyGroup>
+      <_RuntimeJsonPath>$(IntermediateOutputPath)runtime.json</_RuntimeJsonPath>
+    </PropertyGroup>
+    <GenerateNativeRuntimeGraph Library="$(PackagingGroup)" Runtimes="@(NativeRuntime)" Boundaries="@(NativeRuntimeBoundary)" Version="$(PackageVersion)" OutputPath="$(_RuntimeJsonPath)" />
+    <ItemGroup>
+      <FileWrites Include="$(_RuntimeJsonPath)" />
+      <None Include="$(_RuntimeJsonPath)" PackagePath="runtime.json" Pack="true" />
+    </ItemGroup>
+  </Target>
+
 </Project>

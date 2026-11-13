@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+  <PropertyGroup>
+    <TargetFrameworks>net462;net48;netstandard2.0</TargetFrameworks>
+    <PackagingGroup>$(NativeLibrary)</PackagingGroup>
+    <Title>$(NativeLibrary) native runtime for $(NativeRuntimeRid) ($(NativeRuntimeFlavor))</Title>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+  <Import Project="..\NativeAssets.Inventory.props" />
+  <Import Project="..\NativeAssets.Tasks.targets" />
+  <ItemGroup>
+    <_SelectedRuntime Include="@(NativeRuntime->WithMetadataValue('Identity', '$(NativeRuntimeRid)'))" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PackageId>$(_NativeRuntimePackagePrefix).$(NativeRuntimeRid)</PackageId>
+    <PackageId Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'">$(_NativeRuntimePackagePrefix).NoDependencies.$(NativeRuntimeRid)</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\NativeAssets.Runtime.targets" PackagePath="buildTransitive\$(PackageId).targets;build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' == 'Default'" />
+    <PackageFile Include="..\SkiaSharp\buildTransitive\SkiaSharp.NoDependencies.targets" PackagePath="buildTransitive\$(PackageId).targets;build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'" />
+  </ItemGroup>
+  <Target Name="_PrepareNativeRuntimePack" BeforeTargets="_GetPackageFiles">
+    <PropertyGroup>
+      <_NativeSource>@(_SelectedRuntime->'%(Source)')</_NativeSource>
+      <_NativeSource Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'">@(_SelectedRuntime->'%(NoDependenciesSource)')</_NativeSource>
+      <_NativeFileName>@(_SelectedRuntime->'%(NativeFile)')</_NativeFileName>
+      <_NativeFamily>@(_SelectedRuntime->'%(Family)')</_NativeFamily>
+      <_SymbolArchitecture>@(_SelectedRuntime->'%(SymbolArchitecture)')</_SymbolArchitecture>
+      <_NativeSourcePath>$(MSBuildThisFileDirectory)..\..\output\native\$(_NativeSource)\</_NativeSourcePath>
+    </PropertyGroup>
+    <Error Condition="'@(_SelectedRuntime)' == ''" Text="Unknown or missing NativeRuntimeRid '$(NativeRuntimeRid)'. Select a RID from binding\NativeAssets.Inventory.props." />
+    <Error Condition="'$(NativeLibrary)' != 'SkiaSharp' and '$(NativeLibrary)' != 'HarfBuzzSharp'" Text="NativeLibrary must be SkiaSharp or HarfBuzzSharp." />
+    <Error Condition="'$(NativeRuntimeFlavor)' != 'Default' and '$(NativeRuntimeFlavor)' != 'NoDependencies'" Text="NativeRuntimeFlavor must be Default or NoDependencies." />
+    <Error Condition="'$(_NativeSource)' == ''" Text="No $(NativeRuntimeFlavor) native artifact is defined for $(NativeRuntimeRid)." />
+    <Error Condition="!Exists('$(_NativeSourcePath)$(_NativeFileName)')" Text="Required native artifact is missing: $(_NativeSourcePath)$(_NativeFileName). Download/build native artifacts before packing." />
+    <ItemGroup>
+      <None Include="$(_NativeSourcePath)$(_NativeFileName)" Pack="true" PackagePath="runtimes\$(NativeRuntimeRid)\native\$(_NativeFileName)" />
+      <PackageSymbolFile Include="$(_NativeSourcePath)lib$(NativeLibrary)*.pdb;$(_NativeSourcePath)lib$(NativeLibrary)*.dbg" PackagePath="runtimes\$(NativeRuntimeRid)\native\%(Filename)%(Extension)" />
+      <PackageSymbolFile Include="$(_NativeSourcePath)lib$(NativeLibrary)\$(_SymbolArchitecture).xcarchive\dSYMs\lib$(NativeLibrary).dylib.dSYM\**"
+                         PackagePath="runtimes\$(NativeRuntimeRid)\native\symbols\$(_SymbolArchitecture)\lib$(NativeLibrary).dylib.dSYM\%(RecursiveDir)%(Filename)%(Extension)"
+                         Condition="'$(_NativeFamily)' == 'macOS'" />
+    </ItemGroup>
+  </Target>
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" Condition="$(TargetFramework.StartsWith('net4'))" DependsOnTargets="_PrepareNativeRuntimePack">
+    <PropertyGroup>
+      <_FrameworkNativeTarget>$(IntermediateOutputPath)$(PackageId).targets</_FrameworkNativeTarget>
+    </PropertyGroup>
+    <GenerateFrameworkNativeTarget Library="$(NativeLibrary)" Rid="$(NativeRuntimeRid)" PackageId="$(PackageId)" FileName="$(_NativeFileName)"
+        FrameworkDirectory="@(_SelectedRuntime->'%(FrameworkDirectory)')" OutputPath="$(_FrameworkNativeTarget)" />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(_FrameworkNativeTarget)" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets;buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+      <FileWrites Include="$(_FrameworkNativeTarget)" />
+    </ItemGroup>
+  </Target>
+</Project>

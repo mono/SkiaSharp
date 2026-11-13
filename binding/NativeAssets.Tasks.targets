@@ -1,0 +1,139 @@
+<Project>
+  <UsingTask TaskName="GenerateNativeRuntimeGraph" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Runtimes ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Boundaries ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Version ParameterType="System.String" Required="true" />
+      <Library ParameterType="System.String" Required="true" />
+      <OutputPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
+        var entries = Runtimes.Select(r => "    \"" + r.ItemSpec + "\": { \"" + Library + "\": { \"" + r.GetMetadata("PackageId") + "\": \"[" + Version + "]\" } }")
+          .Concat(Boundaries.Select(r => "    \"" + r.ItemSpec + "\": { \"" + Library + "\": {} }"));
+        File.WriteAllText(OutputPath, "{\n  \"runtimes\": {\n" + string.Join(",\n", entries) + "\n  }\n}\n");
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!-- Compatibility packages have pack-only dependencies: unpublished runtime packs must not be restored to build this repository. -->
+  <UsingTask TaskName="GenerateNativeCompatibilityNuspec" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Runtimes ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Frameworks ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Metadata ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <RepositoryUrl ParameterType="System.String" />
+      <RepositoryBranch ParameterType="System.String" />
+      <RepositoryCommit ParameterType="System.String" />
+      <NoDependencies ParameterType="System.Boolean" />
+      <OutputPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var metadata = new XElement("metadata", Metadata.Where(m => !string.IsNullOrEmpty(m.GetMetadata("Value"))).Select(m =>
+          new XElement(m.ItemSpec, m.GetMetadata("Value"))));
+        metadata.Add(new XElement("license", new XAttribute("type", "expression"), "MIT"));
+        if (!string.IsNullOrEmpty(RepositoryUrl)) {
+          var repository = new XElement("repository", new XAttribute("type", "git"), new XAttribute("url", RepositoryUrl));
+          if (!string.IsNullOrEmpty(RepositoryBranch)) repository.Add(new XAttribute("branch", RepositoryBranch));
+          if (!string.IsNullOrEmpty(RepositoryCommit)) repository.Add(new XAttribute("commit", RepositoryCommit));
+          metadata.Add(repository);
+        }
+        var version = Metadata.Single(m => m.ItemSpec == "version").GetMetadata("Value");
+        metadata.Add(new XElement("dependencies", Frameworks.Select(f => new XElement("group",
+          new XAttribute("targetFramework", f.ItemSpec), Runtimes.Select(r => new XElement("dependency",
+            new XAttribute("id", r.GetMetadata(NoDependencies ? "NoDependenciesPackageId" : "PackageId")),
+            new XAttribute("version", "[" + version + "]")))))));
+        var id = Metadata.Single(m => m.ItemSpec == "id").GetMetadata("Value");
+        var frameworkTargets = new System.Collections.Generic.Dictionary<string, string>();
+        XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+        foreach (var framework in Frameworks.Where(f => f.ItemSpec.StartsWith("net4"))) {
+          var directory = "$" + "(MSBuildThisFileDirectory)";
+          var templatePath = "buildTransitive/" + framework.ItemSpec + "/" + id + ".targets";
+          var template = Files.First(file => file.GetMetadata("PackagePath").Split(';')
+            .Any(path => path.Replace('\\', '/') == templatePath));
+          var project = XDocument.Load(template.GetMetadata("FullPath")).Root;
+          foreach (var runtime in Runtimes) {
+            var runtimeId = runtime.GetMetadata(NoDependencies ? "NoDependenciesPackageId" : "PackageId");
+            var guard = "$" + "(_NativeAssetsFramework_" + runtimeId.Replace('.', '_').Replace('-', '_') + ")";
+            var target = "build\\" + framework.ItemSpec + "\\" + runtimeId + ".targets";
+            var cached = "$" + "(NuGetPackageRoot)" + runtimeId.ToLowerInvariant() + "\\" + version + "\\" + target;
+            var legacy = directory + "..\\..\\..\\" + runtimeId + "." + version + "\\" + target;
+            project.Add(new XElement(ns + "Import", new XAttribute("Project", cached),
+              new XAttribute("Condition", "'" + guard + "' != 'true' and Exists('" + cached + "')")));
+            project.Add(new XElement(ns + "Import", new XAttribute("Project", legacy),
+              new XAttribute("Condition", "'" + guard + "' != 'true' and !Exists('" + cached + "')")));
+          }
+          var path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(OutputPath), "compatibility-build", framework.ItemSpec, id + ".targets"));
+          Directory.CreateDirectory(Path.GetDirectoryName(path));
+          new XDocument(project).Save(path);
+          frameworkTargets.Add(framework.ItemSpec, path);
+        }
+        var files = new XElement("files");
+        foreach (var file in Files) {
+          var source = file.GetMetadata("FullPath");
+          var target = file.GetMetadata("PackagePath");
+          if (string.IsNullOrEmpty(target))
+            continue;
+          var recursive = file.GetMetadata("NuGetRecursiveDir");
+          if (string.IsNullOrEmpty(recursive))
+            recursive = file.GetMetadata("RecursiveDir");
+          foreach (var packagePath in target.Split(';')) {
+            var path = packagePath.Replace('\\', '/');
+            var segments = path.Split('/');
+            var packageSource = source;
+            if (segments.Length == 3 && (segments[0] == "build" || segments[0] == "buildTransitive") &&
+                segments[2] == id + ".targets" && frameworkTargets.ContainsKey(segments[1]))
+              packageSource = frameworkTargets[segments[1]];
+            if (path.EndsWith("/") || path.EndsWith(".dSYM") || !Path.HasExtension(path))
+              path = path.TrimEnd('/') + "/" + recursive.Replace('\\', '/') + Path.GetFileName(source);
+            files.Add(new XElement("file", new XAttribute("src", packageSource), new XAttribute("target", path)));
+          }
+        }
+        Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
+        new XDocument(new XElement("package", metadata, files)).Save(OutputPath);
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <UsingTask TaskName="GenerateFrameworkNativeTarget" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Rid ParameterType="System.String" Required="true" />
+      <Library ParameterType="System.String" Required="true" />
+      <PackageId ParameterType="System.String" Required="true" />
+      <FileName ParameterType="System.String" Required="true" />
+      <FrameworkDirectory ParameterType="System.String" Required="true" />
+      <OutputPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+        var directory = "$" + "(MSBuildThisFileDirectory)";
+        var condition = "'" + "$" + "(ShouldIncludeNative" + Library + ")' != 'false'";
+        var guard = "_NativeAssetsFramework_" + PackageId.Replace('.', '_').Replace('-', '_');
+        var project = new XElement(ns + "Project",
+          new XElement(ns + "Import", new XAttribute("Project", directory + "..\\" + PackageId + ".targets")),
+          new XElement(ns + "ItemGroup", new XAttribute("Condition", condition),
+            new XElement(ns + "None", new XAttribute("Include", directory + "..\\..\\runtimes\\" + Rid + "\\native\\" + FileName),
+              new XAttribute("Exclude", "@" + "(None)"),
+              new XElement(ns + "Link", FrameworkDirectory + "\\" + FileName),
+              new XElement(ns + "NuGetPackageId", PackageId),
+              new XElement(ns + "Visible", "false"),
+              new XElement(ns + "CopyToOutputDirectory", "PreserveNewest"),
+              new XElement(ns + "CopyToPublishDirectory", "PreserveNewest"))),
+          new XElement(ns + "PropertyGroup", new XElement(ns + guard, "true")));
+        Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
+        new XDocument(project).Save(OutputPath);
+      ]]></Code>
+    </Task>
+  </UsingTask>
+</Project>
