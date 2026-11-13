@@ -32,6 +32,8 @@ Before building SkiaSharp, ensure you have:
   ```
 - **Microsoft OpenJDK 21** - Required for .NET for Android builds. Set `JAVA_HOME`
   to the JDK home and place its `bin` directory first on `PATH`.
+  The CI installer accepts JVM diagnostics such as `JAVA_TOOL_OPTIONS` output
+  while checking tool versions, and can re-extract its download on task retries.
 
 ## Preparation
 
