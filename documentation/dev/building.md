@@ -105,6 +105,10 @@ from the `internal/mono-skia` mirror using step-scoped Git URL rewriting and a
 mirror-URL-scoped `System.AccessToken` header. Public CI and local builds keep
 using GitHub. All builds use the same `.gitmodules` URL, pinned commit and cache
 identity; a missing mirror commit fails checkout rather than falling back.
+The existing checkout steps select the mirror when `System.TeamProject` is
+`internal`, using Git's `-c` and `--config-env` options without a setup script
+or changes to inherited Git configuration. The token is supplied only in those
+steps' environment, not job-wide.
 
 The internal pipelines declare the `skiaMirror` repository resource, and jobs
 that initialize submodules reference it with `uses.repositories` (no additional

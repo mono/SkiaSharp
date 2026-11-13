@@ -47,12 +47,18 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     continueOnError: ${{ parameters.continueOnError }}
-    ${{ if and(eq(variables['useInternalSkiaMirror'], 'true'), ne(parameters.skipSteps, 'true'), or(startsWith(parameters.name, 'native_'), eq(parameters.checkoutSubmodules, 'true'))) }}:
+    ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(parameters.skipSteps, 'true'), or(startsWith(parameters.name, 'native_'), eq(parameters.checkoutSubmodules, 'true'))) }}:
       uses:
         repositories:
           - skiaMirror
     variables:
       DOTNET_NOLOGO: true
+      ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+        SKIA_GIT_OPTIONS: >-
+          -c url.https://dev.azure.com/dnceng/internal/_git/mono-skia.insteadOf=https://github.com/mono/skia.git
+          --config-env=http.https://dev.azure.com/dnceng/internal/_git/mono-skia.extraheader=SKIA_MIRROR_AUTH_HEADER
+      ${{ else }}:
+        SKIA_GIT_OPTIONS: ''
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
@@ -155,7 +161,7 @@ jobs:
             }
           displayName: Evaluate cache decision
       - ${{ else }}:
-        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true'), ne(variables['useInternalSkiaMirror'], 'true')) }}:
+        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true'), ne(variables['System.TeamProject'], 'internal')) }}:
           - checkout: self
             submodules: recursive
         - ${{ else }}:
@@ -174,14 +180,19 @@ jobs:
 
       # Native source builds only use Skia. Merge-only jobs use no submodules.
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:
-        - template: /scripts/azure-templates-steps-checkout-submodules.yml@self
-          parameters:
-            skiaOnly: true
-            useInternalMirror: ${{ eq(variables['useInternalSkiaMirror'], 'true') }}
-      - ${{ if and(not(startsWith(parameters.name, 'native_')), eq(parameters.checkoutSubmodules, 'true'), or(and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)), and(eq(variables['useInternalSkiaMirror'], 'true'), ne(parameters.skipSteps, 'true')))) }}:
-        - template: /scripts/azure-templates-steps-checkout-submodules.yml@self
-          parameters:
-            useInternalMirror: ${{ eq(variables['useInternalSkiaMirror'], 'true') }}
+        - pwsh: git $(SKIA_GIT_OPTIONS) submodule update --init --recursive externals/skia
+          displayName: Checkout native build submodules
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+            env:
+              SKIA_MIRROR_AUTH_HEADER: 'AUTHORIZATION: bearer $(System.AccessToken)'
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), eq(parameters.checkoutSubmodules, 'true'), or(and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)), and(eq(variables['System.TeamProject'], 'internal'), ne(parameters.skipSteps, 'true')))) }}:
+        - pwsh: git $(SKIA_GIT_OPTIONS) submodule update --init --recursive
+          displayName: Full checkout (submodules)
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+            env:
+              SKIA_MIRROR_AUTH_HEADER: 'AUTHORIZATION: bearer $(System.AccessToken)'
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
