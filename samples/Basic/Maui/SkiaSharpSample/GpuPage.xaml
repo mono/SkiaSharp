@@ -5,12 +5,13 @@
              Title="GPU">
 
     <Grid>
-        <skia:SKGLView x:Name="skiaView"
-                       AutomationId="basic-canvas-gpu"
+        <ContentView AutomationId="basic-canvas-gpu" SemanticProperties.Description="GPU canvas">
+            <skia:SKGLView x:Name="skiaView"
                        PaintSurface="OnPaintSurface"
                        HasRenderLoop="False"
                        EnableTouchEvents="True"
                        Touch="OnTouch" />
+        </ContentView>
 
         <!-- FPS pill overlay — centered top -->
         <Border HorizontalOptions="Center"

@@ -14,7 +14,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 var RUN_GROUP = Argument("runGroup", "");
 var RUN_GROUPS = new[] { "Build", "Host", "Docker", "Android", "Ios", "Mac", "Windows" };
-var APPIUM_RUN_GROUPS = new[] { "Android", "Ios" };
+var APPIUM_RUN_GROUPS = new[] { "Android", "Ios", "Mac", "Windows" };
 if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Unknown sample run group '{RUN_GROUP}'. Expected {string.Join(", ", RUN_GROUPS)}.");
 

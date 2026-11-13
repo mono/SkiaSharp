@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory)]
-    [ValidateSet('iOS', 'Android')]
+    [ValidateSet('iOS', 'Android', 'Mac', 'Windows')]
     [string] $Platform
 )
 
@@ -9,6 +9,12 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 if ($Platform -eq 'iOS' -and -not $IsMacOS) {
     throw 'The iOS sample tests require macOS.'
+}
+if ($Platform -eq 'Mac' -and -not $IsMacOS) {
+    throw 'The Mac desktop sample tests require macOS.'
+}
+if ($Platform -eq 'Windows' -and ($IsMacOS -or $IsLinux)) {
+    throw 'The Windows desktop sample tests require Windows.'
 }
 
 npm install --global appium@3
@@ -31,8 +37,17 @@ if ($Platform -eq 'iOS') {
     if (-not (Test-Path $wdaApp -PathType Container)) {
         throw "The XCUITest driver did not provide the prebuilt simulator WDA app: $wdaApp"
     }
-} else {
+} elseif ($Platform -eq 'Android') {
     # Keep the driver/server pair deterministic because the runtime job
     # preinstalls these exact server APKs once before starting any sessions.
     appium driver install uiautomator2@8.7.0
+} elseif ($Platform -eq 'Mac') {
+    appium driver install mac2
+} else {
+    appium driver install windows
+    appium driver run windows install-wad
+    $wad = Join-Path ${env:ProgramFiles(x86)} 'Windows Application Driver/WinAppDriver.exe'
+    if (-not (Test-Path $wad -PathType Leaf)) {
+        throw "WinAppDriver was not installed at the expected path: $wad"
+    }
 }

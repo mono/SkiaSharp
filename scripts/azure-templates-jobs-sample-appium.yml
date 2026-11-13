@@ -25,10 +25,16 @@ jobs:
             workloadSetVersion: $(DOTNET_WORKLOAD_VERSION)
             ${{ if eq(parameters.platform, 'android') }}:
               workloads: [android, maui-android]
+            ${{ elseif eq(parameters.platform, 'mac') }}:
+              workloads: [macos, maccatalyst, maui]
+            ${{ elseif eq(parameters.platform, 'windows') }}:
+              workloads: [maui]
             ${{ else }}:
               workloads: [ios, maui]
       installAndroidSdk: ${{ and(eq(parameters.phase, 'build'), eq(parameters.platform, 'android')) }}
       installAndroidNdk: false
+      ${{ if eq(parameters.platform, 'mac') }}:
+        installXcode: false
       retryCount: 0
       shouldPublish: false
       requiredArtifacts:
@@ -63,10 +69,12 @@ jobs:
               $PSNativeCommandUseErrorActionPreference = $true
               $archives = 'output/sample-archives/${{ parameters.platform }}'
               New-Item $archives -ItemType Directory -Force | Out-Null
-              tar -czf "$archives/sample-apps.tar.gz" --exclude=cache --exclude=obj -C output/sample-apps '${{ parameters.platform }}'
+              $folders = @('${{ parameters.platform }}')
+              if ('${{ parameters.platform }}' -eq 'mac') { $folders += 'maccatalyst' }
+              tar -czf "$archives/sample-apps.tar.gz" --exclude=cache --exclude=obj -C output/sample-apps @folders
             displayName: Archive prepared sample apps
         - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs/samples --images-out output/logs/testlogs/samples/golden-images
-          displayName: Extract device reference diagnostics
+          displayName: Extract Appium reference diagnostics
           condition: always()
         - task: PublishTestResults@2
           condition: always()

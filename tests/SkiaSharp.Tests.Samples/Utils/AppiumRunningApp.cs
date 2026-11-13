@@ -48,6 +48,8 @@ internal abstract class AppiumRunningApp
 
 	protected virtual Task CapturePlatformDiagnostics() => Task.CompletedTask;
 
+	protected virtual Task StopPlatform() => Task.CompletedTask;
+
 	internal virtual SKRectI ComparisonInsets(SKSizeI size) => SKRectI.Empty;
 
 	internal SKImage TransformComparison(SKImage image)
@@ -117,6 +119,7 @@ internal abstract class AppiumRunningApp
 				driver = null;
 				return Task.CompletedTask;
 			});
+			await Attempt(failures, StopPlatform);
 
 			// Failed session constructors can leave driver children alive.
 			await Attempt(failures, stopServer);
