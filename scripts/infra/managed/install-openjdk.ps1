@@ -51,7 +51,7 @@ if ($installedJavaHome) {
             throw "Failed to extract OpenJDK (exit code $LASTEXITCODE)."
         }
     } else {
-        [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$jdk")
+        [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$jdk", $true)
     }
 
     # set the JAVA_HOME
@@ -74,7 +74,7 @@ foreach ($tool in @("java", "javac")) {
         throw "$tool -version failed at '$java_home' (exit code $LASTEXITCODE): $versionOutput"
     }
     Write-Host ($versionOutput -join [Environment]::NewLine)
-    $versionPattern = if ($tool -eq "java") { 'version "(\d+)\.' } else { '^javac (\d+)\.' }
+    $versionPattern = if ($tool -eq "java") { 'version "(\d+)\.' } else { '(?m)^javac (\d+)\.' }
     if (($versionOutput -join "`n") -notmatch $versionPattern -or [int] $Matches[1] -ne $majorVersion) {
         throw "Expected JDK $majorVersion at '$java_home', but $tool reported: $versionOutput"
     }
