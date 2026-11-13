@@ -1,0 +1,71 @@
+{
+  "format": 6,
+  "version": "4.159.0",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": {
+    "version": "15.0.0.100",
+    "api_diff_link": "harfbuzzsharp/15.0.0.100/index.md",
+    "prs": [
+      5700
+    ]
+  },
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [
+    {
+      "label": "HarfBuzzSharp API diff",
+      "href": "harfbuzzsharp/15.0.0.100/index.md"
+    }
+  ],
+  "tallies": {
+    "product": 2,
+    "mixed": 0,
+    "internal": 2
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5707": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5707",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5713": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5713",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5685": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5685",
+      "title": "[skia-sync] Update skia to milestone 159",
+      "body": "[M159] Update SkiaSharp to Skia m159 (#5685)\n\nContext: https://github.com/mono/skia/pull/443\nChanges: https://github.com/mono/skia/compare/e9296dd4eb471f50a09e462f3a33bf276e5c95e4...1b7b8c4340f57877940b47d24ada18eb6ec66e68\n\nAdopt the m159 native engine, bringing WebAssembly SIMD CPU rasterization,\nWindows font-loading improvements, and image/rendering correctness fixes.\n\nAlign SkiaSharp package and assembly identities with 4.159 and the native\nlibrary version with m159. Native HarfBuzz remains 15.0.0; HarfBuzzSharp\npackages receive the per-milestone revision 15.0.0.100.\n\nUpdate component provenance for Skia and Vulkan-Headers 1.4.368, and\nupdate the Uno CPU reference images for m159's rendering changes.\nC API exports and public managed signatures remain unchanged.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5700": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5700",
+      "title": "Retire .NET 8 WASM and obsolete Emscripten workarounds",
+      "body": "Retire .NET 8 WASM and obsolete Emscripten workarounds (#5700)\n\nContext: https://github.com/mono/skia/pull/446\n\nRetire the .NET 8 WebAssembly toolchain while preserving the runtime-matched\narchives for supported consumers. Non-WASM .NET 8 support and the existing\nnative Dawn integration remain unchanged.\n\n~~ Require .NET 9 for WebAssembly native assets ~~\n\nRemove emsdk 3.1.34 producer jobs, both artifact-merger registrations and\nthe corresponding native artifact inventory. Update source-build and\npackaged targets for SkiaSharp and HarfBuzzSharp to reject unsupported\nWASM frameworks before building.\n\nKeep .NET 9/10 on emsdk 3.1.56 and .NET 11+ on 6.0.2, preserving threading\nand SIMD selection. Newer archives are not interchangeable with older\n.NET toolchains. Current package and developer documentation now describes\nthis support boundary; historical release records remain intact.\n\nMSBuild coverage verifies retained archive selection, unsupported WASM\nerrors and unaffected non-WASM builds. Retired archive directories remain\nas test decoys so their accidental selection is detectable.\n\n~~ Use the existing modern WebGPU integration consistently ~~\n\nThe retained WASM toolchains already use emdawnwebgpu. Remove the obsolete\n_SkiaSharpUseEmdawnwebgpu discriminator, built-in USE_WEBGPU linkage and\nlegacy mgrDevice/mgrQueue/mgrTexture fallbacks.\n\nContinue shipping the matching port JavaScript and exporting instance\ncreation and texture release. Browser test interop now uses importJs*\nhandles directly and releases textures through wgpuTextureRelease rather\nthan silently accepting a missing release path.\n\nKeep the existing native Dawn adaptations, old-toolchain JavaScript\ncompatibility rewrite and runtime library-order workaround. Their\nrequirements do not disappear with .NET 8.\n\n~~ Remove inactive native build switches ~~\n\nDrop SKNX_NO_SIMD, SK_DISABLE_AAA and GR_GL_CHECK_ALLOC_WITH_GET_ERROR from\nthe WASM build flags: the pinned native source has no tracked consumers.\nSIMD selection continues through the compiler's -msimd128 flag.\n\nThe retired toolchain was also the reason for the Graphite version gate.\nGraphite now follows the existing GPU setting, preserving GPU-off builds.\n\n~~ Restore upstream PDF and SVG ranges implementations ~~\n\nPin mono/skia e9296dd4eb471f50a09e462f3a33bf276e5c95e4 in both the\nsubmodule and Component Governance registration. The landed native tree\nequals the reviewed tree and restores std::views::reverse in PDF structure\nemission and projected std::ranges::find in SVG blend-mode selection.\n\nBoth restored translation units compile on emsdk 3.1.56 and 6.0.2 across\nthreading and SIMD variants. Source-built single-threaded archives link\nwith the retained .NET toolchains; these checks do not establish complete\nbrowser runtime coverage.\n\nThe unfiltered managed solution passes. Browser validation has separate\ndocumented limitations, and the unrelated Windows sample confirmation\ntimeout is being investigated independently rather than weakened here.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    }
+  }
+}

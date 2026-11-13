@@ -1,0 +1,30 @@
+{
+  "theme": "Rendering correctness fixes",
+  "highlights_headline": "SkiaSharp 4.156.1 collects rendering and Vulkan synchronization corrections while retaining Skia m156.",
+  "highlights_body": "The collected fixes improve transformed geometry, displacement sampling and GPU flush handling without changing managed APIs.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "More accurate transformed shapes and filters",
+          "detail": "Corrects ellipse and rounded-rectangle stroke transforms, clamps corner radii to prevent overlap, and uses float-precision displacement offsets to match filter bounds.",
+          "prs": [5687, 5711]
+        },
+        {
+          "lead": "Safer GPU flush and clip recording",
+          "detail": "Prevents stale atlas work after empty Ganesh flushes. Graphite counts pending clips against pass capacity and warns and skips a draw whose clip stack cannot fit a fresh pass.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Correct native Vulkan wait results",
+          "detail": "Synchronous native submission now accounts for fence-wait failures. GRContext.Submit remains void: this does not add a managed failure result or exception, and asynchronous submission is unchanged.",
+          "prs": [5711]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
