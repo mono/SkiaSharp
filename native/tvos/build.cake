@@ -18,10 +18,6 @@ Task("libSkiaSharp")
     Build("appletvsimulator", "arm64", "arm64");
     Build("appletvos", "arm64", "arm64");
 
-    SafeCopy(
-        $"libSkiaSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
-        OUTPUT_PATH.Combine($"tvos/libSkiaSharp/x86_64.xcarchive"));
-
     CreateFatFramework(OUTPUT_PATH.Combine("tvos/libSkiaSharp"));
     CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp"));
 
@@ -68,10 +64,6 @@ Task("libHarfBuzzSharp")
     Build("appletvsimulator", "x86_64");
     Build("appletvsimulator", "arm64");
     Build("appletvos", "arm64");
-
-    SafeCopy(
-        $"libHarfBuzzSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
-        OUTPUT_PATH.Combine($"tvos/libHarfBuzzSharp/x86_64.xcarchive"));
 
     CreateFatFramework(OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp"));
     CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp"));
