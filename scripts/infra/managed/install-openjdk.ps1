@@ -45,7 +45,7 @@ if ("$env:JAVA_HOME_17_X64" -and (Test-Path (Join-Path "$env:JAVA_HOME_17_X64" "
     if ($IsMacOS -or $IsLinux) {
         tar -vxzf "$archive" -C "$jdk"
     } else {
-        [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$jdk")
+        [System.IO.Compression.ZipFile]::ExtractToDirectory("$archive", "$jdk", $true)
     }
 
     # set the JAVA_HOME
