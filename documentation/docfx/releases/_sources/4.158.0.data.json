@@ -30,12 +30,20 @@
     }
   ],
   "tallies": {
-    "product": 3,
+    "product": 6,
     "mixed": 0,
-    "internal": 9
+    "internal": 16
   },
   "breaking_candidates": [],
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "rolfbjarne",
+      "url": "https://github.com/rolfbjarne",
+      "prs": [
+        5408
+      ]
+    }
+  ],
   "previews": [
     {
       "key": "v4.158.0-preview.2.26560.5",
@@ -133,6 +141,86 @@
     }
   ],
   "prs": {
+    "5712": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5712",
+      "title": "[skia-sync] Merge upstream chrome/m158 bug fixes",
+      "body": "[M158] Sync Vulkan synchronization and displacement fixes (#5712)\n\nRequires: https://github.com/mono/skia/pull/451\nContext: https://github.com/mono/SkiaSharp/pull/5715\nChanges: https://github.com/mono/skia/compare/600a5886625b49b5955f23c1ab1e45b68933d0dd...c8c6d08ae1ce0578c4e440dd2fe7449460f513f5\n\nBring the chrome/m158 Vulkan fence-wait and displacement-precision fixes\ninto release/4.158.x. Keep package versions and the public API unchanged;\nthis is a same-milestone native correctness update.\n\n~~ Propagate synchronous Vulkan fence-wait failures in native submission ~~\n\nNative Ganesh previously returned queue submission success even when the\nsubsequent synchronous vkWaitForFences failed. The void forceSync()\nhelper could not propagate that wait failure to the submission result.\n\nThe native update makes forceSync() return a bool and combines the wait\nresult with queue submission success when CPU synchronization is\nrequested. An absent fence is already complete; an actual wait succeeds\nonly on VK_SUCCESS. Retain the VK_TIMEOUT retry for signal-interrupted\ndrivers, submission cleanup and asynchronous submission behavior.\n\nThis corrects native Ganesh's failure reporting without adding a managed\nresult: GRContext.Submit remains void, and the C bridge and managed\nsignatures are unchanged.\n\n~~ Align displacement offsets with fp32 filter bounds ~~\n\nHalf-precision displacement scale and offset arithmetic could round\ndifferently from the fp32 filter-bounds calculation and sample a\ndifferent location. Use float2 for the scale uniform, helper parameter\nand displacement vector so offset arithmetic matches the bounds\nprecision. Keep displacement colors and channel selectors at half\nprecision; both generated shader variants follow the updated helper.\n\n~~ Record landed native ancestry without changing reviewed sources ~~\n\nAdvance externals/skia and its Component Governance registration from\n600a5886625b49b5955f23c1ab1e45b68933d0dd to actual native merge\nc8c6d08ae1ce0578c4e440dd2fe7449460f513f5. Record exact upstream commit\n2d58f195f426c41bd856208ddb85ea8f93c88295 while retaining milestone 158\nand upstream_ref chrome/m158.\n\nThe dependent repin in #5715 changes the gitlink and matching manifest\nhash from reviewed head 038363ac1db8b60d2455922f6af6558e34eabfd3 to the\nlanded merge. That merge has two parents, directly includes the reviewed\nhead and shares its exact tree,\ne4a986dde9cafacbbdddd92b617f753ea0293ea5. Preserve this ancestry so\nfuture syncs can identify already integrated upstream commits.\n\nThe source review found the complete seven-file native delta identical\nto the upstream fixes, with 72 non-interop fork patches and 106 interop\nfiles preserved and DEPS unchanged. Independent regeneration matched the\nfive managed binding directories. The parent diff changes the gitlink\nand manifest provenance, not wrappers, generated bindings, tests,\ndependency versions or package/ABI version inputs.\n\nTree equality preserves the reviewed native content; it is not a new\nruntime test run or proof of affected-device Vulkan failure-path and\ndisplacement-boundary coverage.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5702": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5702",
+      "title": "[skia-sync] Merge upstream chrome/m158 bug fixes",
+      "body": "* Update Skia m158 bug fixes\n\nAdvance the Skia submodule and Component Governance metadata to the latest validated chrome/m158 upstream fixes.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Sync Skia submodule and cgmanifest (#5704)\n\nLatest: Merge pull request #448 from mono/skia-sync/m158\nCommit: 600a5886625b49b5955f23c1ab1e45b68933d0dd\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\n\n---------\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5697": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5697",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5695": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5695",
+      "title": "Restore stable support metadata and keep retirement manual",
+      "body": "* Maintain support for the latest two shipped stable lines\n\nDerive stable support from distinct public SkiaSharp release lines instead of Chrome channels or documentation regeneration floors. Restore 4.155 alongside 4.156 and roll the pair during Release Finish without letting older shipments displace newer stable lines.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep supported release retirement a manual decision\n\nRemove the automatic two-line cap and its catalogue lookup, retaining Finish's additive promotion behavior. Preserve all supported lines until a maintainer removes them while keeping the 4.155/4.156 metadata repair and independent documentation floors.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5691": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5691",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5689": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5689",
+      "title": "Update 4.156 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5690": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5690",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5683": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5683",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5408": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5408",
+      "title": "Enable CA5394 for shipped code and use a CSPRNG for the HashCode seed",
+      "body": "* Enable CA5394 (insecure randomness) as an error for shipping code\n\nCA5394 is disabled by default, so nothing would catch a new use of\nSystem.Random in the shipping assemblies. Enable it as an error for\nbinding/ and source/ with a path-scoped .editorconfig section, so that\nany new use has to be justified.\n\nThe only existing hit in shipping code is the hash seed in\nBinding.Shared/HashCode.cs (compiled into both SkiaSharp.dll and\nHarfBuzzSharp.dll). It only randomizes hash codes between processes and\nis not security sensitive, so suppress it with a comment instead of\nchanging behavior.\n\nNotes:\n\n* Samples, tests and benchmarks are not covered. They use System.Random\n  for deterministic or throwaway data (21 call sites in the Gallery\n  sample, the tests and the benchmarks would otherwise be reported, and\n  the Gallery projects treat warnings as errors).\n* The rule is only reported for target frameworks where the SDK's bundled\n  analyzers run: net5.0 and later, including the platform TFMs.\n  netstandard2.0/2.1, net462 and net48 are not analyzed unless\n  EnableNETAnalyzers=true is set. All TFMs compile the same files, so the\n  other TFMs still catch new uses in shared code.\n* The severity is error instead of warning on purpose: only binding/ has\n  TreatWarningsAsErrors=true, so a warning would not fail the build in\n  source/.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Document the CA5394 rule for contributors\n\nMention in the file conventions that System.Random cannot be used in\nbinding/ and source/ without a justification, and what to do instead,\nsince the build now reports it as an error there.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Seed HashCode from the OS CSPRNG instead of suppressing CA5394\n\nThe only System.Random use in shipped code was the per-process seed of\nthe HashCode polyfill in Binding.Shared/HashCode.cs, which is compiled\ninto both SkiaSharp.dll and HarfBuzzSharp.dll. The previous commit\nsuppressed CA5394 for it. Fix it instead, so that the new CA5394 guard\nhas no exceptions in shipped code.\n\nThe polyfill was copied from dotnet/runtime, where the seed comes from\nthe OS CSPRNG (Interop.GetRandomBytes), and Microsoft.Bcl.HashCode, the\nofficial downlevel polyfill of System.HashCode, generates it with\nRandomNumberGenerator. The copy used new Random ().Next () instead,\nwhich is weaker:\n\n* Random.Next () returns [0, int.MaxValue), so the seed only had 31 bits.\n* On .NET Framework the parameterless Random constructor is seeded from\n  the system clock (net462, net48, and netstandard2.0 assemblies running\n  there).\n\nUse RandomNumberGenerator.Create () and GetBytes, like\nMicrosoft.Bcl.HashCode does. It exists on all of our target frameworks\n(netstandard2.0/2.1, net462/net48 and net6.0+, including the platform\nTFMs), so no #if is needed. Hash codes are still randomized per process\nand stable within a process.\n\nThe cost is that the first use of HashCode in a process now loads\nSystem.Security.Cryptography and takes about 2 ms instead of 0.3 ms\n(measured on net10.0, macOS arm64).\n\nAlso remove the references to HashCode.cs as the example of a justified\nsuppression from the .editorconfig comment and api-design.md, since\nthere is no suppression anymore.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Ignore CA5394 explicitly for code that is not shipped\n\nCA5394 is disabled by default, so the samples, tests, benchmarks and\nutils are not reported today. Say so explicitly, so that it also holds\nif the rule gets enabled more broadly: AnalysisMode=All, for instance,\nreports 21 call sites there. They are all seeded or throwaway uses of\nRandom (the day-seeded shuffle and the decorative dots in the Gallery,\nbuffers in the tests, input data in the benchmarks), where a CSPRNG\nwould be a regression.\n\nThe shipped code, the NuGet packages built from binding/ and source/,\nkeeps CA5394 as an error. Together the two sections cover all the C# in\nthe repository (outside of the externals submodule).\n\nVerified with temporary files: a new System.Random use in binding/ or\nsource/ fails the build on the target frameworks where the SDK\nanalyzers run (net6.0 and later), the same use in utils/ is not\nreported even with AnalysisMode=All, and in a directory that matches\nneither section it is reported by AnalysisMode=All, so the exemption is\nwhat silences it.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Move the CA5394 settings to nested .editorconfig files\n\nThe root .editorconfig is in the global include of\nscripts/infra/caching/repo-deps.json, so it is part of the cache key of\nevery native job. Editing it made CI think that the native inputs had\nchanged:\n\n* The Azure native jobs all had a cache miss and rebuilt (636\n  agent-minutes in the Native stages of the PR build, against 77 for a\n  docs-only PR build).\n* The benchmark-source workflow built libSkiaSharp from source on every\n  OS, which currently fails on Windows because the runner image has no\n  Spectre-mitigated MSVC libraries (mono/SkiaSharp#5321 is fixing that).\n\nPut the error severity in binding/.editorconfig (which already exists)\nand in a new source/.editorconfig instead. Neither file is part of the\nnative cache keys, so the keys are the same as the ones for the base\ncommit again, and repo-deps.py validate accepts the new file. A new\nSystem.Random use in binding/ or source/ is still an error on the target\nframeworks where the SDK analyzers run (net6.0 and later), and the code\nthat is not shipped keeps the default, which is that the rule is\ndisabled.\n\nThe explicit \"none\" for samples, tests, benchmarks and utils goes away.\nIt only made a difference if the rule is enabled more broadly\n(AnalysisMode=All reports 21 call sites there), which nothing does\ntoday.\n\nUpdate the note in api-design.md to point at the new files.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "rolfbjarne",
+      "community": true,
+      "tag": "product"
+    },
+    "5677": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5677",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5669": {
       "url": "https://github.com/mono/SkiaSharp/pull/5669",
       "title": "[M158] Adopt upstream GPU correctness fixes",
