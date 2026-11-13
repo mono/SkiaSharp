@@ -22,7 +22,20 @@
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.Tizen\HarfBuzzSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.tvOS\HarfBuzzSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
     <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.Win32\HarfBuzzSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
+    <!--
+      Fix the historical UX gap where Linux devs referencing only HarfBuzzSharp
+      got no native at runtime and had to remember HarfBuzzSharp.NativeAssets.Linux
+      by hand (mirror of the fix for mono/SkiaSharp#2520). Default on plain
+      net10.0 alongside .macOS + .Win32.
+    -->
+    <ProjectReference Include="..\HarfBuzzSharp.NativeAssets.Linux\HarfBuzzSharp.NativeAssets.Linux.csproj" Condition="!$(TargetFramework.Contains('-'))" />
   </ItemGroup>
+  <!-- Ship the plural-<RuntimeIdentifiers> filter + WASM detection targets. See SkiaSharp.csproj for design notes. -->
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

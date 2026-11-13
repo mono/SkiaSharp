@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Asset for linux-bionic-x64</Title>
+    <PackageDescription>Native asset for the linux-bionic-x64 runtime identifier. Pulled in transitively by HarfBuzzSharp.NativeAssets.Linux for backward compatibility, or referenced directly when only this specific RID is needed.</PackageDescription>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageFile Include="..\..\output\native\bionic\x64\libHarfBuzzSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
