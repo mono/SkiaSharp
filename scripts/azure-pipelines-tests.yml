@@ -45,9 +45,16 @@ parameters:
         os: linux
 
 variables:
+  - name: useInternalSkiaMirror
+    value: true
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
+  repositories:
+    - repository: skiaMirror
+      type: git
+      name: internal/mono-skia
+      ref: refs/heads/skiasharp
   pipelines:
     - pipeline: SkiaSharp
       # Azure DevOps requires the full path for pipelines stored in folders.

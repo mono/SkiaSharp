@@ -100,6 +100,23 @@ Once you are finished making changes, you can run the `tests` target and make su
 
 ## Native Building
 
+Build jobs in the internal Azure package and test pipelines fetch `externals/skia`
+from the `internal/mono-skia` mirror using step-scoped Git URL rewriting and a
+mirror-URL-scoped `System.AccessToken` header. Public CI and local builds keep
+using GitHub. All builds use the same `.gitmodules` URL, pinned commit and cache
+identity; a missing mirror commit fails checkout rather than falling back.
+
+The internal pipelines declare the `skiaMirror` repository resource, and jobs
+that initialize submodules reference it with `uses.repositories` (no additional
+checkout). Each pipeline must be authorized to use that resource, and its Build
+Service identity needs **Read** permission on `internal/mono-skia`. Keep repository
+protection enabled. Verify access with the pipeline's job token; a developer's
+Azure login does not establish that permission.
+
+The separate 1ES-injected SDL Sources job retains its template-owned GitHub
+submodule checkout. Routing that scan through the mirror requires supported 1ES
+checkout/authentication integration; build-job configuration does not affect it.
+
 ### Dependencies
 
 In addition to a few extra dependencies, the [Managed-Only build dependencies](#dependencies) are still required.

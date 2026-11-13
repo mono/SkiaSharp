@@ -98,11 +98,17 @@ parameters:
     default: false
 
 variables:
+  - name: useInternalSkiaMirror
+    value: true
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
   repositories:
+    - repository: skiaMirror
+      type: git
+      name: internal/mono-skia
+      ref: refs/heads/skiasharp
     - repository: 1ESPipelineTemplates
       type: git
       name: 1ESPipelineTemplates/1ESPipelineTemplates
