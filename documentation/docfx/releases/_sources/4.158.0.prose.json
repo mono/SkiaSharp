@@ -1,16 +1,16 @@
 {
   "theme": "Skia and HarfBuzz updates",
-  "highlights_headline": "SkiaSharp 4.158.0 pairs Skia m158 rendering updates with HarfBuzz 15.0.0 and expanded script constants.",
-  "highlights_body": "GPU corrections cover hairlines, text atlases, clip recording and displacement sampling. The collected changes also strengthen per-process hash seeding without changing hash-code stability within a process.",
+  "highlights_headline": "SkiaSharp 4.158.0 previews Skia m158 alongside HarfBuzz 15.0.0 and expanded named script coverage.",
+  "highlights_body": "The cumulative line includes GPU rendering corrections and a stronger per-process hash seed. Preview 1 retains native HarfBuzz 14.4.0; Preview 2 introduces HarfBuzz 15.0.0 and 30 additional Script constants. Later collected work remains separate from those exact shipment summaries.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia milestone 158",
-          "detail": "Updates the bundled renderer to Skia m158 and incorporates subsequent same-milestone native fixes without changing SkiaSharp's public managed signatures.",
-          "prs": [5634, 5702]
+          "lead": "Skia m158 engine",
+          "detail": "Updates the bundled renderer to milestone 158 without changing SkiaSharp's managed API surface. The initial cut uses HarfBuzzSharp package revision 14.4.0.300 with native HarfBuzz 14.4.0; the subsequent HarfBuzz update adopts native 15.0.0.",
+          "prs": [5634, 5554, 5702]
         }
       ]
     },
@@ -18,8 +18,8 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "HarfBuzz 15 and complete named scripts",
-          "detail": "Updates bundled HarfBuzz to 15.0.0 and adds 30 HarfBuzzSharp Script constants, including Jurchen, ProtoCuneiform and Seal. Existing constants, struct-based parsing and numeric conversions are preserved.",
+          "lead": "Complete named HarfBuzz scripts",
+          "detail": "HarfBuzzSharp adds 30 documented Script fields, including Jurchen, ProtoCuneiform and Seal, plus 27 previously omitted constants. Existing fields, numeric values, parsing, conversions and horizontal-direction lookup remain intact; Script stays a struct rather than becoming an enum.",
           "prs": [5554]
         }
       ]
@@ -28,13 +28,18 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Correct GPU sampling and clip limits",
-          "detail": "Fixes reflected zero-length hairline caps and text-atlas selection. Displacement offsets now match float-precision filter bounds. Graphite accounts for pending clips and logs and skips draws whose clip stacks cannot fit a fresh pass.",
-          "prs": [5669, 5712]
+          "lead": "Correct reflected hairlines and text-atlas selection",
+          "detail": "Zero-length square-capped hairlines retain the correct scale under reflected transforms, with non-finite outsets suppressed. Ganesh rounds ordinary and LCD text-atlas indices before selecting a sampler to avoid interpolation errors choosing the wrong atlas.",
+          "prs": [5669]
         },
         {
-          "lead": "Vulkan device-loss and synchronous waits",
-          "detail": "Adds a 1 ms device-loss teardown delay for ARM proprietary drivers >=42 and <56. Native synchronous submission now reports fence-wait failures internally; GRContext.Submit remains void, with no new managed failure result and no change to asynchronous submission.",
+          "lead": "Bound Graphite clip recording",
+          "detail": "Render-pass capacity checks account for clips still needing recording. A draw whose full effective clip stack cannot fit a fresh pass is rejected and logged rather than overflowing pass structures.",
+          "prs": [5669]
+        },
+        {
+          "lead": "Vulkan cleanup and displacement precision",
+          "detail": "Affected ARM proprietary Vulkan drivers from version 42 up to, but excluding, 56 get a targeted 1 ms device-loss cleanup delay. Native synchronous submission propagates fence-wait failure, but GRContext.Submit remains void. Displacement offsets use float precision to match filter bounds.",
           "prs": [5669, 5712]
         }
       ]
@@ -43,21 +48,21 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "OS-generated hash seeds",
-          "detail": "The shared HashCode implementation uses the OS cryptographic random generator for its per-process seed. Hashes remain randomized between processes and stable within one process; first use now also loads cryptography support.",
+          "lead": "OS-generated per-process hash seed",
+          "detail": "The HashCode polyfill shared by SkiaSharp and HarfBuzzSharp now seeds from RandomNumberGenerator instead of System.Random. Hash codes remain randomized between processes and stable within a process; first use adds cryptography initialization overhead.",
           "prs": [5408]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "rolfbjarne": "Replaced the shared HashCode seed with OS-generated randomness and added analyzer safeguards for shipped code."
+    "rolfbjarne": "Replaced the shared HashCode polyfill's seed with OS-generated randomness and enabled analyzer checks for insecure randomness in shipped code."
   },
   "preview_summaries": {
-    "v4.158.0-preview.2.26560.5": "Preview 2 updates HarfBuzz to 15.0.0 and adds 30 named Script constants. It also corrects reflected hairlines, text-atlas selection and Graphite clip limits, with targeted Vulkan device-loss cleanup timing.",
-    "v4.158.0-preview.1.26556.2": "Preview 1 introduces Skia m158 without changing managed APIs. HarfBuzzSharp moves to package revision 14.4.0.300 while the native HarfBuzz engine remains at 14.4.0."
+    "v4.158.0-preview.2.26560.5": "Preview 2 introduces HarfBuzz 15.0.0 and 30 additional named Script constants. GPU fixes address reflected hairlines, text-atlas selection, Graphite clip capacity and affected ARM Vulkan device-loss cleanup.",
+    "v4.158.0-preview.1.26556.2": "Preview 1 introduces Skia m158 without changing the SkiaSharp managed API surface. HarfBuzzSharp moves to package revision 14.4.0.300 while native HarfBuzz remains 14.4.0."
   },
-  "harfbuzz_summary": "Updates bundled HarfBuzz to 15.0.0 and adds 30 named Script constants, including Jurchen, ProtoCuneiform and Seal. Existing Script values, parsing and numeric conversions remain intact; no public managed member is removed.",
+  "harfbuzz_summary": "Updates bundled HarfBuzz to 15.0.0 and adds 30 named Script constants while preserving the existing struct-based API, parsing and conversions. Removing the unused deprecated font-face setter import does not remove a public managed member; the assembly version remains 1.0.0.0.",
   "release_summaries": {
     "v4.158.0-preview.1.26556.2": {
       "headline": "SkiaSharp 4.158.0 Preview 1 updates the bundled renderer to Skia m158.",
