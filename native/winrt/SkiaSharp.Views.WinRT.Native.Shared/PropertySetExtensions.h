@@ -1,11 +1,12 @@
 #pragma once
 
 #include "PropertySetExtensions.g.h"
+#include "NativeNamespace.h"
 
 using namespace winrt::Windows::Foundation;
 using namespace winrt::Windows::Foundation::Collections;
 
-namespace winrt::SkiaSharp::Views::WinUI::Native::implementation
+namespace SKIA_SHARP_VIEWS_NATIVE_NAMESPACE::implementation
 {
     struct PropertySetExtensions
     {
@@ -16,7 +17,7 @@ namespace winrt::SkiaSharp::Views::WinUI::Native::implementation
     };
 }
 
-namespace winrt::SkiaSharp::Views::WinUI::Native::factory_implementation
+namespace SKIA_SHARP_VIEWS_NATIVE_NAMESPACE::factory_implementation
 {
     struct PropertySetExtensions : PropertySetExtensionsT<PropertySetExtensions, implementation::PropertySetExtensions>
     {

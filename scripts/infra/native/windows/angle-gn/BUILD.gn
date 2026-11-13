@@ -1,0 +1,21 @@
+declare_args() {
+  spectre_lib_root = ""
+}
+
+config("skiasharp") {
+  if (is_win) {
+    assert(spectre_lib_root != "", "Spectre library directory is required.")
+    defines = [ "ANGLE_WINDOWS_NO_FUTEX=1" ]
+    cflags = [
+      "/guard:cf",
+      "/GS",
+    ]
+    ldflags = [ "/guard:cf" ]
+
+    # The Spectre libraries are desktop CRT libraries. UWP must link the store
+    # (_APP) CRT that vcvarsall selects for winuwp.
+    if (current_os != "winuwp") {
+      ldflags += [ "/LIBPATH:${spectre_lib_root}/${current_cpu}" ]
+    }
+  }
+}

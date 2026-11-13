@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(UWPTargetFramework)</TargetFramework>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for Windows UI (UWP)</Title>
+    <IsNativeAssetsProject>true</IsNativeAssetsProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <NativeAssetPackageFile Include="..\..\output\native\uwp\any\*" RuntimeIdentifier="win-x64" Folder="lib\$(UWPTargetFramework)" />
+    <NativeAssetPackageFile Include="..\..\output\native\uwp\x64\*" RuntimeIdentifier="win-x64" />
+    <NativeAssetPackageFile Include="..\..\output\native\uwp\any\*" RuntimeIdentifier="win-x86" Folder="lib\$(UWPTargetFramework)" />
+    <NativeAssetPackageFile Include="..\..\output\native\uwp\x86\*" RuntimeIdentifier="win-x86" />
+    <NativeAssetPackageFile Include="..\..\output\native\uwp\any\*" RuntimeIdentifier="win-arm64" Folder="lib\$(UWPTargetFramework)" />
+    <NativeAssetPackageFile Include="..\..\output\native\uwp\arm64\*" RuntimeIdentifier="win-arm64" />
+  </ItemGroup>
+</Project>

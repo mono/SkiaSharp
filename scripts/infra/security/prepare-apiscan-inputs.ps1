@@ -43,30 +43,37 @@ if ($packages.Count -eq 0) {
 
 New-Item -ItemType Directory -Force -Path $surrogateFolder, $surrogateBinaryFolder | Out-Null
 
-$winUiSurrogateSource = Get-ChildItem $extractedPackages -Directory |
-    Where-Object Name -Like 'skiasharp.nativeassets.winui-*.symbols' |
-    ForEach-Object { Join-Path $_.FullName 'runtimes/win-x64/native' } |
-    Where-Object { Test-Path $_ -PathType Container } |
-    Select-Object -First 1
-if (-not $winUiSurrogateSource) {
-    throw 'Unable to find x64 WinUI binaries for API Scan ARM64 surrogates.'
+function Copy-Arm64Surrogates {
+    param(
+        [Parameter(Mandatory)][string] $PackageId,
+        [Parameter(Mandatory)][string] $Destination,
+        [Parameter(Mandatory)][string[]] $Names
+    )
+
+    $source = Get-ChildItem $extractedPackages -Directory |
+        Where-Object Name -Like "$PackageId-*.symbols" |
+        ForEach-Object { Join-Path $_.FullName 'runtimes/win-x64/native' } |
+        Where-Object { Test-Path $_ -PathType Container } |
+        Select-Object -First 1
+    if (-not $source) {
+        throw "Unable to find x64 $PackageId binaries for API Scan ARM64 surrogates."
+    }
+
+    New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+    foreach ($name in $Names) {
+        foreach ($file in @("$name.dll", "$name.pdb")) {
+            $path = Join-Path $source $file
+            if (-not (Test-Path $path -PathType Leaf)) {
+                throw "Unable to find API Scan surrogate file: $path"
+            }
+            Copy-Item $path $Destination
+        }
+    }
 }
 
-$winUiSurrogateFiles = @(
-    'libEGL.dll'
-    'libEGL.pdb'
-    'libGLESv2.dll'
-    'libGLESv2.pdb'
-    'SkiaSharp.Views.WinUI.Native.dll'
-    'SkiaSharp.Views.WinUI.Native.pdb'
-)
-foreach ($file in $winUiSurrogateFiles) {
-    $source = Join-Path $winUiSurrogateSource $file
-    if (-not (Test-Path $source -PathType Leaf)) {
-        throw "Unable to find API Scan surrogate file: $source"
-    }
-    Copy-Item $source $surrogateBinaryFolder
-}
+# UWP uses a subfolder because its files have the same names as WinUI's.
+Copy-Arm64Surrogates 'skiasharp.nativeassets.winui' $surrogateBinaryFolder @('libEGL', 'libGLESv2', 'SkiaSharp.Views.WinUI.Native')
+Copy-Arm64Surrogates 'skiasharp.nativeassets.uwp' (Join-Path $surrogateBinaryFolder 'uwp') @('libEGL', 'libGLESv2', 'SkiaSharp.Views.UWP.Native')
 
 $surrogateXml = (Get-Content $surrogateSourcePath -Raw).
     Replace('{SOFTWARE_FOLDER}', $scanRootPath)
