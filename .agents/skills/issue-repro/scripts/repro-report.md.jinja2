@@ -1,0 +1,184 @@
+# Issue Reproduction Report — #{{ meta.number }}
+
+| Field | Value |
+|-------|-------|
+| Repository | {{ meta.repo | d('—') }} |
+| Analyzed | {{ meta.analyzedAt | d('—') }} |
+| Conclusion | **{{ conclusion }}** |
+{% if output and output.actionability %}
+| Suggested action | {{ output.actionability.suggestedAction | d('—') }} ({{ output.actionability.confidence | fmt_confidence }}) |
+{% endif %}
+
+**Notes:** {{ notes }}
+
+---
+
+## Environment
+
+| Field | Value |
+|-------|-------|
+| OS | {{ environment.os | d('—') }} |
+| Architecture | {{ environment.arch | d('—') }} |
+| .NET SDK | {{ environment.dotnetSdkVersion | d('—') }} |
+| .NET Version | {{ environment.dotnetVersion | d('—') }} |
+| SkiaSharp | {{ environment.skiaSharpVersion | d('—') }} |
+| Docker used | {{ environment.dockerUsed | d('false') }} |
+{% if environment.dockerImage %}
+| Docker image | {{ environment.dockerImage | d('—') }} |
+{% endif %}
+{% if environment.wasmToolsVersion %}
+| WASM Tools | {{ environment.wasmToolsVersion | d('—') }} |
+{% endif %}
+
+{% if reproProject %}
+## Reproduction Project
+
+| Field | Value |
+|-------|-------|
+| Type | {{ reproProject.type | d('—') }} |
+| Framework | {{ reproProject.targetFramework | d('—') }} |
+{% if reproProject.description %}
+| Description | {{ reproProject.description }} |
+{% endif %}
+{% endif %}
+
+## Reproduction Steps
+
+{% for step in reproductionSteps %}
+### Step {{ step.stepNumber }}: {{ step.description }}
+
+| | |
+|---|---|
+| Layer | `{{ step.layer }}` |
+| Result | {{ '✅' if step.result == 'success' else ('❌' if step.result in ['failure', 'wrong-output'] else '⏭️') }} **{{ step.result }}** |
+{% if step.command %}
+| Command | `{{ step.command }}` |
+{% endif %}
+{% if step.exitCode is defined and step.exitCode is not none %}
+| Exit code | {{ step.exitCode }} |
+{% endif %}
+
+{% if step.filesCreated %}
+{% for file in step.filesCreated %}
+**{{ file.filename }}:**
+```{{ file.language | d('text') }}
+{{ file.content }}
+```
+{% endfor %}
+{% endif %}
+{% if step.output %}
+<details>
+<summary>Output ({{ step.output | length }} chars)</summary>
+
+```
+{{ step.output }}
+```
+
+</details>
+{% endif %}
+
+{% endfor %}
+
+{% if versionResults %}
+## Version Results
+
+| Version | Source | Platform | Result | Notes |
+|---------|--------|----------|--------|-------|
+{% for vr in versionResults %}
+| {{ vr.version | d('—') }} | {{ vr.source | d('—') }} | {{ vr.platform | d('—') }} | {{ '❌' if vr.result in ['reproduced', 'confirmed'] else '✅' }} {{ vr.result }} | {{ vr.notes | d('—') }} |
+{% endfor %}
+{% endif %}
+
+{% if errorMessages %}
+## Error Details
+{% if errorMessages.primary %}
+
+**Primary error:** {{ errorMessages.primary }}
+{% endif %}
+{% if errorMessages.stackTrace %}
+
+**Stack trace:**
+```text
+{{ errorMessages.stackTrace }}
+```
+{% endif %}
+{% endif %}
+
+{% if scope %}
+## Scope
+
+{{ scope }}
+{% endif %}
+
+{% if feedback and feedback.corrections %}
+## Triage Feedback
+
+{% for correction in feedback.corrections %}
+- **{{ correction.topic }}:** {{ correction.upstream }} → {{ correction.corrected }}
+{% endfor %}
+{% endif %}
+
+{% if output %}
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | {{ output.actionability.suggestedAction | d('—') }} |
+| Confidence | {{ output.actionability.confidence | fmt_confidence }} |
+| Reason | {{ output.actionability.reason | d('—') }} |
+
+{% if output.workarounds %}
+### Workarounds
+
+{% for w in output.workarounds %}
+- {{ w }}
+{% endfor %}
+{% endif %}
+
+{% if output.missingInfo %}
+### Missing Info
+
+{% for item in output.missingInfo %}
+- {{ item }}
+{% endfor %}
+{% endif %}
+
+{% if output.actions %}
+### Automatable Actions
+
+| Type | Risk | Confidence | Description |
+|------|------|------------|-------------|
+{% for action in output.actions %}
+| {{ action.type | d('—') }} | {{ action.risk | d('—') }} | {{ action.confidence | fmt_confidence }} | {{ action.description | d('—') }} |
+{% endfor %}
+{% endif %}
+
+{% if output.proposedResponse %}
+### Proposed Response
+
+**Status:** {{ output.proposedResponse.status | d('—') }}
+
+```markdown
+{{ output.proposedResponse.body | d('—') }}
+```
+{% endif %}
+{% endif %}
+
+{% if blockers %}
+## Blockers
+
+{% for b in blockers %}
+- {{ b }}
+{% endfor %}
+{% endif %}
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{{ raw_json }}
+```
+
+</details>
