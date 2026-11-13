@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-macos</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <MauiVersion>10.0.51</MauiVersion>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationTitle>SkiaSharp Sample</ApplicationTitle>
+    <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>14.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../SkiaSharpSample/*.cs" Exclude="../SkiaSharpSample/MauiProgram.cs" Link="%(Filename)%(Extension)" />
+    <MauiXaml Include="../SkiaSharpSample/*.xaml" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="../SkiaSharpSample/Resources/appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiSplashScreen Include="../SkiaSharpSample/Resources/skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+    <MauiImage Include="../SkiaSharpSample/Resources/Images/*.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Platforms.MacOS.Essentials" Version="0.1.0-preview.12.26421.1" />
+    <ProjectReference Include="../../../../source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls.MacOS/SkiaSharp.Views.Maui.Controls.MacOS.csproj" />
+  </ItemGroup>
+
+  <Import Project="../../../../binding/IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>
