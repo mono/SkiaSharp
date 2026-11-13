@@ -127,6 +127,17 @@ explicit user authorization. Explain blockers and trade-offs before asking.
   alternatively commit the update locally and let normal `git cl upload`
   squash it into the same review. With patchset-upload authorization, upload
   again and verify the same CL URL/Change-Id and the new patchset number.
+  Practical notes: recover a patchset with
+  `git fetch origin refs/changes/<last-2-digits>/<CL>/<PS>` and branch from
+  `FETCH_HEAD`; run depot_tools from a clean clone with
+  `DEPOT_TOOLS_UPDATE=0`; set repo-local `user.email` to the Gerrit account
+  and run `git cl creds-check` (`git credential-luci login` if prompted).
+  If upstream deleted or renamed a file the CL touches (`DU` conflict), read
+  the removal commit, drop the stale hunk with `git rm`, and port its intent
+  to the successor file and tests; never resurrect the file. Fix any commit
+  message text that mentions the removed code, keeping the Change-Id.
+  `git cl format` needs a Chromium `buildtools` checkout (or
+  `CHROMIUM_BUILDTOOLS_PATH`); if absent, record formatting as a gap.
 - **Review/testing:** use blame/OWNERS and Skia's suggested reviewers to propose
   an appropriate committer. Request review or send mail only when authorized.
   Select current jobs from `bin/try --list`; `git cl try` requires permission,
