@@ -106,6 +106,7 @@ var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com
 var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     // SkiaSharp core
     { "SkiaSharp",                                     new Version (2, 80, 0) },
+    { "SkiaSharp.Testing",                             new Version (4, 156, 0) },
     { "SkiaSharp.NativeAssets.Linux",                  new Version (2, 80, 0) },
     { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (2, 80, 0) },
     { "SkiaSharp.NativeAssets.NanoServer",             new Version (2, 80, 0) },
