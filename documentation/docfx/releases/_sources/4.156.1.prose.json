@@ -1,25 +1,25 @@
 {
-  "theme": "Rendering correctness fixes",
-  "highlights_headline": "SkiaSharp 4.156.1 collects rendering and Vulkan synchronization corrections while retaining Skia m156.",
-  "highlights_body": "The collected fixes improve transformed geometry, displacement sampling and GPU flush handling without changing managed APIs.",
+  "theme": "GPU rendering correctness",
+  "highlights_headline": "SkiaSharp 4.156.1 collects m156 fixes for transformed geometry, clipping, displacement filters and native Vulkan synchronization.",
+  "highlights_body": "The collected servicing changes keep managed APIs and dependency versions unchanged. Ganesh avoids stale atlas work after empty flushes, while Graphite respects render-pass clip capacity.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "More accurate transformed shapes and filters",
-          "detail": "Corrects ellipse and rounded-rectangle stroke transforms, clamps corner radii to prevent overlap, and uses float-precision displacement offsets to match filter bounds.",
+          "lead": "Correct transformed shapes and displacement sampling",
+          "detail": "Ellipse and rounded-rectangle stroke widths and corner radii map to the correct device-space axes; radii are clamped to prevent overlap. Displacement offset arithmetic now matches the float precision used to calculate filter bounds.",
           "prs": [5687, 5711]
         },
         {
-          "lead": "Safer GPU flush and clip recording",
-          "detail": "Prevents stale atlas work after empty Ganesh flushes. Graphite counts pending clips against pass capacity and warns and skips a draw whose clip stack cannot fit a fresh pass.",
+          "lead": "Keep atlas and clip work within the current flush",
+          "detail": "Ganesh advances draw tokens after empty flushes to avoid stale atlas work. Graphite counts clips still needing recording and warns and skips a draw if its full clip stack cannot fit a fresh render pass.",
           "prs": [5687]
         },
         {
-          "lead": "Correct native Vulkan wait results",
-          "detail": "Synchronous native submission now accounts for fence-wait failures. GRContext.Submit remains void: this does not add a managed failure result or exception, and asynchronous submission is unchanged.",
+          "lead": "Respect failed synchronous Vulkan waits",
+          "detail": "Native Ganesh submission now requires both queue submission and its requested fence wait to succeed. Asynchronous submission is unchanged; managed GRContext.Submit still returns void and does not expose a new failure result or exception.",
           "prs": [5711]
         }
       ]
