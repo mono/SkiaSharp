@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
 using SkiaSharp.Tests;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace SkiaSharp.Views.Maui.Controls.Tests;
 
 public class MemoryLeakTests : SKUITests
 {
-	[UIFact]
+	[Fact]
 	public Task SKCanvasViewHandlerDoesNotLeak() =>
 		AssertHandlerDoesNotLeak(() =>
 		{
@@ -26,7 +27,7 @@ public class MemoryLeakTests : SKUITests
 			return view;
 		});
 
-	[UIFact]
+	[Fact]
 	public Task SKGLViewHandlerDoesNotLeak() =>
 		AssertHandlerDoesNotLeak(() =>
 		{
@@ -67,7 +68,7 @@ public class MemoryLeakTests : SKUITests
 
 			return (viewReference, handlerReference, platformViewReference);
 		}
-		var (viewRef, handlerRef, platformRef) = await RunTest();
+		var (viewRef, handlerRef, platformRef) = await MainThread.InvokeOnMainThreadAsync(RunTest);
 
 		await AssertEx.EventuallyGC(viewRef, handlerRef, platformRef);
 	}

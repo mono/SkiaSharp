@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
 using SkiaSharp.Tests;
 using Xunit;
 
@@ -14,7 +15,7 @@ public abstract class SKUITests : SKTest, IAsyncLifetime
 
 	protected IMauiContext MauiContext { get; private set; } = null!;
 
-	public async ValueTask InitializeAsync()
+	public ValueTask InitializeAsync() => new(MainThread.InvokeOnMainThreadAsync(async () =>
 	{
 		Routing.RegisterRoute("uitests", typeof(ContentPage));
 
@@ -25,9 +26,9 @@ public abstract class SKUITests : SKTest, IAsyncLifetime
 		await CurrentPage.WaitForLoaded();
 
 		MauiContext = CurrentPage.Handler!.MauiContext!;
-	}
+	}));
 
-	public async ValueTask DisposeAsync()
+	public ValueTask DisposeAsync() => new(MainThread.InvokeOnMainThreadAsync(async () =>
 	{
 		// pop all modals
 		while (Shell.Current.CurrentPage.Navigation.ModalStack.Count > 0)
@@ -46,5 +47,5 @@ public abstract class SKUITests : SKTest, IAsyncLifetime
 		await Shell.Current.GoToAsync("..");
 
 		Routing.UnRegisterRoute("uitests");
-	}
+	}));
 }
