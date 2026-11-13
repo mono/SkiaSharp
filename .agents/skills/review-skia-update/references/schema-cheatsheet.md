@@ -52,7 +52,8 @@ All sections use `PASS` or `REVIEW_REQUIRED`. There is no WARN or FAIL for sourc
 | `upstreamIntegrity.status == REVIEW_REQUIRED` | HIGH |
 | `interopIntegrity.status == REVIEW_REQUIRED` | MEDIUM |
 | `depsAudit.status == REVIEW_REQUIRED` | MEDIUM |
-| All PASS | LOW |
+| `companionPr.status == REVIEW_REQUIRED` | MEDIUM |
+| All five checks PASS | LOW |
 
 ## Source Integrity (upstream + interop)
 
@@ -166,6 +167,8 @@ Files in these dirs go to `interopIntegrity`; everything else to `upstreamIntegr
 - `meta.skiasharpPrNumber` is required (integer, not null)
 - `meta.shas.upstream` is the NEW upstream SHA (the milestone being merged in)
 - `companionPr` must have `prNumber`, `status`, `summary`, `recommendations`, `unchanged`
+- `companionPr.headSha` may record the exact companion PR head SHA
+- `companionPr.baseSha` may record the exact companion PR base SHA
 - Each companion PR file item must have `path` + `summary` (same as source integrity items)
 - `generatedFiles` can include `generatorError` (string) when the generator itself crashes
 - No absolute paths (redact `/Users/...` → relative)
