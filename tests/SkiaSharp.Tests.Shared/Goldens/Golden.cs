@@ -215,35 +215,60 @@ public sealed class Golden
 		if (actualSize != expectedSize)
 		{
 			var failure = $"Image dimensions differ: actual {Size(actualSize)}, expected {Size(expectedSize)}.";
-			return new(false, actualSize, expectedSize, null, null, failure);
+			return new(false, actualSize, expectedSize, actualSize, null, null, failure);
 		}
 		if (options.ExpectedSize is { } required && actualSize != required)
 		{
 			var failure = $"Image is {Size(actualSize)}, expected {Size(required)}.";
-			return new(false, actualSize, expectedSize, null, null, failure);
+			return new(false, actualSize, expectedSize, actualSize, null, null, failure);
 		}
 
-		var pixels = SKPixelComparer.Compare(expectedImage, actualImage, options.ChannelTolerance);
-		var matched = options.MaxAverageColorErrorFraction is { } average
-			? pixels.AverageColorErrorFraction <= average
-			: pixels.ErrorPixelCount <= (long)Math.Floor(pixels.TotalPixels * options.MaxErrorPixelFraction);
-		if (matched)
-			return new(true, actualSize, expectedSize, pixels, null, null);
-
-		var pixelDifference = $"{pixels.ErrorPixelCount}/{pixels.TotalPixels} pixels differ";
-		var budget = $"{pixelDifference}, exceeding {options.MaxErrorPixelFraction:P3};";
-		var message = options.MaxAverageColorErrorFraction is { } limit
-			? $"average RGBA color error {pixels.AverageColorErrorFraction:P3} exceeds {limit:P3}."
-			: $"{budget} max channel delta {pixels.MaxChannelDelta}.";
-		byte[]? differencePng = null;
-		if (createDifference)
+		SKImage? comparedActual = null, comparedExpected = null;
+		try
 		{
-			using var difference = SKPixelComparer.GenerateDifferenceImage(
-				expectedImage, actualImage, options.ChannelTolerance);
-			using var data = difference.Encode(SKEncodedImageFormat.Png, 100);
-			differencePng = data.ToArray();
+			comparedActual = Transform(actualImage);
+			comparedExpected = Transform(expectedImage);
+			var diffSize = comparedActual.Info.Size;
+			var pixels = SKPixelComparer.Compare(comparedExpected, comparedActual, options.ChannelTolerance);
+			var matched = options.MaxAverageColorErrorFraction is { } average
+				? pixels.AverageColorErrorFraction <= average
+				: pixels.ErrorPixelCount <= (long)Math.Floor(pixels.TotalPixels * options.MaxErrorPixelFraction);
+			if (matched)
+				return new(true, actualSize, expectedSize, diffSize, pixels, null, null);
+
+			var pixelDifference = $"{pixels.ErrorPixelCount}/{pixels.TotalPixels} pixels differ";
+			var budget = $"{pixelDifference}, exceeding {options.MaxErrorPixelFraction:P3};";
+			var message = options.MaxAverageColorErrorFraction is { } limit
+				? $"average RGBA color error {pixels.AverageColorErrorFraction:P3} exceeds {limit:P3}."
+				: $"{budget} max channel delta {pixels.MaxChannelDelta}.";
+			byte[]? differencePng = null;
+			if (createDifference)
+			{
+				using var difference = SKPixelComparer.GenerateDifferenceImage(
+					comparedExpected, comparedActual, options.ChannelTolerance);
+				using var data = difference.Encode(SKEncodedImageFormat.Png, 100);
+				differencePng = data.ToArray();
+			}
+			return new(false, actualSize, expectedSize, diffSize, pixels, differencePng, message);
 		}
-		return new(false, actualSize, expectedSize, pixels, differencePng, message);
+		finally
+		{
+			if (comparedActual is not null && comparedActual != actualImage && comparedActual != expectedImage)
+				comparedActual.Dispose();
+			if (comparedExpected is not null && comparedExpected != actualImage && comparedExpected != expectedImage &&
+				comparedExpected != comparedActual)
+				comparedExpected.Dispose();
+		}
+
+		SKImage Transform(SKImage image)
+		{
+			var transformed = options.ComparisonTransform is { } transform
+				? transform(image) ?? throw new InvalidOperationException("The comparison transform returned no image.")
+				: image;
+			if (transformed.Handle == IntPtr.Zero)
+				throw new InvalidOperationException("The comparison transform returned a disposed image.");
+			return transformed;
+		}
 	}
 
 	private void WriteDiagnostics(GoldenInput.Image actual, SKSizeI actualSize)
@@ -258,7 +283,7 @@ public sealed class Golden
 		TestContext.Current.TestOutputHelper?.WriteLine(Marker("actual", actual.Png, comparison.ActualSize));
 		TestContext.Current.TestOutputHelper?.WriteLine(Marker("reference", expected.Png, comparison.ExpectedSize));
 		if (comparison.DifferencePng != null)
-			TestContext.Current.TestOutputHelper?.WriteLine(Marker("diff", comparison.DifferencePng, comparison.ActualSize));
+			TestContext.Current.TestOutputHelper?.WriteLine(Marker("diff", comparison.DifferencePng, comparison.DiffSize));
 	}
 
 	private static void Complete(GoldenInput.Image actual, GoldenInput.Image expected, Comparison comparison)
@@ -397,6 +422,7 @@ public sealed class Golden
 		bool Matched,
 		SKSizeI ActualSize,
 		SKSizeI ExpectedSize,
+		SKSizeI DiffSize,
 		SKPixelComparisonResult? Pixels,
 		byte[]? DifferencePng,
 		string? Failure);
