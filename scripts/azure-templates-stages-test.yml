@@ -11,6 +11,8 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: buildAgentAndroidAppiumTests
+    type: object
   - name: enableCaching
     type: boolean
     default: false
@@ -31,6 +33,8 @@ stages:
       buildAgentWindows: ${{ parameters.buildAgentWindows }}
       buildAgentMac: ${{ parameters.buildAgentMac }}
       buildAgentLinux: ${{ parameters.buildAgentLinux }}
+      buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+      buildAgentAndroidAppiumTests: ${{ parameters.buildAgentAndroidAppiumTests }}
 
   - template: /scripts/azure-templates-stages-tests.yml@self
     parameters:

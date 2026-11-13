@@ -243,7 +243,7 @@ jobs:
             displayName: Display all the .NET information
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
-      # Restore before Android provisioning and pre-build hooks.
+      # Restore before Android provisioning and pre-build hooks, including Appium run-only jobs.
       - ${{ if or(and(eq(parameters.docker, ''), ne(parameters.skipSteps, 'true')), and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true'), eq(parameters.installAndroidSdk, 'true'))) }}:
         - pwsh: dotnet tool restore
           displayName: Restore the .NET tools

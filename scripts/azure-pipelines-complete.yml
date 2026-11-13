@@ -75,6 +75,15 @@ parameters:
         name: Azure Pipelines
         vmImage: ubuntu-24.04
         os: linux
+  - name: buildAgentAndroidAppiumTests
+    displayName: 'The build agent configuration for running Android Appium tests:'
+    type: object
+    default:
+      pool:
+        name: MAUI-DNCENG
+        demands:
+          - ImageOverride -equals 1ESPT-Ubuntu22.04
+        os: linux
 
 variables:
   - template: /eng/common/templates/variables/pool-providers.yml@self
@@ -96,4 +105,5 @@ extends:
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+          buildAgentAndroidAppiumTests: ${{ parameters.buildAgentAndroidAppiumTests }}
           enableCaching: ${{ parameters.enableCaching }}

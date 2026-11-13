@@ -6,6 +6,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/msbuild.cake"
 #load "tests-shared.cake"
 #load "tests-shared-apple.cake"
+#load "tests-shared-android.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
@@ -13,7 +14,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 var RUN_GROUP = Argument("runGroup", "");
 var RUN_GROUPS = new[] { "Build", "Host", "Docker", "Android", "Ios", "Mac", "Windows" };
-var APPIUM_RUN_GROUPS = new[] { "Ios" };
+var APPIUM_RUN_GROUPS = new[] { "Android", "Ios" };
 if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Unknown sample run group '{RUN_GROUP}'. Expected {string.Join(", ", RUN_GROUPS)}.");
 
@@ -24,6 +25,8 @@ if (APPIUM_MODE != "all" && !APPIUM_RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Select an Appium run group ({string.Join(", ", APPIUM_RUN_GROUPS)}) with an explicit phase.");
 
 string OWNED_IOS_SIMULATOR = null;
+string OWNED_ANDROID_AVD = null;
+string OWNED_ANDROID_SERIAL = null;
 
 Setup(context =>
 {
@@ -32,6 +35,9 @@ Setup(context =>
         IsCakeListingCommand())
         return;
 
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android")
+        StopCIAndroidEmulators();
+
     if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
         SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
 
@@ -39,13 +45,39 @@ Setup(context =>
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
         Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
     }
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android") {
+        Environment.SetEnvironmentVariable("TEST_ANDROID_PREINSTALL_APPIUM_SERVER", "1");
+        // All mode builds APKs inside the test host; only run mode has them ready to preinstall in Setup.
+        SetupAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, installAppiumArtifacts: APPIUM_MODE == "run");
+        Environment.SetEnvironmentVariable("TEST_ANDROID_IMAGE", TEST_ANDROID_IMAGE);
+        Environment.SetEnvironmentVariable("TEST_ANDROID_MODEL", TEST_ANDROID_MODEL);
+        Environment.SetEnvironmentVariable("TEST_ANDROID_UDID", OWNED_ANDROID_SERIAL);
+    }
 });
 
 Teardown(context =>
 {
-    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
-        TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+    var failures = new List<Exception>();
+    if ((TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) ||
+         TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Android") &&
+        APPIUM_MODE != "build" && !IsCakeListingCommand()) {
+        try {
+            TeardownAndroidEmulator(ref OWNED_ANDROID_AVD, ref OWNED_ANDROID_SERIAL, context.ThrownException);
+        } catch (Exception error) {
+            failures.Add(error);
+        }
     }
+
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        try {
+            TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+        } catch (Exception error) {
+            failures.Add(error);
+        }
+    }
+    if (failures.Count != 0)
+        throw new AggregateException("Owned sample device cleanup failed.", failures);
 });
 
 Task ("samples-generate")
