@@ -1140,7 +1140,10 @@ Assert-True (-not [bool] (
         Where-Object { $_ -match '^release create .*--draft(?:\s|=|$)' }
 )) 'Finish unexpectedly created a draft release.'
 
-# Exercises exact-release support-tier additions and promotions.
+# Exercises additive support membership without querying the public catalogue.
+function global:Invoke-RestMethod {
+    throw 'Support membership unexpectedly queried the public catalogue.'
+}
 $supportConfig = @'
 {
   "$comment": "keep this text",
@@ -1190,7 +1193,7 @@ $promotedRelease = Get-ReleaseIdentity '4.152.0'
 $promotedSupport = Get-UpdatedReleaseSupport -Text $rcSupport -Release $promotedRelease
 $promotedDocument = $promotedSupport | ConvertFrom-Json
 Assert-Equal @('4.148', '4.150', '4.152') @($promotedDocument.support.stable) `
-    'A stable release did not retain existing stable lines and append its line.'
+    'A stable promotion did not preserve more than two supported stable lines.'
 Assert-Equal @('4.151', '4.153') @($promotedDocument.support.preview) `
     'A stable release removed a preview line other than its own.'
 Assert-Equal $promotedSupport (Get-UpdatedReleaseSupport -Text $promotedSupport -Release $promotedRelease) `
@@ -1212,6 +1215,17 @@ Assert-Equal '3.0.0' $promotedDocument.history_floor.skiasharp `
 Assert-Equal $true $promotedDocument.unrelated.enabled `
     'Release support changed unrelated configuration.'
 
+$patchSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.150.1.1')
+Assert-Equal $promotedSupport $patchSupport `
+    'Finishing an older stable patch displaced a newer stable line.'
+$olderSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.149.0')
+$olderDocument = $olderSupport | ConvertFrom-Json
+Assert-Equal @('4.148', '4.150', '4.152', '4.149') @($olderDocument.support.stable) `
+    'Adding an older shipment removed or reordered supported stable lines.'
+Assert-Equal @('4.151', '4.153') @($olderDocument.support.preview) `
+    'Adding an older stable shipment changed unrelated preview lines.'
+Assert-Equal $olderSupport (Get-UpdatedReleaseSupport -Text $olderSupport -Release (Get-ReleaseIdentity '4.149.1')) `
+    'A patch added a duplicate supported line.'
 $inlineConfig = @'
 {
   "support": {
@@ -1240,6 +1254,7 @@ Assert-Equal @() @($emptyPromotionDocument.support.preview) `
     'Promotion did not empty the sole preview tier.'
 Assert-Equal $emptyPromotion (Get-UpdatedReleaseSupport -Text $emptyPromotion -Release $promotedRelease) `
     'Rerunning after promotion from the sole preview tier failed.'
+Remove-Item Function:\Invoke-RestMethod
 
 # Exercises issue-template release parsing, selection, and text surgery.
 Invoke-Expression (Get-ScriptFunctionText $bugTemplatePath)

@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/mirror/docker/library/debian:12
 
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0.403 | * ]
-#   EMSCRIPTEN_VERSION   - the version of the emscripten SDK                [ 3.1.34 | * ]
+#   EMSCRIPTEN_VERSION   - the version of the emscripten SDK                [ 3.1.56 | 6.0.2 ]
 
 # default value, but should be provided depending on app
 ARG EMSCRIPTEN_VERSION=3.1.56

@@ -1,0 +1,38 @@
+{
+  "theme": "Engine and WebAssembly updates",
+  "highlights_headline": "SkiaSharp 4.159.0 adopts Skia m159 and raises the WebAssembly minimum to .NET 9.",
+  "highlights_body": "The engine update brings WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and image and rendering fixes. Non-WebAssembly .NET 8 support remains unchanged.",
+  "breaking": [
+    {
+      "title": "Move .NET 8 WebAssembly apps to a supported toolchain",
+      "body": "SkiaSharp and HarfBuzzSharp no longer provide .NET 8 WebAssembly native assets; unsupported WASM target frameworks now fail before building. Retarget WASM apps to .NET 9 or later and use runtime-matched archives: .NET 9/10 use Emscripten 3.1.56, while .NET 11+ uses 6.0.2. These archives are not interchangeable with older .NET toolchains. Non-WASM .NET 8 support is unchanged.",
+      "prs": [5700]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m159",
+          "detail": "Updates the native renderer with WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and image and rendering correctness fixes. Public managed signatures remain unchanged.",
+          "prs": [5685]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "OS-generated hash seeds",
+          "detail": "The shared HashCode polyfill now seeds from the operating system random-number generator. Hash codes remain randomized per process and stable within a process; first use now loads System.Security.Cryptography, adding initialization cost.",
+          "prs": [5408]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "rolfbjarne": "Replaced the shared HashCode seed with OS-generated randomness and added analyzer safeguards for shipped code."
+  },
+  "preview_summaries": {}
+}

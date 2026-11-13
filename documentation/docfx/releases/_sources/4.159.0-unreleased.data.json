@@ -1,0 +1,132 @@
+{
+  "format": 6,
+  "version": "4.159.0",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": null,
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [],
+  "tallies": {
+    "product": 3,
+    "mixed": 0,
+    "internal": 9
+  },
+  "breaking_candidates": [],
+  "contributors": [
+    {
+      "login": "rolfbjarne",
+      "url": "https://github.com/rolfbjarne",
+      "prs": [
+        5408
+      ]
+    }
+  ],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5707": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5707",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5713": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5713",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5685": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5685",
+      "title": "[skia-sync] Update skia to milestone 159",
+      "body": "[M159] Update SkiaSharp to Skia m159 (#5685)\n\nContext: https://github.com/mono/skia/pull/443\nChanges: https://github.com/mono/skia/compare/e9296dd4eb471f50a09e462f3a33bf276e5c95e4...1b7b8c4340f57877940b47d24ada18eb6ec66e68\n\nAdopt the m159 native engine, bringing WebAssembly SIMD CPU rasterization,\nWindows font-loading improvements, and image/rendering correctness fixes.\n\nAlign SkiaSharp package and assembly identities with 4.159 and the native\nlibrary version with m159. Native HarfBuzz remains 15.0.0; HarfBuzzSharp\npackages receive the per-milestone revision 15.0.0.100.\n\nUpdate component provenance for Skia and Vulkan-Headers 1.4.368, and\nupdate the Uno CPU reference images for m159's rendering changes.\nC API exports and public managed signatures remain unchanged.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5700": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5700",
+      "title": "Retire .NET 8 WASM and obsolete Emscripten workarounds",
+      "body": "Retire .NET 8 WASM and obsolete Emscripten workarounds (#5700)\n\nContext: https://github.com/mono/skia/pull/446\n\nRetire the .NET 8 WebAssembly toolchain while preserving the runtime-matched\narchives for supported consumers. Non-WASM .NET 8 support and the existing\nnative Dawn integration remain unchanged.\n\n~~ Require .NET 9 for WebAssembly native assets ~~\n\nRemove emsdk 3.1.34 producer jobs, both artifact-merger registrations and\nthe corresponding native artifact inventory. Update source-build and\npackaged targets for SkiaSharp and HarfBuzzSharp to reject unsupported\nWASM frameworks before building.\n\nKeep .NET 9/10 on emsdk 3.1.56 and .NET 11+ on 6.0.2, preserving threading\nand SIMD selection. Newer archives are not interchangeable with older\n.NET toolchains. Current package and developer documentation now describes\nthis support boundary; historical release records remain intact.\n\nMSBuild coverage verifies retained archive selection, unsupported WASM\nerrors and unaffected non-WASM builds. Retired archive directories remain\nas test decoys so their accidental selection is detectable.\n\n~~ Use the existing modern WebGPU integration consistently ~~\n\nThe retained WASM toolchains already use emdawnwebgpu. Remove the obsolete\n_SkiaSharpUseEmdawnwebgpu discriminator, built-in USE_WEBGPU linkage and\nlegacy mgrDevice/mgrQueue/mgrTexture fallbacks.\n\nContinue shipping the matching port JavaScript and exporting instance\ncreation and texture release. Browser test interop now uses importJs*\nhandles directly and releases textures through wgpuTextureRelease rather\nthan silently accepting a missing release path.\n\nKeep the existing native Dawn adaptations, old-toolchain JavaScript\ncompatibility rewrite and runtime library-order workaround. Their\nrequirements do not disappear with .NET 8.\n\n~~ Remove inactive native build switches ~~\n\nDrop SKNX_NO_SIMD, SK_DISABLE_AAA and GR_GL_CHECK_ALLOC_WITH_GET_ERROR from\nthe WASM build flags: the pinned native source has no tracked consumers.\nSIMD selection continues through the compiler's -msimd128 flag.\n\nThe retired toolchain was also the reason for the Graphite version gate.\nGraphite now follows the existing GPU setting, preserving GPU-off builds.\n\n~~ Restore upstream PDF and SVG ranges implementations ~~\n\nPin mono/skia e9296dd4eb471f50a09e462f3a33bf276e5c95e4 in both the\nsubmodule and Component Governance registration. The landed native tree\nequals the reviewed tree and restores std::views::reverse in PDF structure\nemission and projected std::ranges::find in SVG blend-mode selection.\n\nBoth restored translation units compile on emsdk 3.1.56 and 6.0.2 across\nthreading and SIMD variants. Source-built single-threaded archives link\nwith the retained .NET toolchains; these checks do not establish complete\nbrowser runtime coverage.\n\nThe unfiltered managed solution passes. Browser validation has separate\ndocumented limitations, and the unrelated Windows sample confirmation\ntimeout is being investigated independently rather than weakened here.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5697": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5697",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5695": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5695",
+      "title": "Restore stable support metadata and keep retirement manual",
+      "body": "* Maintain support for the latest two shipped stable lines\n\nDerive stable support from distinct public SkiaSharp release lines instead of Chrome channels or documentation regeneration floors. Restore 4.155 alongside 4.156 and roll the pair during Release Finish without letting older shipments displace newer stable lines.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep supported release retirement a manual decision\n\nRemove the automatic two-line cap and its catalogue lookup, retaining Finish's additive promotion behavior. Preserve all supported lines until a maintainer removes them while keeping the 4.155/4.156 metadata repair and independent documentation floors.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5691": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5691",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5689": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5689",
+      "title": "Update 4.156 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5690": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5690",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5683": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5683",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5408": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5408",
+      "title": "Enable CA5394 for shipped code and use a CSPRNG for the HashCode seed",
+      "body": "* Enable CA5394 (insecure randomness) as an error for shipping code\n\nCA5394 is disabled by default, so nothing would catch a new use of\nSystem.Random in the shipping assemblies. Enable it as an error for\nbinding/ and source/ with a path-scoped .editorconfig section, so that\nany new use has to be justified.\n\nThe only existing hit in shipping code is the hash seed in\nBinding.Shared/HashCode.cs (compiled into both SkiaSharp.dll and\nHarfBuzzSharp.dll). It only randomizes hash codes between processes and\nis not security sensitive, so suppress it with a comment instead of\nchanging behavior.\n\nNotes:\n\n* Samples, tests and benchmarks are not covered. They use System.Random\n  for deterministic or throwaway data (21 call sites in the Gallery\n  sample, the tests and the benchmarks would otherwise be reported, and\n  the Gallery projects treat warnings as errors).\n* The rule is only reported for target frameworks where the SDK's bundled\n  analyzers run: net5.0 and later, including the platform TFMs.\n  netstandard2.0/2.1, net462 and net48 are not analyzed unless\n  EnableNETAnalyzers=true is set. All TFMs compile the same files, so the\n  other TFMs still catch new uses in shared code.\n* The severity is error instead of warning on purpose: only binding/ has\n  TreatWarningsAsErrors=true, so a warning would not fail the build in\n  source/.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Document the CA5394 rule for contributors\n\nMention in the file conventions that System.Random cannot be used in\nbinding/ and source/ without a justification, and what to do instead,\nsince the build now reports it as an error there.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Seed HashCode from the OS CSPRNG instead of suppressing CA5394\n\nThe only System.Random use in shipped code was the per-process seed of\nthe HashCode polyfill in Binding.Shared/HashCode.cs, which is compiled\ninto both SkiaSharp.dll and HarfBuzzSharp.dll. The previous commit\nsuppressed CA5394 for it. Fix it instead, so that the new CA5394 guard\nhas no exceptions in shipped code.\n\nThe polyfill was copied from dotnet/runtime, where the seed comes from\nthe OS CSPRNG (Interop.GetRandomBytes), and Microsoft.Bcl.HashCode, the\nofficial downlevel polyfill of System.HashCode, generates it with\nRandomNumberGenerator. The copy used new Random ().Next () instead,\nwhich is weaker:\n\n* Random.Next () returns [0, int.MaxValue), so the seed only had 31 bits.\n* On .NET Framework the parameterless Random constructor is seeded from\n  the system clock (net462, net48, and netstandard2.0 assemblies running\n  there).\n\nUse RandomNumberGenerator.Create () and GetBytes, like\nMicrosoft.Bcl.HashCode does. It exists on all of our target frameworks\n(netstandard2.0/2.1, net462/net48 and net6.0+, including the platform\nTFMs), so no #if is needed. Hash codes are still randomized per process\nand stable within a process.\n\nThe cost is that the first use of HashCode in a process now loads\nSystem.Security.Cryptography and takes about 2 ms instead of 0.3 ms\n(measured on net10.0, macOS arm64).\n\nAlso remove the references to HashCode.cs as the example of a justified\nsuppression from the .editorconfig comment and api-design.md, since\nthere is no suppression anymore.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Ignore CA5394 explicitly for code that is not shipped\n\nCA5394 is disabled by default, so the samples, tests, benchmarks and\nutils are not reported today. Say so explicitly, so that it also holds\nif the rule gets enabled more broadly: AnalysisMode=All, for instance,\nreports 21 call sites there. They are all seeded or throwaway uses of\nRandom (the day-seeded shuffle and the decorative dots in the Gallery,\nbuffers in the tests, input data in the benchmarks), where a CSPRNG\nwould be a regression.\n\nThe shipped code, the NuGet packages built from binding/ and source/,\nkeeps CA5394 as an error. Together the two sections cover all the C# in\nthe repository (outside of the externals submodule).\n\nVerified with temporary files: a new System.Random use in binding/ or\nsource/ fails the build on the target frameworks where the SDK\nanalyzers run (net6.0 and later), the same use in utils/ is not\nreported even with AnalysisMode=All, and in a directory that matches\nneither section it is reported by AnalysisMode=All, so the exemption is\nwhat silences it.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Move the CA5394 settings to nested .editorconfig files\n\nThe root .editorconfig is in the global include of\nscripts/infra/caching/repo-deps.json, so it is part of the cache key of\nevery native job. Editing it made CI think that the native inputs had\nchanged:\n\n* The Azure native jobs all had a cache miss and rebuilt (636\n  agent-minutes in the Native stages of the PR build, against 77 for a\n  docs-only PR build).\n* The benchmark-source workflow built libSkiaSharp from source on every\n  OS, which currently fails on Windows because the runner image has no\n  Spectre-mitigated MSVC libraries (mono/SkiaSharp#5321 is fixing that).\n\nPut the error severity in binding/.editorconfig (which already exists)\nand in a new source/.editorconfig instead. Neither file is part of the\nnative cache keys, so the keys are the same as the ones for the base\ncommit again, and repo-deps.py validate accepts the new file. A new\nSystem.Random use in binding/ or source/ is still an error on the target\nframeworks where the SDK analyzers run (net6.0 and later), and the code\nthat is not shipped keeps the default, which is that the rule is\ndisabled.\n\nThe explicit \"none\" for samples, tests, benchmarks and utils goes away.\nIt only made a difference if the rule is enabled more broadly\n(AnalysisMode=All reports 21 call sites there), which nothing does\ntoday.\n\nUpdate the note in api-design.md to point at the new files.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "rolfbjarne",
+      "community": true,
+      "tag": "product"
+    },
+    "5677": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5677",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}

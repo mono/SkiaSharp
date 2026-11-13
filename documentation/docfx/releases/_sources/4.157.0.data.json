@@ -7,7 +7,7 @@
     "kind": "preview",
     "date": null,
     "nuget_url": null,
-    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.157.0-preview.1.26556.1",
+    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.157.0-rc.1.26560.6",
     "github_release_url": null
   },
   "harfbuzz": {
@@ -30,18 +30,28 @@
     }
   ],
   "tallies": {
-    "product": 3,
+    "product": 4,
     "mixed": 0,
-    "internal": 8
+    "internal": 9
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [
     {
+      "key": "v4.157.0-rc.1.26560.6",
+      "label": "Release Candidate 1",
+      "date": "November 9, 2026",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.157.0-preview.1.26556.1...v4.157.0-rc.1.26560.6",
+      "prs": [
+        5670,
+        5664
+      ]
+    },
+    {
       "key": "v4.157.0-preview.1.26556.1",
       "label": "Preview 1",
       "date": "November 6, 2026",
-      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.156.0-rc.1.26553.11...v4.157.0-preview.1.26556.1",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.156.0...v4.157.0-preview.1.26556.1",
       "prs": [
         5630,
         5612,
@@ -64,10 +74,10 @@
       "public_version": "4.157.0-preview.1.26556.1",
       "channel": "preview",
       "label": "Preview 1 (Build 26556.1)",
-      "previous_tag": "v4.156.0-rc.1.26553.11",
+      "previous_tag": "v4.156.0",
       "target_sha": "0b5f5b6acc78ac215e7a9c5cf3887e8cd89965e7",
       "date": "2026-11-06",
-      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.156.0-rc.1.26553.11...v4.157.0-preview.1.26556.1",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.156.0...v4.157.0-preview.1.26556.1",
       "prs": [
         5542,
         5565,
@@ -100,9 +110,51 @@
           "kind": "automation"
         }
       ]
+    },
+    {
+      "tag": "v4.157.0-rc.1.26560.6",
+      "core_version": "4.157.0",
+      "public_version": "4.157.0-rc.1.26560.6",
+      "channel": "rc",
+      "label": "Release Candidate 1 (Build 26560.6)",
+      "previous_tag": "v4.157.0-preview.1.26556.1",
+      "target_sha": "4a43cafa5471f644124f8986b9c773daf22e59ec",
+      "date": "2026-11-09",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.157.0-preview.1.26556.1...v4.157.0-rc.1.26560.6",
+      "prs": [
+        5664,
+        5670
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        }
+      ]
     }
   ],
   "prs": {
+    "5670": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5670",
+      "title": "[M157] Sync upstream Skia chrome/m157 bug fixes",
+      "body": "[M157] Sync upstream Skia chrome/m157 bug fixes (#5670)\n\nRequires: https://github.com/mono/skia/pull/440\nContext: https://github.com/mono/SkiaSharp/pull/5674\nChanges: https://github.com/mono/skia/compare/cd151a3c30953e87a673d9840ad1e525667b46ee...24c21cc82f1f03e03740b742309c7a5e0d50beb3\n\nBring the m157 rendering and Vulkan fixes into release/4.157.x without\nchanging managed APIs, generated bindings, or package versions.\n\n~~ Correct reflected hairline square caps ~~\n\nNegative-determinant transforms incorrectly took a unit local-space\nfallback when constructing square caps on zero-length hairlines,\nallowing scaling to enlarge them arbitrarily. Use the signed inverse\ndeterminant for the half-pixel outset and suppress non-finite results.\n\n~~ Stabilize text atlas selection ~~\n\nGanesh's flat-interpolation hint does not guarantee integral atlas\nindices. Round the interpolated index before converting to int in\nordinary and LCD texture selection to avoid sampling the wrong atlas.\n\n~~ Respect affected Mali device-loss cleanup timing ~~\n\nGanesh and Graphite delay affected device-loss cleanup paths by 1 ms\nfor ARM proprietary Vulkan driver versions >=42 and <56. These drivers\ncan return from waits before device destruction is safe.\n\n~~ Record landed native ancestry without changing reviewed content ~~\n\nUpdate externals/skia and its Component Governance registration to\n24c21cc82f1f03e03740b742309c7a5e0d50beb3. Record upstream chrome/m157\nat 851b8fee76806e84c668d40bdaf17a6468e1ce6f.\n\nThe native merge directly contains reviewed head\naa0f7c80a0caa1d792eb63134ba938be64b6634d and has the identical tree,\n125bb54f9deab6118df7a628df7c2782e9a99638. The dependent repin updates\nonly the gitlink and matching manifest SHA.\n\nAzure build 1671433 succeeded on the PR merge for original source head\nb2cb867d98031def80d4b381014092030fc36b81, including native builds and\nmanaged/runtime tests. The repin retains that reviewed native content;\naffected physical Mali device-loss behavior was not specifically proven.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5664": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5664",
+      "title": "Fix Alpine apk bootstrap artifact pin",
+      "body": "Use the available Alpine 3.21 apk-tools-static 2.14.13-r0 archive and its verified SHA-256. The previous 2.14.6-r3 archive now returns HTTP 404, preventing musl build images from bootstrapping.\n\n\n(cherry picked from commit 55c03c000afa46e4d3b659fb80b2ae70e3af26d5)\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
     "5630": {
       "url": "https://github.com/mono/SkiaSharp/pull/5630",
       "title": "[M157] Update Skia to upstream raster, Slug and Graphite fixes",

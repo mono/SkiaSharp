@@ -1,0 +1,52 @@
+{
+  "format": 6,
+  "version": "4.156.1",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": null,
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [],
+  "tallies": {
+    "product": 2,
+    "mixed": 0,
+    "internal": 1
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5711": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5711",
+      "title": "[skia-sync] Merge upstream chrome/m156 bug fixes",
+      "body": "[Skia] Sync m156 Vulkan wait and displacement fixes (#5711)\n\nContext: https://github.com/mono/skia/pull/450\nContext: https://github.com/mono/SkiaSharp/pull/5716\nChanges: https://github.com/mono/skia/compare/cb6f6ce6bf3aa7102bbffa49e4b760d948d68918...712ea097151d4951652dee046a8944376fd8df1b\n\nAdvance externals/skia and its Component Governance registration to native\nmerge 712ea097151d4951652dee046a8944376fd8df1b, incorporating chrome/m156 at\n8e7863a6ff2ee1dbc6ec0631b61f3631852c8878. Keep this a servicing sync for\nrelease/4.156.x: package versions, C API signatures, managed APIs and\ndependency pins remain unchanged.\n\n~~ Propagate failed Vulkan synchronous waits internally ~~\n\nA successful queue submission could be reported as successful synchronous\nsubmission even when the subsequent fence wait failed. Make\nGrVkPrimaryCommandBuffer::forceSync return whether vkWaitForFences succeeded,\nand require both queue submission and synchronization to succeed in\nGrVkGpu::submitCommandBuffer.\n\nRetain the VK_TIMEOUT retry, diagnostics and existing cleanup path.\nAsynchronous submission behavior is unchanged. The C API already returns a\nboolean, but GRContext.Submit remains void and discards that result; this\nupdate does not introduce a managed failure return or exception.\n\n~~ Keep displacement offsets consistent with filter bounds ~~\n\nHalf-precision displacement arithmetic could round differently from the\nfloat-precision bounds calculations, making sampling disagree with the\ncomputed filter bounds.\n\nUse float2 for the scale uniform and displacement offset arithmetic in the\nruntime effect and SkSL helper. Carry the corresponding generated shader\nrepresentations together; color-channel selection remains half precision\nand the existing SkV2 uniform assignment remains compatible.\n\n~~ Record the completed native merge without changing reviewed sources ~~\n\nRepin both the gitlink and mono/skia manifest hash to the completed native\nmerge rather than the temporary reviewed head. The merge has two parents,\ndirectly includes reviewed commit\n796c0cc256ba1252fd0e755f5d8ec9f2dff9b608, and has the identical tree\n3b4bc4c2a8d1fb836d51e84b827f172f58498c31.\n\nKeep upstream_merge_commit at the incorporated upstream commit rather than\nthe fork merge SHA. The repin changes ancestry and commit identity, not\nnative source contents; independently regenerated binding trees matched\nthe reviewed source, and the repin does not require different declarations.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5687": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5687",
+      "title": "[M156] Integrate Ganesh rendering and Graphite clip fixes",
+      "body": "[M156] Integrate Ganesh rendering and Graphite clip fixes (#5687)\n\nContext: https://github.com/mono/skia/pull/444\nContext: https://github.com/mono/SkiaSharp/pull/5698\nChanges: https://github.com/mono/skia/compare/d1717dc22ef2203b7fc9bf0e01078b37b1a4af6b...cb6f6ce6bf3aa7102bbffa49e4b760d948d68918\n\nAdvance externals/skia and its Component Governance registration to the\nactual mono/skia merge cb6f6ce6bf3aa7102bbffa49e4b760d948d68918. Record\nupstream 24e65cdd9b6421351dde22acd81dc604bd8073b8 on chrome/m156 while\nretaining milestone 156 and the servicing line's version identities.\n\nThe merged native tree equals reviewed head\n8c8de9aa05950b0b251924873c361a5441997b54. The dependent repin changes\ncommit identity and provenance, not the native source that was reviewed.\nC API declarations and DEPS are unchanged; independent regeneration\nfound no binding differences. No managed API or release version changes.\n\n~~ Avoid stale atlas work after empty Ganesh flushes ~~\n\nEmpty flushes could leave per-flush token comparisons stale. Advance\nthe draw token when GrOpFlushState resets and catch the flush token up,\nso work scheduled during one flush is not treated as pending later.\n\n~~ Correct transformed ellipse and rounded-rectangle geometry ~~\n\nFix the matrix-axis mapping of rrect radii and ellipse/rrect stroke\nwidths, and remove the redundant quarter-turn swap. Clamp transformed\ncorner radii to half the device-space bounds to prevent corner overlap.\n\n~~ Keep Graphite clip draws within pass capacity ~~\n\nAccount for clip elements that still need recording without counting\nalready-recorded DrawListLayer clips twice. A fresh pass must fit the\ndraw and its full effective clip stack; warn and skip a draw that cannot\nfit rather than exceeding render-step capacity.\n\nThe upstream DeviceTestClipRenderStepLimits regression exercises\naccumulating and reused clip stacks, an oversized stack, and a normal\ndraw after restoring it, asserting that a recording can still be made.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5678": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5678",
+      "title": "Bump to the next version (4.156.1) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}

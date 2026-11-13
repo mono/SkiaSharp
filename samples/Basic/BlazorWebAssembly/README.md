@@ -49,7 +49,7 @@ It may be used, embedded, and redistributed with applications under that license
 
 ## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - WebAssembly tools workload: `dotnet workload install wasm-tools`
 
 ## Running the Sample

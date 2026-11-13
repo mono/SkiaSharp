@@ -1,0 +1,40 @@
+{
+  "theme": "GPU rendering corrections",
+  "highlights_headline": "SkiaSharp 4.156.1 improves GPU geometry, clipping, and displacement-filter correctness while retaining Skia m156.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Transformed ellipses and rounded rectangles",
+          "detail": "Corrects the transform mapping for corner radii and stroke widths, removes a redundant quarter-turn swap, and clamps corner radii to prevent overlap.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Atlas work after empty flushes",
+          "detail": "Corrects Ganesh flush-token tracking so atlas work scheduled during one flush is not incorrectly treated as pending in a later flush.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Graphite clip capacity",
+          "detail": "Accounts for unrecorded clip elements without double-counting recorded clips. Draws whose full effective clip stack cannot fit in a fresh pass are warned about and skipped rather than exceeding pass capacity.",
+          "prs": [5687]
+        },
+        {
+          "lead": "Displacement-filter precision",
+          "detail": "Uses float precision for displacement scale and offset arithmetic so sampling coordinates agree with the filter's computed bounds. Color-channel selection remains half precision.",
+          "prs": [5711]
+        },
+        {
+          "lead": "Native Vulkan synchronization reporting",
+          "detail": "Native synchronous submission now requires both queue submission and the fence wait to succeed. Asynchronous submission is unchanged. GRContext.Submit remains void; this does not add a managed failure result or exception.",
+          "prs": [5711]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

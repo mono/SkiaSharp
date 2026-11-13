@@ -1,21 +1,36 @@
 {
-  "theme": "GPU rendering correctness fixes",
-  "highlights_headline": "SkiaSharp 4.157.0 development brings upstream rendering and Vulkan fixes without changing managed APIs or package versions.",
-  "highlights_body": "The unreleased changes correct reflected hairline caps and GPU text-atlas selection, and add a targeted workaround for affected Mali device-loss cleanup.",
+  "theme": "GPU correctness updates",
+  "highlights_headline": "SkiaSharp 4.157.0 improves GPU geometry, clipping, and displacement-filter correctness without changing the public managed API.",
+  "highlights_body": "These native fixes retain the Skia m157 engine line.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "More reliable hairlines and GPU text",
-          "detail": "Corrects oversized square caps on zero-length hairlines under reflected transforms and suppresses non-finite cap calculations. Ganesh rounds interpolated atlas indices before selecting textures for ordinary and LCD text, avoiding sampling from the wrong atlas.",
-          "prs": [5670]
+          "lead": "Transformed ellipses and rounded rectangles",
+          "detail": "Corrects axis mapping for corner radii and stroke widths, removes the redundant quarter-turn swap, and clamps radii to half the transformed bounds to prevent overlapping corners.",
+          "prs": [5688]
         },
         {
-          "lead": "Targeted Mali device-loss workaround",
-          "detail": "Adds a 1 ms delay to affected Ganesh and Graphite Vulkan device-loss cleanup paths for ARM proprietary drivers with versions at least 42 and below 56, whose waits can finish before device destruction is safe. Behavior on affected physical Mali devices was not specifically proven by the integration tests.",
-          "prs": [5670]
+          "lead": "Atlas work after empty flushes",
+          "detail": "Updates Ganesh flush-token tracking so atlas work from one flush is not incorrectly considered pending in a later flush.",
+          "prs": [5688]
+        },
+        {
+          "lead": "Graphite clip capacity",
+          "detail": "Includes unrecorded clips in pass-capacity checks without double-counting recorded clips. A draw whose full clip stack cannot fit in a fresh pass is warned about and skipped; a pass exactly at capacity remains valid.",
+          "prs": [5688]
+        },
+        {
+          "lead": "Displacement-filter precision",
+          "detail": "Computes displacement scale and offsets at float precision to match filter bounds and avoid rounding differences in sampling positions. Color-channel samples and selectors remain half precision.",
+          "prs": [5710]
+        },
+        {
+          "lead": "Native Vulkan synchronization reporting",
+          "detail": "Propagates failed fence waits into the native synchronous submission result, preserving timeout retries and asynchronous behavior. GRContext.Submit remains void and discards that result; no managed failure-reporting API is added.",
+          "prs": [5710]
         }
       ]
     }

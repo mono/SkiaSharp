@@ -56,7 +56,7 @@ Add a canvas to a Razor component:
 }
 ```
 
-The package supplies its browser interop automatically. Use .NET 8 or later for a complete WebAssembly application with the supported native assets. For animated or GPU-heavy scenes, switch to `SKGLView` and enable its render loop.
+The package supplies its browser interop automatically. Use .NET 9 or later for a complete WebAssembly application with the supported native assets. For animated or GPU-heavy scenes, switch to `SKGLView` and enable its render loop.
 
 ## See it running
 

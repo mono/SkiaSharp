@@ -116,7 +116,7 @@ emits both SkiaSharp-versioned and HarfBuzzSharp-versioned diff folders (§3.3/�
   "skiasharp":      { "4.147.0": { "status": "superseded", "superseded_by": "4.148.0" },
                       "4.148.0": { "compare_to": "3.119.4" } },
   "harfbuzzsharp":  { "14.2.1.500": { "status": "superseded", "superseded_by": "14.4.0" } },
-  "support":        { "stable": [], "preview": ["4.156", "4.157", "4.158"] },
+  "support":        { "stable": ["4.155", "4.156"], "preview": ["4.157", "4.158"] },
   "history_floor":  { "skiasharp": "4.156.0", "harfbuzzsharp": "14.4.0.100" }
 }
 ```
@@ -808,33 +808,33 @@ SkiaSharp minor *is* the Chrome/Skia milestone):
 
 ```json
 "support": {
-  "stable": ["4.148"],
-  "preview": ["4.150"]
+  "stable": ["4.155", "4.156"],
+  "preview": ["4.157", "4.158"]
 }
 ```
 
-- **`stable`** — the supported stable line(s): normally the current **Chrome Stable**
-  milestone, or the **Chrome Extended-stable** milestone during the *promotion gap* (when
-  a `preview` line is about to go stable).
-- **`preview`** — the in-flight preview/RC line(s): normally the **Chrome Beta** milestone,
-  or newer when previewing ahead in Dev/Canary.
+- **`stable`** — the supported SkiaSharp `major.minor` lines that actually shipped
+  stable packages on NuGet.org, not Chrome's current stable milestones. There is no
+  automatic limit on the number of supported lines; only maintainers remove them.
+  Preview-only lines do not count, and patches do not duplicate a line.
+- **`preview`** — the in-flight SkiaSharp preview/RC line(s).
 
 Either field may be a single string or a list. An absent or empty block makes every 3.x+
 line render as top-level/supported (the legacy flat layout), so the feature is purely
 additive.
 
-**Release-driven membership; policy-driven removal.** Release Finish proposes a focused
+**Release-driven membership; manual retirement.** Release Finish proposes a focused
 PR from the exact public SkiaSharp package version: previews and RCs add their line to
-`preview`, while stable releases add their line to `stable` and remove only that same
-line from `preview`. It never removes another supported line. Maintainers explicitly
-remove lines when support ends. The values *correspond to* Chrome's channels, but the block
-is a **release-backed, human-curated grouping for the docs site**, not a mirror of the live
-channels. SkiaSharp does not ship every Chrome milestone, so membership is derived only from
-versions that actually reached NuGet.org and never from Chromium Dash. Release Finish makes
-the safe monotonic additions and same-line promotion; support retirement remains an explicit
-editorial decision.
+`preview` without changing stable support. Stable releases add their line to `stable`
+and remove only the same line from `preview`. All other supported lines are preserved,
+even when more than two stable lines remain; maintainers explicitly remove lines when
+support ends. Finishing an older shipment cannot displace another supported line. SkiaSharp does not
+ship every Chrome milestone and may lag behind Chrome, so membership comes from NuGet.org,
+never Chromium Dash. The `history_floor` values control regeneration work, not support:
+the current floors remain SkiaSharp `4.156.0` and HarfBuzzSharp `14.4.0.100`, even while
+SkiaSharp `4.155` remains supported.
 
-**Drift is detected, not auto-fixed.** The security audit's milestone heads-up
+**Chrome drift is advisory, not support policy.** The security audit's milestone heads-up
 (`.agents/skills/security-audit/scripts/query-milestone-schedule.py`, Step 3) already
 fetches the live Chrome channels, so it also compares this block to them and emits an
 `ok` / `warn` / `drift` verdict in its `support` output section. With `E ≤ S ≤ B` = Chrome

@@ -188,7 +188,7 @@ function Update-ReleaseSupport([pscustomobject] $Release) {
     $body = @"
 ## Description
 
-$action Existing supported lines are retained because ending support remains an explicit maintainer decision.
+$action Existing supported lines are retained; only maintainers remove lines when support ends. Support follows SkiaSharp's own public shipments, independently of Chrome channels and documentation regeneration floors.
 
 **Related issues**
 
@@ -209,7 +209,7 @@ None - release support metadata only.
 
 ## Testing
 
-The publishing tests cover preview, RC, stable promotion, idempotency, multiple supported lines, and preservation of unrelated configuration.
+The publishing tests cover preview, RC, stable promotion, idempotency, preservation of more than two supported stable lines, and unrelated configuration.
 
 ## Checklist
 

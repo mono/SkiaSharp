@@ -206,7 +206,7 @@ function Get-TizenArtifacts([string] $NativeRoot) {
 }
 
 function Get-WasmArtifacts([string] $NativeRoot) {
-    foreach ($version in '3.1.34', '3.1.56', '6.0.2') {
+    foreach ($version in '3.1.56', '6.0.2') {
         foreach ($features in 'st', 'mt', 'st,simd', 'mt,simd') {
             foreach ($name in 'libSkiaSharp', 'libHarfBuzzSharp') {
                 $directory = "wasm/$name.a/$version/$features"

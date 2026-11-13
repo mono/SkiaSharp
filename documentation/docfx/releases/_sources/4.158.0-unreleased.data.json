@@ -15,70 +15,102 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 2,
+    "product": 3,
     "mixed": 0,
-    "internal": 5
+    "internal": 7
   },
   "breaking_candidates": [],
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "rolfbjarne",
+      "url": "https://github.com/rolfbjarne",
+      "prs": [
+        5408
+      ]
+    }
+  ],
   "previews": [],
   "shipments": [],
   "prs": {
-    "5669": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5669",
-      "title": "[M158] Adopt upstream GPU correctness fixes",
-      "body": "[M158] Adopt upstream GPU correctness fixes (#5669)\n\nContext: https://github.com/mono/skia/pull/439\nContext: https://github.com/mono/SkiaSharp/pull/5675\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1671411\nChanges: https://github.com/google/skia/compare/75584a96108b2bf0b1c74b0536126fa4917b64a8...361c8326695a06b7492fb6eeeff803c0c92a2447\n\nAdopt the merged m158 GPU bug fixes without a milestone or package-version\ntransition. Update the native gitlink and Component Governance identities;\nthe companion native PR carries the implementation changes.\n\n~~ Respect affected ARM Vulkan device-loss teardown timing ~~\n\nSome Mali drivers report idle completion before device teardown is safe.\nAdopt the Ganesh and Graphite workaround that adds a 1 ms delay on the\nrelevant loss paths for ARM proprietary drivers from 42.0 through versions\nbelow 56.0, rather than delaying ordinary successful submissions.\n\n~~ Preserve hairline cap scale under reflected transforms ~~\n\nA negative determinant previously selected a local-space unit outset for\nzero-length square-capped hairlines, allowing reflected scales to enlarge\nthe cap. Adopt the signed inverse-determinant calculation and finite-result\nguard for singular matrices and overflow.\n\n~~ Select text-atlas samplers despite interpolation imprecision ~~\n\nGanesh's flat-varying hint is not a guarantee. Adopt rounding before the\ninteger sampler-index comparison in ordinary and LCD atlas lookups so\ninterpolation error does not select the wrong atlas.\n\n~~ Bound Graphite clip recording within a render pass ~~\n\nAccount for effective undrawn clip elements when deciding to flush.\nBecause flushing resets clip recording, reject and log a draw whose clips\ncannot fit a fresh pass instead of overflowing the pass structures.\nThe native update includes DeviceTestClipRenderStepLimits.\n\n~~ Pin the actual native merge without changing the reviewed tree ~~\n\nPin mono/skia merge 7329f82be5f66b326acdfadbc87a62793e6d6dba rather\nthan leaving the parent on the temporary reviewed branch head. Its two\nparents include reviewed head 365bf08330f18bbe64c5e9f84f251262afe7f371,\nand both commits have tree 3bf18d50473a78bcfe982206ef0810e825aad412.\n\nKeep the gitlink and mono/skia commitHash aligned while recording exact\nupstream commit 361c8326695a06b7492fb6eeeff803c0c92a2447 separately.\nRetain chrome/m158 and milestone 158; no managed declarations or version\ninputs change in this parent PR.\n\nBuild 1671411 succeeded for the pre-repin parent source, including the\nsingle Mac Catalyst retry after an agent-side .NET setup permission error.\nIndependent regeneration matched the generated bindings. The repin changes\nnative commit identity, not its tree; affected-device Vulkan loss behavior\nwas not specifically established by the integration review.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+    "5712": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5712",
+      "title": "[skia-sync] Merge upstream chrome/m158 bug fixes",
+      "body": "[M158] Sync Vulkan synchronization and displacement fixes (#5712)\n\nRequires: https://github.com/mono/skia/pull/451\nContext: https://github.com/mono/SkiaSharp/pull/5715\nChanges: https://github.com/mono/skia/compare/600a5886625b49b5955f23c1ab1e45b68933d0dd...c8c6d08ae1ce0578c4e440dd2fe7449460f513f5\n\nBring the chrome/m158 Vulkan fence-wait and displacement-precision fixes\ninto release/4.158.x. Keep package versions and the public API unchanged;\nthis is a same-milestone native correctness update.\n\n~~ Propagate synchronous Vulkan fence-wait failures in native submission ~~\n\nNative Ganesh previously returned queue submission success even when the\nsubsequent synchronous vkWaitForFences failed. The void forceSync()\nhelper could not propagate that wait failure to the submission result.\n\nThe native update makes forceSync() return a bool and combines the wait\nresult with queue submission success when CPU synchronization is\nrequested. An absent fence is already complete; an actual wait succeeds\nonly on VK_SUCCESS. Retain the VK_TIMEOUT retry for signal-interrupted\ndrivers, submission cleanup and asynchronous submission behavior.\n\nThis corrects native Ganesh's failure reporting without adding a managed\nresult: GRContext.Submit remains void, and the C bridge and managed\nsignatures are unchanged.\n\n~~ Align displacement offsets with fp32 filter bounds ~~\n\nHalf-precision displacement scale and offset arithmetic could round\ndifferently from the fp32 filter-bounds calculation and sample a\ndifferent location. Use float2 for the scale uniform, helper parameter\nand displacement vector so offset arithmetic matches the bounds\nprecision. Keep displacement colors and channel selectors at half\nprecision; both generated shader variants follow the updated helper.\n\n~~ Record landed native ancestry without changing reviewed sources ~~\n\nAdvance externals/skia and its Component Governance registration from\n600a5886625b49b5955f23c1ab1e45b68933d0dd to actual native merge\nc8c6d08ae1ce0578c4e440dd2fe7449460f513f5. Record exact upstream commit\n2d58f195f426c41bd856208ddb85ea8f93c88295 while retaining milestone 158\nand upstream_ref chrome/m158.\n\nThe dependent repin in #5715 changes the gitlink and matching manifest\nhash from reviewed head 038363ac1db8b60d2455922f6af6558e34eabfd3 to the\nlanded merge. That merge has two parents, directly includes the reviewed\nhead and shares its exact tree,\ne4a986dde9cafacbbdddd92b617f753ea0293ea5. Preserve this ancestry so\nfuture syncs can identify already integrated upstream commits.\n\nThe source review found the complete seven-file native delta identical\nto the upstream fixes, with 72 non-interop fork patches and 106 interop\nfiles preserved and DEPS unchanged. Independent regeneration matched the\nfive managed binding directories. The parent diff changes the gitlink\nand manifest provenance, not wrappers, generated bindings, tests,\ndependency versions or package/ABI version inputs.\n\nTree equality preserves the reviewed native content; it is not a new\nruntime test run or proof of affected-device Vulkan failure-path and\ndisplacement-boundary coverage.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
     },
-    "5672": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5672",
-      "title": "Refresh 4.15x release documentation and set the m156 support floor",
-      "body": "Complete release notes and API records for all published 4.150\u20134.158 versions before freezing older regeneration. Retire pre-m156 support and use the matching HarfBuzz history floor while preserving historical comparisons and artifacts.\n\nCorrect published co-release metadata on cached/scoped runs, fix HarfBuzz API landing links, retain the superseded m155 preview record, and document verified package API changes even when their PRs merged earlier.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+    "5702": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5702",
+      "title": "[skia-sync] Merge upstream chrome/m158 bug fixes",
+      "body": "* Update Skia m158 bug fixes\n\nAdvance the Skia submodule and Component Governance metadata to the latest validated chrome/m158 upstream fixes.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Sync Skia submodule and cgmanifest (#5704)\n\nLatest: Merge pull request #448 from mono/skia-sync/m158\nCommit: 600a5886625b49b5955f23c1ab1e45b68933d0dd\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\n\n---------\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "product"
     },
-    "5659": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5659",
-      "title": "Fix Alpine apk bootstrap artifact pin",
-      "body": "Use the available Alpine 3.21 apk-tools-static 2.14.13-r0 archive and its verified SHA-256. The previous 2.14.6-r3 archive now returns HTTP 404, preventing musl build images from bootstrapping.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5653": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5653",
-      "title": "Update release support for 4.155, 4.157, and 4.158",
-      "body": "* Update 4.155 release support tier\n\n* Consolidate release support for 4.155, 4.157, and 4.158\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5658": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5658",
+    "5697": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5697",
       "title": "docs: regenerate API diffs and release notes",
       "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
     },
-    "5651": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5651",
+    "5695": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5695",
+      "title": "Restore stable support metadata and keep retirement manual",
+      "body": "* Maintain support for the latest two shipped stable lines\n\nDerive stable support from distinct public SkiaSharp release lines instead of Chrome channels or documentation regeneration floors. Restore 4.155 alongside 4.156 and roll the pair during Release Finish without letting older shipments displace newer stable lines.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep supported release retirement a manual decision\n\nRemove the automatic two-line cap and its catalogue lookup, retaining Finish's additive promotion behavior. Preserve all supported lines until a maintainer removes them while keeping the 4.155/4.156 metadata repair and independent documentation floors.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5691": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5691",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5689": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5689",
+      "title": "Update 4.156 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5690": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5690",
       "title": "Update issue template version dropdowns",
       "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
     },
-    "5554": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5554",
-      "title": "Update HarfBuzz to 15.0.0 and complete script constants",
-      "body": "Update HarfBuzz to 15.0.0 and complete script constants (#5554)\n\nRequires: https://github.com/mono/skia/pull/419\nChanges: https://github.com/harfbuzz/harfbuzz/compare/36cb489cb02ce4b92099669ba9f9bea348eff93f...35f656a1a2bab548ea7f54a6dd3fba2b09680d14\n\nKeep the native HarfBuzz revision, packaged library identity and managed\nbindings aligned while adopting 15.0.0. Complete the manually maintained\nScript constants without replacing their existing struct-based API.\n\n~~ Align the native upgrade with its package identity ~~\n\nAdopt HarfBuzz revision 35f656a1a2bab548ea7f54a6dd3fba2b09680d14\nthrough mono/skia#419. The native companion updates DEPS and the GN source\ninventory for the added headers and test sources, including the change\nfrom OT/Layout/types.hh to hb-ot-dual.hh.\n\nPin externals/skia and its matching governance registration to native\ncommit fb69790c17977edad0142d277435ec5514dd0f2d. Record HarfBuzz\n15.0.0 and its exact revision and version-header evidence in cgmanifest.\n\nAdvance the native SONAME from 0.61440.0 to 0.61500.0. Reset the\nHarfBuzzSharp file and NativeAssets package versions from 14.4.0.300 to\n15.0.0: a native version upgrade establishes a new revision-zero bucket,\nrather than continuing the previous version's milestone servicing range.\nKeep the HarfBuzzSharp assembly version at 1.0.0.0 and retain the m158\nSkiaSharp product versions.\n\nThe rebased source passed the macOS ARM64 native build and unfiltered\nnet10.0 console solution, including existing shaping and subsetting tests.\n\n~~ Regenerate the deprecated font-face setter import ~~\n\nHarfBuzz moves hb_font_set_face from hb-font.h to hb-deprecated.h and marks\nit deprecated in favor of hb_font_create. The binding configuration\nalready excludes hb-deprecated.h, so regeneration removes the unused\ninternal hb_font_set_face declarations and delegate path.\n\nDo not restore the import by hand or widen deprecated-header generation:\nFont(Face) already constructs fonts through hb_font_create, and this\nremoval does not remove a public managed member. The current-head\nbinding-generation determinism check passes after regeneration.\n\n~~ Complete named scripts without changing the Script programming model ~~\n\nThe native script list advanced while Script.fields.cs remained manually\nmaintained. Regenerating interop alone cannot repair that gap:\nhb_script_t deliberately maps to UInt32 with generation disabled because\nHarfBuzzSharp exposes a custom Script struct, not a generated enum.\n\nAdd 30 documented static readonly fields: Jurchen, ProtoCuneiform and Seal\nfrom the updated native list, plus 27 previously omitted constants.\nPreserve the 149 existing field declarations and values. The resulting\n179 named tag values match the HB_TAG entries in the selected native\nhb-script-list.h.\n\nKeep the struct's parsing, numeric conversions and horizontal-direction\nlookup intact. Document the manual synchronization requirement beside the\ngenerator mapping so future native updates do not mistake disabled enum\ngeneration for complete script coverage.\n\nAdd a theory case for each new field, asserting its numeric tag,\nToString output, Parse result and successful TryParse round-trip against\nthe native-backed parser.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
+    "5683": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5683",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
       "community": false,
+      "tag": "internal"
+    },
+    "5408": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5408",
+      "title": "Enable CA5394 for shipped code and use a CSPRNG for the HashCode seed",
+      "body": "* Enable CA5394 (insecure randomness) as an error for shipping code\n\nCA5394 is disabled by default, so nothing would catch a new use of\nSystem.Random in the shipping assemblies. Enable it as an error for\nbinding/ and source/ with a path-scoped .editorconfig section, so that\nany new use has to be justified.\n\nThe only existing hit in shipping code is the hash seed in\nBinding.Shared/HashCode.cs (compiled into both SkiaSharp.dll and\nHarfBuzzSharp.dll). It only randomizes hash codes between processes and\nis not security sensitive, so suppress it with a comment instead of\nchanging behavior.\n\nNotes:\n\n* Samples, tests and benchmarks are not covered. They use System.Random\n  for deterministic or throwaway data (21 call sites in the Gallery\n  sample, the tests and the benchmarks would otherwise be reported, and\n  the Gallery projects treat warnings as errors).\n* The rule is only reported for target frameworks where the SDK's bundled\n  analyzers run: net5.0 and later, including the platform TFMs.\n  netstandard2.0/2.1, net462 and net48 are not analyzed unless\n  EnableNETAnalyzers=true is set. All TFMs compile the same files, so the\n  other TFMs still catch new uses in shared code.\n* The severity is error instead of warning on purpose: only binding/ has\n  TreatWarningsAsErrors=true, so a warning would not fail the build in\n  source/.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Document the CA5394 rule for contributors\n\nMention in the file conventions that System.Random cannot be used in\nbinding/ and source/ without a justification, and what to do instead,\nsince the build now reports it as an error there.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Seed HashCode from the OS CSPRNG instead of suppressing CA5394\n\nThe only System.Random use in shipped code was the per-process seed of\nthe HashCode polyfill in Binding.Shared/HashCode.cs, which is compiled\ninto both SkiaSharp.dll and HarfBuzzSharp.dll. The previous commit\nsuppressed CA5394 for it. Fix it instead, so that the new CA5394 guard\nhas no exceptions in shipped code.\n\nThe polyfill was copied from dotnet/runtime, where the seed comes from\nthe OS CSPRNG (Interop.GetRandomBytes), and Microsoft.Bcl.HashCode, the\nofficial downlevel polyfill of System.HashCode, generates it with\nRandomNumberGenerator. The copy used new Random ().Next () instead,\nwhich is weaker:\n\n* Random.Next () returns [0, int.MaxValue), so the seed only had 31 bits.\n* On .NET Framework the parameterless Random constructor is seeded from\n  the system clock (net462, net48, and netstandard2.0 assemblies running\n  there).\n\nUse RandomNumberGenerator.Create () and GetBytes, like\nMicrosoft.Bcl.HashCode does. It exists on all of our target frameworks\n(netstandard2.0/2.1, net462/net48 and net6.0+, including the platform\nTFMs), so no #if is needed. Hash codes are still randomized per process\nand stable within a process.\n\nThe cost is that the first use of HashCode in a process now loads\nSystem.Security.Cryptography and takes about 2 ms instead of 0.3 ms\n(measured on net10.0, macOS arm64).\n\nAlso remove the references to HashCode.cs as the example of a justified\nsuppression from the .editorconfig comment and api-design.md, since\nthere is no suppression anymore.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Ignore CA5394 explicitly for code that is not shipped\n\nCA5394 is disabled by default, so the samples, tests, benchmarks and\nutils are not reported today. Say so explicitly, so that it also holds\nif the rule gets enabled more broadly: AnalysisMode=All, for instance,\nreports 21 call sites there. They are all seeded or throwaway uses of\nRandom (the day-seeded shuffle and the decorative dots in the Gallery,\nbuffers in the tests, input data in the benchmarks), where a CSPRNG\nwould be a regression.\n\nThe shipped code, the NuGet packages built from binding/ and source/,\nkeeps CA5394 as an error. Together the two sections cover all the C# in\nthe repository (outside of the externals submodule).\n\nVerified with temporary files: a new System.Random use in binding/ or\nsource/ fails the build on the target frameworks where the SDK\nanalyzers run (net6.0 and later), the same use in utils/ is not\nreported even with AnalysisMode=All, and in a directory that matches\nneither section it is reported by AnalysisMode=All, so the exemption is\nwhat silences it.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Move the CA5394 settings to nested .editorconfig files\n\nThe root .editorconfig is in the global include of\nscripts/infra/caching/repo-deps.json, so it is part of the cache key of\nevery native job. Editing it made CI think that the native inputs had\nchanged:\n\n* The Azure native jobs all had a cache miss and rebuilt (636\n  agent-minutes in the Native stages of the PR build, against 77 for a\n  docs-only PR build).\n* The benchmark-source workflow built libSkiaSharp from source on every\n  OS, which currently fails on Windows because the runner image has no\n  Spectre-mitigated MSVC libraries (mono/SkiaSharp#5321 is fixing that).\n\nPut the error severity in binding/.editorconfig (which already exists)\nand in a new source/.editorconfig instead. Neither file is part of the\nnative cache keys, so the keys are the same as the ones for the base\ncommit again, and repo-deps.py validate accepts the new file. A new\nSystem.Random use in binding/ or source/ is still an error on the target\nframeworks where the SDK analyzers run (net6.0 and later), and the code\nthat is not shipped keeps the default, which is that the rule is\ndisabled.\n\nThe explicit \"none\" for samples, tests, benchmarks and utils goes away.\nIt only made a difference if the rule is enabled more broadly\n(AnalysisMode=All reports 21 call sites there), which nothing does\ntoday.\n\nUpdate the note in api-design.md to point at the new files.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "rolfbjarne",
+      "community": true,
       "tag": "product"
+    },
+    "5677": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5677",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
     }
   }
 }

@@ -2,13 +2,13 @@
   "format": 6,
   "version": "4.156.0",
   "family": "skiasharp",
-  "status": "preview",
+  "status": "stable",
   "banner": {
-    "kind": "preview",
-    "date": null,
-    "nuget_url": null,
-    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.156.0-rc.1.26553.11",
-    "github_release_url": null
+    "kind": "stable",
+    "date": "November 9, 2026",
+    "nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.156.0",
+    "preview_nuget_url": null,
+    "github_release_url": "https://github.com/mono/SkiaSharp/releases/tag/v4.156.0"
   },
   "harfbuzz": {
     "version": "14.4.0.100",
@@ -41,9 +41,9 @@
     }
   ],
   "tallies": {
-    "product": 28,
+    "product": 32,
     "mixed": 5,
-    "internal": 78
+    "internal": 79
   },
   "breaking_candidates": [
     {
@@ -449,9 +449,78 @@
           "first_time": false
         }
       ]
+    },
+    {
+      "tag": "v4.156.0",
+      "core_version": "4.156.0",
+      "public_version": "4.156.0",
+      "channel": "stable",
+      "label": "Stable",
+      "previous_tag": "v4.156.0-rc.1.26553.11",
+      "target_sha": "c4ef20229bd56e41731aa94eebe8b082b8ef886c",
+      "date": "2026-11-09",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.156.0-rc.1.26553.11...v4.156.0",
+      "prs": [
+        5617,
+        5624,
+        5631,
+        5666,
+        5671
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        }
+      ]
     }
   ],
   "prs": {
+    "5671": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5671",
+      "title": "[M156] Integrate reflected-cap and text-atlas fixes",
+      "body": "[M156] Integrate reflected-cap and text-atlas fixes (#5671)\n\nContext: https://github.com/mono/skia/pull/441\nContext: https://github.com/mono/SkiaSharp/pull/5676\nChanges: https://github.com/mono/skia/compare/5b643c68a74d5688d929cd8e48154f87bfef5a38...d1717dc22ef2203b7fc9bf0e01078b37b1a4af6b\n\nAdvance the native gitlink and cgmanifest registration to the actual\nmono/skia merge d1717dc22ef2203b7fc9bf0e01078b37b1a4af6b. Record upstream\n93787ea895902029f91dbf524bab0254c121a0f0 on chrome/m156 while retaining\nmilestone 156.\n\nThe native merge has the same tree as the reviewed native PR head.\nThe dependent repin changes commit identity and provenance, not native\nsource content. This parent update changes no managed API, generated\nbinding or release version.\n\n~~ Keep reflected hairline square caps at device-space size ~~\n\nGanesh treated negative determinants as singular and used a local-space\nfallback outset, allowing reflected transforms to enlarge square caps\non zero-length hairlines. Apply the signed inverse determinant and use\na zero outset when the result is non-finite.\n\n~~ Make text atlas selection tolerate interpolation error ~~\n\nGanesh's flat-interpolation hint does not guarantee integer atlas-index\nvaryings reach the fragment shader unchanged. Round with int(index + 0.5)\nbefore sampler comparisons in ordinary and LCD multi-texture lookups.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5666": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5666",
+      "title": "Fix Alpine apk bootstrap artifact pin",
+      "body": "Use the available Alpine 3.21 apk-tools-static 2.14.13-r0 archive and its verified SHA-256. The previous 2.14.6-r3 archive now returns HTTP 404, preventing musl build images from bootstrapping.\n\n\n(cherry picked from commit 55c03c000afa46e4d3b659fb80b2ae70e3af26d5)\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5631": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5631",
+      "title": "[M156] Update Skia path rasterization and Graphite readback fixes",
+      "body": "[M156] Update Skia path rasterization and Graphite readback fixes (#5631)\n\nRequires: https://github.com/mono/skia/pull/436\nContext: https://github.com/mono/SkiaSharp/pull/5636\nChanges: https://github.com/mono/skia/compare/b4715bb4e58f70e832ba6e49e21cc3647c2b4145...5b643c68a74d5688d929cd8e48154f87bfef5a38\n\nAdvance externals/skia and its Component Governance registration to native\nmerge 5b643c68a74d5688d929cd8e48154f87bfef5a38 on release/4.156.x. Record\nupstream chrome/m156 revision ea1e651d7a105f5ca327dfd65d28957957279e2e\n(previously bc965180c7f33af63bb59d94f06a9003279dd6fc) while retaining\nmilestone 156.\n\nPin the actual two-parent native merge rather than the reviewed PR head\nf09d3572885ab374281065e06090a71ef384f449. Its tree,\nab0b0d7ebcc2084d03a6a7ce07d04165638e1174, matches the reviewed commit, so\nthe repin (#5636) updates the gitlink and matching manifest SHA together\nand records landed ancestry without changing reviewed native content.\n\nThe parent diff is limited to externals/skia and cgmanifest.json. The\nC API, DEPS, managed wrappers, generated bindings and package versions\nare unchanged. The producing Linux x64 native source build, binding\nregeneration, managed build and unfiltered console solution passed.\n\n~~ Adopt the convex AAA rasterization overflow fix ~~\n\nRasterizing a convex path clipped against the right edge of the clip\ncould write outside the additive blitter's run buffer, and edges far\noutside the clip overflowed 32-bit SkFixed arithmetic. The native merge\nstops convex edge cancellation on the clip boundary from leaving a\nscanline Y-gap, advances y when edges are adopted across a gap, uses\nsaturating fixed-point math, clamps trapezoid rows to the bounds, and\nrejects non-positive run lengths in both additive blitters. The new\nbehavior is compiled out when SK_LEGACY_ALPHA_RUNS is defined. A new\nnative raster regression covers a convex path and a wide oval clipped\nfar to the right.\n\n~~ Adopt the Graphite A-to-RGBx readback fix ~~\n\nA GPU-to-CPU transfer from an alpha texture to an RGBx color type\nswitched to a 3-byte kRGB8 texture format after the transfer ops were\nqueried, so rows were stepped with the wrong pixel size. The native\nmerge lifts that destination to RGBA with kForceOpaque so every pixel\nbit is written. Its transfer test now pre-fills the destination to expose\nbytes left unwritten, which the earlier zero-filled buffer could not\ndetect.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5624": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5624",
+      "title": "[M156] Update Skia Slug validation and direct-mask replay fixes",
+      "body": "[M156] Update Skia Slug validation and direct-mask replay fixes (#5624)\n\nRequires: https://github.com/mono/skia/pull/434\nContext: https://github.com/mono/SkiaSharp/pull/5625\nChanges: https://github.com/mono/skia/compare/fdae549c4f686a6b608239334d17df0f57824db1...b4715bb4e58f70e832ba6e49e21cc3647c2b4145\n\nAdvance externals/skia and its Component Governance registration to native\nmerge b4715bb4e58f70e832ba6e49e21cc3647c2b4145 on release/4.156.x.\nRecord upstream chrome/m156 revision\nbc965180c7f33af63bb59d94f06a9003279dd6fc while retaining milestone 156.\n\nAdopt upstream validation of serialized Slug positions, matrices, bounds\nand flags to prevent malformed direct-mask data from bypassing atlas\nsampling constraints. Preserve creation-time float rounding during replay,\nbound direct-mask offsets, and retain rendering fallbacks for unsuitable\nglyph data. Include the accompanying Slug regressions and GPU test fixes.\n\nPin the actual two-parent native merge rather than the reviewed PR head.\nIts tree, 79b0aed8c11f3c501d7bbd00e822862daed69503, matches reviewed\ncommit 6d3a94de4b7a09579d0875c2f48ff1e06866852c. The dependent repin\nupdates the gitlink and matching manifest SHA together, recording landed\nancestry without changing the reviewed native content.\n\nThe parent diff is limited to externals/skia and cgmanifest.json.\nManaged wrappers, generated bindings and package versions remain\nunchanged. The producing Linux x64 native source build, regeneration,\nmanaged build and unfiltered console solution passed.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5617": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5617",
+      "title": "[M156] Update Skia path, clip and glyph replay fixes",
+      "body": "[M156] Update Skia path, clip and glyph replay fixes (#5617)\n\nRequires: https://github.com/mono/skia/pull/432\nContext: https://github.com/mono/SkiaSharp/pull/5621\nChanges: https://github.com/mono/skia/compare/92d87f74f704671936d3cf7f15249037e48e9823...fdae549c4f686a6b608239334d17df0f57824db1\n\nAdvance externals/skia and its Component Governance registration to native\nmerge fdae549c4f686a6b608239334d17df0f57824db1 on release/4.156.x.\nRecord upstream chrome/m156 revision\n01c8c057881f90924adfb2eddb05609151f3d66a while retaining milestone 156.\n\nAdopt upstream corrections for Ganesh device-space path bounds and software\ncoverage-mask subset clamping, Graphite clip-key packing and wedge miter\nbounds, and Ganesh/Graphite Slug replay validation when glyph-atlas bilerp\nis unavailable. Include the scaler-independent oversized-glyph regression\nassertion so CoreText bounds need not match FreeType dimensions.\n\nPin the actual two-parent native merge rather than the reviewed PR head.\nIts tree, 13169ff5ffd7d3506fc4dd9371af30fd6faa8936, matches reviewed\ncommit d85876724650d28454f0997cef90bff431d5457b, preserving reviewed\nnative content while recording the landed ancestry. The dependent repin\nupdates the gitlink and matching manifest SHA together.\n\nThe parent diff is limited to externals/skia and cgmanifest.json; managed\nwrappers, generated bindings and package versions remain unchanged.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5592": {
       "url": "https://github.com/mono/SkiaSharp/pull/5592",
       "title": "docs: regenerate API diffs and release notes",
