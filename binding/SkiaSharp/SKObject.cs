@@ -207,6 +207,15 @@ namespace SkiaSharp
 			return owner;
 		}
 
+		internal static void Unreferenced (SKObject owner, SKObject child)
+		{
+			if (owner != null && child != null)
+				owner.keepAliveObjects?.TryRemove (child.Handle, out _);
+		}
+
+		internal static void UnreferencedAll (SKObject owner) =>
+			owner?.keepAliveObjects?.Clear ();
+
 		internal void RevokeOwnership (SKObject newOwner)
 		{
 			// We cannot dispose this wrapper because the native object might
