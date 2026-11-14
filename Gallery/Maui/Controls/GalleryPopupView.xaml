@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpSample.Controls"
+             x:Class="SkiaSharpSample.Controls.GalleryPopupView">
+    <ContentView.ControlTemplate>
+        <ControlTemplate>
+            <AbsoluteLayout>
+                <BoxView Color="{AppThemeBinding Light={StaticResource ScrimLight}, Dark={StaticResource ScrimDark}}"
+                         AbsoluteLayout.LayoutBounds="0,0,1,1"
+                         AbsoluteLayout.LayoutFlags="All"
+                         SemanticProperties.Description="Dismiss gallery menu"
+                         AutomationId="gallery-popup-scrim">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="BackdropTapped" />
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+                <Border x:Name="PART_Panel"
+                        AbsoluteLayout.LayoutBounds="{Binding PopupBounds, Source={RelativeSource TemplatedParent}, x:DataType=local:GalleryPopupView}"
+                        Stroke="{AppThemeBinding Light={StaticResource CardBorderLight}, Dark={StaticResource CardBorderDark}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
+                        StrokeShape="RoundRectangle 16"
+                        StrokeThickness="1"
+                        Padding="12"
+                        AutomationId="gallery-popup-panel">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,5" Opacity="0.18" Radius="15" />
+                    </Border.Shadow>
+                    <ContentPresenter />
+                </Border>
+            </AbsoluteLayout>
+        </ControlTemplate>
+    </ContentView.ControlTemplate>
+</ContentView>

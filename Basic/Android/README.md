@@ -52,6 +52,12 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width (1–50px) via a Material 3 slider.
 
+## Font license
+
+Noto Sans is Copyright 2022 The Noto Project Authors and licensed under the
+[SIL Open Font License 1.1](https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt).
+It may be used, embedded, and redistributed with applications under that license.
+
 ## Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) or later

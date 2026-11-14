@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:items="clr-namespace:SkiaSharpSample.Controls"
+             x:Class="SkiaSharpSample.Controls.GalleryHeader"
+             x:DataType="items:GalleryHeader"
+             AutomationId="gallery-app-header"
+             BackgroundColor="{StaticResource BrandNavy}">
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="8" Padding="12,8">
+        <ImageButton x:Name="BackButton" IsVisible="{Binding HasBack}"
+                     AutomationId="sample-back" SemanticProperties.Description="Back to gallery"
+                     BackgroundColor="#34438E" CornerRadius="11" Padding="10"
+                     MinimumWidthRequest="44" MinimumHeightRequest="44"
+                     Clicked="BackClicked">
+            <ImageButton.Source>
+                <FontImageSource Glyph="&#xf284;" FontFamily="BootstrapIcons" Color="White" Size="17" />
+            </ImageButton.Source>
+        </ImageButton>
+        <Label Text="&#xf3fa;" FontFamily="BootstrapIcons" TextColor="White" FontSize="23"
+               IsVisible="{Binding IsHome}" WidthRequest="38"
+               VerticalTextAlignment="Center" HorizontalTextAlignment="Center"
+               InputTransparent="True" />
+        <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
+            <Label Text="{Binding BrandText}" FontSize="17" FontAttributes="Bold" TextColor="White" />
+            <Label Text="Native canvas and API atlas" FontSize="10" TextColor="#C8D7FF"
+                   IsVisible="{Binding ShowSubheading}" />
+        </VerticalStackLayout>
+        <HorizontalStackLayout Grid.Column="2" Spacing="3" VerticalOptions="Center">
+            <Button Text="CPU" AutomationId="gallery-header-cpu"
+                    SemanticProperties.Description="{Binding CpuDescription}"
+                    CornerRadius="9" FontSize="11" FontAttributes="Bold"
+                    Padding="6,3" MinimumHeightRequest="40" MinimumWidthRequest="45"
+                    BorderWidth="1" BorderColor="#6979BD" TextColor="White"
+                    BackgroundColor="#34438E" Clicked="CpuClicked">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding CpuSelected}" Value="True">
+                        <Setter Property="BackgroundColor" Value="White" />
+                        <Setter Property="TextColor" Value="{StaticResource BrandNavy}" />
+                        <Setter Property="BorderColor" Value="White" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button Text="GPU" AutomationId="gallery-header-gpu"
+                    SemanticProperties.Description="{Binding GpuDescription}"
+                    CornerRadius="9" FontSize="11" FontAttributes="Bold"
+                    Padding="6,3" MinimumHeightRequest="40" MinimumWidthRequest="45"
+                    BorderWidth="1" BorderColor="#6979BD" TextColor="White"
+                    BackgroundColor="#34438E" Clicked="GpuClicked">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding GpuSelected}" Value="True">
+                        <Setter Property="BackgroundColor" Value="White" />
+                        <Setter Property="TextColor" Value="{StaticResource BrandNavy}" />
+                        <Setter Property="BorderColor" Value="White" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+        </HorizontalStackLayout>
+        <ImageButton x:Name="ThemeButton" Grid.Column="3"
+                     IsVisible="{Binding ThemeVisible}"
+                     AutomationId="gallery-header-theme"
+                     SemanticProperties.Description="Choose system, light, or dark theme"
+                     BackgroundColor="#34438E" CornerRadius="11" Padding="10"
+                     MinimumWidthRequest="44" MinimumHeightRequest="44">
+            <ImageButton.Source>
+                <FontImageSource Glyph="&#xf496;" FontFamily="BootstrapIcons" Color="White" Size="16" />
+            </ImageButton.Source>
+        </ImageButton>
+        <ImageButton x:Name="InfoButton" Grid.Column="4"
+                     AutomationId="gallery-info-trigger"
+                     SemanticProperties.Description="About this gallery"
+                     BackgroundColor="#34438E" CornerRadius="11" Padding="10"
+                     MinimumWidthRequest="44" MinimumHeightRequest="44">
+            <ImageButton.Source>
+                <FontImageSource Glyph="&#xf431;" FontFamily="BootstrapIcons" Color="White" Size="17" />
+            </ImageButton.Source>
+        </ImageButton>
+    </Grid>
+</ContentView>

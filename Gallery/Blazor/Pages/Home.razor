@@ -35,10 +35,12 @@
                         SearchText="@searchText"
                         SelectedCategory="@selectedCategory"
                         SelectedTags="@selectedTags"
+                        LiveCategoryCounts="@liveCategoryCounts"
                         LiveTagCounts="@liveTagCounts"
                         OnSearchChanged="HandleSearchChanged"
                         OnCategoryChanged="HandleCategoryChanged"
-                        OnTagToggled="HandleTagToggled" />
+                        OnTagToggled="HandleTagToggled"
+                        OnResetAll="ResetAll" />
         </div>
 
         <div class="results-column">
@@ -72,7 +74,7 @@
                     <div class="empty-state">
                         <i class="bi bi-search" style="font-size: 2rem; opacity: 0.3;"></i>
                         <h3>No samples match</h3>
-                        <p>Try removing a filter or switching tag mode to <strong>ANY</strong>.</p>
+                        <p>Try removing a filter or changing your search.</p>
                         <button class="empty-reset" @onclick="ResetAll">Reset all filters</button>
                     </div>
                 }
@@ -92,7 +94,6 @@
                                     <SampleCard Sample="sample" Icon="@icon"
                                                 Index="i" Supported="true" IsNew="isNew"
                                                 ActiveTags="@selectedTags"
-                                                CorpusCounts="@corpusTagCounts"
                                                 OnTagClicked="HandleTagToggled" />
                                 </a>
                             }
@@ -102,7 +103,6 @@
                                     <SampleCard Sample="sample" Icon="@icon"
                                                 Index="i" Supported="false" IsNew="isNew"
                                                 ActiveTags="@selectedTags"
-                                                CorpusCounts="@corpusTagCounts"
                                                 OnTagClicked="HandleTagToggled" />
                                 </div>
                             }
@@ -139,10 +139,12 @@
                             SearchText="@searchText"
                             SelectedCategory="@selectedCategory"
                             SelectedTags="@selectedTags"
+                            LiveCategoryCounts="@liveCategoryCounts"
                             LiveTagCounts="@liveTagCounts"
                             OnSearchChanged="HandleSearchChanged"
                             OnCategoryChanged="HandleCategoryChanged"
-                            OnTagToggled="HandleTagToggled" />
+                            OnTagToggled="HandleTagToggled"
+                            OnResetAll="ResetAll" />
             </div>
         </div>
     }
@@ -169,6 +171,7 @@
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
     private SampleBase[] filteredSamples = Array.Empty<SampleBase>();
     private Dictionary<string, int> corpusTagCounts = new();
+    private Dictionary<string, int> liveCategoryCounts = new();
     private Dictionary<string, int> liveTagCounts = new();
     private int uniqueApiCount;
 
@@ -178,7 +181,6 @@
         allCategories = SampleManager.GetCategories()
             .Select(c => c.Name)
             .Where(name => allSamples.Any(s => s.Category == name))
-            .OrderBy(c => c)
             .ToArray();
 
         corpusTagCounts = SampleManager.GetTagCounts(allSamples);
@@ -207,6 +209,7 @@
             tagModeAll, sortOrder).ToArray();
 
         liveTagCounts = SampleManager.GetLiveTagCounts(filteredSamples);
+        liveCategoryCounts = SampleManager.GetCategoryCounts(filteredSamples);
         StateHasChanged();
     }
 

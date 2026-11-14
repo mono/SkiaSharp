@@ -22,7 +22,7 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-#if HAS_UNO_SKIA
+#if __UNO__
         await Uno.UI.Xaml.Media.FontFamilyHelper.PreloadAsync(
             SampleManager.IconFontPath,
             Microsoft.UI.Text.FontWeights.Normal,

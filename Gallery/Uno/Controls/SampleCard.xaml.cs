@@ -14,7 +14,7 @@ public sealed partial class SampleCard : UserControl
     public SampleCard()
     {
         this.InitializeComponent();
-        // handledEventsToo: child TextBlocks mark Pointer events Handled under SkiaRenderer.
+        // handledEventsToo: child TextBlocks mark Pointer events Handled.
         this.AddHandler(
             UIElement.PointerReleasedEvent,
             new PointerEventHandler((_, _) => Invoked?.Invoke(this, System.EventArgs.Empty)),

@@ -79,7 +79,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public GpuPage()
 	{
 		InitializeComponent();
-#if __UNO_SKIA__
+#if __UNO__
         skiaView.RenderAction = (canvas, area) => OnPaintSurface(canvas, (float)area.Width, (float)area.Height);
 #endif
 	}

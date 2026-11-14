@@ -61,7 +61,7 @@ try {
         await page.screenshot({ path: screenshot, fullPage: true });
     }
 
-    // With SkiaRenderer, Uno renders the XAML tree as pixels inside #uno-canvas,
+    // Uno renders the XAML tree as pixels inside #uno-canvas,
     // so text-based DOM matches don't work. Boot is complete iff the Uno loader
     // has been dismissed AND a sized canvas is present.
     const ready = await page.evaluate(() => {
@@ -83,7 +83,7 @@ try {
         /deprecated/i,
         /Download the React DevTools/i,
         /Service worker/i,
-        // SkiaRenderer-on-WASM emits these routinely during startup
+        // Uno on WASM emits these routinely during startup
         /WEBGL_debug_renderer_info not enabled/i,
         /GPU stall due to ReadPixels/i,
         /Automatic fallback to software WebGL/i,

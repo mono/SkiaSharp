@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using SkiaSharpSample.Controls;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
@@ -19,6 +20,23 @@ public sealed partial class SamplePage : Page
         ControlPanel.ControlChanged += OnControlChanged;
         canvasHost = SampleCanvasView.Create(OnPaint);
         CanvasBorder.Child = canvasHost;
+        SizeChanged += (_, args) => ApplyLayout(args.NewSize);
+    }
+
+    // Below this width the sidebar would leave the canvas a sliver, so the controls go under it instead.
+    private const double StackedLayoutMaxWidth = 720;
+    private bool stacked;
+
+    private void ApplyLayout(Size size)
+    {
+        stacked = size.Width < StackedLayoutMaxWidth;
+        Grid.SetColumnSpan(CanvasBorder, stacked ? 2 : 1);
+        CanvasBorder.Margin = stacked ? new Thickness(0, 0, 0, 12) : new Thickness(0, 0, 12, 0);
+        Grid.SetRow(ControlsSidebar, stacked ? 1 : 0);
+        Grid.SetColumn(ControlsSidebar, stacked ? 0 : 1);
+        Grid.SetColumnSpan(ControlsSidebar, stacked ? 2 : 1);
+        ControlsSidebar.MaxHeight = stacked ? size.Height * 0.45 : double.PositiveInfinity;
+        UpdateCollapsedState();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -128,10 +146,18 @@ public sealed partial class SamplePage : Page
     private void OnCollapseClicked(object sender, RoutedEventArgs e)
     {
         controlsCollapsed = !controlsCollapsed;
+        UpdateCollapsedState();
+    }
+
+    private void UpdateCollapsedState()
+    {
         if (ControlsSidebar.FindName("ControlPanel") is FrameworkElement)
         {
-            ControlsSidebar.Width = controlsCollapsed ? 48 : 290;
-            CollapseIcon.Text = controlsCollapsed ? "▶" : "◀";
+            // Stacked, the panel spans the page and folds vertically.
+            ControlsSidebar.Width = stacked ? double.NaN : controlsCollapsed ? 48 : 290;
+            CollapseIcon.Text = stacked
+                ? (controlsCollapsed ? "▲" : "▼")
+                : (controlsCollapsed ? "▶" : "◀");
             if (ControlsSidebar.Child is Grid g && g.RowDefinitions.Count > 1)
             {
                 foreach (var child in g.Children)
