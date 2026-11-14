@@ -1,11 +1,11 @@
 {
-  "theme": "Skia m159 and modern WebAssembly",
-  "highlights_headline": "SkiaSharp 4.159.0 brings Skia m159 and requires .NET 9 or later for WebAssembly native assets.",
-  "highlights_body": "The engine update includes WebAssembly SIMD CPU rasterization, Windows font-loading improvements and image/rendering corrections. Non-WebAssembly .NET 8 support is unchanged.",
+  "theme": "Skia m159 preview",
+  "highlights_headline": "SkiaSharp 4.159.0 previews Skia m159 with WebAssembly SIMD rasterization, Windows font-loading improvements, and rendering fixes.",
+  "highlights_body": "WebAssembly consumers must now target .NET 9 or later. Non-WebAssembly .NET 8 support is unchanged, and public managed signatures remain unchanged.",
   "breaking": [
     {
-      "title": "Move WebAssembly consumers off .NET 8",
-      "body": "SkiaSharp and HarfBuzzSharp WebAssembly native assets now require .NET 9 or later; unsupported WASM frameworks are rejected before building. Upgrade .NET 8 browser applications and use runtime-matched archives: .NET 9/10 use Emscripten 3.1.56, while .NET 11+ use 6.0.2. These archives are not interchangeable with older toolchains. Non-WASM .NET 8 support is unchanged.",
+      "title": "Move .NET 8 WebAssembly apps to .NET 9 or later",
+      "body": "SkiaSharp and HarfBuzzSharp no longer provide .NET 8 WebAssembly native assets; unsupported WASM target frameworks are rejected before building. Retarget WebAssembly apps to .NET 9 or later and use the runtime-matched native archives. Non-WebAssembly .NET 8 support is unchanged.",
       "prs": [5700]
     }
   ],
@@ -14,14 +14,22 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia milestone 159",
-          "detail": "Updates the native renderer with WebAssembly SIMD CPU rasterization, Windows font-loading improvements and image/rendering correctness fixes. C API exports and public managed signatures are unchanged.",
+          "lead": "Skia m159",
+          "detail": "Updates the native renderer with WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and image/rendering correctness fixes. C API exports and public managed signatures remain unchanged.",
           "prs": [5685]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": "HarfBuzzSharp WebAssembly native assets now require .NET 9 or later and retain runtime-matched archives for supported toolchains. Non-WASM .NET 8 support is unchanged."
+  "preview_summaries": {
+    "v4.159.0-preview.1.26563.22": "Preview 1 adopts Skia m159, bringing WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and rendering fixes. It retires .NET 8 WebAssembly support in SkiaSharp and HarfBuzzSharp while preserving non-WebAssembly .NET 8 support."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp no longer ships .NET 8 WebAssembly native assets; WebAssembly apps must target .NET 9 or later. Non-WebAssembly .NET 8 support is unchanged.",
+  "release_summaries": {
+    "v4.159.0-preview.1.26563.22": {
+      "headline": "SkiaSharp 4.159.0 Preview 1 introduces the Skia m159 engine.",
+      "body": "The engine update brings WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and rendering fixes without changing public managed signatures. SkiaSharp and HarfBuzzSharp WebAssembly consumers must target .NET 9 or later; non-WebAssembly .NET 8 support is unchanged."
+    }
+  }
 }
