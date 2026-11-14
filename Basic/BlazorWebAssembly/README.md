@@ -41,15 +41,9 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width via a MudBlazor slider.
 
-## Font license
-
-Noto Sans is Copyright 2022 The Noto Project Authors and licensed under the
-[SIL Open Font License 1.1](https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt).
-It may be used, embedded, and redistributed with applications under that license.
-
 ## Requirements
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
 - WebAssembly tools workload: `dotnet workload install wasm-tools`
 
 ## Running the Sample
