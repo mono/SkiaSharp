@@ -1361,10 +1361,15 @@ function Write-ReleaseAuditCurrentReport([pscustomobject] $State) {
                 -MaintenanceVersion $State.Maintenance.Version
             Write-Output "   Release - Prepare (workflow ref=main): base=$($State.Maintenance.Branch); release=$next; push=false"
         } elseif ($action.Kind -eq 'publish') {
-            Write-Output '   AzDO dotnet-maui-release (MAUI main): ghOwner=mono; ghRepo=SkiaSharp'
-            Write-Output "   commitHash=$($State.LatestSpecificBranch.Sha)"
-            Write-Output '   pushPackages=true; pushNugetOrg=true; pushWorkloadSet=false'
-            Write-Output '   nugetIncludeFilters=skip; nugetExcludeFilters=skip'
+            Write-Output '   AzDO skiasharp-nuget-release (1715): verify live publisher/tooling production refs and SHAs.'
+            $producer = if ($State.PackageBuilds) { $State.PackageBuilds[$State.LatestSpecificBranch.Name] }
+            if ($producer -and $producer.BuildNumber) {
+                Write-Output "   resources.pipelines.skiaSharpBuild.version=$($producer.BuildNumber)"
+            } else {
+                Write-Output '   Producer Build number not checked; verify exact Build/Tests/BAR before selecting skiaSharpBuild.'
+            }
+            Write-Output '   Use the exact producing Build number, not numeric build ID; templateParameters.validateOnly=false.'
+            Write-Output '   Follow documentation/dev/releasing.md step 4 (Runs API); protected ESRP approval remains required.'
         } elseif ($action.Kind -ne 'finish' -and $action.Command) {
             Write-Output "   $($action.Command)"
         }
@@ -1376,7 +1381,8 @@ function Write-ReleaseAuditCurrentReport([pscustomobject] $State) {
         Write-Output '   Prepare/Finish: review push=false before confirming push=true.'
     }
     if ($releaseActions.Kind -contains 'publish') {
-        Write-Output '   Publish: verify producing Build/Tests and BAR; check for an existing MAUI run before queueing.'
+        Write-Output '   Publish: verify producing Build/Tests and BAR; check existing 1715 parents and resolved producer resources before queueing.'
+        Write-Output '   Monitor an existing publication; on failure/partial publication preserve run/ESRP IDs and report, never auto-requeue or retry failed parent jobs.'
     }
 
     if ($public.Count) {

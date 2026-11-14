@@ -2294,11 +2294,11 @@ $failedReleaseBuildState.PackageBuilds['main'] = New-AuditPackageBuild `
 $failedReport = @(Write-ReleaseAuditReport $failedReleaseBuildState) -join "`n"
 Assert-True ($failedReport -match '(?m)^Release CI / BAR:\s+#201 failed$' -and
     $failedReport -match '(?m)^Base CI \(exact SHA\):\s+#204 succeeded / BAR 330715$' -and
-    $failedReport.Substring(0, $failedReport.IndexOf('2. Branch readiness')) -notmatch '330715|commitHash=') `
+    $failedReport.Substring(0, $failedReport.IndexOf('2. Branch readiness')) -notmatch '330715|resources\.pipelines\.skiaSharpBuild\.version=') `
     'The report confused a green base build/BAR with a failed release publication candidate.'
 $partialReport = @(Write-ReleaseAuditReport $partialReleaseBuildState) -join "`n"
 Assert-True ($partialReport -match '#201 partially succeeded - review required / BAR 330713' -and
-    $partialReport -notmatch 'commitHash=') `
+    $partialReport -notmatch 'resources\.pipelines\.skiaSharpBuild\.version=') `
     'The report presented a partial BAR as ready to publish.'
 $unavailableReportState = $partialReleaseBuildState.PSObject.Copy()
 $unavailableReportState.PackageBuilds = @{ main = $unavailableBuild }
@@ -2313,12 +2313,18 @@ Assert-True ($unavailableReport -match 'Release CI unavailable:' -and
     $unavailableReport.Contains($unavailableBuild.Message)) `
     'The report hid why a required CI check was unavailable.'
 $greenReleaseBuildState.UpstreamSync = $blockedByUpstream.UpstreamSync
+$greenReleaseBuild.BuildNumber = '4.153.0-rc.1.26453.1+20261030.1'
 $greenReport = @(Write-ReleaseAuditReport $greenReleaseBuildState) -join "`n"
-Assert-True ($greenReport -match "commitHash=$($latestRc.Sha)" -and
+Assert-True ($greenReport.Contains("resources.pipelines.skiaSharpBuild.version=$($greenReleaseBuild.BuildNumber)") -and
     $greenReport -match '#202 succeeded / BAR 330714 \(newer #203 canceled\)' -and
-    $greenReport -match 'check for an existing MAUI run before queueing') `
+    $greenReport -match 'check existing 1715 parents and resolved producer resources before queueing') `
     'The report lost exact publication inputs or confused upstream work with existing publication.'
-Assert-True ($greenReport.IndexOf('commitHash=') -lt $greenReport.IndexOf('3. Upstream / sync')) `
+Assert-True ($greenReport -match 'skiasharp-nuget-release \(1715\)' -and
+    $greenReport -match 'templateParameters.validateOnly=false' -and
+    $greenReport -match 'never auto-requeue or retry failed parent jobs' -and
+    $greenReport -notmatch 'dotnet-maui-release|commitHash=|pushPackages=|nugetIncludeFilters=') `
+    'The report must use the dedicated publisher contract without retired MAUI dispatch inputs.'
+Assert-True ($greenReport.IndexOf('resources.pipelines.skiaSharpBuild.version=') -lt $greenReport.IndexOf('3. Upstream / sync')) `
     'Publication instructions were buried under future upstream work.'
 Assert-True ($greenReport -match 'Verify\s+CI/BAR,\s+then\s+Publish' -and
     $failedReport -match 'Fix\s+release\s+build' -and

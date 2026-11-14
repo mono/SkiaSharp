@@ -138,7 +138,8 @@ Single source of truth for all commands:
 > binaries don't contain your new functions.
 
 > **Note:** For publication, verify the exact producing Build/Tests runs and
-> BAR before the protected human approval in the MAUI release pipeline; see
+> BAR before using the dedicated `skiasharp-nuget-release` publisher (1715)
+> and its protected ESRP approval; see
 > [`documentation/dev/releasing.md`](documentation/dev/releasing.md).
 
 **Recovery Commands:**
@@ -398,8 +399,12 @@ Custom slash commands are available for specialized workflows. Use these for com
 
 Repository release branches are normally created with the **Release - Prepare**
 GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The
-`release-publish` skill queues the protected MAUI package pipeline on an
-explicit "push the packages" request, then uses the **Release - Finish**
+`release-publish` skill queues the dedicated `skiasharp-nuget-release` pipeline
+(1715) on an explicit "push the packages" request, selecting the exact producing
+Build number through its `skiaSharpBuild` resource, not a numeric build ID.
+Discover its live production publisher/tooling refs; do not assume `main` or
+use the retired MAUI publisher. Protected ESRP approval remains required.
+The skill then uses the **Release - Finish**
 workflow after public-package verification and separate confirmation. Local
 scripts are fallback tools. Other release skills cover milestone maintenance
 and optional pre-publication BAR/CI package testing. See
