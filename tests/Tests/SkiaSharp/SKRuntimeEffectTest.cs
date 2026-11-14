@@ -96,6 +96,44 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expectedData, data);
 			}
 
+			[Fact]
+			public void UniformIsConvertedFromJaggedFloatArrayInRowOrder()
+			{
+				var values = new[]
+				{
+					new[] { 0f, -0f, float.NaN },
+					Array.Empty<float>(),
+					new[] { float.PositiveInfinity, float.NegativeInfinity, float.Epsilon, float.MaxValue },
+				};
+
+				SKRuntimeEffectUniform uniform = values;
+				var actual = new byte[uniform.Size];
+				uniform.WriteTo(actual);
+
+				var expectedValues = values.SelectMany(static row => row).ToArray();
+				var expected = new byte[expectedValues.Length * sizeof(float)];
+				Buffer.BlockCopy(expectedValues, 0, expected, 0, expected.Length);
+
+				Assert.Equal(expected, actual);
+			}
+
+			[Fact]
+			public void UniformFromJaggedFloatArrayPreservesNullValidation()
+			{
+				float[][] nullValue = null;
+				Assert.Throws<NullReferenceException>(() =>
+				{
+					SKRuntimeEffectUniform uniform = nullValue;
+				});
+
+				var nullRow = new float[][] { new[] { 1f }, null };
+				var exception = Assert.Throws<ArgumentNullException>(() =>
+				{
+					SKRuntimeEffectUniform uniform = nullRow;
+				});
+				Assert.Equal("collection", exception.ParamName);
+			}
+
 			[Theory]
 			[InlineData(0xFFFF0000, 3, new byte[] { 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0 })]
 			[InlineData(0xFFFF0000, 4, new byte[] { 0, 0, 128, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 63 })]
