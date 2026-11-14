@@ -316,27 +316,48 @@ public class SampleImageTests : IDisposable
         small.Erase(SKColors.Blue);
         var actual = SavePng(small, "deadline.actual.png");
         var attempts = 0;
+        var timeout = TimeSpan.FromMilliseconds(100);
+        var pending = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var clock = Stopwatch.StartNew();
 
-        await Golden.VerifyAsync(
-            GoldenInput.Capture(async () =>
-            {
-                if (++attempts == 1)
+        try
+        {
+            var verification = Golden.VerifyAsync(
+                GoldenInput.Capture(() =>
                 {
-                    Thread.Sleep(150);
-                }
-                else
-                {
-                    File.Copy(expected, actual, overwrite: true);
-                    await Task.Delay(20, TestContext.Current.CancellationToken);
-                }
-                return actual;
-            }),
-            GoldenInput.Path(expected),
-            new(expectedSize: new(4, 4)),
-            TimeSpan.FromMilliseconds(100),
-            cancellationToken: TestContext.Current.CancellationToken);
+                    if (++attempts == 1)
+                    {
+                        Thread.Sleep(150);
+                        return Task.FromResult(actual);
+                    }
+                    return pending.Task;
+                }),
+                GoldenInput.Path(expected),
+                new(expectedSize: new(4, 4)),
+                timeout,
+                cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal(2, attempts);
+            Assert.True(clock.Elapsed >= timeout);
+            Assert.Equal(2, attempts);
+            Assert.False(verification.IsCompleted);
+            using (var firstCapture = SKBitmap.Decode(actual))
+                Assert.Equal(new SKSizeI(2, 2), firstCapture.Info.Size);
+
+            File.Copy(expected, actual, overwrite: true);
+            pending.SetResult(actual);
+
+            Assert.Equal(actual, await verification);
+            Assert.Equal(2, attempts);
+            using var confirmedCapture = SKBitmap.Decode(actual);
+            Assert.Equal(new SKSizeI(4, 4), confirmedCapture.Info.Size);
+            Assert.Contains(Path.GetFileName(actual), TestContext.Current.Attachments!.Keys);
+            Assert.DoesNotContain("expected-" + Path.GetFileName(expected), TestContext.Current.Attachments.Keys);
+            Assert.False(File.Exists(Path.ChangeExtension(actual, ".diff.png")));
+        }
+        finally
+        {
+            pending.TrySetCanceled(TestContext.Current.CancellationToken);
+        }
     }
 
     [Theory]
