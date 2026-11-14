@@ -38,6 +38,26 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void DisposedManagedStreamReleasesBorrowedStream()
+		{
+			var stream = CreateDisposedStream(out var weakStream);
+
+			CollectGarbage();
+
+			Assert.False(weakStream.IsAlive);
+			GC.KeepAlive(stream);
+
+			static SKManagedStream CreateDisposedStream(out WeakReference weakStream)
+			{
+				var dotnet = CreateTestStream();
+				var stream = new SKManagedStream(dotnet, false);
+				stream.Dispose();
+				weakStream = new WeakReference(dotnet);
+				return stream;
+			}
+		}
+
+		[Fact]
 		public unsafe void StreamLosesOwnershipToCodecButIsNotForgotten()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
