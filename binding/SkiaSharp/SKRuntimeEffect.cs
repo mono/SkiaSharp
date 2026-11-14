@@ -766,11 +766,20 @@ namespace SkiaSharp
 		/// <remarks>The jagged array is flattened into a single contiguous array of floats.</remarks>
 		public static implicit operator SKRuntimeEffectUniform (float[][] value)
 		{
-			var floats = new List<float> ();
+			var length = 0;
 			foreach (var array in value) {
-				floats.AddRange (array);
+				if (array == null)
+					throw new ArgumentNullException ("collection");
+				length += array.Length;
 			}
-			return floats.ToArray ();
+
+			var floats = new float[length];
+			var offset = 0;
+			foreach (var array in value) {
+				array.CopyTo (floats, offset);
+				offset += array.Length;
+			}
+			return floats;
 		}
 
 		/// <summary>Converts an <see cref="T:SkiaSharp.SKMatrix" /> to an <see cref="T:SkiaSharp.SKRuntimeEffectUniform" />.</summary>
