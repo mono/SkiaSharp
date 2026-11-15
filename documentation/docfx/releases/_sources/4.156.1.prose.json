@@ -1,30 +1,32 @@
 {
-  "theme": "GPU rendering correctness",
-  "highlights_headline": "SkiaSharp 4.156.1 collects m156 fixes for transformed geometry, clipping, displacement filters and native Vulkan synchronization.",
-  "highlights_body": "The collected servicing changes keep managed APIs and dependency versions unchanged. Ganesh avoids stale atlas work after empty flushes, while Graphite respects render-pass clip capacity.",
+  "theme": "GPU geometry and filter corrections",
+  "highlights_headline": "SkiaSharp 4.156.1 corrects GPU geometry, clip recording and displacement-filter precision without changing managed APIs.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Correct transformed shapes and displacement sampling",
-          "detail": "Ellipse and rounded-rectangle stroke widths and corner radii map to the correct device-space axes; radii are clamped to prevent overlap. Displacement offset arithmetic now matches the float precision used to calculate filter bounds.",
-          "prs": [5687, 5711]
-        },
-        {
-          "lead": "Keep atlas and clip work within the current flush",
-          "detail": "Ganesh advances draw tokens after empty flushes to avoid stale atlas work. Graphite counts clips still needing recording and warns and skips a draw if its full clip stack cannot fit a fresh render pass.",
+          "lead": "Transformed shapes and GPU bookkeeping",
+          "detail": "Corrects ellipse and rounded-rectangle axis mapping and clamps transformed corner radii to prevent overlap. Empty Ganesh flushes no longer leave stale atlas tokens. Graphite accounts for unrecorded clips and warns and skips draws whose clip stack cannot fit a fresh pass.",
           "prs": [5687]
         },
         {
-          "lead": "Respect failed synchronous Vulkan waits",
-          "detail": "Native Ganesh submission now requires both queue submission and its requested fence wait to succeed. Asynchronous submission is unchanged; managed GRContext.Submit still returns void and does not expose a new failure result or exception.",
+          "lead": "Displacement precision and Vulkan waits",
+          "detail": "Displacement offsets now use float precision to match filter bounds. Native synchronous Vulkan submission incorporates fence-wait failure while preserving timeout retries and asynchronous behavior; GRContext.Submit remains void and gains no managed failure result or exception.",
           "prs": [5711]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null,
+  "release_summaries": {
+    "v4.156.1": {
+      "headline": "SkiaSharp 4.156.1 improves transformed GPU shapes, clip recording and displacement-filter precision.",
+      "body": "It also corrects stale atlas bookkeeping after empty flushes and native synchronous Vulkan wait handling. Managed APIs are unchanged."
+    }
+  }
 }
