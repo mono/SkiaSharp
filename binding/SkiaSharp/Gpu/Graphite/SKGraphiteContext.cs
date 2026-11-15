@@ -104,9 +104,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
-
+			// Convert the backend first: it throws on incomplete handles, and must do so
+			// before options.ToNative pins the shader-error handler.
 			var init = backendContext.ToNative ();
+			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
 			IntPtr handle = SkiaApi.sk_graphite_context_make_dawn (&init, &native);
 			if (handle == IntPtr.Zero) {
 				DisposeShaderErrorHandler (pinnedHandler, nativeHandler);
@@ -131,9 +132,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
-
+			// Convert the backend first: it throws on incomplete handles, and must do so
+			// before options.ToNative pins the shader-error handler.
 			var init = backendContext.ToNative ();
+			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
 			IntPtr handle = SkiaApi.sk_graphite_context_make_metal (&init, &native);
 			if (handle == IntPtr.Zero) {
 				DisposeShaderErrorHandler (pinnedHandler, nativeHandler);
@@ -157,9 +159,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
-
+			// Convert the backend first: it throws on incomplete handles, and must do so
+			// before options.ToNative pins the shader-error handler.
 			var init = backendContext.ToNative ();
+			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
 			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &native);
 			if (handle == IntPtr.Zero) {
 				DisposeShaderErrorHandler (pinnedHandler, nativeHandler);

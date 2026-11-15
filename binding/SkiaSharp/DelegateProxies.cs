@@ -167,7 +167,7 @@ namespace SkiaSharp
 			}
 		}
 
-		private static partial void SKGraphiteShaderErrorHandlerProxyImplementation (void* userData, void* shader, void* errors, bool shaderWasCached)
+		private static partial void SKGraphiteShaderErrorHandlerProxyImplementation (void* userData, void* shader, void* errors, byte shaderWasCached)
 		{
 			// userData is a GCHandle pinned by SKGraphiteContext for the Context's lifetime and
 			// freed in DisposeNative — this callback can fire many times, so we must NOT free here.
@@ -182,7 +182,7 @@ namespace SkiaSharp
 				del.Invoke (
 					Marshal.PtrToStringAnsi ((IntPtr)shader) ?? string.Empty,
 					Marshal.PtrToStringAnsi ((IntPtr)errors) ?? string.Empty,
-					shaderWasCached);
+					shaderWasCached != 0);
 			} catch {
 			}
 		}

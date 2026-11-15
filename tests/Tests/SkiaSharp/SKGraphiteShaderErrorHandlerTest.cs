@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Xunit;
@@ -61,7 +62,7 @@ namespace SkiaSharp.Tests
 			try
 			{
 				var proxy = DelegateProxies.SKGraphiteShaderErrorHandlerProxy;
-				proxy((void*)userData, null, null, false);
+				proxy((void*)userData, null, null, 0);
 
 				// Copilot review on #4586: guarantee user handlers never receive null,
 				// so their code can treat both args as always-string.
@@ -94,6 +95,56 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		public enum Backend { Dawn, Metal, Vulkan }
+
+		// A Create* call whose backend context is incomplete must throw without leaving the
+		// shader-error handler rooted by a GCHandle (or its native bridge allocated).
+		[Theory]
+		[InlineData(Backend.Dawn)]
+		[InlineData(Backend.Metal)]
+		[InlineData(Backend.Vulkan)]
+		public void FailedCreateDoesNotRootShaderErrorHandler(Backend backend)
+		{
+			var weak = CreateWithIncompleteBackend(backend);
+
+			for (var i = 0; i < 3 && weak.IsAlive; i++)
+			{
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
+
+			Assert.False(weak.IsAlive, "The shader-error handler was still rooted after a failed Create call.");
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static WeakReference CreateWithIncompleteBackend(Backend backend)
+		{
+			var captured = new object();
+			SKGraphiteShaderErrorHandlerDelegate handler = (_, _, _) => GC.KeepAlive(captured);
+			var options = new SKGraphiteContextOptions { ShaderErrorHandler = handler };
+
+			Assert.Throws<InvalidOperationException>(() =>
+			{
+				switch (backend)
+				{
+					case Backend.Dawn:
+						using (var ctx = new SKGraphiteDawnBackendContext())
+							SKGraphiteContext.CreateDawn(ctx, options);
+						break;
+					case Backend.Metal:
+						using (var ctx = new SKGraphiteMtlBackendContext())
+							SKGraphiteContext.CreateMetal(ctx, options);
+						break;
+					case Backend.Vulkan:
+						using (var ctx = new SKGraphiteVkBackendContext())
+							SKGraphiteContext.CreateVulkan(ctx, options);
+						break;
+				}
+			});
+
+			return new WeakReference(handler);
+		}
+
 		private static void InvokeProxy(IntPtr userData, string shader, string errors, bool shaderWasCached)
 		{
 			var proxy = DelegateProxies.SKGraphiteShaderErrorHandlerProxy;
@@ -102,7 +153,7 @@ namespace SkiaSharp.Tests
 			fixed (byte* shaderPtr = shaderBytes)
 			fixed (byte* errorsPtr = errorsBytes)
 			{
-				proxy((void*)userData, shaderPtr, errorsPtr, shaderWasCached);
+				proxy((void*)userData, shaderPtr, errorsPtr, shaderWasCached ? (byte)1 : (byte)0);
 			}
 		}
 	}
