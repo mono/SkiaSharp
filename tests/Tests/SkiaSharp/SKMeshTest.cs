@@ -587,6 +587,10 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
 
+			builder.Dispose();
+			vb.Dispose();
+			ib.Dispose();
+
 			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
 			Assert.NotNull(surface);
 			var canvas = surface.Canvas;
@@ -605,6 +609,94 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(SKColors.Red, bmp.GetPixel(50, 50));
 			Assert.Equal(SKColors.Red, bmp.GetPixel(10, 10));
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void MeshRetainsSpecBuffersUniformsAndChildrenAfterWrappersDisposed()
+		{
+			const string vs = @"
+				Varyings main(const Attributes attrs) {
+					Varyings v;
+					v.position = attrs.position;
+					return v;
+				}";
+
+			const string fs = @"
+				uniform float uScale;
+				uniform shader uChild;
+				float2 main(const Varyings varyings, out half4 color) {
+					color = uChild.eval(varyings.position * uScale);
+					return varyings.position;
+				}";
+
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+			Assert.NotNull(grContext);
+
+			using var cs = SKColorSpace.CreateSrgb();
+			var spec = SKMeshSpecification.Create(
+				SimpleAttributes, sizeof(float) * 2, EmptyVaryings,
+				vs, fs, cs, SKAlphaType.Premul, out var errors);
+			Assert.NotNull(spec);
+			Assert.Null(errors);
+
+			var vb = SKMeshVertexBuffer.Make(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
+			var ib = SKMeshIndexBuffer.Make(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
+			var childShader = SKShader.CreateColor(SKColors.Lime);
+
+			var specHandle = spec.Handle;
+			var vbHandle = vb.Handle;
+			var ibHandle = ib.Handle;
+			var childHandle = childShader.Handle;
+
+			Assert.Equal(1, specHandle.GetReferenceCount(false));
+			Assert.Equal(1, vbHandle.GetReferenceCount(true));
+			Assert.Equal(1, ibHandle.GetReferenceCount(true));
+			Assert.Equal(1, childHandle.GetReferenceCount(true));
+
+			var builder = new SKMeshBuilder(spec)
+			{
+				Bounds = new SKRect(0, 0, 100, 100),
+			};
+			builder.Uniforms["uScale"] = 1f;
+			builder.Children["uChild"] = childShader;
+
+			using var mesh = builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+			Assert.NotNull(mesh);
+			Assert.True(mesh.IsValid);
+
+			Assert.True(specHandle.GetReferenceCount(false) > 1);
+			Assert.True(vbHandle.GetReferenceCount(true) > 1);
+			Assert.True(ibHandle.GetReferenceCount(true) > 1);
+			Assert.True(childHandle.GetReferenceCount(true) > 1);
+
+			// Dispose the builder, specification, buffers, and child shader before drawing.
+			builder.Dispose();
+			spec.Dispose();
+			vb.Dispose();
+			ib.Dispose();
+			childShader.Dispose();
+
+			Assert.True(specHandle.GetReferenceCount(false) >= 1);
+			Assert.True(vbHandle.GetReferenceCount(true) >= 1);
+			Assert.True(ibHandle.GetReferenceCount(true) >= 1);
+			Assert.True(childHandle.GetReferenceCount(true) >= 1);
+
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+			canvas.Clear(SKColors.Blue);
+
+			using var paint = new SKPaint { Color = SKColors.White };
+			canvas.DrawMesh(mesh, paint);
+			canvas.Flush();
+
+			using var img = surface.Snapshot();
+			using var raster = img.ToRasterImage(true);
+			using var bmp = SKBitmap.FromImage(raster);
+
+			Assert.Equal(SKColors.Lime, bmp.GetPixel(50, 50));
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
