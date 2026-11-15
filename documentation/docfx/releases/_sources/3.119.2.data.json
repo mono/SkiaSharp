@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "3.119.2",
   "family": "skiasharp",
   "status": "stable",
@@ -235,6 +235,7 @@
     "3503": {
       "url": "https://github.com/mono/SkiaSharp/pull/3503",
       "title": "Add Spectre mitigation flag for libSkiaSharp.so. (#3502)",
+      "body": "* Add Spectre mitigation flag for libSkiaSharp.so.\n\n* Use -mretpoline for x86/x64 and -mharden-sls=all for arm/arm64\n\n* Use same approach in spectreFlags as in wordSizeDefine - append leading comma.\n\n---------\n\n\n(cherry picked from commit d489bb55e53a109ee495bcc7f0db5461e3eb9f5d)\n\nCo-authored-by: Sergii Shumakov <sshumakov@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "mixed"
@@ -242,6 +243,7 @@
     "3497": {
       "url": "https://github.com/mono/SkiaSharp/pull/3497",
       "title": "Add Spectre mitigation flag for libSkiaSharp.dll. (#3496)",
+      "body": "(cherry picked from commit b90d9467fb52875aee3dc1c230f32fa7d3ea1add)\n\nCo-authored-by: Sergii Shumakov <sshumakov@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "mixed"
@@ -249,6 +251,7 @@
     "3450": {
       "url": "https://github.com/mono/SkiaSharp/pull/3450",
       "title": "Fix the version processing",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -256,6 +259,7 @@
     "3444": {
       "url": "https://github.com/mono/SkiaSharp/pull/3444",
       "title": "Add a release and tagging skill",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -263,6 +267,7 @@
     "3387": {
       "url": "https://github.com/mono/SkiaSharp/pull/3387",
       "title": "Add API documentation skill and improve API reference docs",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -270,6 +275,7 @@
     "3443": {
       "url": "https://github.com/mono/SkiaSharp/pull/3443",
       "title": "Fix issues with CI",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -277,6 +283,7 @@
     "3442": {
       "url": "https://github.com/mono/SkiaSharp/pull/3442",
       "title": "Rewite the docs and Copilot instructions",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -284,6 +291,7 @@
     "3441": {
       "url": "https://github.com/mono/SkiaSharp/pull/3441",
       "title": "improved docs a bit",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -291,6 +299,7 @@
     "3406": {
       "url": "https://github.com/mono/SkiaSharp/pull/3406",
       "title": "Adding the initial set of AI docs",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -298,6 +307,7 @@
     "3404": {
       "url": "https://github.com/mono/SkiaSharp/pull/3404",
       "title": "Enable BufferSecurityCheck for native DLLs to resolve BinSkim BA2007",
+      "body": "* Enable BufferSecurityCheck for native DLLs to resolve BinSkim BA2007\n\nThis change enables the /GS (Buffer Security Check) compiler flag for three native libraries to resolve BinSkim error BA2007:\n\n- libHarfBuzzSharp.dll: Added BufferSecurityCheck=true to all configurations in the vcxproj file, including creating the missing Debug|ARM64 ItemDefinitionGroup\n- libEGL.dll and libGLESv2.dll: Added /GS flag to extra_cflags in the ANGLE GN build configuration\n\nThe /GS flag enables compile-time buffer overrun detection, which is an important security feature that helps prevent stack-based buffer overflow attacks.\n\n* Merge duplicate Debug|Win32 ItemDefinitionGroup in libHarfBuzzSharp.vcxproj (#3405)\n\n* Initial plan\n\n* Merge duplicate Debug|Win32 sections in libHarfBuzzSharp.vcxproj\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>",
       "author": "Aguilex",
       "community": true,
       "tag": "mixed"
@@ -305,6 +315,7 @@
     "3397": {
       "url": "https://github.com/mono/SkiaSharp/pull/3397",
       "title": "Enable Control Flow Guard for all Windows native DLLs",
+      "body": "- libSkiaSharp.dll, libHarfBuzzSharp.dll, SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, and libGLESv2.dll\n- Add ControlFlowGuard compiler and linker settings to all configurations\n- libSkiaSharp: Add /guard:cf to extra_cflags and extra_ldflags in GN build (applies to all Windows variants including nanoserver)\n- libHarfBuzzSharp: Add ControlFlowGuard settings to all Debug/Release builds for Win32, x64, and ARM64 platforms\n- SkiaSharp.Views.WinUI.Native: Add ControlFlowGuard settings to all WinUI configurations\n- libEGL & libGLESv2: Add /guard:cf to extra_cflags and extra_ldflags in ANGLE GN build for all architectures\n- Improves security by preventing ROP/JOP attacks with minimal performance impact",
       "author": "Aguilex",
       "community": true,
       "tag": "mixed"
@@ -312,6 +323,7 @@
     "3383": {
       "url": "https://github.com/mono/SkiaSharp/pull/3383",
       "title": "Use the correct run for the artifacts",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -319,6 +331,7 @@
     "3382": {
       "url": "https://github.com/mono/SkiaSharp/pull/3382",
       "title": "Bump to the next version (3.119.3) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -326,6 +339,7 @@
     "3374": {
       "url": "https://github.com/mono/SkiaSharp/pull/3374",
       "title": "Preserve and pack the Android symbols",
+      "body": "* Preserve and pack the Android symbols\n\n* Everything got too big\n\n* bump externals",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -333,6 +347,7 @@
     "3370": {
       "url": "https://github.com/mono/SkiaSharp/pull/3370",
       "title": "Bump to the next version after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -340,6 +355,7 @@
     "3368": {
       "url": "https://github.com/mono/SkiaSharp/pull/3368",
       "title": "Add handling for symbol package suffix in folder name",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -347,6 +363,7 @@
     "3342": {
       "url": "https://github.com/mono/SkiaSharp/pull/3342",
       "title": "Add missing tvOS `SKSurface.Create` overloads",
+      "body": "Co-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "MartinZikmund",
       "community": true,
       "tag": "product"
@@ -354,6 +371,7 @@
     "3367": {
       "url": "https://github.com/mono/SkiaSharp/pull/3367",
       "title": "Use a valid \"version number\" for APIScan",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -361,6 +379,7 @@
     "3366": {
       "url": "https://github.com/mono/SkiaSharp/pull/3366",
       "title": "Extract to same folder names",
+      "body": "The tools use the full path as a bug ID and this makes\neverything re-create for every build.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -368,6 +387,7 @@
     "3364": {
       "url": "https://github.com/mono/SkiaSharp/pull/3364",
       "title": "Add the MS build messages to AzDo logs",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -375,6 +395,7 @@
     "3361": {
       "url": "https://github.com/mono/SkiaSharp/pull/3361",
       "title": "Preserve docs on generated enum members",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -382,6 +403,7 @@
     "3360": {
       "url": "https://github.com/mono/SkiaSharp/pull/3360",
       "title": "Improve the generator slightly",
+      "body": "* Fix generator to run on macOS\n\n* Generator now preserves docs in generated files",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -389,6 +411,7 @@
     "3359": {
       "url": "https://github.com/mono/SkiaSharp/pull/3359",
       "title": "Add Copilot setup steps",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

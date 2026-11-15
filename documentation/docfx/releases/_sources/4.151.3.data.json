@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.151.3",
   "family": "skiasharp",
   "status": "stable",
@@ -66,6 +66,7 @@
     "5089": {
       "url": "https://github.com/mono/SkiaSharp/pull/5089",
       "title": "[skia-sync] Record the Chrome M151 branch retirement",
+      "body": "[skia-sync] Record the Chrome M151 branch retirement (#5089)\n\nRequires: https://github.com/mono/skia/pull/365\nChanges: https://github.com/google/skia/compare/7ad44b72c93c242f96f2563edb566439fe816c0a...b91d74bf28bcc5bc94e0f7b810b4f023f74537ab\nContext: https://github.com/mono/SkiaSharp/pull/5097\n\nBump externals/skia to the merged release/4.151.x tip\nad2b1b49da724dc996c773043075eed32690aa6c and record the final upstream\nChrome M151 commit in cgmanifest.\n\nThe upstream commit retires Skia CQ metadata after Chrome M151 became\nunsupported. The mono/skia release branch had already removed the same file,\nso the old and new native revisions have the identical tree\n3d75c138755c7cc8143349bd32adcb649e1e43b8. This update changes provenance\nand preserves upstream merge ancestry without changing shipped product bits.\n\nKeep the Skia milestone, native ABI, assembly and package versions, C API,\nmanaged wrappers, generated bindings, and dependency pins unchanged. The\nreview retained all 100 interop patches and all 17 audited dependency entries.\n\nThe merged-source Linux x64 build and unfiltered managed test solution passed.\nThe remaining iOS macOS check failure was an accepted agent-loss infrastructure\nfailure and is unrelated to this tree-identical update.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"

@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.150.4",
   "family": "skiasharp",
   "status": "stable",
@@ -78,6 +78,7 @@
     "5113": {
       "url": "https://github.com/mono/SkiaSharp/pull/5113",
       "title": "[skia-sync] Update the m150 servicing line",
+      "body": "[skia-sync] Update the m150 servicing line (#5113)\n\nNative: https://github.com/mono/skia/pull/366\nChanges: https://github.com/google/skia/compare/b2a21c389121ba073d207c0c7235196f7703c7f5...f6fc31f884ae25ad97500ba12437bce2dfe15903\n\nBring the current chrome/m150 glyph-atlas correction into the SkiaSharp\n4.150 servicing line.\n\nA partial glyph-atlas regeneration beginning after glyph zero could mark the\nentire glyph vector as current even though earlier glyphs may have been\nevicted. The updated Skia implementation limits the generation-state update\nto the regenerated subrun in both Ganesh and Graphite.\n\nPin the Skia submodule and Component Governance registration to the actual\nmono/skia merge commit, c1b1143575de5610719d8c9d43e18aaa8f058508.\nThis servicing update leaves package versions, DEPS, the native C API, and the\ngenerated managed binding surface unchanged.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -85,6 +86,7 @@
     "5123": {
       "url": "https://github.com/mono/SkiaSharp/pull/5123",
       "title": "Fix BinSkim BA2007 for libHarfBuzzSharp by scoping C4244/C4267 suppression (#5111)",
+      "body": "libHarfBuzzSharp.dll fails BinSkim rule BA2007 (EnableCriticalCompilerWarnings)\nat error severity, because libHarfBuzzSharp.vcxproj passed\n<DisableSpecificWarnings>4267;4244</DisableSpecificWarnings> in all six\nItemDefinitionGroups. C4244 and C4267 are the \"possible loss of data\" truncation\nwarnings BinSkim policy does not allow to be suppressed, so the /wd4244 /wd4267\nrecorded in the PDB failed the rule.\n\nThis breaks consumers, not just us: Microsoft-internal CI runs BinSkim in break\nmode, and anything that takes SkiaSharp picks up HarfBuzzSharp.NativeAssets.Win32\ntransitively (Svg.Skia 5.x does), then fails its security gate on a binary it\ndoes not build. The only workaround available today is to baseline it.\n\nThe project compiles exactly one translation unit -- the vendored\nharfbuzz-subset.cc, itself an amalgamation of 73 upstream HarfBuzz sources -- so\nthere is no other object file to scope the suppression to, and BinSkim names\nharfbuzz-subset.obj precisely because it is the whole binary. Building with the\nsuppressions removed produces 1196 warnings (976 C4244, 220 C4267), every one of\nthem inside vendored HarfBuzz headers and sources, so simply dropping them is not\nviable and patching upstream code is not desirable.\n\nInstead, add a small SkiaSharp-owned translation unit that wraps the vendored\namalgamation in #pragma warning(push/disable/pop) and compile that. The\nsuppression now lives in source rather than on the command line, so the compiler\ncommand line recorded in the PDB is free of disabled warnings and BA2007 passes,\nwhile any first-party code added to this project in future still gets the\nwarnings. libSkiaSharp is untouched -- it is clang-built and already passes.\n\nVerified on Windows with BinSkim 4.4.9.11 (the version in the report):\n\n  before  BA2007 error  Error_WarningsDisabled ... [Explicitly disabled warnings: 4244;4267]\n  after   BA2007 pass\n\nBA2007 now reports kind=pass on x64, ARM64 and Win32, and those are the only\nresults that changed -- the pre-existing BA2024/BA2025/BA2026/BA2027 warnings are\nunaffected. All three platforms build with 0 warnings and 0 errors, the DLL still\nexports the same 560 symbols (no ABI change), and the rebuilt binary loads and\nshapes correctly (hb_version_string reports 14.2.1).\n\nFixes #5108\n\nCo-authored-by: Alexandre Zollinger Chohfi <chohfi@outlook.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "mixed",
@@ -95,6 +97,7 @@
     "5083": {
       "url": "https://github.com/mono/SkiaSharp/pull/5083",
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+      "body": "[skia-sync] Bump Skia to the Chrome M150 stencil fix (#5083)\n\nRequires: https://github.com/mono/skia/pull/363\nChanges: https://github.com/google/skia/compare/9c7b2dffb2433f5a0cc2b77f06025a09126807ed...b2a21c389121ba073d207c0c7235196f7703c7f5\nContext: https://github.com/mono/SkiaSharp/pull/5096\n\nBump externals/skia to the merged release/4.150.x tip\n7930e7d3b1ea0a46f06e5076f634e414eb5fb95c. That merge preserves the\nreviewed native tree and its two-parent ancestry.\n\nThe upstream LTS fix tracks shared Ganesh stencil-clear rectangles in\nbackend-native coordinates. Stencil attachments can be shared by render\ntargets with different surface origins, so surface-origin tracking could\nincorrectly treat an uncleared native region as cleared. The fix converts\nstencil bounds for clear checks and bookkeeping while retaining\nsurface-origin coordinates for render-pass creation.\n\nUpdate cgmanifest with the actual merged mono/skia commit while retaining the\nupstream Chrome M150 provenance. This is a same-milestone servicing update:\nthe Skia milestone, soname, assembly and package versions, C API, tracked\ndependencies, managed wrappers, and generated bindings remain unchanged.\n\nThe reviewed native source build and full unfiltered managed test solution\npassed. The required Linux GL and Vulkan backends executed, and the Azure\nTests-stage retry completed successfully.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"

@@ -1,50 +1,85 @@
 {
-  "theme": "Cross-platform servicing release",
-  "highlights_headline": "SkiaSharp 3.119.4 improves platform reliability, native hardening, and supported view integrations.",
-  "highlights_body": "It rolls up the 3.119.3 preview work with Linux, Android, Tizen, and desktop fixes.",
+  "theme": "Broader platforms and safer streams",
+  "highlights_headline": "SkiaSharp 3.119.4 adds GTK 4 views and expands native platform coverage while improving stream and loading reliability.",
+  "highlights_body": "Linux Bionic and 64-bit Tizen assets join the package set. Android view reattachment, tvOS simulator linking, reflection-disabled AOT, and Windows CPU-only startup receive fixes, alongside refreshed native dependencies.",
   "breaking": [
     {
-      "title": "Blazor view surface changed",
-      "body": "Review the API-diff report and update Blazor view code to use the current supported members before upgrading.",
+      "title": "Update platform-specific .NET targets",
+      "body": "Platform libraries move to .NET 9 and .NET 10 target sets. Update platform-specific consumers to a compatible target and workload; this does not remove the existing net462 and .NET Standard compatibility targets for core libraries. .NET Framework 4.8 is added and recommended for desktop applications.",
+      "prs": [3514, 3631]
+    },
+    {
+      "title": "Do not use the generated Blazor _Imports type as a component",
+      "body": "The generated SkiaSharp.Views.Blazor._Imports type no longer derives from ComponentBase or implements its component interfaces. Remove code that instantiates or treats that generated imports type as a Blazor component.",
       "prs": []
     }
   ],
   "categories": [
     {
-      "heading": "Bug Fixes",
+      "heading": "Platform",
       "bullets": [
         {
-          "lead": "Android GL views recover after tab switches",
-          "detail": "MAUI applications no longer leave SKGLView blank after switching TabBar tabs.",
-          "prs": [3076]
+          "lead": "GTK 4 drawing views",
+          "detail": "Adds SkiaSharp.Views.Gtk4 with SKDrawingArea and GTK/Skia geometry and color conversions using GirCore bindings. A follow-up fix prevents Cairo snapshot assertions during repeated redraws.",
+          "prs": [3527, 3562]
         },
         {
-          "lead": "Linux ARM64 runtime stability improved",
-          "detail": "Native packaging and runtime dependencies are corrected for Linux ARM64 applications.",
-          "prs": [3494]
+          "lead": "Bionic and 64-bit Tizen native assets",
+          "detail": "Adds linux-bionic x64 and arm64 assets for SkiaSharp and HarfBuzzSharp without fontconfig dependencies. Tizen gains x64 and arm64 assets alongside its existing 32-bit targets.",
+          "prs": [3217, 3620]
         }
       ]
     },
     {
-      "heading": "Platform",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Tizen and Linux support broadened",
-          "detail": "The release adds 64-bit Tizen native support and Linux Bionic native assets.",
-          "prs": [3620, 3217]
+          "lead": "Independent managed-stream duplicates",
+          "detail": "SKManagedStream duplicates and forks use a cached, ref-counted SKData snapshot. The original remains readable, multiple duplicates are allowed, and disposing the parent can close the .NET stream without invalidating the duplicates. Non-seekable streams return null for duplicate and fork requests.",
+          "prs": [3589]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native loading on Linux and Windows",
+          "detail": "Fixes Linux ARM64 fontconfig loading and LoongArch native linkage. Windows CPU-only rendering can load without Direct3D 12 components, and ANGLE statically links its C runtime to avoid requiring the VC++ Redistributable.",
+          "prs": [3494, 3629, 3648, 3633, 3510]
+        },
+        {
+          "lead": "Android reattachment and tvOS simulator linking",
+          "detail": "MAUI Android SKGLView redraws after returning to a tab or page at the same size. tvOS packages and native references distinguish simulator frameworks from device frameworks, preventing simulator link failures.",
+          "prs": [3076, 3561, 3563]
+        },
+        {
+          "lead": "Reflection-disabled AOT initialization",
+          "detail": "SKBlender initializes blend modes without reflection, avoiding TypeInitializationException when IlcDisableReflection=true.",
+          "prs": [3485]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native dependency refresh and hardening",
+          "detail": "Updates libpng to 1.6.58, libwebp to 1.6.0, Brotli to 1.2.0, and libexpat to 2.7.3. Native SkiaSharp builds also enable Spectre mitigation flags on Windows and Linux.",
+          "prs": [3723, 3478, 3469, 3458, 3496, 3502]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "4Darmygeometry": "Linux Bionic assets, Tizen support, and legacy target improvements",
-    "sshumakov": "Windows and Linux native binary hardening",
-    "ramezgerges": "Skia synchronization work",
-    "SimonvBez": "Fixed Android SKGLView rendering after tab switches"
+    "4Darmygeometry": "Linux Bionic assets, .NET Framework 4.8 support, and compiler compatibility for legacy targets.",
+    "sshumakov": "Windows and Linux native Spectre mitigation flags.",
+    "ramezgerges": "Shared configuration for repository coding agents.",
+    "SimonvBez": "Android SKGLView rendering after tab switches and page navigation."
   },
   "preview_summaries": {
-    "v3.119.4-preview.1.1": "Preview 1 rolled up cross-platform reliability work from the 3.119 servicing line.",
-    "v3.119.3-preview.1.1": "The prior preview introduced Linux ARM64, AOT, and dependency servicing updates."
+    "v3.119.3-preview.1.1": "Fixed Linux ARM64 font loading and reflection-disabled AOT, refreshed native dependencies, and enabled Spectre mitigation flags.",
+    "v3.119.4-preview.1.1": "Added GTK 4 views, Linux Bionic assets, and 64-bit Tizen support. Introduced independent managed-stream snapshots and fixed Android view reattachment, tvOS simulator linking, and Windows startup without Direct3D 12."
   },
-  "harfbuzz_summary": "HarfBuzzSharp carries the accompanying platform and native dependency updates."
+  "harfbuzz_summary": "HarfBuzzSharp adds Linux Bionic and 64-bit Tizen assets and separates tvOS simulator assets from device frameworks. Its platform target sets move with the .NET 9/10 update; the 8.3.1.5 package revision is not a native engine upgrade."
 }

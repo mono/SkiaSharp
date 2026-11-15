@@ -1,0 +1,205 @@
+#addin nuget:?package=Cake.FileHelpers&version=4.0.1
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// GPU OPT-OUT — backends to skip on this host
+//
+// Desktop and container legs need nothing here: their test process is a child of this one and
+// inherits SKIASHARP_TEST_SKIP_GPU from the environment. The Android / iOS / Mac Catalyst / WASM
+// hosts run on a device, emulator or browser that never sees the agent environment, so for those
+// the value is baked into runtimeconfig.json (see tests/Directory.Build.targets) and read back
+// through AppContext.
+//
+//   dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
+//   SKIASHARP_TEST_SKIP_GPU=ganesh-gl dotnet cake --target=tests-netcore
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var SKIP_GPU = Argument("skipGpu", EnvironmentVariable("SKIASHARP_TEST_SKIP_GPU") ?? "");
+
+bool IsCakeListingCommand()
+{
+    // Cake 4 still invokes Setup/Teardown in a dry run and does not set IsDryRun().
+    var listingOptions = new[] { "--showdescription", "--dryrun", "--noop", "--whatif" };
+    return System.Environment.GetCommandLineArgs().Any(arg =>
+        listingOptions.Contains(arg.Split('=')[0], StringComparer.OrdinalIgnoreCase));
+}
+
+// GpuPolicy accepts comma, semicolon or whitespace separators; normalise to the one form the
+// MSBuild property path survives. Cake's DotNetMSBuildSettings quotes the value, so a comma-joined
+// list arrives intact — a raw /p: on a command line would not, since MSBuild splits that switch on
+// commas as well as semicolons (MSB1006). Newlines are separators here too, matching GpuPolicy, so
+// a YAML block value cannot smuggle one into an MSBuild property.
+string NormalizeGpuOptOut(string value) =>
+    string.Join(",", value.Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+
+void AddGpuOptOut(Dictionary<string, string> properties)
+{
+    if (!string.IsNullOrWhiteSpace(SKIP_GPU)) {
+        properties["SkiaSharpTestSkipGpu"] = NormalizeGpuOptOut(SKIP_GPU);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEVICE RUNNERS — shared helper for DeviceRunners.Testing.Targets based tests
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void RunDeviceRunnersTest(
+    FilePath testProject,
+    DirectoryPath output,
+    string configuration = null,
+    string framework = null,
+    bool noBuild = false,
+    Dictionary<string, string> properties = null)
+{
+    CleanDirectories($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+    output = MakeAbsolute(output);
+    CleanDirectories(output.FullPath);
+
+    properties = properties == null
+        ? new Dictionary<string, string>()
+        : new Dictionary<string, string>(properties);
+    AddGpuOptOut(properties);
+
+    var msb = new DotNetMSBuildSettings();
+    msb.Properties ["RestoreNoCache"] = new [] { "true" };
+    msb.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+    foreach (var prop in properties) {
+        if (!string.IsNullOrEmpty(prop.Value)) {
+            msb.Properties [prop.Key] = new [] { prop.Value };
+        }
+    }
+
+    var settings = new DotNetTestSettings {
+        Configuration = configuration ?? CONFIGURATION,
+        Framework = framework,
+        MSBuildSettings = msb,
+        NoBuild = noBuild,
+        ResultsDirectory = output,
+        Verbosity = DotNetVerbosity.Normal,
+        ArgumentCustomization = args => {
+            args = AppendForwardingLogger(args);
+            var sep = IsRunningOnWindows() ? ";" : "%3B";
+            return args
+                .Append($"/p:RestoreSources=\"{string.Join(sep, GetNuGetSources())}\"")
+                .Append("--logger").Append("trx");
+        },
+    };
+
+    DotNetTest(MakeAbsolute(testProject).FullPath, settings);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// TEST UTILITIES — shared by desktop test cakes
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Runs a Microsoft.Testing.Platform test executable directly (used for .NET Framework, where
+// the v3 test project builds a runnable exe). MTP report + hang-dump args are passed natively.
+//
+// Hang protection (the MTP equivalent of #4142's VSTest `--blame-hang-timeout 15m`): MTP only
+// detects a per-test hang via the HangDump extension, and that extension always writes a dump
+// (`--hangdump-type` accepts only Mini/Heap/Triage/Full — there is no "none"). #4142 used a dump
+// type of none, but MTP cannot do per-test hang detection without a dump, so the smallest (Mini)
+// is used. The global `--timeout` option aborts without a dump but is a whole-session timeout, not
+// per-test, so it is unsuitable (a healthy-but-slow suite would fail). The Mini dump only
+// materialises if a test actually hangs and lands in the published results directory.
+void RunTests(FilePath testApp, DirectoryPath output)
+{
+    var dir = testApp.GetDirectory();
+    output = MakeAbsolute(output);
+    EnsureDirectoryExists(output);
+
+    var exitCode = StartProcess(testApp, new ProcessSettings {
+        WorkingDirectory = dir,
+        Arguments = new ProcessArgumentBuilder()
+            .Append("--results-directory").AppendQuoted(output.FullPath)
+            .Append("--report-trx")
+            .Append("--report-trx-filename").Append("TestResults.trx")
+            .Append("--hangdump")
+            .Append("--hangdump-timeout").Append("15m")
+            .Append("--hangdump-type").Append("Mini"),
+    });
+
+    if (exitCode != 0)
+        throw new Exception($"Tests failed: {testApp.GetFilename()} returned exit code {exitCode}.");
+}
+
+void RunDotNetTest(
+    FilePath testProject,
+    DirectoryPath output,
+    string configuration = null,
+    Dictionary<string, string> properties = null,
+    bool noBuild = true,
+    string hangTimeout = "15m",
+    IEnumerable<string> runnerArguments = null)
+{
+    output = MakeAbsolute(output);
+    var dir = testProject.GetDirectory();
+
+    properties = properties == null
+        ? new Dictionary<string, string>()
+        : new Dictionary<string, string>(properties);
+    properties.TryAdd("TestingPlatformCaptureOutput", "false");
+    properties.TryAdd("Platform", "AnyCPU");
+    if (COVERAGE) {
+        properties.TryAdd("CollectCoverage", "true");
+        properties.TryAdd("CoverletOutputFormat", "cobertura");
+        properties.TryAdd("CoverletOutput", output.Combine("Coverage").FullPath + "/");
+    }
+
+    var settings = new DotNetTestSettings {
+        Configuration = configuration ?? CONFIGURATION,
+        NoBuild = noBuild,
+        WorkingDirectory = dir,
+        Verbosity = DotNetVerbosity.Normal,
+        ArgumentCustomization = args => {
+            foreach (var prop in properties) {
+                if (!string.IsNullOrEmpty(prop.Value)) {
+                    args = args
+                        .AppendQuoted($"/p:{prop.Key}={prop.Value}");
+                }
+            }
+            // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.
+            args = args
+                .Append("--")
+                .Append("--show-live-output").Append("on")
+                .Append("--no-ansi")
+                .Append("--results-directory").AppendQuoted(output.FullPath)
+                .Append("--report-trx")
+                .Append("--report-trx-filename").Append("TestResults.trx");
+            if (!string.IsNullOrEmpty(hangTimeout)) {
+                args = args
+                    .Append("--hangdump")
+                    .Append("--hangdump-timeout").Append(hangTimeout)
+                    .Append("--hangdump-type").Append("Mini");
+            }
+            if (runnerArguments != null) {
+                foreach (var argument in runnerArguments)
+                    args = args.AppendQuoted(argument);
+            }
+            return args;
+        },
+    };
+    DotNetTest(MakeAbsolute(testProject).FullPath, settings);
+}
+
+void RunCodeCoverage(string testResultsGlob, DirectoryPath output)
+{
+    try {
+        DotNetTool(
+            $"reportgenerator" +
+            $"  -reports:{testResultsGlob}" +
+            $"  -targetdir:{output}" +
+            $"  -reporttypes:HtmlInline_AzurePipelines;Cobertura" +
+            $"  -assemblyfilters:-*.Tests");
+    } catch (Exception ex) {
+        Error("Make sure to install the 'dotnet-reportgenerator-globaltool' .NET Core global tool.");
+        Error(ex);
+        throw;
+    }
+    var xml = $"{output}/Cobertura.xml";
+    var root = FindRegexMatchGroupsInFile(xml, @"<source>(.*)<\/source>", 0)[1].Value;
+    ReplaceTextInFiles(xml, root, "");
+}

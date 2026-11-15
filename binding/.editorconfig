@@ -14,3 +14,12 @@ csharp_new_line_before_finally = false
 # Spacing options
 csharp_space_between_method_call_name_and_opening_parenthesis = true
 csharp_space_between_method_declaration_name_and_open_parenthesis = true
+
+# Analyzer rules
+
+# CA5394 (do not use insecure randomness) is disabled by default. It is an error for the shipped code (the NuGet
+# packages are built from binding/ and source/), so any new System.Random use there has to be justified: use
+# RandomNumberGenerator, or if the value is not security sensitive, suppress the diagnostic with a comment saying why.
+# This is not in the root .editorconfig on purpose: that file is part of the native build cache keys
+# (scripts/infra/caching/repo-deps.json), so changing it makes CI rebuild all the native libraries.
+dotnet_diagnostic.CA5394.severity = error

@@ -83,7 +83,7 @@ How did you verify this? Add or update tests where relevant, and note which
 backends/platforms you ran on (CPU, GPU/Metal/Vulkan/ANGLE, Windows/macOS/Linux/
 Android/iOS/tvOS/Tizen/WASM) and anything you could NOT test.
 
-Rendering change? Mention golden-image updates (tests/Content/Goldens/) and copy
+Rendering change? Mention golden-image updates (tests/Goldens/) and copy
 this in to show the difference:
 
 <details>

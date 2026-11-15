@@ -60,7 +60,7 @@ RUN case "${BUILD_ARCH}" in \
     && echo "export GCC_LIB_DIR=${ROOTFS_DIR}/usr/lib/gcc/${TOOLCHAIN_ARCH}/${GCC_VER}" >> /etc/skia-env
 
 # Install the .NET SDK (needed for Cake build scripts).
-ARG DOTNET_SDK_VERSION=10.0.401
+ARG DOTNET_SDK_VERSION=10.0.403
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
     && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
@@ -72,21 +72,25 @@ ENV CC=clang CXX=clang++
 # Install fontconfig-dev into the sysroot from Alpine repos.
 # The sysroot is Alpine 3.17 but we pull fontconfig from 3.21 (newer keys needed).
 # SSL_CERT_FILE is needed because apk.static (musl) can't find Azure Linux's CA bundle.
-ARG APK_STATIC_VERSION=2.12.14
-ARG APK_STATIC_SHA256=cd282c693059c39b68ce0575fbdc4e0c162af85ed633a7834f9cfd01b8b1d58b
+# Bootstrap from the official package CDN, not the GitLab package registry.
+# This is the x86_64 host tool, regardless of the target sysroot architecture.
+ARG APK_STATIC_VERSION=2.14.13-r0
+ARG APK_STATIC_SHA256=7c9a784c1c2544e71e3de83b6be62a6e2c3ae7749248425ff8561dfdbece3b08
 ARG ALPINE_VERSION=3.21
 RUN . /etc/skia-env \
     && APK_DIR="$(mktemp -d)" \
     && curl -fSL --retry 5 --retry-delay 10 --retry-all-errors \
-        -o "$APK_DIR/apk.static" \
-        "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v${APK_STATIC_VERSION}/x86_64/apk.static" \
-    && echo "${APK_STATIC_SHA256}  $APK_DIR/apk.static" | sha256sum -c - \
-    && chmod +x "$APK_DIR/apk.static" \
+        --connect-timeout 20 --max-time 120 \
+        -o "$APK_DIR/apk-tools-static.apk" \
+        "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/x86_64/apk-tools-static-${APK_STATIC_VERSION}.apk" \
+    && echo "${APK_STATIC_SHA256}  $APK_DIR/apk-tools-static.apk" | sha256sum -c - \
+    && tar -xzf "$APK_DIR/apk-tools-static.apk" -C "$APK_DIR" sbin/apk.static \
+    && chmod +x "$APK_DIR/sbin/apk.static" \
     && curl -fsSL -o ${SYSROOT_ROOT}/etc/apk/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub \
         "https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub" \
     && curl -fsSL -o ${SYSROOT_ROOT}/etc/apk/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub \
         "https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-61666e3f.rsa.pub" \
-    && SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt "$APK_DIR/apk.static" \
+    && SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt "$APK_DIR/sbin/apk.static" \
         -X "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" \
         -X "https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/community" \
         --no-cache --root ${SYSROOT_ROOT} --arch "${APK_ARCH}" --no-scripts \

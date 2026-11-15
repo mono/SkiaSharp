@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -198,17 +200,16 @@ namespace SkiaSharp.Tests
 
 
 		[Fact]
-		public void StreamIsNotCollectedPrematurely()
+		public async Task StreamIsNotCollectedPrematurely()
 		{
-			DoWork(out var handle);
+			DoWork(out var handle, out var weakStream);
 
-			CollectGarbage();
+			await SKHandleDictionaryTestHelpers.CollectGarbageAndAssertCollectedAsync(handle, weakStream);
 
-			Assert.False(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
-
-			static void DoWork(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				using (var document = CreateDocument(out streamHandle))
+				using (var document = CreateDocument(out streamHandle, out streamRef))
 				{
 					using (var pageCanvas = document.BeginPage(792, 842))
 					{
@@ -225,10 +226,11 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(streamHandle, out _));
 			}
 
-			static SKDocument CreateDocument(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKDynamicMemoryWStream();
-				streamHandle = stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
 			}

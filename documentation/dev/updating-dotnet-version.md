@@ -20,11 +20,12 @@ This checklist documents every file that needs updating when bumping the .NET SD
 
 - [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`). Use `"rollForward": "latestPatch"` to accept any patch version available on CI agents.
 - [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version` and verify the selected SDK satisfies Arcade's CLI requirements for `dotnet package download`.
-- [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
+- [ ] **Native WinUI projection** — Verify the root SDK works with VS 2026 MSBuild. The projection uses the repository `global.json`; it has no separate older SDK pin.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
 - [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/azure-templates-steps-dotnet.yml`** — Review host workload defaults and explicit job descriptors.
 - [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the exact-SDK workload install and Samsung's pinned manifest handling.
+- [ ] **Developer documentation** — Refer to the authoritative version files instead of duplicating current SDK, workload, or package pins in prose or commands. Use clearly marked placeholders where a version must be supplied.
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
 
@@ -92,7 +93,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
-> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and static libraries must match that toolchain. Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 6.0.2**. The preview CI pins are SDK **11.0.100-rc.1.26425.128** and workload set **11.0.100-rc.1.26460.1**; approved mirrors lacked Preview 6's Emscripten 5.0.6 host packs. The obsolete 5.0.6 preview build variants are replaced by 6.0.2. When the toolchain changes for the new SDK, you must:
+> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and static libraries must match that toolchain. Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Supported mapping: **.NET 9/10 → 3.1.56, .NET 11 → 6.0.2**. WebAssembly native assets require .NET 9 or later. The preview CI SDK and workload set are defined by `DOTNET_VERSION_PREVIEW` and `DOTNET_WORKLOAD_VERSION_PREVIEW` in `scripts/azure-templates-variables.yml`. When the toolchain changes for the new SDK, you must:
 > 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml`, and register its `native_wasm_<version>_*` artifacts in both merger lists in `scripts/azure-templates-stages-native-merge.yml`, so the packages ship a static library for it.
 > 2. Add a `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
 >    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
@@ -102,7 +103,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 >
 > Convention for the conditions: the **newest** entry stays open-ended (`VersionGreaterThanOrEquals(TFV, 'A')`) so a future SDK that keeps the same Emscripten version keeps working with no code change (e.g. .NET 9 and .NET 10 both use 3.1.56). Only when a new SDK actually *diverges* do you close the previous entry with an upper bound (`… and VersionLessThan(TFV, 'B')`) and add a new open-ended entry for the new version — `net9.0`–`net10.x` is capped at `< 11.0`, and `net11.0+` selects 6.0.2. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
 
-The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/package targets for net8.0 through net12.0 with threading and SIMD on/off (80 evaluations). Its dummy archives verify item selection only, not native linking or execution. Validate new toolchains with source-built archives in producing CI, packaging, and the .NET preview WASM test job; do not substitute older downloaded natives.
+The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/package targets for net9.0 through net12.0 with threading and SIMD on/off (64 evaluations), and verifies that unsupported frameworks fail with an actionable error. Its dummy archives verify item selection only, not native linking or execution. Validate new toolchains with source-built archives in producing CI, packaging, and the .NET preview WASM test job; do not substitute older downloaded natives.
 
 ### 10. Docker Images
 
@@ -125,6 +126,8 @@ The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/pac
 Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
 Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
+
+If the exact SDK patch is not published for an existing distro suffix, explicitly review the distro change rather than choosing an unavailable tag.
 
 ### 11. NuGet & Feeds
 
@@ -166,7 +169,7 @@ These use MSBuild properties from `SkiaSharp.Build.props`:
 - All projects using `$(BasicTargetFrameworks)` — NativeAssets.Linux, Win32, WebAssembly, etc.
 - All projects using `$(WindowsTargetFrameworks)` — NativeAssets.WinUI, NanoServer, Views.WinUI
 - All projects using `$(MauiTargetFrameworks)` — Views.Maui.Core, Views.Maui.Controls
-- All projects using `$(UnoTargetFrameworks)` — Views.Uno.WinUI, Skia, Wasm
+- All projects using `$(UnoTargetFrameworks)` — Views.Uno.WinUI (.NET 10 and later only, as Uno Platform 7 requires)
 - All projects using `$(TFMCurrent)` — Benchmarks, test console projects, Direct3D
 - `binding/NativeAssets.Build.targets` — Uses `$(TFMCurrent)`
 - `native/winui/.../SkiaSharp.Views.WinUI.Native.Projection.csproj` — Uses `$(WindowsTargetFrameworksPrevious)`
@@ -208,10 +211,9 @@ dotnetSdks:
     tizen:
       manifestBand: $(DOTNET_TIZEN_MANIFEST_BAND)
       manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
-  - sdkVersion: $(DOTNET_VERSION_WINUI) # SDK-only
 ```
 
-Omitting `workloadSetVersion` installs only the SDK. When a set is present,
+Additional entries without `workloadSetVersion` install only that SDK. When a set is present,
 `workloads` optionally overrides the centralized host list with explicit IDs.
 An empty `dotnetSdks` list performs no host .NET provisioning; container images
 own their SDK installations.

@@ -34,7 +34,9 @@ names.
 | `{BASE_BRANCH}` | `SKIA_SYNC_BASE_BRANCH` | Parent PR base |
 | `{PARENT_BASE_SHA}` | `SKIA_SYNC_PARENT_BASE_SHA` | Exact parent base commit used for metadata comparison |
 | `{SKIA_BASE_BRANCH}` | `SKIA_SYNC_SKIA_BASE_BRANCH` | mono/skia PR base |
-| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Exact mono/skia commit recorded by the parent base |
+| `{PARENT_SKIA_SHA}` | `SKIA_SYNC_PARENT_SKIA_SHA` | mono/skia gitlink recorded by the parent base; the old state that parent metadata (DEPS, cgmanifest) describes |
+| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Live tip of the mono/skia base branch; the native merge starting point. It equals the gitlink or descends from it when the parent lags |
+| `{SKIA_BASE_UPSTREAM_SHA}` | `SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA` | Upstream commit already merged into `{SKIA_BASE_SHA}`; the old side of the fork-patch audit |
 | `{HEAD_BRANCH}` | `SKIA_SYNC_HEAD_BRANCH` | Feature branch used in both repositories |
 | `{IS_RELEASE}` | `SKIA_SYNC_IS_RELEASE` | Whether the selected base is a release line |
 | `{BASE_UPSTREAM_SHA}` | `SKIA_SYNC_BASE_UPSTREAM_SHA` | Exact upstream commit recorded by the parent base |
@@ -98,6 +100,12 @@ An update is complete only when:
 - Run long builds and full test suites in the foreground as one shell invocation. Do not use
   `nohup`, `&`, or agent-turn progress polling. If the shell tool keeps a command running, block on
   that existing session and inspect its output once after it exits.
+- Start ad hoc Bash validation snippets with `set -euo pipefail`. Handle expected nonzero statuses
+  (such as `git diff` or `git merge-base --is-ancestor`) explicitly, distinguishing a negative result
+  from an error. Never let `head` or `tee` mask a command's failure; capture complete output first,
+  then inspect bounded excerpts.
+- Handle expected search no-matches and absent optional paths explicitly; propagate tool errors.
+  Discover shim filenames in the fork's `src/c/` and `include/c/`, not the upstream tree.
 - Keep complete logs and broad diffs in `$ARTIFACT_DIR`; inspect bounded excerpts instead of
   streaming large generated files, manifests, or successful build/test logs into model context.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.
@@ -139,6 +147,10 @@ needed for that phase.
   DEPS-to-Component-Governance identity/review signals.
 - `scripts/regenerate_bindings.py` runs every binding configuration from the checked-out
   source and reports new native functions.
+- `scripts/build_native.py --platform <platform> --arch <arch>` restores tools and builds native
+  source for that target; `scripts/build_managed.py` builds the managed bindings;
+  `scripts/run_tests.py` runs the unfiltered test solution. Use these helpers instead of shell
+  pipelines. They record exit codes, archive previous logs, and clear stale downstream results.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
   added, removed, or changed patch lacks a final evidence-backed disposition.
 

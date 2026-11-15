@@ -1,6 +1,4 @@
-﻿#if !__WASM__ && (!UNO_REFERENCE_API || (NET6_0_OR_GREATER && (__IOS__ || __MACOS__))) && !MACCATALYST
-// Note that `(!UNO_REFERENCE_API || (NET6_0_OR_GREATER && (__IOS__ || __MACOS__)))` is required
-// because of https://github.com/unoplatform/uno/issues/8814, where !UNO_REFERENCE_API should be enough.
+﻿#if !__WASM__ && !HAS_UNO && !MACCATALYST
 
 using System.Runtime.InteropServices;
 
@@ -16,7 +14,7 @@ namespace SkiaSharp.Views.GlesInterop
 		private const string libGLESv2 = "opengl32.dll";
 #elif __ANDROID__
 		private const string libGLESv2 = "libGLESv2.so";
-#elif WINDOWS_UWP || WINDOWS
+#elif WINDOWS
 		private const string libGLESv2 = "libGLESv2.dll";
 #elif __TIZEN__
 		private const string libGLESv2 = "libGLESv2.so";

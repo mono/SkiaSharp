@@ -6,14 +6,17 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	// Shared white-box fakes and helpers for the HandleDictionary corner-case tests
-	// (SKHandleDictionaryReservationTest / DisposeProtectedTest / StaleWrapperTest).
+	// (SKHandleDictionaryReservationTest / DisposeProtectedTest / StaleWrapperTest), plus
+	// address-reuse-safe post-dispose and post-GC assertion helpers (AssertDeregistered, Track,
+	// AssertCollected, CollectGarbageAndAssertCollectedAsync) used across the test suite with
+	// real native handles.
 	//
-	// These drive HandleDictionary directly with a fake, non-owning SKObject so the registry
-	// machinery (single-lock construction, dispose-protected promotion, stale-wrapper deregistration)
-	// can be exercised without any native allocations. A non-owning (owns: false) wrapper never
-	// calls a native free on Dispose, and the synthetic handle values are chosen far from any real
-	// native pointer range, so they cannot collide with live Skia objects. Every test disposes
-	// everything it registers so GarbageCleanupFixture stays clean.
+	// The white-box tests drive HandleDictionary directly with a fake, non-owning SKObject so the
+	// registry machinery (single-lock construction, dispose-protected promotion, stale-wrapper
+	// deregistration) can be exercised without any native allocations. A non-owning (owns: false)
+	// wrapper never calls a native free on Dispose, and the synthetic handle values are chosen far
+	// from any real native pointer range, so they cannot collide with live Skia objects. Every test
+	// disposes everything it registers so GarbageCleanupFixture stays clean.
 	//
 	// The fakes are internal top-level types (not private nested) so they can be reused across the
 	// three split test files.
@@ -162,7 +165,8 @@ namespace SkiaSharp.Tests
 				System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture (captured).Throw ();
 		}
 
-		// Asserts that a disposed wrapper has been deregistered from the HandleDictionary.
+		// Asserts that a disposed wrapper has been marked disposed, had its Handle zeroed, and been
+		// removed from HandleDictionary.instances.
 		//
 		// The handle is a raw native pointer. Once the wrapper is disposed and its native object is
 		// freed, the allocator is free to immediately hand that exact address back out for an unrelated
@@ -170,24 +174,116 @@ namespace SkiaSharp.Tests
 		// Asserting the address is entirely absent from the registry is therefore racy and can spuriously
 		// fail when a parallel test re-registers a brand-new wrapper at the reused address. The real
 		// lifecycle invariant we care about is narrower and address-reuse-safe: OUR specific disposed
-		// wrapper must no longer be reachable through the registry under its handle. A different live
-		// wrapper that legitimately reused the freed address is fine and must not fail the test.
+		// wrapper must no longer be registered under its handle. A different live wrapper that
+		// legitimately reused the freed address is fine and must not fail the test.
 		//
-		// The lookup is intentionally typed as the base SKObject, NOT TSkiaObject. Under
-		// THROW_OBJECT_EXCEPTIONS (Debug), HandleDictionary.GetInstance<T> throws when a reused handle
-		// holds a LIVE owning object of a DIFFERENT concrete type than T — exactly the legal
-		// address-reuse case above. Looking up as SKObject (the common base) can never hit that
-		// wrong-type diagnostic, so a parallel test's unrelated wrapper at the reused address yields a
-		// benign reference-mismatch instead of an InvalidOperationException. The reference-identity
-		// assertion below is unchanged: a disposed instance is filtered out by GetInstance (returns
-		// false), and any returned object is compared by reference against ours.
+		// We inspect HandleDictionary.instances directly under instancesLock rather than calling
+		// HandleDictionary.GetInstance<T>: GetInstance filters out disposed wrappers (so it would not
+		// catch a disposed wrapper left behind in instances) and, under THROW_OBJECT_EXCEPTIONS (Debug),
+		// throws when a reused handle holds a live owning wrapper of a different concrete type than T.
 		public static void AssertDeregistered<TSkiaObject> (IntPtr handle, TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
-			if (HandleDictionary.GetInstance<SKObject> (handle, out var found))
-				Assert.False (
-					ReferenceEquals (found, instance),
-					$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
+			Assert.NotEqual (IntPtr.Zero, handle);
+			Assert.NotNull (instance);
+			Assert.True (
+				instance.IsDisposed,
+				$"Expected {typeof (TSkiaObject).Name} (handle 0x{handle.ToString ("x")}) to be disposed.");
+			Assert.Equal (IntPtr.Zero, instance.Handle);
+
+			HandleDictionary.instancesLock.EnterReadLock ();
+			try {
+				if (HandleDictionary.instances.TryGetValue (handle, out var current))
+					Assert.False (
+						ReferenceEquals (current.Target, instance),
+						$"Disposed {typeof (TSkiaObject).Name} is still registered under handle 0x{handle.ToString ("x")}.");
+			} finally {
+				HandleDictionary.instancesLock.ExitReadLock ();
+			}
+		}
+
+		// Captures a wrapper's native handle and its HandleDictionary WeakReference entry (or a
+		// fresh WeakReference for ISKSkipObjectRegistration types) while the wrapper is alive
+		// inside a helper scope, so AssertCollected can verify both managed GC collection and raw
+		// dictionary deregistration after the scope exits.
+		public static void Track (SKObject instance, out IntPtr handle, out WeakReference weak)
+		{
+			Assert.NotNull (instance);
+			handle = instance.Handle;
+			Assert.NotEqual (IntPtr.Zero, handle);
+
+			if (instance is ISKSkipObjectRegistration) {
+				weak = new WeakReference (instance);
+				return;
+			}
+
+			HandleDictionary.instancesLock.EnterReadLock ();
+			try {
+				Assert.True (
+					HandleDictionary.instances.TryGetValue (handle, out weak) && ReferenceEquals (weak.Target, instance),
+					$"Expected {instance.GetType ().Name} to be registered under handle 0x{handle.ToString ("x")}.");
+			} finally {
+				HandleDictionary.instancesLock.ExitReadLock ();
+			}
+		}
+
+		// Asserts that an unrooted wrapper has been garbage-collected (no longer reachable) and
+		// its registration entry has been removed from HandleDictionary.instances by its finalizer/
+		// disposal, without failing if a concurrent test reuses the freed native pointer for a new
+		// wrapper (which creates a distinct WeakReference entry in HandleDictionary.instances).
+		public static void AssertCollected (IntPtr handle, WeakReference instance)
+		{
+			Assert.NotEqual (IntPtr.Zero, handle);
+			Assert.NotNull (instance);
+
+			var target = instance.Target;
+			Assert.True (
+				target is null,
+				$"Expected {target?.GetType ().Name} (handle 0x{handle.ToString ("x")}) to be garbage-collected, but it is still reachable.");
+
+			HandleDictionary.instancesLock.EnterReadLock ();
+			try {
+				if (HandleDictionary.instances.TryGetValue (handle, out var current))
+					Assert.False (
+						ReferenceEquals (current, instance),
+						$"Collected wrapper is still registered under handle 0x{handle.ToString ("x")}.");
+			} finally {
+				HandleDictionary.instancesLock.ExitReadLock ();
+			}
+		}
+
+		// Collects garbage and waits (via AssertEx.Eventually, yielding to the event loop when
+		// needed on single-threaded Browser WASM so queued finalizers can execute) before running
+		// the strict AssertCollected check.
+		public static async Task CollectGarbageAndAssertCollectedAsync (IntPtr handle, WeakReference instance)
+		{
+			Assert.NotEqual (IntPtr.Zero, handle);
+			Assert.NotNull (instance);
+
+			try {
+				await AssertEx.Eventually (() => {
+					BaseTest.CollectGarbage ();
+
+					if (instance.Target is not null)
+						return false;
+
+					HandleDictionary.instancesLock.EnterReadLock ();
+					try {
+						if (HandleDictionary.instances.TryGetValue (handle, out var current) &&
+							ReferenceEquals (current, instance))
+							return false;
+					} finally {
+						HandleDictionary.instancesLock.ExitReadLock ();
+					}
+
+					return true;
+				}, timeout: 5000);
+			} catch (Xunit.Sdk.XunitException) {
+				// Fall through to AssertCollected so the failure message identifies whether
+				// the wrapper remained reachable or its registration entry was not removed.
+			}
+
+			AssertCollected (handle, instance);
 		}
 
 		// A dedicated-thread replacement for Task.Run used by the white-box stale-wrapper tests and the

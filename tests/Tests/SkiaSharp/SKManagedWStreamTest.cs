@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -49,18 +50,18 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			var handle = DoWork();
+			DoWork(out var handle, out var weakStream);
 
 			CollectGarbage();
 
-			var exists = SKObject.GetInstance<SKManagedWStream>(handle, out _);
-			Assert.False(exists);
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakStream);
 
-			static IntPtr DoWork()
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var dotnet = new MemoryStream();
 				var stream = new SKManagedWStream(dotnet, true);
-				return stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 			}
 		}
 
@@ -113,17 +114,18 @@ namespace SkiaSharp.Tests
 		{
 			SkipOnMono();
 
-			DoWork(out var docH, out var streamH);
+			DoWork(out var docH, out var weakDoc, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKManagedWStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKDocument>(docH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(docH, weakDoc);
 
-			static void DoWork(out IntPtr documentHandle, out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static void DoWork(out IntPtr documentHandle, out WeakReference documentRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var document = CreateDocument(out streamHandle);
-				documentHandle = document.Handle;
+				var document = CreateDocument(out streamHandle, out streamRef);
+				SKHandleDictionaryTestHelpers.Track(document, out documentHandle, out documentRef);
 
 				CollectGarbage();
 
@@ -134,12 +136,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKManagedWStream>(streamHandle, out var stream));
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(document);
 			}
 
-			static SKDocument CreateDocument(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKManagedWStream(new MemoryStream(), true);
-				streamHandle = stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -124,7 +125,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -144,7 +145,7 @@ namespace SkiaSharp.Tests
 			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
 			Assert.True(stream.IsDisposed);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
 		[Fact]
@@ -154,17 +155,18 @@ namespace SkiaSharp.Tests
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
-			DoWork(out var codecH, out var streamH);
+			DoWork(out var codecH, out var weakCodec, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
-			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var codec = CreateCodec(out streamHandle);
-				codecHandle = codec.Handle;
+				var codec = CreateCodec(out streamHandle, out streamRef);
+				SKHandleDictionaryTestHelpers.Track(codec, out codecHandle, out codecRef);
 
 				CollectGarbage();
 
@@ -174,12 +176,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
 				Assert.True(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(codec);
 			}
 
-			SKCodec CreateCodec(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKMemoryStream(bytes);
-				streamHandle = stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);

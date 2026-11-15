@@ -1,30 +1,31 @@
 {
-  "theme": "NuGet packaging patch",
-  "highlights_headline": "SkiaSharp 3.116.1 fixes a NuGet packaging issue and updates the Android NDK to r27c.",
+  "theme": "Android native asset compatibility",
+  "highlights_headline": "SkiaSharp 3.116.1 adds 16 KB Android native-library alignment and corrects package path metadata.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "16 KB Android page alignment",
+          "detail": "Android native libraries are built with NDK r27c and 16 KB alignment for devices using larger memory pages.",
+          "prs": [3098]
+        }
+      ]
+    },
+    {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "PackagePath attribute corrected",
-          "detail": "An incorrect PackagePath attribute was causing issues with NuGet package layout; this is now fixed.",
-          "prs": [
-            3102
-          ]
-        },
-        {
-          "lead": "Android NDK updated to r27c with 16 KB alignment",
-          "detail": "The Android NDK is updated to r27c, adding support for the 16 KB memory page alignment required by newer Android devices.",
-          "prs": [
-            3098
-          ]
+          "lead": "Correct package destination metadata",
+          "detail": "Native asset packaging uses the correct PackagePath attribute rather than the misspelled PackageFile attribute.",
+          "prs": [3102]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {},
-  "harfbuzz_summary": "Packages the HarfBuzzSharp 8.3.0.1 binding with the packaging and NDK fixes from this release."
+  "harfbuzz_summary": "HarfBuzzSharp receives the same Android 16 KB alignment and package-path metadata corrections. The 8.3.0.1 package revision is not a native engine upgrade."
 }

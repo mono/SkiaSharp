@@ -10,11 +10,7 @@ using GLKit;
 using OpenGLES;
 using SkiaSharp.Views.GlesInterop;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
-namespace SkiaSharp.Views.UWP
-#elif __TVOS__
+#if __TVOS__
 namespace SkiaSharp.Views.tvOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
@@ -28,12 +24,8 @@ namespace SkiaSharp.Views.iOS
 	[SupportedOSPlatform("tvos")]
 	[UnsupportedOSPlatform("macos")]
 	[DesignTimeVisible(true)]
-#if HAS_UNO
-	internal
-#else
 	[Register(nameof(SKGLView))]
 	public
-#endif
 	class SKGLView : GLKView, IGLKViewDelegate, IComponent
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;

@@ -55,6 +55,27 @@ This starts a local server (typically at `http://localhost:8080`) and watches fo
 - DocFX configuration (`documentation/docfx/docfx.json`)
 - Templates and styling (see [Customizing DocFX](#customizing-docfx) below)
 
+### API Cross-Reference Archives
+
+The `xrefmaps/*.zip` inputs listed in `documentation/docfx/docfx.json` are
+imported API reference snapshots. The site workflow consumes the committed maps;
+it does not regenerate them from this checkout's bindings. Updating a source
+summary therefore does not refresh an older map automatically.
+
+For a terminology finding inside a map, inspect the associated API entries,
+including their summaries, rather than treating the archive as a single
+exemption. Preserve compatibility identifiers, reference UIDs, links, and
+standardized codes. Review prose separately: a required API name does not exempt
+the surrounding description.
+
+Correct editable prose at its authoritative source, then obtain a refreshed map
+from that API documentation publisher. For SkiaSharp, the authoritative API prose
+is the source `///` documentation; see
+[API design](api-design.md#xml-documentation) for the package and publication
+boundary. Do not hand-edit generated ZIPs or exclude all reference maps to hide
+stale descriptions. Any retained technical match needs its own observed
+fingerprint and contextual justification in the active suppression file.
+
 ### Gallery (Blazor WASM)
 
 The gallery requires SkiaSharp NuGet packages from CI. Building locally:

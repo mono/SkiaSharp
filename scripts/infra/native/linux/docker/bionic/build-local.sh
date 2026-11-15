@@ -20,4 +20,4 @@ PLATFORM_ARGS="--platform linux/amd64"
 (cd "$DIR/../../../../../.." &&
     docker run --rm $PLATFORM_ARGS --name "skiasharp-bionic-$ARCH" --volume "$(pwd)":/work "skiasharp-bionic-$ARCH" /bin/bash -c " \
         dotnet tool restore ; \
-        dotnet cake --target=externals-linux --configuration=Release --buildarch=$ARCH --variant=bionic --verifyExcluded=fontconfig ")
+        dotnet cake --target=externals-linux --configuration=Release --buildarch=$ARCH --variant=bionic ")

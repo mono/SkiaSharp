@@ -1,11 +1,9 @@
-#if !MACCATALYST || HAS_UNO_WINUI
+#if !MACCATALYST
 using System;
 using System.ComponentModel;
 
 #if HAS_UNO_WINUI
 namespace SkiaSharp.Views.Windows
-#elif (WINDOWS_UWP || HAS_UNO)
-namespace SkiaSharp.Views.UWP
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
@@ -24,7 +22,7 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.Blazor
 #endif
 {
-	#if __ANDROID__ && !HAS_UNO
+	#if __ANDROID__
 	/// <summary>Provides data for the <c>PaintSurface</c> events raised by <see cref="SkiaSharp.Views.Android.SKGLSurfaceView" /> and <see cref="SkiaSharp.Views.Android.SKGLTextureView" />.</summary>
 	/// <remarks />
 	#elif (WINDOWS || HAS_UNO_WINUI) && !__DESKTOP__
@@ -36,7 +34,7 @@ namespace SkiaSharp.Views.Blazor
 	#endif
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
@@ -57,7 +55,7 @@ namespace SkiaSharp.Views.Blazor
 		{
 		}
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
@@ -89,7 +87,7 @@ namespace SkiaSharp.Views.Blazor
 			RawInfo = Info;
 		}
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
@@ -116,7 +114,7 @@ namespace SkiaSharp.Views.Blazor
 		{
 		}
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs" /> event arguments.</summary>
 		/// <param name="surface">The surface that is being drawn on.</param>
 		/// <param name="renderTarget">The render target that is currently being drawn.</param>
@@ -151,7 +149,7 @@ namespace SkiaSharp.Views.Blazor
 			RawInfo = rawInfo;
 		}
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the surface that is currently being drawn on.</summary>
 		/// <value>The current surface.</value>
 		/// <remarks />
@@ -162,7 +160,7 @@ namespace SkiaSharp.Views.Blazor
 		#endif
 		public SKSurface Surface { get; private set; }
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the render target that is currently being drawn.</summary>
 		/// <value>The current render target.</value>
 		/// <remarks />
@@ -183,7 +181,7 @@ namespace SkiaSharp.Views.Blazor
 		/// <remarks />
 		public GRSurfaceOrigin Origin { get; private set; }
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the image information of the surface.</summary>
 		/// <value>The <see cref="T:SkiaSharp.SKImageInfo" /> containing the dimensions and color type of the surface.</value>
 		/// <remarks />
@@ -194,7 +192,7 @@ namespace SkiaSharp.Views.Blazor
 		#endif
 		public SKImageInfo Info { get; private set; }
 
-		#if __ANDROID__ && !HAS_UNO
+		#if __ANDROID__
 		/// <summary>Gets the raw image information of the underlying render target.</summary>
 		/// <value>The <see cref="T:SkiaSharp.SKImageInfo" /> containing the actual dimensions and color type of the underlying render target.</value>
 		/// <remarks />

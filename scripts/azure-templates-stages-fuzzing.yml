@@ -1,0 +1,60 @@
+parameters:
+  - name: buildAgentLinux
+    type: object
+  # Each entry submits drop/<config>/OneFuzzConfig.json to the fuzzing pool for <os>.
+  - name: submissions
+    type: object
+    default:
+      windows:
+        config: windows
+        os: Windows
+      linux:
+        config: linux
+        os: azurelinux3
+
+stages:
+  - stage: fuzzing
+    displayName: Fuzzing
+    dependsOn: native
+    jobs:
+      # Builds and publishes the drop. Nothing here talks to the fuzzing service.
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: fuzzing_prepare
+          displayName: Prepare the fuzzing drop
+          buildAgent: ${{ parameters.buildAgentLinux }}
+          target: fuzzing-prepare
+          checkoutSubmodules: false
+          installAndroidSdk: false
+          installXcode: false
+          installNode: false
+          shouldPublish: false
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: fuzzing
+              path: output/fuzzing/drop
+
+      # Runs on a fresh agent: it never builds anything, it only submits the published drop.
+      - job: fuzzing_submit
+        displayName: Submit the fuzzing drop
+        dependsOn: fuzzing_prepare
+        timeoutInMinutes: 120
+        pool: ${{ parameters.buildAgentLinux.pool }}
+        workspace:
+          clean: all
+        steps:
+          - checkout: none
+
+          - download: current
+            artifact: fuzzing
+            displayName: Download the fuzzing drop
+
+          - ${{ each submission in parameters.submissions }}:
+            - task: onefuzz-task@0
+              displayName: Submit the ${{ submission.key }} targets for fuzzing
+              inputs:
+                onefuzzOSes: ${{ submission.value.os }}
+              env:
+                onefuzzDropDirectory: $(Pipeline.Workspace)/fuzzing/${{ submission.value.config }}
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)

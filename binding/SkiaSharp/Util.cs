@@ -4,9 +4,6 @@ using System;
 using System.Buffers;
 using System.ComponentModel;
 using System.Text;
-#if NETSTANDARD1_3 || WINDOWS_UWP
-using System.Reflection;
-#endif
 
 namespace SkiaSharp
 {
@@ -42,22 +39,39 @@ namespace SkiaSharp
 		internal static bool NearlyEqual (float a, float b, float tolerance) =>
 			Math.Abs (a - b) <= tolerance;
 
+		internal static int GetByteCount (this Encoding encoding, ReadOnlySpan<char> text)
+		{
+			if (text.Length == 0)
+				return 0;
+
+			fixed (char* t = text) {
+				return encoding.GetByteCount (t, text.Length);
+			}
+		}
+
+		internal static int GetBytes (this Encoding encoding, ReadOnlySpan<char> text, Span<byte> bytes)
+		{
+			if (text.Length == 0)
+				return 0;
+
+			fixed (char* t = text)
+			fixed (byte* b = bytes) {
+				return encoding.GetBytes (t, text.Length, b, bytes.Length);
+			}
+		}
+
 		internal static byte[] GetBytes (this Encoding encoding, ReadOnlySpan<char> text)
 		{
 			if (text.Length == 0)
 				return new byte[0];
 
-			fixed (char* t = text) {
-				var byteCount = encoding.GetByteCount (t, text.Length);
-				if (byteCount == 0)
-					return new byte[0];
+			var byteCount = encoding.GetByteCount (text);
+			if (byteCount == 0)
+				return new byte[0];
 
-				var bytes = new byte[byteCount];
-				fixed (byte* b = bytes) {
-					encoding.GetBytes (t, text.Length, b, byteCount);
-				}
-				return bytes;
-			}
+			var bytes = new byte[byteCount];
+			encoding.GetBytes (text, bytes);
+			return bytes;
 		}
 
 		public static RentedArray<T> RentArray<T> (int length, bool nullIfEmpty = false) =>
@@ -112,27 +126,12 @@ namespace SkiaSharp
 			public static implicit operator ReadOnlySpan<T> (RentedArray<T> scope) =>
 				scope.Span;
 		}
-
-#if NETSTANDARD1_3 || WINDOWS_UWP
-		internal static bool IsAssignableFrom (this Type type, Type c) =>
-			type.GetTypeInfo ().IsAssignableFrom (c.GetTypeInfo ());
-#endif
 	}
 
 	/// <summary>Various utility methods for when working with strings and text.</summary>
 	/// <remarks />
 	public unsafe static class StringUtilities
 	{
-		// GetUnicodeStringLength
-
-		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
-			encoding switch {
-				SKTextEncoding.Utf8 => 1,
-				SKTextEncoding.Utf16 => 1,
-				SKTextEncoding.Utf32 => 2,
-				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported.")
-			};
-
 		// GetCharacterByteSize
 
 		internal static int GetCharacterByteSize (this SKTextEncoding encoding) =>
@@ -154,11 +153,17 @@ namespace SkiaSharp
 		{
 			if (character == null)
 				throw new ArgumentNullException (nameof (character));
-			if (GetUnicodeStringLength (encoding) != character.Length)
-				throw new ArgumentException (nameof (character), $"Only a single character can be specified.");
 
 			var bytes = GetEncodedText (character, encoding);
-			return BitConverter.ToInt32 (bytes, 0);
+			if (bytes.Length != encoding.GetCharacterByteSize ())
+				throw new ArgumentException ("Only a single character can be specified.", nameof (character));
+
+			return bytes.Length switch {
+				1 => bytes[0],
+				2 => BitConverter.ToUInt16 (bytes, 0),
+				4 => BitConverter.ToInt32 (bytes, 0),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
 		}
 
 		// GetEncodedText
@@ -232,8 +237,13 @@ namespace SkiaSharp
 		/// <param name="encoding">The encoding to use.</param>
 		/// <returns>Returns the decoded text.</returns>
 		/// <remarks />
-		public static string GetString (byte[] data, SKTextEncoding encoding) =>
-			GetString (data, 0, data.Length, encoding);
+		public static string GetString (byte[] data, SKTextEncoding encoding)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			return GetString (data, 0, data.Length, encoding);
+		}
 
 		/// <summary>Encodes the specified string using the encoding as a byte array.</summary>
 		/// <param name="data">The bytes representing text.</param>

@@ -13,7 +13,7 @@ on:
         description: "Issue number to triage (leave blank for auto-select)"
         required: false
         type: string
-  skip-if-no-match: "is:issue is:open -label:triage/triaged"
+  skip-if-no-match: "is:issue is:open -label:triage/triaged -label:agentic-workflows"
   skip-bots: [github-actions, copilot, dependabot]
   roles: all
   permissions:
@@ -32,7 +32,7 @@ on:
         CUTOFF=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
         ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" \
           --state open \
-          --search "-label:triage/triaged created:<${CUTOFF} sort:comments-desc" \
+          --search "-label:triage/triaged -label:agentic-workflows created:<${CUTOFF} sort:comments-desc" \
           --json number --limit 1 --jq '.[0].number')
         if [ -z "$ISSUE" ] || [ "$ISSUE" = "null" ]; then
           echo "::notice::No untriaged issues older than 1 hour"
@@ -53,12 +53,20 @@ steps:
       touch /tmp/gh-aw/agent/step-summary.md
       rm -f /tmp/gh-aw/agent-step-summary.md
       ln -s /tmp/gh-aw/agent/step-summary.md /tmp/gh-aw/agent-step-summary.md
+pre-agent-steps:
+  - name: Set up Python
+    uses: actions/setup-python@v7.1.0
+    with:
+      python-version: "3.13"
+  - name: Install triage validation and rendering dependencies
+    run: python3 -m pip install --requirement .agents/skills/issue-triage/scripts/requirements.txt
 tools:
   github:
     toolsets: [issues]
     allowed-repos: ["mono/skiasharp", "mono/skia", "google/skia"]
     min-integrity: none
-  bash: ["gh", "python3", "pip3", "jq"]
+  edit:
+  bash: ["gh", "python3", "jq", "cat", "cp", "find", "git", "grep", "head", "ls", "mkdir", "printf", "rg", "tail", "test"]
 permissions:
   contents: read
   issues: read
@@ -85,8 +93,11 @@ Triage issue **#${{ needs.pre_activation.outputs.issue_number }}** using the iss
 Read and follow the instructions in `.agents/skills/issue-triage/SKILL.md` to triage issue #${{ needs.pre_activation.outputs.issue_number }}.
 
 Complete all phases (Setup → Investigate → Analyze → Workarounds → Validate → Persist).
+Python, Jinja2, and jsonschema are already installed by the host; verify imports
+instead of running the skill's pip install command inside the agent sandbox.
 
-After Phase 6 completes, the triage JSON will be at `issue-triage-workspace/${{ needs.pre_activation.outputs.issue_number }}.json`.
+After Phase 6 completes, read the persisted triage JSON at
+`output/ai-triage/${{ needs.pre_activation.outputs.issue_number }}/triage.json`.
 
 ## Step 2 — Apply labels from classification
 

@@ -14,7 +14,7 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
-    public async Task<string> Image(string folder, string dockerfile)
+    internal async Task<string> Image(string folder, Func<string, Task> build)
     {
         if (images.TryGetValue(folder, out var existing))
             return existing;
@@ -23,33 +23,10 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
         var identity = SampleWorkspace.CreateIdentity(folder);
         var tag = $"skiasharp-sample-test:{identity}";
-        var context = Path.Combine(Repo.ArtifactsDir, identity, "context");
-
-        try
-        {
-            SampleWorkspace.CopyTree(Path.Combine(Repo.SamplesDir, folder), context);
-
-            var packages = Path.Combine(context, "packages");
-            Directory.CreateDirectory(packages);
-            foreach (var package in Directory.EnumerateFiles(Repo.PackagesDir, "*.nupkg", SearchOption.AllDirectories))
-            {
-                File.Copy(package, Path.Combine(packages, Path.GetFileName(package)));
-            }
-            Assert.NotEmpty(Directory.EnumerateFiles(packages, "*.nupkg"));
-
-            DotNet.WriteNuGetConfig(Path.Combine(context, "nuget.config"), "packages");
-
-            ownedTags.Add(tag);
-            await Run(["build", "--tag", tag, "--file", dockerfile, "."], TimeSpan.FromMinutes(30), context);
-            images.Add(folder, tag);
-
-            return tag;
-        }
-        finally
-        {
-            if (Directory.Exists(context))
-                SampleWorkspace.DeleteDirectory(context);
-        }
+        ownedTags.Add(tag);
+        await build(tag);
+        images.Add(folder, tag);
+        return tag;
     }
 
     public void OwnContainer(string name) =>
@@ -57,18 +34,11 @@ public sealed class DockerSampleFixture : IAsyncLifetime
 
     public async Task RemoveContainer(string name)
     {
-        var listed = await Run(["ps", "--all", "--quiet", "--filter", $"name=^/{name}$"]);
+        var listed = await Docker.Ps(name);
         if (listed.Length > 0)
-            await Run(["container", "rm", "--force", name]);
+            await Docker.RemoveContainer(name);
 
         containers.Remove(name);
-    }
-
-    public async Task<string> Run(IEnumerable<string> args, TimeSpan? timeout = null, string? workingDir = null)
-    {
-        var (exitCode, stdout, stderr) = await RunProcess(args, timeout, workingDir);
-        Assert.True(exitCode == 0, $"docker {string.Join(" ", args)} failed ({exitCode}):\n{stdout}\n{stderr}");
-        return stdout.Trim();
     }
 
     internal async Task Run(string tag, IEnumerable<string> arguments, Func<DockerRunningApp, Task> test)
@@ -81,9 +51,9 @@ public sealed class DockerSampleFixture : IAsyncLifetime
         {
             var portBinding = OperatingSystem.IsWindows() ? "8080" : "127.0.0.1::8080";
 
-            await Run(["run", "-d", "--name", name, "-p", portBinding, tag, .. arguments], TimeSpan.FromMinutes(2));
+            await Docker.Run(tag, name, portBinding, arguments);
 
-            var app = new DockerRunningApp(this, name, diagnostics);
+            var app = new DockerRunningApp(name, diagnostics);
 
             await app.Run(() => test(app));
         }
@@ -93,21 +63,13 @@ public sealed class DockerSampleFixture : IAsyncLifetime
         }
     }
 
-    internal static Task<(int ExitCode, string Output, string Error)> RunProcess(
-        IEnumerable<string> args, TimeSpan? timeout = null, string? workingDir = null) =>
-        ProcessRunner.Run(
-            "docker",
-            args,
-            workingDir ?? Directory.GetCurrentDirectory(),
-            timeout ?? TimeSpan.FromMinutes(1));
-
     private async Task Probe()
     {
         if (!probed)
         {
             try
             {
-                var result = await RunProcess(["info", "--format", "{{.OSType}}"], TimeSpan.FromSeconds(30));
+                var result = await Docker.Info();
                 if (result.ExitCode != 0)
                     unavailableReason = $"Docker is unavailable: docker info exited {result.ExitCode}.\n{result.Output}\n{result.Error}";
                 else
@@ -147,9 +109,9 @@ public sealed class DockerSampleFixture : IAsyncLifetime
         {
             try
             {
-                var listed = await Run(["image", "ls", "--quiet", "--filter", $"reference={tag}"]);
+                var listed = await Docker.Images(tag);
                 if (listed.Length > 0)
-                    await Run(["image", "rm", "--force", tag]);
+                    await Docker.RemoveImage(tag);
             }
             catch (Exception error)
             {

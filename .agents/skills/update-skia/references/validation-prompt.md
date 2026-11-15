@@ -5,7 +5,7 @@ Use this prompt when launching the Phase 3 validation agent. Substitute every pl
 ---
 
 I'm updating SkiaSharp's Skia submodule from exact upstream commit `{BASE_UPSTREAM_SHA}` to
-`{TARGET_UPSTREAM_SHA}`. The exact mono/skia fork base is `{SKIA_BASE_SHA}`.
+`{TARGET_UPSTREAM_SHA}`. The exact mono/skia fork base (native base tip) is `{SKIA_BASE_SHA}`.
 Here is the breaking-change analysis file: `{ANALYSIS_FILE}`.
 Here is the provisional fork-vs-target dependency decision file: `{DEPENDENCY_FILE}`.
 
@@ -32,8 +32,10 @@ Please validate by (run from `externals/skia`):
 7. Recompute the dependency diff from the exact fork base:
    `git diff {SKIA_BASE_SHA}..{TARGET_UPSTREAM_SHA} -- DEPS`.
    Confirm the decision report accounts separately for every revision and enabled/commented-state
-   difference. Flag any accept-target decision whose only evidence is that the dependency remains
-   active or newer. Inspect the roll commit for every compatibility-sensitive decision and every
+   difference. Verify source-backed base/target semantic-version comparisons; missing evidence is
+   `UNVERIFIED`, and an unexplained downgrade is unsafe. Flag any accept-target decision whose only
+   evidence is that the dependency remains active, is newer, or has no apparent fork customization.
+   Inspect the roll commit for every compatibility-sensitive decision and every
    dependency roll in the upstream range that also changes consuming source. Verify the selected
    revision exposes the required API.
 8. Report only missed items, incorrect classifications, unsafe dependency decisions, and one

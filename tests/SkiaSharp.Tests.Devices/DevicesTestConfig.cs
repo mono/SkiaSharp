@@ -2,6 +2,10 @@
 {
 	public class DevicesTestConfig : TestConfig
 	{
+#if WINDOWS
+		public override GlContext CreateGlContext() => new WglContext();
+#endif
+
 		public DevicesTestConfig()
 		{
 			// the the base paths

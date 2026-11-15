@@ -224,6 +224,113 @@ foreach ($invalid in @('4.152.0-preview.0', '4.152.0-rc.0', '4.152.0-beta.1', '4
     Assert-Equal $invalid (Resolve-NuGetPackageVersion 'SkiaSharp' $invalid) `
         "A non-resolvable version ($invalid) was not passed through unchanged."
 }
+$shippingVersions = @'
+# nuget versions
+skia release m152
+SkiaSharp assembly 4.152.0.0
+Some.Tool release 1.0.0
+SkiaSharp nuget 4.152.0
+SkiaSharp.NativeAssets.Linux nuget 4.152.0
+SkiaSharp.Views.Gtk4 nuget 4.152.0
+HarfBuzzSharp nuget 14.2.1.300
+HarfBuzzSharp.NativeAssets.Linux nuget 14.2.1.300
+'@
+$expectedShipping = @(ConvertFrom-ReleasePackageVersions $shippingVersions '4.152.0-rc.1.123.4')
+Assert-Equal 5 $expectedShipping.Count 'Nonshipping version rows entered the package inventory.'
+Assert-Equal '14.2.1.300-rc.1.123.4' ($expectedShipping | Where-Object Id -eq HarfBuzzSharp).Version `
+    'The distinct HarfBuzz version or shared build suffix was lost.'
+Assert-Equal '4.152.0-rc.1.123.4' ($expectedShipping | Where-Object Id -eq SkiaSharp).Version `
+    'The exact SkiaSharp version was lost.'
+$olderShipping = @(ConvertFrom-ReleasePackageVersions `
+    ($shippingVersions -replace '(?m)^SkiaSharp.Views.Gtk4.*\r?\n', '') '4.152.0')
+Assert-Equal 4 $olderShipping.Count 'An older source inventory acquired a newer package ID.'
+Assert-Equal '14.2.1.300' ($olderShipping | Where-Object Id -eq HarfBuzzSharp).Version `
+    'Stable publication unexpectedly acquired a suffix.'
+$zeroRevision = ConvertFrom-ReleasePackageVersions `
+    ($shippingVersions.Replace('14.2.1.300', '14.2.1.0')) '4.152.0'
+Assert-Equal '14.2.1' ($zeroRevision | Where-Object Id -eq HarfBuzzSharp).Version `
+    'NuGet normalization of a zero fourth component was not preserved.'
+Assert-Throws { ConvertFrom-ReleasePackageVersions "$shippingVersions`nSkiaSharp nuget 4.152.0" '4.152.0' } `
+    'Duplicate' 'Duplicate shipping package IDs were accepted.'
+Assert-Throws { ConvertFrom-ReleasePackageVersions $shippingVersions '4.153.0' } `
+    'both package families' 'An inventory from the wrong source revision was accepted.'
+Assert-Throws { Get-NuGetPublication -ExpectedPackages @() } 'nonempty' `
+    'An empty inventory was marked complete.'
+
+$publicationCache = @{}
+foreach ($package in $expectedShipping) {
+    $publicationCache[$package.Id] = [pscustomobject] @{
+        Available = $true; Versions = @($package.Version); Message = ''
+    }
+}
+$completePublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'complete' $completePublication.State 'Complete publication of both families was rejected.'
+Assert-Equal 5 $completePublication.PublishedCount 'The published count did not include both families.'
+$publicationCache['SkiaSharp.Views.Gtk4'].Versions = @()
+$partialPublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'partial' $partialPublication.State 'A missing views package was hidden by a public SkiaSharp anchor.'
+Assert-Equal @('SkiaSharp.Views.Gtk4') @($partialPublication.MissingPackages.Id) `
+    'The partial shipment did not identify its exact missing package.'
+Assert-Equal @('4.152.0-rc.1.123.4') @($partialPublication.MissingPackages.Version) `
+    'The missing-package result omitted the exact version.'
+$publicationCache['SkiaSharp'].Versions = @()
+$anchorlessPublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'partial' $anchorlessPublication.State 'A missing anchor hid other published packages.'
+$publicationCache['HarfBuzzSharp'].Versions = @('14.2.1.300-rc.1.999.9')
+$wrongFamilyBuild = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-True ($wrongFamilyBuild.MissingPackages.Id -contains 'HarfBuzzSharp') `
+    'A HarfBuzz package from another build satisfied the shipment.'
+foreach ($index in $publicationCache.Values) { $index.Versions = @() }
+Assert-Equal 'missing' (Get-NuGetPublication $expectedShipping $publicationCache).State `
+    'A wholly unpublished shipment was called partial.'
+$publicationCache['SkiaSharp'].Available = $false
+$publicationCache['SkiaSharp'].Message = 'HTTP 503'
+$unavailablePublication = Get-NuGetPublication $expectedShipping $publicationCache
+Assert-Equal 'unavailable' $unavailablePublication.State 'A failed registry check was classified as missing.'
+Assert-Equal 4 $unavailablePublication.MissingPackages.Count 'Known absences disappeared during an outage.'
+Assert-Equal @('SkiaSharp') @($unavailablePublication.UnavailablePackages.Id) `
+    'The unavailable package was not identified.'
+
+$script:RegistryCalls = 0
+function global:Invoke-RestMethod {
+    $script:RegistryCalls++
+    throw 'Registry temporarily unavailable (HTTP 503).'
+}
+try {
+    $failureCache = @{}
+    $failedIndex = Get-NuGetVersionIndex 'SkiaSharp' $failureCache
+    $null = Get-NuGetVersionIndex 'SkiaSharp' $failureCache
+    Assert-Equal 1 $script:RegistryCalls 'Registry failures were not cached within an audit.'
+    Assert-True (!$failedIndex.Available -and $failedIndex.Message -match '503') `
+        'The registry service error was hidden.'
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
+function global:Invoke-RestMethod {
+    $response = [Net.Http.HttpResponseMessage]::new([Net.HttpStatusCode]::NotFound)
+    throw [Microsoft.PowerShell.Commands.HttpResponseException]::new('Not Found', $response)
+}
+try {
+    $absentId = Get-NuGetVersionIndex 'New.Shipping.Package' @{}
+    Assert-True $absentId.Available 'A real HTTP 404 was classified as a service outage.'
+    Assert-Equal 0 $absentId.Versions.Count 'An absent package ID acquired published versions.'
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
+
+# The current Windows product pack inputs and shipping rows enumerate the same IDs.
+$currentVersionText = Get-Content (Join-Path $repositoryRoot 'scripts/VERSIONS.txt') -Raw
+$currentVersion = [regex]::Match($currentVersionText, '(?m)^SkiaSharp\s+nuget\s+(\S+)').Groups[1].Value
+$currentShipping = ConvertFrom-ReleasePackageVersions $currentVersionText $currentVersion
+$windowsPack = Get-Content (Join-Path $repositoryRoot 'source/SkiaSharpSource.Windows.slnf') -Raw | ConvertFrom-Json
+$packIds = @($windowsPack.solution.projects | ForEach-Object {
+    [IO.Path]::GetFileNameWithoutExtension(($_ -replace '\\', '/'))
+} | Sort-Object)
+Assert-Equal $packIds @($currentShipping.Id | Sort-Object) `
+    'VERSIONS shipping rows no longer match product pack inputs; review the inventory contract.'
+$finishScript = Get-Content $finishPath -Raw
+Assert-True ($finishScript -match '(?s)Get-ReleaseExpectedPackages.*Get-NuGetPublication.*Cannot Finish.*Push-ReleaseTag') `
+    'Finish does not check the complete package set before mutating tags.'
 $releaseTopology = @(
     'v2.88.4-preview.95',
     'v4.150.2',
@@ -252,6 +359,79 @@ $pages = @(
     @([pscustomobject] @{ number = 3 })
 )
 Assert-Equal @(1, 2, 3) @((Expand-GitHubPages $pages).number) 'GitHub pages were not flattened.'
+
+# Uses the current PowerShell executable as gh to exercise native streams offline.
+$gitHubModule = Get-Module GitHub.Common
+& $gitHubModule {
+    Set-Alias -Name gh -Value (Get-Process -Id $PID).Path -Scope Script
+}
+try {
+    $nativeFailureArguments = @(
+        '-NoLogo', '-NoProfile', '-Command',
+        '[Console]::Out.WriteLine(''{"message":"Not Found"}''); [Console]::Error.WriteLine("original API failure (HTTP 404)"); exit 7'
+    )
+    $nativeFailure = Invoke-GitHub -Arguments $nativeFailureArguments -AllowFailure
+    Assert-Equal 7 $nativeFailure.ExitCode 'A native gh failure lost its exit code.'
+    Assert-Equal '{"message":"Not Found"}' $nativeFailure.Output `
+        'Native stderr contaminated the gh stdout result.'
+    Assert-Equal 'original API failure (HTTP 404)' $nativeFailure.Error `
+        'A native gh failure lost its original stderr.'
+    Assert-Throws {
+        Invoke-GitHub -Arguments $nativeFailureArguments
+    } 'gh.*failed \(7\).*original API failure \(HTTP 404\)' `
+        'A native gh failure did not report its operation, exit code, and original error.'
+    Assert-Throws {
+        Invoke-GitHubJson -Arguments $nativeFailureArguments
+    } 'original API failure \(HTTP 404\)' `
+        'A failed gh JSON request hid the original error behind JSON parsing.'
+
+    $nativeWarningArguments = @(
+        '-NoLogo', '-NoProfile', '-Command',
+        '[Console]::Error.WriteLine("successful stderr warning"); [Console]::Out.WriteLine(''{"number":42}''); exit 0'
+    )
+    $nativeWarning = Invoke-GitHub -Arguments $nativeWarningArguments -WriteOutput
+    Assert-Equal 0 $nativeWarning.ExitCode 'A successful native gh warning became a failure.'
+    Assert-Equal '{"number":42}' $nativeWarning.Output 'A successful warning contaminated gh JSON.'
+    Assert-Equal 'successful stderr warning' $nativeWarning.Error `
+        'Successful native stderr was not retained separately.'
+    Assert-Equal 42 (Invoke-GitHubJson -Arguments $nativeWarningArguments).number `
+        'A successful native stderr warning prevented JSON parsing.'
+} finally {
+    & $gitHubModule { Remove-Item Alias:\gh }
+}
+
+$script:GhFailureArguments = @()
+function global:gh {
+    $script:GhFailureArguments = @($args)
+    $global:LASTEXITCODE = 23
+    Write-Error 'original fake failure (HTTP 403)' -ErrorAction Continue
+    '{"message":"Forbidden"}'
+}
+try {
+    $fakeFailure = Invoke-GitHub -Arguments @('api', 'repos/mono/SkiaSharp/issues/42') -AllowFailure
+    Assert-Equal 23 $fakeFailure.ExitCode 'A fake gh global exit code was shadowed.'
+    Assert-Equal '{"message":"Forbidden"}' $fakeFailure.Output 'Fake stderr contaminated stdout.'
+    Assert-Equal 'original fake failure (HTTP 403)' $fakeFailure.Error 'Fake stderr was lost.'
+    Assert-Equal @('api', 'repos/mono/SkiaSharp/issues/42') $script:GhFailureArguments `
+        'The gh argument array was not preserved.'
+    Assert-Throws {
+        Invoke-GitHub -Arguments @('api', 'repos/mono/SkiaSharp/issues/42')
+    } 'api repos/mono/SkiaSharp/issues/42.*original fake failure \(HTTP 403\)' `
+        'A fake gh failure did not retain the API operation and original error.'
+} finally {
+    Remove-Item Function:\gh
+}
+function global:gh {
+    $global:LASTEXITCODE = 0
+    Write-Error 'successful fake warning' -ErrorAction Continue
+    '{"number":43}'
+}
+try {
+    Assert-Equal 43 (Invoke-GitHubJson -Arguments @('api', 'test')).number `
+        'A successful fake stderr warning prevented JSON parsing.'
+} finally {
+    Remove-Item Function:\gh
+}
 
 $buildBranch = 'release/4.152.1'
 $buildCommit = 'a' * 40
@@ -731,6 +911,31 @@ try {
         -Remote $bareRoot `
         -Tag v9.9.9 `
         -SourceCommit $otherSha } 'expected' 'A dry run ignored a conflicting release tag.'
+
+    $null = New-Item -ItemType Directory -Path (Join-Path $gitRoot 'scripts'), (Join-Path $gitRoot 'source')
+    $shippingVersions | Set-Content (Join-Path $gitRoot 'scripts/VERSIONS.txt')
+    $packFilterPath = Join-Path $gitRoot 'source/SkiaSharpSource.Windows.slnf'
+    $packFilter = @{ solution = @{ projects = @(
+        '..\binding\SkiaSharp\SkiaSharp.csproj',
+        '..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj'
+    ) } }
+    $packFilter | ConvertTo-Json -Depth 4 | Set-Content $packFilterPath
+    & git -C $gitRoot add scripts source
+    & git -C $gitRoot commit --quiet -m 'Shipping inventory before project inclusion'
+    $beforeInclusion = (git -C $gitRoot rev-parse HEAD).Trim()
+    $packFilter.solution.projects += 'SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj'
+    $packFilter | ConvertTo-Json -Depth 4 | Set-Content $packFilterPath
+    & git -C $gitRoot add source
+    & git -C $gitRoot commit --quiet -m 'Include new shipping project'
+    $afterInclusion = (git -C $gitRoot rev-parse HEAD).Trim()
+    $olderExpected = @(Get-ReleaseExpectedPackages $gitRoot $beforeInclusion '4.152.0-rc.1.123.4')
+    $newerExpected = @(Get-ReleaseExpectedPackages $gitRoot $afterInclusion '4.152.0-rc.1.123.4')
+    Assert-Equal @('HarfBuzzSharp', 'SkiaSharp') @($olderExpected.Id) `
+        'A version row absent from the source pack filter became an expected package.'
+    Assert-Equal @('HarfBuzzSharp', 'SkiaSharp', 'SkiaSharp.Views.Gtk4') @($newerExpected.Id) `
+        'A newly included shipping project was omitted from the expected set.'
+    Assert-Equal '14.2.1.300-rc.1.123.4' ($olderExpected | Where-Object Id -eq HarfBuzzSharp).Version `
+        'Filtering the exact-source shipping inventory lost the HarfBuzz version.'
 } finally {
     Remove-Item $gitRoot, $bareRoot, $readerRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
@@ -935,7 +1140,10 @@ Assert-True (-not [bool] (
         Where-Object { $_ -match '^release create .*--draft(?:\s|=|$)' }
 )) 'Finish unexpectedly created a draft release.'
 
-# Exercises exact-release support-tier additions and promotions.
+# Exercises additive support membership without querying the public catalogue.
+function global:Invoke-RestMethod {
+    throw 'Support membership unexpectedly queried the public catalogue.'
+}
 $supportConfig = @'
 {
   "$comment": "keep this text",
@@ -985,7 +1193,7 @@ $promotedRelease = Get-ReleaseIdentity '4.152.0'
 $promotedSupport = Get-UpdatedReleaseSupport -Text $rcSupport -Release $promotedRelease
 $promotedDocument = $promotedSupport | ConvertFrom-Json
 Assert-Equal @('4.148', '4.150', '4.152') @($promotedDocument.support.stable) `
-    'A stable release did not retain existing stable lines and append its line.'
+    'A stable promotion did not preserve more than two supported stable lines.'
 Assert-Equal @('4.151', '4.153') @($promotedDocument.support.preview) `
     'A stable release removed a preview line other than its own.'
 Assert-Equal $promotedSupport (Get-UpdatedReleaseSupport -Text $promotedSupport -Release $promotedRelease) `
@@ -1007,6 +1215,17 @@ Assert-Equal '3.0.0' $promotedDocument.history_floor.skiasharp `
 Assert-Equal $true $promotedDocument.unrelated.enabled `
     'Release support changed unrelated configuration.'
 
+$patchSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.150.1.1')
+Assert-Equal $promotedSupport $patchSupport `
+    'Finishing an older stable patch displaced a newer stable line.'
+$olderSupport = Get-UpdatedReleaseSupport -Text $promotedSupport -Release (Get-ReleaseIdentity '4.149.0')
+$olderDocument = $olderSupport | ConvertFrom-Json
+Assert-Equal @('4.148', '4.150', '4.152', '4.149') @($olderDocument.support.stable) `
+    'Adding an older shipment removed or reordered supported stable lines.'
+Assert-Equal @('4.151', '4.153') @($olderDocument.support.preview) `
+    'Adding an older stable shipment changed unrelated preview lines.'
+Assert-Equal $olderSupport (Get-UpdatedReleaseSupport -Text $olderSupport -Release (Get-ReleaseIdentity '4.149.1')) `
+    'A patch added a duplicate supported line.'
 $inlineConfig = @'
 {
   "support": {
@@ -1035,6 +1254,7 @@ Assert-Equal @() @($emptyPromotionDocument.support.preview) `
     'Promotion did not empty the sole preview tier.'
 Assert-Equal $emptyPromotion (Get-UpdatedReleaseSupport -Text $emptyPromotion -Release $promotedRelease) `
     'Rerunning after promotion from the sole preview tier failed.'
+Remove-Item Function:\Invoke-RestMethod
 
 # Exercises issue-template release parsing, selection, and text surgery.
 Invoke-Expression (Get-ScriptFunctionText $bugTemplatePath)
@@ -1187,8 +1407,8 @@ $auditParameters = @($auditCommand.Parameters.Keys | Where-Object {
         'ProgressAction', 'ErrorVariable', 'WarningVariable', 'InformationVariable',
         'OutVariable', 'OutBuffer', 'PipelineVariable')
 })
-Assert-Equal @('Json', 'Version') @($auditParameters | Sort-Object) `
-    'The release-line audit must expose only Version and Json.'
+Assert-Equal @('Check', 'Json', 'Version') @($auditParameters | Sort-Object) `
+    'The release-line audit must expose Version, Check, and Json.'
 Assert-Equal 'System.String' $auditCommand.Parameters['Version'].ParameterType.FullName `
     'The release-line audit Version parameter must be a string.'
 $auditScript = Get-Content $auditPath -Raw
@@ -1205,11 +1425,23 @@ Assert-True ($auditScript -match
     'The release-line audit does not inspect pre-transition sync PRs after a servicing branch is cut.'
 $auditFunctions = Get-ScriptFunctionText $auditPath
 Invoke-Expression $auditFunctions
+Assert-Equal @('4.152') @(Expand-ReleaseAuditVersions '4.152') 'An exact line selector changed.'
+Assert-Equal @('4.150', '4.151', '4.152') @(Expand-ReleaseAuditVersions '4.150-4.152') `
+    'An inclusive milestone range was not expanded.'
+Assert-Equal @('4.150', '4.151', '4.152') @(Expand-ReleaseAuditVersions '4.150..4.152') `
+    'The dotted range form was not expanded.'
+Assert-Throws { Expand-ReleaseAuditVersions '4.152-4.150' } 'ascending' 'A descending range was accepted.'
+Assert-Throws { Expand-ReleaseAuditVersions '3.119-4.150' } 'one major' 'A cross-major range was accepted.'
+Assert-Equal @('Upstream') @(Get-ReleaseAuditSections 'Upstream') 'Upstream requested unrelated sections.'
+Assert-Equal @('Release') @(Get-ReleaseAuditSections 'NuGet') 'NuGet requested branch readiness or upstream.'
+Assert-Equal @('Release') @(Get-ReleaseAuditSections 'Finish') 'Finish requested unrelated sections.'
+Assert-Equal @('Release', 'Readiness', 'Upstream') @(Get-ReleaseAuditSections 'Prepare') `
+    'Prepare omitted a prerequisite release gate.'
 Assert-True ((Format-ReleasePackageBuild $rerunBuild) -match
-    '#100 green / BAR 331115.*newer #105 canceled') `
+    '#100 succeeded / BAR 331115.*newer #105 canceled') `
     'The human-readable audit hid the newer canceled rerun.'
 Assert-True ((Format-ReleasePackageBuild $partialBuild) -match
-    '#104 partial / BAR 331117.*newer #105 canceled') `
+    '#104 partially succeeded - review required / BAR 331117.*newer #105 canceled') `
     'The human-readable audit hid the partial BAR or canceled rerun.'
 Assert-Equal 'review-build' (New-ReleasePackageBuildAction -Build $partialBuild `
     -Purpose $buildBranch).Kind `
@@ -1227,7 +1459,10 @@ function New-AuditBranch([string] $Identity, [string] $Sha) {
 }
 
 function New-AuditPackage([string] $Version, [string] $Branch, [string] $Commit) {
-    return [pscustomobject] @{ Version = $Version; Branch = $Branch; Commit = $Commit }
+    return [pscustomobject] @{
+        Version = $Version; Branch = $Branch; Commit = $Commit
+        Publication = [pscustomobject] @{ State = 'complete'; Available = $true }
+    }
 }
 
 function New-AuditRelease([string] $Tag, [string] $Commit, [bool] $Prerelease = $false) {
@@ -1656,6 +1891,81 @@ Assert-Equal 'version bump only' $state.MaintenanceDelta.Text 'The bump-only mai
 Assert-Equal $sha0 $state.Releases[0].SourceCommit 'NuGet source provenance was omitted from the audit state.'
 
 $realChanges = New-AuditDelta '2 queued release commits' 2
+foreach ($publication in @($partialPublication, $anchorlessPublication, $unavailablePublication)) {
+    $incompletePackage = New-AuditPackage '4.152.0' $stable.Name $sha0
+    $incompletePackage.Publication = $publication
+    $incompleteState = Get-ReleaseAuditState `
+        -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($incompletePackage) `
+        -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
+    Assert-True ($incompleteState.Actions.Kind -notcontains 'finish' -and
+        $incompleteState.Actions.Kind -notcontains 'start' -and
+        $incompleteState.Actions.Kind -notcontains 'publish') `
+        "$($publication.State) publication offered Finish, a new cut, or a fresh publication."
+    Assert-True (@($incompleteState.Actions.Kind | Where-Object {
+        $_ -in @('complete-publication', 'publication-unavailable')
+    }).Count -gt 0) 'Incomplete publication did not direct completing/checking the existing shipment.'
+    $incompleteReport = (Write-ReleaseAuditReport $incompleteState) -join "`n"
+    Assert-True ($incompleteReport -match $publication.State -and $incompleteReport -match 'SkiaSharp') `
+        'The human-readable report hid incomplete publication.'
+}
+
+$discoveryBranch = New-AuditBranch '4.152.0-rc.1' $sha0
+$discoveryRegistry = @{}
+foreach ($package in $expectedShipping) {
+    $discoveryRegistry[$package.Id.ToLowerInvariant()] = @()
+}
+$discoveryRegistry['skiasharp.nativeassets.linux'] = @('4.152.0-rc.1.123.4')
+$discoveryRegistry['harfbuzzsharp'] = @('14.2.1.300-rc.1.123.4')
+function global:Invoke-RestMethod {
+    param($Uri, $TimeoutSec)
+    $id = ([uri] $Uri).Segments[-2].TrimEnd('/')
+    return [pscustomobject] @{ versions = @($discoveryRegistry[$id]) }
+}
+try {
+    & {
+        function Get-ReleaseExpectedPackages {
+            param($Root, $Commit, $PublicVersion)
+            ConvertFrom-ReleasePackageVersions $shippingVersions $PublicVersion
+        }
+        function Get-ResolvedGitCommit { param($Root, $Reference) return $Reference }
+        function Get-NuGetPackageSource {
+            param($PackageId, $PackageVersion)
+            [pscustomobject] @{ Branch = $discoveryBranch.Name; Commit = $discoveryBranch.Sha }
+        }
+        function Get-ReleasePackageBuild {
+            param($Branch, $Commit)
+            [pscustomobject] @{ Available = $true; BuildNumber = '' }
+        }
+        $discovered = @(Get-ReleaseAuditPackages -Root $repositoryRoot -Line '4.152' `
+            -Branches @($discoveryBranch) -TagShas @{} -PackageBuilds @{})
+        Assert-Equal 1 $discovered.Count 'A partial shipment without SkiaSharp was not discovered.'
+        Assert-Equal '4.152.0-rc.1.123.4' $discovered[0].Version `
+            'A HarfBuzz/native version was not mapped to its exact SkiaSharp shipment.'
+        Assert-Equal 'partial' $discovered[0].Publication.State `
+            'An anchorless shipment was not classified as partial.'
+        Assert-Equal 2 $discovered[0].Publication.PublishedCount `
+            'The anchorless shipment did not include both published families.'
+        Assert-True ($discovered[0].Publication.MissingPackages.Id -contains 'SkiaSharp') `
+            'The absent SkiaSharp anchor was omitted from missing packages.'
+
+        $discoveryRegistry['skiasharp.nativeassets.linux'] = @()
+        $harfBuzzOnly = @(Get-ReleaseAuditPackages -Root $repositoryRoot -Line '4.152' `
+            -Branches @($discoveryBranch) -TagShas @{} -PackageBuilds @{})
+        Assert-Equal 1 $harfBuzzOnly.Count 'A HarfBuzz-only partial shipment was hidden.'
+        Assert-Equal 1 $harfBuzzOnly[0].Publication.PublishedCount `
+            'A HarfBuzz-only partial shipment was counted incorrectly.'
+
+        $discoveryRegistry['harfbuzzsharp'] = @()
+        $tagOnly = @(Get-ReleaseAuditPackages -Root $repositoryRoot -Line '4.152' `
+            -Branches @() -TagShas @{ 'v4.152.0-rc.1.123.4' = $sha0 } -PackageBuilds @{})
+        Assert-Equal 1 $tagOnly.Count 'An exact tag with no anchor or live branch was not audited.'
+        Assert-Equal 'missing' $tagOnly[0].Publication.State `
+            'A tag was treated as proof that packages were public.'
+        Assert-Equal $sha0 $tagOnly[0].Commit 'The tagged source commit was lost.'
+    }
+} finally {
+    Remove-Item Function:\Invoke-RestMethod
+}
 $state = Get-ReleaseAuditState `
     -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
     -TagShas @{ $stableTag = $sha0 } -GitHubReleases @{ $stableTag = $stableRelease } -Delta $realChanges
@@ -1850,6 +2160,7 @@ $state = Get-ReleaseAuditState `
     } -Delta (New-AuditDelta 'none')
 Assert-Equal 2 @($state.Releases | Where-Object NuGet -match 'preview').Count `
     'Exact public prerelease shipments were collapsed.'
+$publicShipmentsState = $state
 
 $mainPreview = New-AuditBranch '4.154.0-preview.1' $sha0
 $mainPreviewPackage = New-AuditPackage '4.154.0-preview.1.1' $mainPreview.Name $sha0
@@ -1890,10 +2201,60 @@ Assert-True ($latestUnpublishedReport -notmatch 'publish release branch; Publish
 Assert-True ($plainLatestUnpublishedReport -match '(?m)^Release line:\s+4\.153$') `
     'The report summary fields were not aligned.'
 Assert-True ($plainLatestUnpublishedReport -match
-    '(?m)^Identity\s+Branch SHA\s+NuGet\s+Build / BAR\s+Tag\s+GitHub Release\s+State / action$') `
-    'The report did not render an aligned PowerShell table.'
-Assert-True ($plainLatestUnpublishedReport -notmatch '\| Identity \|') `
-    'The report still rendered the old Markdown table.'
+    '(?m)^On NuGet\s+Cut release\s+Build / BAR\s+Next release step\s*$') `
+    'The report did not combine public shipment, cut branch, build, and next release step in one table.'
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^Release branch:\s+release/4\.153\.0-rc\.1$') `
+    'The report did not identify the release branch awaiting publication.'
+Assert-True ($plainLatestUnpublishedReport -notmatch 'release/4\.153\.0-preview\.1') `
+    'A superseded unpublished branch cluttered the current shipment report.'
+
+$gapBranches = @(5..7 | ForEach-Object { New-AuditBranch "4.152.$_" $sha0 })
+$gapPackages = @(5..7 | ForEach-Object {
+    $package = New-AuditPackage "4.152.$_" "release/4.152.$_" $sha0
+    $package.Publication = [pscustomobject] @{
+        State = if ($_ -eq 5) { 'complete' } elseif ($_ -eq 6) { 'missing' } else { 'partial' }
+        PublishedCount = if ($_ -eq 5) { 40 } elseif ($_ -eq 6) { 0 } else { 14 }
+        ExpectedCount = 40
+        Available = $true
+    }
+    $package
+})
+$gapBuilds = @{}
+foreach ($number in 6..7) {
+    $gapBuilds["release/4.152.$number"] = New-AuditPackageBuild `
+        -Branch "release/4.152.$number" -Commit $sha0 -State green -Ready $true `
+        -BuildId (300 + $number) -BarId (330000 + $number)
+}
+$gapState = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches $gapBranches -Packages $gapPackages `
+    -TagShas @{ 'v4.152.5' = $sha0 } `
+    -GitHubReleases @{ 'v4.152.5' = (New-AuditRelease 'v4.152.5' $sha0) } `
+    -Delta (New-AuditDelta 'none') -PackageBuilds $gapBuilds
+$gapReport = @(Write-ReleaseAuditReport $gapState) -join "`n"
+Assert-Equal @('4.152.5', '4.152.7') @((Get-ReleaseAuditPublicShipments $gapState).NuGet) `
+    'A newer partial shipment hid the latest complete shipment.'
+Assert-True ($gapReport -match '4\.152\.5' -and
+    $gapReport -match 'Publication: complete; 40/40' -and
+    $gapReport -match 'Publication: partial; 14/40') `
+    'The release summary did not distinguish complete and partial public shipments.'
+Assert-True ($gapReport -match '(?s)Release branch:\s+release/4\.152\.6.*?Publication: missing; 0/40' -and
+    $gapReport -match '#306 succeeded / BAR 330006' -and
+    $gapReport -match 'buildId=306') `
+    'The report hid an older unpublished stable cut or borrowed another cut build/BAR.'
+Assert-True ($gapReport -match 'Review why it was left unpublished; do not automatically publish it') `
+    'The report treated an older missing cut as an instruction to publish it.'
+Assert-True (@($gapState.Actions.Kind) -notcontains 'publish' -and
+    @($gapState.Actions.Kind) -notcontains 'start' -and
+    @($gapState.Actions.Kind) -notcontains 'finish') `
+    'Reporting an older missing cut changed publication or release-cut gating.'
+
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^main\s+1\s+not checked') `
+    'The report did not distinguish the next Prepare base from the release branch.'
+Assert-True ($plainLatestUnpublishedReport -match
+    '(?m)^Changes since cut:\s+1 merged commit\(s\) since release/4\.153\.0-rc\.1') `
+    'The report did not explain where queued maintenance commits are counted from.'
 $incomingPullRequestReport = [regex]::Replace(
     (@(Write-ReleaseAuditReport $blockedBySync) -join "`n"),
     "$([char] 0x1b)\[[0-9;]*m",
@@ -1905,17 +2266,161 @@ $upstreamReport = [regex]::Replace(
     "$([char] 0x1b)\[[0-9;]*m",
     '')
 Assert-True ($upstreamReport -match
-    '(?m)^Upstream Skia:\s+chrome/m152@a{12} -> mono/skia:release/4\.152\.x \(1 newer commit\)') `
+    'Compared with mono/skia:release/4\.152\.x\.') `
+    'The report did not identify the branch used for the upstream comparison.'
+Assert-True ($upstreamReport -match
+    '1 missing') `
     'The report did not show the newer upstream Skia commit.'
+Assert-True ($upstreamReport -match
+    '(?m)^Base branch\s+Upstream commits\s+Sync PR\s+Sync build\s+Next sync step\s*$') `
+    'The report did not render upstream status and its next sync step as a table.'
+Assert-True ($upstreamReport.Substring(0, $upstreamReport.IndexOf('3. Upstream / sync')) -notmatch
+    'Update Skia sync branch|auto-skia-sync|Sync 1 newer upstream') `
+    'A sync action leaked into the next release step or release evidence.'
 $pendingReport = [regex]::Replace(
     (@(Write-ReleaseAuditReport $pendingState) -join "`n"),
     "$([char] 0x1b)\[[0-9;]*m",
     '')
 Assert-True ($pendingReport -match
-    '(?m)^Pending milestone:\s+4\.155 via m155 -> main \(current 4\.154\.0/m154\)') `
+    'Pending 4\.155: main is still 4\.154\.0/m154\.') `
     'The report did not explain the pending next milestone.'
 Assert-True ($pendingReport -match '(?m)^Incoming sync PR:\s+#5081 ') `
     'The report did not show the pending next-milestone PR.'
+Assert-True ($pendingReport -match 'No active source branch for this line') `
+    'The report represented a pending milestone as an active release source.'
+
+$failedReleaseBuildState.PackageBuilds['main'] = New-AuditPackageBuild `
+    -Branch main -Commit $sha1 -State green -Ready $true -BuildId 204 -BarId 330715
+$failedReport = @(Write-ReleaseAuditReport $failedReleaseBuildState) -join "`n"
+Assert-True ($failedReport -match '(?m)^Release CI / BAR:\s+#201 failed$' -and
+    $failedReport -match '(?m)^Base CI \(exact SHA\):\s+#204 succeeded / BAR 330715$' -and
+    $failedReport.Substring(0, $failedReport.IndexOf('2. Branch readiness')) -notmatch '330715|commitHash=') `
+    'The report confused a green base build/BAR with a failed release publication candidate.'
+$partialReport = @(Write-ReleaseAuditReport $partialReleaseBuildState) -join "`n"
+Assert-True ($partialReport -match '#201 partially succeeded - review required / BAR 330713' -and
+    $partialReport -notmatch 'commitHash=') `
+    'The report presented a partial BAR as ready to publish.'
+$unavailableReportState = $partialReleaseBuildState.PSObject.Copy()
+$unavailableReportState.PackageBuilds = @{ main = $unavailableBuild }
+$unavailableReportState.Releases = @(
+    $partialReleaseBuildState.Releases | Where-Object State -ne 'superseded' |
+        ForEach-Object { $_.PSObject.Copy() }
+)
+$unavailableReportState.Releases[0].PackageBuild = $unavailableBuild
+$unavailableReport = @(Write-ReleaseAuditReport $unavailableReportState) -join "`n"
+Assert-True ($unavailableReport -match 'Release CI unavailable:' -and
+    $unavailableReport -match 'Base CI unavailable:' -and
+    $unavailableReport.Contains($unavailableBuild.Message)) `
+    'The report hid why a required CI check was unavailable.'
+$greenReleaseBuildState.UpstreamSync = $blockedByUpstream.UpstreamSync
+$greenReport = @(Write-ReleaseAuditReport $greenReleaseBuildState) -join "`n"
+Assert-True ($greenReport -match "commitHash=$($latestRc.Sha)" -and
+    $greenReport -match '#202 succeeded / BAR 330714 \(newer #203 canceled\)' -and
+    $greenReport -match 'check for an existing MAUI run before queueing') `
+    'The report lost exact publication inputs or confused upstream work with existing publication.'
+Assert-True ($greenReport.IndexOf('commitHash=') -lt $greenReport.IndexOf('3. Upstream / sync')) `
+    'Publication instructions were buried under future upstream work.'
+Assert-True ($greenReport -match 'Verify\s+CI/BAR,\s+then\s+Publish' -and
+    $failedReport -match 'Fix\s+release\s+build' -and
+    $partialReport -match 'Review\s+partial\s+release\s+build') `
+    'The release table did not give the release action appropriate to its own build.'
+$prepareReport = @(Write-ReleaseAuditReport $greenMaintenanceAllowsRelease) -join "`n"
+Assert-True ($prepareReport -match
+    'Release - Prepare \(workflow ref=main\): base=release/4\.152\.x; release=4\.152\.1-stable; push=false') `
+    'The report did not show the exact Prepare workflow inputs.'
+$finishState = Get-ReleaseAuditState `
+    -Line '4.152' -Maintenance $maintenance -Branches @($stable) -Packages @($stablePackage) `
+    -TagShas @{} -GitHubReleases @{} -Delta (New-AuditDelta 'none')
+$finishReport = @(Write-ReleaseAuditReport $finishState) -join "`n"
+Assert-True ($finishReport -match '4\.152\.0 \(complete\)' -and
+    $finishReport -match '(?m)^Release action:\s+Finish public shipment\s*$' -and
+    $finishReport -match 'Release - Finish \(workflow ref=main\): version=4\.152\.0; push=false' -and
+    $finishReport -match 'None awaiting publication') `
+    'The report confused Finish for public packages with publishing a prepared branch.'
+Assert-True ($finishReport -notmatch "$([char] 0x1b)\[") `
+    'Redirected audit output contained ANSI styling.'
+$draftDoesNotBlock.UpstreamSync = $upstreamCurrent
+$draftDoesNotBlock.UpstreamSync = $draftDoesNotBlock.UpstreamSync.PSObject.Copy()
+$draftDoesNotBlock.UpstreamSync.CompareRef = $draftSyncPullRequest.HeadBranch
+$draftDoesNotBlock.UpstreamSync.SyncBranch = $draftSyncPullRequest.HeadBranch
+$draftDoesNotBlock.UpstreamSync.SyncBranchSha = $sha1
+$draftReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+Assert-True ($draftReport -match 'not proof it has landed in the release source' -and
+    $draftReport.Contains('(draft,')) `
+    'An up-to-date draft sync branch was presented as already merged.'
+$linePr = [pscustomobject] @{
+    Number = 9999; Title = 'Backport release fix'; Url = 'https://github.com/mono/SkiaSharp/pull/9999'
+    BaseBranch = $maintenance.Branch; HeadBranch = 'backport/test'; IsDraft = $false
+}
+$draftDoesNotBlock.OpenPullRequests = @($linePr, $draftSyncPullRequest)
+$draftDoesNotBlock.PackageBuilds = @{
+    $maintenance.Branch = $greenMaintenanceBuild
+    $draftSyncPullRequest.HeadBranch = New-AuditPackageBuild `
+        -Branch $draftSyncPullRequest.HeadBranch -Commit $draftSyncPullRequest.HeadSha `
+        -State failed -Ready $false -BuildId 205 -BarId 0
+}
+$originalAuditOutputWidth = ${function:Get-ReleaseAuditOutputWidth}
+try {
+    foreach ($reportWidth in @(80, 120)) {
+        Set-Item Function:\Get-ReleaseAuditOutputWidth -Value { $reportWidth }
+        $lineReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+        Assert-True ($lineReport -match '#9999 Backport release fix:' -and
+            $lineReport.Contains($linePr.Url) -and
+            $lineReport -match '(?m)^Base readiness:\s+.*review open PRs') `
+            "The branch-readiness view hid pending line PRs at width $reportWidth."
+    }
+} finally {
+    Set-Item Function:\Get-ReleaseAuditOutputWidth -Value $originalAuditOutputWidth
+}
+Assert-True ($lineReport -match '#205 failed' -and
+    $lineReport.Substring($lineReport.IndexOf('3. Upstream / sync')) -notmatch "#$($greenMaintenanceBuild.BuildId) succeeded") `
+    'The upstream view borrowed maintenance CI instead of displaying the sync branch build.'
+$greenSyncBuild = New-AuditPackageBuild `
+    -Branch $draftSyncPullRequest.HeadBranch -Commit $draftSyncPullRequest.HeadSha `
+    -State green -Ready $true -BuildId 205 -BarId 330716
+$greenSyncBuild.NewerBuilds = @(
+    [pscustomobject] @{ BuildId = 206; State = 'failed' }
+    [pscustomobject] @{ BuildId = 207; State = 'canceled' }
+)
+$draftDoesNotBlock.PackageBuilds[$draftSyncPullRequest.HeadBranch] = $greenSyncBuild
+$syncRerunReport = @(Write-ReleaseAuditReport $draftDoesNotBlock) -join "`n"
+$syncRerunSection = $syncRerunReport.Substring($syncRerunReport.IndexOf('3. Upstream / sync'))
+Assert-True ($syncRerunSection -match
+    '(?m)^Sync CI \(exact SHA\):\s+#205 succeeded / BAR 330716 \(newer #206 failed, #207 canceled\)$') `
+    'The upstream view hid newer failed or canceled attempts after a succeeded exact-sync build.'
+
+function Invoke-GitHubJsonWithRetry([string[]] $Arguments) {
+    return @(
+        [pscustomobject] @{ number = 1; base = @{ ref = 'release/4.152.x' }; head = @{ ref = 'fix/one' } }
+        [pscustomobject] @{ number = 2; base = @{ ref = 'release/4.152.1' }; head = @{ ref = 'fix/two' } }
+        [pscustomobject] @{ number = 3; base = @{ ref = 'release/4.153.x' }; head = @{ ref = 'fix/three' } }
+        [pscustomobject] @{ number = 4; base = @{ ref = 'main' }; head = @{ ref = 'fix/four' } }
+    )
+}
+try {
+    Assert-Equal @(1, 2) @((Get-ReleaseLinePullRequests -Line '4.152').Number) `
+        'Open line PRs did not include both maintenance/cut targets or included another release line.'
+    Assert-Equal @(1, 2, 4) @((Get-ReleaseLinePullRequests -Line '4.152' -IncludeMain).Number) `
+        'Main-targeted PRs were not included for a current/pending main line.'
+} finally {
+    Remove-Item Function:\Invoke-GitHubJsonWithRetry
+}
+
+$publicState = $publicShipmentsState
+$publicState.Releases += [pscustomobject] @{
+    Identity = $preview.Identity.Title; NuGet = '4.153.0-preview.1.10'; State = 'finished'
+}
+Assert-Equal @('4.153.0-preview.1.10') @((Get-ReleaseAuditPublicShipments $publicState).NuGet) `
+    'The concise report selected a public build lexically rather than numerically.'
+$publicState.Releases += [pscustomobject] @{
+    Identity = '4.153.0-preview.2'; NuGet = '4.153.0-preview.2.1'; State = 'finished branch unavailable'
+}
+$publicState.Releases[0].State = 'finish shipment'
+Assert-Equal @('4.153.0-preview.1.1', '4.153.0-preview.2.1') @(
+    (Get-ReleaseAuditPublicShipments $publicState).NuGet
+) 'The concise report hid an older unfinished shipment or a newer missing source branch.'
+Assert-True ((@(Write-ReleaseAuditReport $inactive) -join "`n") -match
+    'No active source branch for this line') 'The inactive-line report invented a release source.'
 Assert-Equal 'main' $mainMaintenance.Branch 'A matching current main was not usable as maintenance.'
 Assert-Equal '4.154.0-preview.1' (Get-NextReleaseIdentity '4.154' $null '4.154.0') `
     'A first release identity was not preview.1.'
@@ -1925,5 +2430,149 @@ Assert-Equal '4.154.0-rc.1' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4
     'Later previews did not advance to RC.1.'
 Assert-Equal '4.154.0-stable' (Get-NextReleaseIdentity '4.154' (New-AuditBranch '4.154.0-rc.1' $sha0) '4.154.0') `
     'RC did not advance to stable.'
+
+& {
+    $calls = [Collections.Generic.List[string]]::new()
+    $publicationState = 'complete'
+    $baseReady = $true
+    $upstreamBlocked = $false
+    function Get-GitRepositoryRoot { return '.' }
+    function Get-RemoteBranchSha {
+        param($Root, $Remote, $Branch)
+        if ($Branch -eq 'release/4.152.x') { return $sha1 }
+        return $null
+    }
+    function Get-ResolvedGitCommit { param($Root, $Reference) return $sha1 }
+    function Get-SkiaSharpReleaseInfoAtCommit {
+        return [pscustomobject] @{ Version = '4.152.1'; SkiaMilestone = 152 }
+    }
+    function Get-LegacyTransitionSyncSelection { return $null }
+    function Get-SkiaUpstreamStatus {
+        $calls.Add('upstream')
+        return [pscustomobject] @{
+            State = if ($upstreamBlocked) { 'changes available' } else { 'current' }
+            HasChanges = $upstreamBlocked; BlocksRelease = $upstreamBlocked
+            BehindBy = if ($upstreamBlocked) { 1 } else { 0 }
+            Milestone = 152; UpstreamRef = 'chrome/m152'; ParentBaseBranch = 'release/4.152.x'
+        }
+    }
+    function Get-GitHubOpenPullRequests { $calls.Add('sync-prs'); return @() }
+    function Get-ReleaseBranches { $calls.Add('cuts'); return @(New-AuditBranch '4.152.0' $sha0) }
+    function Get-GitHubReleaseMap { $calls.Add('releases'); return @{} }
+    function Get-RemoteTagMap { $calls.Add('tags'); return @{} }
+    function Get-ReleaseAuditPackages {
+        $calls.Add('nuget')
+        $package = New-AuditPackage '4.152.0' 'release/4.152.0' $sha0
+        $package.Publication = [pscustomobject] @{
+            State = $publicationState; Available = $true; ExpectedCount = 40
+            PublishedCount = if ($publicationState -eq 'complete') { 40 } else { 14 }
+        }
+        return @($package)
+    }
+    function Get-ReleasePackageBuild {
+        param($Branch, $Commit)
+        $calls.Add("build:$Branch")
+        return New-AuditPackageBuild -Branch $Branch -Commit $Commit `
+            -State $(if ($baseReady) { 'green' } else { 'failed' }) -Ready $baseReady
+    }
+    function Get-ReleaseLinePullRequests { $calls.Add('line-prs'); return @() }
+    function Get-MaintenanceDelta { $calls.Add('delta'); return New-AuditDelta '1 queued release commit' 1 }
+
+    $focused = Invoke-ReleaseLineAudit -Version '4.152' -Check Upstream
+    Assert-Equal @('sync-prs', 'upstream') @($calls | Sort-Object) `
+        'The upstream check fetched NuGet, cut branches, branch builds, or readiness data.'
+    Assert-Equal $null $focused.releases 'Unrequested publication checks were reported as an empty/healthy set.'
+    Assert-Equal $null $focused.maintenanceDelta 'Unrequested branch readiness was reported as checked.'
+    $focusedReport = (Write-ReleaseAuditReport $focused) -join "`n"
+    Assert-True ($focusedReport -match '3. Upstream / sync' -and
+        $focusedReport -notmatch '1. Current release|2. Branch readiness') `
+        'The upstream report included unrequested sections.'
+
+    $calls.Clear()
+    $focused = Invoke-ReleaseLineAudit -Version '4.152' -Check NuGet
+    Assert-Equal @('cuts', 'nuget', 'tags') @($calls | Sort-Object) `
+        'The NuGet check fetched GitHub Releases, readiness, or upstream data.'
+    Assert-Equal 0 $focused.exitCode 'Complete package publication was blocked by unchecked GitHub Release state.'
+    Assert-Equal 'complete publication' $focused.releases[0].State `
+        'A package-only check claimed the shipment was finished.'
+    Assert-Equal $null $focused.releases[0].GitHubRelease 'Unrequested GitHub Release state was called missing.'
+    Assert-True ($focused.actions.Kind -notcontains 'finish' -and $focused.actions.Kind -notcontains 'start') `
+        'A NuGet-only check offered Finish or Prepare without their prerequisite checks.'
+    $packageReport = (Write-ReleaseAuditReport $focused) -join "`n"
+    Assert-True ($packageReport -match 'Package publication' -and
+        $packageReport -notmatch '1. Current release|2. Branch readiness|3. Upstream / sync') `
+        'The NuGet-only report included unrelated release sections.'
+    $publicationState = 'partial'
+    $partialOnly = Invoke-ReleaseLineAudit -Version '4.152' -Check NuGet
+    Assert-Equal 1 $partialOnly.exitCode 'A package-only partial shipment reported success.'
+    Assert-Equal @('verify-publication') @($partialOnly.actions.Kind) `
+        'A package-only partial check offered mutation or readiness actions.'
+
+    $calls.Clear()
+    $focused = Invoke-ReleaseLineAudit -Version '4.152' -Check Finish
+    Assert-Equal @('build:release/4.152.0', 'cuts', 'nuget', 'releases', 'tags') @($calls | Sort-Object) `
+        'The Finish check fetched base readiness or upstream data.'
+    Assert-True ($focused.actions.Kind -notcontains 'finish' -and $focused.actions.Kind -notcontains 'start') `
+        'An incomplete Finish check offered Finish or Prepare.'
+    $publicationState = 'complete'
+    $finishOnly = Invoke-ReleaseLineAudit -Version '4.152' -Check Finish
+    Assert-Equal @('finish') @($finishOnly.actions.Kind) 'A complete untagged shipment did not need Finish.'
+
+    $calls.Clear()
+    $prepareOnly = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-Equal @('build:release/4.152.x', 'cuts', 'delta', 'line-prs', 'nuget', 'releases', 'sync-prs', 'tags', 'upstream') `
+        @($calls | Sort-Object) 'Prepare did not collect every required release gate.'
+    Assert-True ($null -ne $prepareOnly.openPullRequests -and $prepareOnly.openPullRequests.Count -eq 0) `
+        'An empty checked PR list became an unchecked null value.'
+    Assert-True ($prepareOnly.actions.Kind -notcontains 'start') `
+        'Prepare was recommended while a public shipment still needed Finish.'
+    function Get-GitHubReleaseMap { return @{ 'v4.152.0' = (New-AuditRelease 'v4.152.0' $sha0) } }
+    function Get-RemoteTagMap { return @{ 'v4.152.0' = $sha0 } }
+    $ready = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-Equal @('start') @($ready.actions.Kind) 'A fully checked ready base was not offered Prepare.'
+    $upstreamBlocked = $true
+    $blocked = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-True ($blocked.actions.Kind -contains 'sync-skia' -and $blocked.actions.Kind -notcontains 'start') `
+        'Prepare ignored an upstream blocker.'
+    $prepareReport = (Write-ReleaseAuditReport $blocked) -join "`n"
+    Assert-True ($prepareReport -match '2. Branch readiness' -and $prepareReport -match 'Sync 1 newer' -and
+        $prepareReport -notmatch '1. Current release|3. Upstream / sync') `
+        'The Prepare report omitted prerequisite blockers or included unrelated full-detail sections.'
+    $upstreamBlocked = $false
+    $baseReady = $false
+    $blocked = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-True ($blocked.actions.Kind -contains 'fix-build' -and $blocked.actions.Kind -notcontains 'start') `
+        'Prepare ignored an unsuccessful base build.'
+    $baseReady = $true
+    $publicationState = 'partial'
+    $blocked = Invoke-ReleaseLineAudit -Version '4.152' -Check Prepare
+    Assert-True ($blocked.actions.Kind -contains 'complete-publication' -and $blocked.actions.Kind -notcontains 'start') `
+        'Prepare ignored partial publication.'
+    $defaultFull = Invoke-ReleaseLineAudit -Version '4.152'
+    Assert-Equal @('Release', 'Readiness', 'Upstream') @($defaultFull.sections) `
+        'The default invocation stopped collecting the full audit.'
+    Assert-Equal @($blocked.actions.Kind) @($defaultFull.actions.Kind) `
+        'Prepare and the full audit disagreed on prerequisite blockers.'
+    function Get-ReleaseAuditPackages { throw 'NuGet service unavailable.' }
+    $unaffected = Invoke-ReleaseLineAudit -Version '4.152' -Check Upstream
+    Assert-Equal 0 $unaffected.exitCode 'An unrequested NuGet outage affected the upstream check.'
+    $unavailable = @(Invoke-ReleaseAudit -Version '4.152' -Check NuGet)
+    Assert-True ($unavailable[0].exitCode -eq 2 -and $unavailable[0].error -match 'NuGet service unavailable') `
+        'A selected unavailable check lost its failure status or cause.'
+}
+
+& {
+    function Invoke-ReleaseLineAudit {
+        param($Version, $Check)
+        if ($Version -eq '4.151') { throw 'NuGet service unavailable for this line.' }
+        [pscustomobject] @{ line = $Version; check = $Check; exitCode = 0 }
+    }
+    $rangeResults = @(Invoke-ReleaseAudit -Version '4.150-4.152' -Check NuGet)
+    Assert-Equal @('4.150', '4.151', '4.152') @($rangeResults.line) `
+        'An unavailable line prevented later range checks from running.'
+    Assert-Equal @(0, 2, 0) @($rangeResults.exitCode) 'Per-line unavailable results were lost.'
+    Assert-Equal 'NuGet' $rangeResults[1].check 'A failed line lost the requested check identity.'
+    Assert-True ($rangeResults[1].error -match 'service unavailable') 'A failed line hid its original service error.'
+}
 
 Write-Output "All $script:TestsRun publishing script tests passed."

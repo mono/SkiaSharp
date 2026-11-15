@@ -17,6 +17,9 @@ namespace SkiaSharp.Tests
 			var glInterface = GRGlInterface.Create();
 
 			Assert.Null(glInterface);
+
+			if (IsWindows && !GpuPolicy.Disabled().Contains(GpuBackends.GaneshGl))
+				Assert.NotEqual(IntPtr.Zero, GetModuleHandle("opengl32.dll"));
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
@@ -89,6 +92,9 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+
+		[DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, ExactSpelling = true)]
+		private static extern IntPtr GetModuleHandle(string name);
 
 		[DllImport("opengl32.dll", CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string lpszProc);

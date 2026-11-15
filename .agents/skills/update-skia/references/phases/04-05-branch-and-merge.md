@@ -20,9 +20,10 @@ The helper fails instead of resetting existing branches or dirty files. On succe
 
 - the parent feature branch starts at `{PARENT_BASE_SHA}`;
 - every recursive submodule matches that parent commit;
-- the mono/skia pointer is verified against `{SKIA_BASE_SHA}` and
-  `origin/{SKIA_BASE_BRANCH}`; and
-- the mono/skia feature branch is created from that exact pointer.
+- the submodule pointer equals `{PARENT_SKIA_SHA}`, which must be an ancestor of `{SKIA_BASE_SHA}`
+  (the `origin/{SKIA_BASE_BRANCH}` tip); and
+- the mono/skia feature branch is created from `{SKIA_BASE_SHA}`, so already-merged native history is
+  preserved even when the parent gitlink lags.
 
 If either feature branch already exists, stop and inspect its base and commits. Reuse it only when
 it is the intended continuation; never reset or overwrite unrelated work.
@@ -79,7 +80,7 @@ Account for every revision and enabled/commented-state difference:
 | Decision | Required evidence |
 |---|---|
 | Preserve fork | A fork patch, build file, security update, or product choice depends on it |
-| Accept target | No fork customization depends on the old state |
+| Accept target | Phase 02's source-backed version comparison rules out an unexplained downgrade, and no fork customization depends on the old state |
 | Compatibility roll | Target source uses dependency API absent from the fork revision |
 
 For a compatibility-sensitive revision, inspect the upstream roll commit and its coupled source
@@ -99,7 +100,10 @@ Before committing:
 - Verify every conflict and fork patch has a recorded disposition.
 - Compare final `DEPS` against both the fork base and target, then confirm every dependency-decision
   row names the revision and enabled/commented state actually present in the merged file.
-- Run `git diff --check` and confirm no unresolved paths remain.
+- Scope `git diff --check` findings to this update's own fork-authored changes and conflict
+  resolutions, using the exact target upstream SHA and previous fork patches to attribute them.
+  Preserve upstream formatting verbatim; do not edit unrelated imported lines or historical fork
+  patches to silence a whole-merge whitespace check. Confirm no unresolved paths remain.
 
 Create the required two-parent merge commit. Verify its parents are the selected mono/skia base and
 the target upstream commit. Build-driven dependency or C API adaptations belong in later, separate
@@ -113,7 +117,8 @@ merge:
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
-  --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+  --skia-root "${GITHUB_WORKSPACE:-$PWD}/externals/skia" \
+  --old-upstream "$SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA" \
   --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
   --merged-head HEAD \
@@ -124,6 +129,9 @@ Inspect both old and new patches for every table row. Replace every `TODO` with 
 disposition and concrete source/commit evidence, then rerun with `--validate`. Reapply or adapt any
 patch that was neither upstreamed nor intentionally obsolete. Never infer integrity from commit or
 file counts alone.
+
+Review this update's own changes against the exact target upstream and previous fork patches;
+do not justify needless cosmetic differences as `intentional-addition`. Undo those cosmetic edits.
 
 ## Gate
 

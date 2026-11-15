@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Xunit;
@@ -17,6 +18,7 @@ namespace SkiaSharp.Tests
 			typeof(HarfBuzzSharp.HarfBuzzApi),
 			typeof(SkiaSharp.SceneGraphApi),
 			typeof(SkiaSharp.SkottieApi),
+			typeof(SkiaSharp.ResourcesApi),
 		};
 
 		private static IEnumerable<Type> InteropApiDelegatesTypes => new[]
@@ -68,6 +70,28 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(del);
 #endif
 		}
+
+#if USE_LIBRARY_IMPORT
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
+		[Fact]
+		public void LibraryImportsUseCdeclCallingConvention()
+		{
+			foreach (var apiType in InteropApiTypes)
+			{
+				var methods = apiType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+					.Where(m => m.GetCustomAttribute<LibraryImportAttribute>() != null)
+					.ToArray();
+
+				Assert.NotEmpty(methods);
+				foreach (var method in methods)
+				{
+					var callConvs = method.GetCustomAttribute<UnmanagedCallConvAttribute>()?.CallConvs;
+					Assert.True(callConvs?.SequenceEqual(new[] { typeof(CallConvCdecl) }) == true,
+						$"{apiType.Name}.{method.Name} must use the cdecl calling convention.");
+				}
+			}
+		}
+#endif
 
 #if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]

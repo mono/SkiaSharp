@@ -91,6 +91,8 @@ Task ("docs-api-diff")
     // it, so we can write the co-release map sidecar (spec §3.6) at the end. Keyed
     // by SkiaSharp line core; value is the HarfBuzz line core shipping with it.
     var skiaHarfBuzzDeps = new Dictionary<string, string> ();
+    var inflightSkia = new NuGetVersion (GetVersion ("SkiaSharp")).ToNormalizedString ().Split ('-') [0];
+    var inflightHb = new NuGetVersion (GetVersion ("HarfBuzzSharp")).ToNormalizedString ().Split ('-') [0];
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for NativeAssets as that has nothing but a native binary
@@ -104,6 +106,21 @@ Task ("docs-api-diff")
         Information ($"Comparing the assemblies in '{id}'...");
 
         var allVersions = await NuGetVersions.GetAllAsync (id, filter);
+
+        // A cached or scoped run must not replace a published dependency with VERSIONS.txt.
+        if (id == "SkiaSharp.HarfBuzz") {
+            var publishedInflight = allVersions
+                .Where (v => v.ToNormalizedString ().Split ('-') [0] == inflightSkia)
+                .OrderByDescending (v => v)
+                .FirstOrDefault ();
+            if (publishedInflight != null) {
+                var publishedRoot = await comparer.ExtractCachedPackageAsync (id, publishedInflight.ToNormalizedString ());
+                var publishedHb = ReadHarfBuzzDependencyLine (publishedRoot);
+                if (string.IsNullOrEmpty (publishedHb))
+                    throw new InvalidOperationException ($"{id} {publishedInflight} has no HarfBuzzSharp dependency.");
+                skiaHarfBuzzDeps [inflightSkia] = publishedHb;
+            }
+        }
 
         // The newest stable release on the feed. It is the cut-off for preview
         // emission: a preview-only line is only worth an api diff while it is
@@ -286,8 +303,6 @@ Task ("docs-api-diff")
     // ONLY when the feed did not already supply this SkiaSharp line (an on-feed line is
     // always read from its own published package, never overridden). This is what lets an
     // in-flight HarfBuzz line be recorded before it publishes (§4.5).
-    var inflightSkia = new NuGetVersion (GetVersion ("SkiaSharp")).ToNormalizedString ().Split ('-') [0];
-    var inflightHb = new NuGetVersion (GetVersion ("HarfBuzzSharp")).ToNormalizedString ().Split ('-') [0];
     if (!string.IsNullOrEmpty (inflightSkia) && !string.IsNullOrEmpty (inflightHb)
             && !skiaHarfBuzzDeps.ContainsKey (inflightSkia)) {
         Information ($"Recording in-flight co-release from working tree: SkiaSharp {inflightSkia} → HarfBuzzSharp {inflightHb}.");
@@ -488,7 +503,7 @@ void WriteCoReleaseMap (Dictionary<string, string> skiaHarfBuzzDeps)
 // each line folder (SkiaSharp `releases/<line>/` and HarfBuzz
 // `releases/harfbuzzsharp/<hb-line>/`) it lists every `<package>/<assembly>.md` diff,
 // flags any with a `<assembly>.breaking.md` sibling as breaking, and links back to the
-// `../<line>.md` hub. It carries the API_DIFF_MARKER like every other generated file, so
+// SkiaSharp release page or the release overview for HarfBuzzSharp. It carries the API_DIFF_MARKER, so
 // the §3.5 wipe regenerates it each run.
 void WriteApiDiffFolderIndexes ()
 {
@@ -508,16 +523,17 @@ void WriteApiDiffFolderIndexes ()
         foreach (var dir in GetSubDirectories (hbRoot)) {
             var name = dir.GetDirectoryName ();
             if (name.Length > 0 && char.IsDigit (name [0]))
-                WriteApiDiffFolderIndex (dir, name);
+                WriteApiDiffFolderIndex (dir, name, "harfbuzzsharp");
         }
     }
 }
 
-// Write one line folder's index.md. `line` is the folder name (== the §1.1 line core),
-// so the hub back-link is always `../<line>.md` for both families. Skips folders that
-// hold no per-assembly diffs (nothing to land on).
-void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
+// Below-floor landings are preserved alongside their cached assembly diffs.
+void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line, string family = "skiasharp")
 {
+    if (IsBelowHistoryFloor (line, family))
+        return;
+
     var body = new System.Text.StringBuilder ();
     var hasContent = false;
 
@@ -553,7 +569,8 @@ void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
         if (existing.EndsWith (n + n, StringComparison.Ordinal))
             trailingNewline = n + n;
     }
-    var text = $"{API_DIFF_MARKER} {line}{n}{n}> Back to [release notes](../{line}.md).{n}{n}{body}"
+    var releaseNotes = family == "harfbuzzsharp" ? "../../index.md" : $"../{line}.md";
+    var text = $"{API_DIFF_MARKER} {line}{n}{n}> Back to [release notes]({releaseNotes}).{n}{n}{body}"
         .TrimEnd () + trailingNewline;
     System.IO.File.WriteAllText (indexPath.FullPath, text);
 }

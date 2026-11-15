@@ -101,6 +101,8 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libEGL)]
 		public static extern glbool eglDestroySurface(EGLDisplay dpy, EGLSurface surface);
 		[DllImport(libEGL)]
+		public static extern EGLContext eglGetCurrentContext();
+		[DllImport(libEGL)]
 		public static extern glbool eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
 		[DllImport(libEGL)]
 		public static extern glbool eglSwapBuffers(EGLDisplay dpy, EGLSurface surface);

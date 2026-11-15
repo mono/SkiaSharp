@@ -28,6 +28,7 @@ import json
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 # ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
@@ -229,7 +230,7 @@ def render(data, prose):
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        if hb.get("prs"):
+        if hb.get("prs") or (prose.get("harfbuzz_summary") or "").strip():
             # Summary only: the API diff is in the banner and the community credit
             # is in the contributor table, so this section stays a clean narrative
             # instead of dumping every HarfBuzz-touching build PR.
@@ -290,6 +291,27 @@ def _finish_text(L):
     if not text.endswith("\n"):
         text += "\n"
     return text
+
+
+def with_generation_date(text, previous_text=""):
+    """Keep the previous generation date until the rendered content changes."""
+    footer = re.search(
+        r'\n---\n\n<small class="text-body-secondary">Release notes generated on '
+        r'\d{4}-\d{2}-\d{2} at \d{2}:\d{2} UTC\.</small>\n\Z',
+        previous_text,
+    )
+    if footer and previous_text[:footer.start()] == text:
+        return previous_text
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d at %H:%M")
+    return text + (
+        '\n---\n\n<small class="text-body-secondary">Release notes generated on '
+        '{} UTC.</small>\n'.format(timestamp)
+    )
+
+
+def write_page(page, text):
+    previous_text = page.read_text() if page.is_file() else ""
+    page.write_text(with_generation_date(text, previous_text))
 
 
 # ── enforcement ──────────────────────────────────────────────────────────────
@@ -679,11 +701,9 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
         intro = (
             "Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose "
             "minor version is the Chrome/Skia milestone it builds on. Two release "
-            "lines are supported at a time — a **stable** line for production and a "
-            "**preview** line for the milestone currently being stabilized — "
-            "mirroring "
-            "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) "
-            "(stable / extended-stable and beta). Everything else stays published "
+            "paths are supported — **stable** for production and **preview** for "
+            "testing ahead of stable releases. Each path can include multiple "
+            "supported milestone lines, as listed below. Everything else stays published "
             "for reference but is no longer serviced.")
     else:
         intro = "Release notes for all SkiaSharp versions."
@@ -755,10 +775,9 @@ def generate_index(versions, next_versions, schedule_by_ms=None):
         lines.extend([
             "## Support overview",
             "",
-            "- **Stable** — the line we recommend for production apps. Tracks "
-            "Chrome's Stable / Extended Stable channel.",
-            "- **Preview** — prerelease NuGets for the next milestone, so you can "
-            "test ahead of its stable release. Tracks Chrome's Beta channel.",
+            "- **Stable** — supported stable releases recommended for production apps.",
+            "- **Preview** — supported prerelease NuGets for testing ahead of "
+            "their stable releases.",
             "- **Out of support** — older 3.x / 4.x lines, still listed below for "
             "reference but no longer serviced.",
             "- **Obsolete** — SkiaSharp 1.x and 2.x, no longer maintained.",
@@ -983,7 +1002,7 @@ def render_all():
                 log("  ERROR: prose for {} failed validation: {}".format(
                     page, "; ".join(errs)))
                 continue
-            page.write_text(render(data, prose))
+            write_page(page, render(data, prose))
             rendered += 1
     log("Rendered {} pages".format(rendered))
 
@@ -1029,10 +1048,10 @@ def main(argv):
     text = render(data, prose)
     out = args[2] if len(args) >= 3 else None
     if out:
-        Path(out).write_text(text)
+        write_page(Path(out), text)
         print("wrote {} ({} words)".format(out, _words(text)))
     else:
-        sys.stdout.write(text)
+        sys.stdout.write(with_generation_date(text))
     return 0
 
 

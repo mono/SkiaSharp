@@ -1,12 +1,32 @@
 {
-  "theme": "First stable SkiaSharp v3",
-  "highlights_headline": "SkiaSharp 3.116.0 is the first stable v3 release, bringing modern .NET, Skia, and cross-platform view updates.",
-  "highlights_body": "It rolls up the v3 preview work with API additions, WebAssembly improvements, refreshed native components, and fixes across supported UI platforms.",
+  "theme": "First stable v3 graphics release",
+  "highlights_headline": "SkiaSharp 3.116.0 brings the v3 API and Skia m116 to a stable release.",
+  "highlights_body": "The release combines accelerated WinUI, WPF, and Mac Catalyst views with richer picture and shader APIs. WebAssembly gains threading and SIMD choices, while Span overloads reduce the need for temporary arrays.",
   "breaking": [
     {
-      "title": "Legacy obsolete APIs were removed",
-      "body": "Members previously marked obsolete are no longer available in v3. Update code to the documented replacement APIs before upgrading.",
+      "title": "Replace the removed 2.88 legacy surface",
+      "body": "Previously obsolete APIs and types are removed. Use GRBackendTexture and GRBackendRenderTarget instead of legacy descriptors, SKSurfaceProperties instead of SKSurfaceProps, and SKFont-based text-blob overloads. Rebuild against v3 and follow the linked API diffs for other replacements.",
+      "prs": [2539]
+    },
+    {
+      "title": "Move away from UWP and watchOS",
+      "body": "The v3 packages no longer support UWP or watchOS. Migrate applications to supported platforms or retain a compatible older SkiaSharp release.",
+      "prs": [2505]
+    },
+    {
+      "title": "Adjust matrix and encoder-option code",
+      "body": "SKMatrix44 changes from a disposable object to a value type; remove disposal and reference-identity assumptions and use current matrix operations such as TryInvert(out ...). JPEG, PNG, and WebP encoder option properties are read-only, so construct configured options instead of setting properties afterward. Review changed ref-matrix call sites in the API diff.",
       "prs": []
+    },
+    {
+      "title": "Migrate filter crops and runtime shaders",
+      "body": "SKImageFilter.CropRect and older filter signatures are removed. Use current SKRect-based overloads where applicable. Replace SKRuntimeEffect.Create with CreateShader for shaders and remove the isOpaque argument from ToShader calls; use the corresponding color-filter or blender factories for those effects.",
+      "prs": []
+    },
+    {
+      "title": "Update custom view integration",
+      "body": "Use OnPaintSurface instead of removed Android OnDraw/OnDrawFrame or Apple DrawInSurface overrides, and PaintSurface instead of SetRenderer. MAUI controller interfaces are removed. WinForms SKGLControl uses the newer OpenTK GLControl base without the old GraphicsMode constructors. Blazor's old Internal action-helper types are also removed; migrate any direct dependencies to supported APIs.",
+      "prs": [2989]
     }
   ],
   "categories": [
@@ -14,9 +34,9 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia and HarfBuzzSharp updated",
-          "detail": "The stable v3 release includes refreshed graphics and text-shaping engines.",
-          "prs": [3089, 3087]
+          "lead": "Skia milestone 116",
+          "detail": "The first stable v3 release uses the Skia m116 renderer introduced during the preview cycle.",
+          "prs": [2829]
         }
       ]
     },
@@ -24,9 +44,14 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Expanded drawing and picture APIs",
-          "detail": "New span-based overloads and picture-recording capabilities make common managed drawing scenarios more efficient and expressive.",
-          "prs": [3079, 2971]
+          "lead": "Reusable pictures and programmable drawing",
+          "detail": "Adds SKBlender, raw image shaders, Skottie animation-builder bindings, and SKPicture playback and size APIs, together with R-tree picture recording.",
+          "prs": [2830, 2748, 2630, 2883, 2889]
+        },
+        {
+          "lead": "Span-based geometry and pixel access",
+          "detail": "MapPoints, MapVectors, and AddPoly accept spans to process multiple points without a temporary heap array. Color filters and SetRectRadii gain Span overloads, pixel spans accept coordinates, and Blazor components expose DPI.",
+          "prs": [3030, 2879, 2949, 2609, 1832]
         }
       ]
     },
@@ -34,35 +59,55 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Improved WebAssembly and desktop views",
-          "detail": "v3 improves WebAssembly support and adds or refines view integrations across desktop and mobile platforms.",
-          "prs": [3088, 3064]
+          "lead": "Accelerated desktop and Catalyst views",
+          "detail": "Adds WinUI SKSwapChainPanel with ANGLE native assets and WPF SKGLElement. Mac Catalyst uses Metal, and Metal bindings are available from a common .NET target.",
+          "prs": [2733, 2970, 2317, 2747, 2788]
+        },
+        {
+          "lead": "WebAssembly execution variants",
+          "detail": "Adds multithreaded and SIMD WebAssembly options alongside non-SIMD assets, including Emscripten 3.1.56 binaries for .NET 9.",
+          "prs": [2620, 2612, 3010]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Rendering and disposal stability",
+          "detail": "Corrects Metal snapshot colors, MAUI view leaks, cloned-paint disposal, kerning-pair adjustments, and Uno canvas pixel format, resizing, and unload handling. PNG encoding returns to the 2.88.8 behavior.",
+          "prs": [2804, 2955, 2904, 2858, 2918, 2922, 2854, 3014]
+        },
+        {
+          "lead": "WebAssembly startup and base paths",
+          "detail": "Fixes .NET 9 Blazor issues, applies the WASM workaround outside Blazor views, and corrects imports for applications hosted beneath a base path.",
+          "prs": [3081, 3087, 3089, 3093]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeromelaban": "Uno and platform-view improvements",
-    "maxkatz6": "API and rendering improvements",
-    "Youssef1313": "Platform integration fixes",
-    "alexandrvslv": "Community platform contributions",
-    "beto-rodriguez": "Community API contributions",
-    "Fxplorer": "Platform support improvements",
-    "gmurray81": "Rendering and integration fixes",
-    "jeremy-visionaid": "Community fixes",
-    "lindexi": "Platform integration work",
-    "pdjonov": "API improvements",
-    "Redth": "MAUI and view support",
-    "sungaila": "Cross-platform fixes",
-    "taublast": "Community maintenance contributions"
+    "jeromelaban": "Uno canvas fixes, browser variants, and .NET 9 WebAssembly assets.",
+    "maxkatz6": "Trimming improvements, common-target Metal APIs, and generated interop modernization.",
+    "Youssef1313": "Uno canvas color correction and Span and filter-quality overloads.",
+    "alexandrvslv": "Span overloads for point mapping, vector mapping, and polygon construction.",
+    "beto-rodriguez": "Blazor component DPI access.",
+    "Fxplorer": "README notebook typo correction.",
+    "gmurray81": "WPF SKGLElement support.",
+    "jeremy-visionaid": "Cloned-paint disposal crash fix.",
+    "lindexi": "SKXamlCanvas asynchronous rendering cleanup.",
+    "pdjonov": "Kerning-pair adjustment fix.",
+    "Redth": "Skia dependency update work.",
+    "sungaila": "PNG encoder compatibility restoration.",
+    "taublast": "Metal snapshot color fix."
   },
   "preview_summaries": {
-    "v3.116.0-preview.6.1": "The release preview completed the stabilization work for SkiaSharp v3.",
-    "v3.0.0-preview.5.4": "Preview 5 completed the v3 API and dependency refresh work.",
-    "v3.0.0-preview.4.1": "Preview 4 expanded rendering and platform compatibility.",
-    "v3.0.0-preview.3.1": "Preview 3 added API refinements and native build updates.",
-    "v3.0.0-preview.2.1": "Preview 2 focused on modern .NET and view integration.",
-    "v3.0.0-preview.1.8": "Preview 1 opened the SkiaSharp v3 line."
+    "v3.0.0-preview.1.8": "Introduced the v3 migration, WinUI GPU views, and offset pixel spans, while dropping UWP and watchOS.",
+    "v3.0.0-preview.2.1": "Added raw image shaders and Skottie animation-builder bindings, with Metal rendering on Mac Catalyst.",
+    "v3.0.0-preview.3.1": "Added WPF SKGLElement and Blazor DPI access, broadened Metal API availability, and corrected Metal snapshot colors.",
+    "v3.0.0-preview.4.1": "Updated to Skia m116 with SKBlender and picture playback support. Fixed cloned-paint disposal and Uno canvas output.",
+    "v3.0.0-preview.5.4": "Added .NET 9 WebAssembly assets and generated interop, fixed MAUI leaks, and restored PNG encoding compatibility.",
+    "v3.116.0-preview.6.1": "Added threading and SIMD WebAssembly options and Span overloads for point and vector mapping and polygon construction."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 8.3.0 ships with the v3 release and updates the bundled text-shaping stack."
+  "harfbuzz_summary": "HarfBuzzSharp gains multithreaded and SIMD WebAssembly assets and broader WASM workaround coverage. Native interop moves to function pointers and LibraryImport."
 }

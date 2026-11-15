@@ -5,12 +5,16 @@
 The native build must run first so dependency headers exist:
 
 ```bash
+set -euo pipefail
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/regenerate_bindings.py" \
   --repo-root "${GITHUB_WORKSPACE:-$PWD}"
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/build_managed.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}" --artifact-dir "$ARTIFACT_DIR"
 ```
 
-The helper runs every maintained generator configuration from the checked-out source, reports
+Require both helpers to exit 0 before continuing. Inspect `managed-build.log` for build failures.
+
+The binding helper runs every maintained generator configuration from the checked-out source, reports
 generated changes, and lists new native functions. Never manually edit generated
 declarations or interop code. Source-controlled `///` comment trivia is the
 exception: edit it directly when needed, regenerate, and verify preservation.
@@ -46,18 +50,11 @@ validation from incomplete coverage.
 ### Canonical full solution
 
 ```bash
-rm -f "$ARTIFACT_DIR/test-output.txt" "$ARTIFACT_DIR/test-exit-code.txt"
-(
-  set +e
-  dotnet test tests/SkiaSharp.Tests.Console.slnx \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0 \
-    > "$ARTIFACT_DIR/test-output.txt" 2>&1
-  TEST_EXIT=$?
-  printf '%s\n' "$TEST_EXIT" > "$ARTIFACT_DIR/test-exit-code.txt"
-  exit "$TEST_EXIT"
-)
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/run_tests.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}" --artifact-dir "$ARTIFACT_DIR"
 ```
+
+Require exit 0 and inspect `test-output.txt` for per-host results.
 
 Run the solution unfiltered. Confirm every maintained test host in the solution reported results.
 Run each full solution command as one foreground invocation and wait for it to return; do not
@@ -99,9 +96,8 @@ Diagnose the failing behavior before editing:
 - After native changes, rebuild from source and prove the changed library is loaded.
 - If the C API surface changed, regenerate bindings and repeat Phase 09.
 
-A focused run proves a candidate fix only. Before replacing a failed canonical log, preserve it as
-`$ARTIFACT_DIR/test-attempt-<UTC timestamp>.txt`. After the fix, rerun the canonical full-solution
-command above; only a green canonical run against the unchanged final source satisfies the gate.
+A focused run proves a candidate fix only. After the fix, rerun the full-solution helper above;
+only a green canonical run against the unchanged final source satisfies the gate.
 Keep complete output in the artifact and inspect targeted failure excerpts instead of streaming the
 entire log into model context.
 
@@ -111,7 +107,8 @@ After the final full solution passes, complete every deterministic gate against 
 mono/skia tree before moving to Phase 11:
 
 1. Ensure every post-merge mono/skia adaptation is committed and the worktree is clean.
-2. From the parent root, run the metadata finalizer:
+2. From the parent root, rerun Phase 06's complete version-helper command. In automation, the
+   resolved inputs come from the environment, so this shorter invocation is sufficient:
 
    ```bash
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
@@ -124,7 +121,8 @@ mono/skia tree before moving to Phase 11:
 
    ```bash
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
-     --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+     --skia-root "${GITHUB_WORKSPACE:-$PWD}/externals/skia" \
+     --old-upstream "$SKIA_SYNC_SKIA_BASE_UPSTREAM_SHA" \
      --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
      --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
      --merged-head HEAD \

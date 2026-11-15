@@ -1,4 +1,4 @@
-<Project Sdk="Uno.Sdk/6.6.0-dev.208">
+<Project Sdk="Uno.Sdk/7.0.0-dev.79">
 
   <PropertyGroup>
     <!-- CI ships only -browserwasm; the other heads are for local exploration. -->
@@ -20,12 +20,11 @@
     <Description>SkiaSharp Gallery — Uno Platform sample running the shared SkiaSharp sample catalog.</Description>
 
     <UnoFeatures>
-      SkiaRenderer;
+      Skia;
     </UnoFeatures>
   </PropertyGroup>
 
   <PropertyGroup>
-    <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,6 +33,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Uno.Sdk 7 no longer references the Uno views implicitly. -->
+    <ProjectReference Include="..\..\..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" />
     <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.Linux\SkiaSharp.NativeAssets.Linux.csproj" />
@@ -52,13 +53,15 @@
     <!-- samples-generate's version-substitution will override this value so that
         implicit references from Uno.Sdk match the versions specified in SkiaSharpSample.Shared -->
     <SkiaSharpVersion />
+    <HarfBuzzSharpVersion />
   </PropertyGroup>
 
   <!-- SkiaSharp.Views.WinUI is needed for SKXamlCanvas/SKSwapChainPanel on Windows.
        In-tree, this comes via _UnoPlatformSamples.targets (as a ProjectReference).
        In generated samples, that import is stripped, so this PackageReference ensures
-       the generated build can resolve the types. samples-generate bumps the version. -->
-  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+       the generated build can resolve the types. samples-generate bumps the version.
+       Skipped in-tree, where that import already declares the package: the Uno.Sdk fails on a duplicate. -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and '$(SkiaSharpInTreeSamples)' != 'true'">
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.2" />
   </ItemGroup>
 

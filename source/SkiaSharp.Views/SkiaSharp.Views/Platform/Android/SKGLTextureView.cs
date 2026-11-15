@@ -4,21 +4,11 @@ using Android.Content;
 using Android.Opengl;
 using Android.Util;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
-namespace SkiaSharp.Views.UWP
-#else
 namespace SkiaSharp.Views.Android
-#endif
 {
-#if HAS_UNO
-	internal
-#else
 	/// <summary>An implementation of <see cref="T:SkiaSharp.Views.Android.GLTextureView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="T:SkiaSharp.SKSurface" />.</summary>
 	/// <remarks />
 	public
-#endif
 	partial class SKGLTextureView : GLTextureView
 	{
 		private SKGLTextureViewRenderer renderer;

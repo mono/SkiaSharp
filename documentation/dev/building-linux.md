@@ -95,3 +95,18 @@ chown -R $(id -u):$(id -g) .
 ```
 
 > See the `scripts/infra/native/linux/docker/` directory for available Dockerfiles.
+
+### Alpine bootstrap
+
+The Alpine cross-compilation image downloads the x86_64 host `apk-tools-static`
+package from Alpine's official package CDN. The Dockerfile pins its exact package
+version and SHA-256; verification must pass before extracting or executing
+`sbin/apk.static`. The same host tool installs packages for every target sysroot,
+including the no-dependencies builds.
+
+When updating the bootstrap package, update its version and archive checksum
+together and rebuild the image. Keep package signature verification enabled for
+sysroot installs. Download timeouts, missing pinned packages, and checksum
+mismatches are build failures; do not bypass verification or substitute an
+unpinned tool. If the pinned package is unavailable, restore that exact artifact
+or review and validate an explicit pin update.

@@ -1,4 +1,5 @@
 trigger:
+  batch: true
   branches:
     include:
       - main
@@ -14,8 +15,9 @@ trigger:
 pr: none
 
 schedules:
-  - cron: "0 0 * * *"
-    displayName: Daily midnight build for main
+  # Saturday 23:00 PST / Sunday 00:00 PDT, away from peak shared-pool demand.
+  - cron: "0 7 * * 0"
+    displayName: Sunday 07:00 UTC build for main
     branches:
       include:
         - main
@@ -28,7 +30,7 @@ parameters:
     default:
       pool:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
+        image: windows.vs2026.amd64
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -36,7 +38,7 @@ parameters:
     default:
       pool:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
+        image: windows.vs2026.amd64
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
@@ -44,7 +46,7 @@ parameters:
     default:
       pool:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022
+        image: windows.vs2026.amd64
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -80,6 +82,10 @@ parameters:
         os: linux
   - name: runApiScan
     displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
+    type: boolean
+    default: false
+  - name: runFuzzing
+    displayName: 'Run fuzzing for this build (scheduled main builds run automatically)'
     type: boolean
     default: false
   - name: forceRealSigning
@@ -158,3 +164,4 @@ extends:
           forceRealSigning: ${{ parameters.forceRealSigning }}
           registerInBar: ${{ parameters.registerInBar }}
           runApiScan: ${{ parameters.runApiScan }}
+          runFuzzing: ${{ parameters.runFuzzing }}

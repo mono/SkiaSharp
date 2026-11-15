@@ -11,6 +11,3 @@ Added method:
 ```csharp
 public static Tag Parse (System.ReadOnlySpan<char> tag);
 ```
-
-
-

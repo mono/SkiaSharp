@@ -1,22 +1,14 @@
 Param(
-    [Parameter(Mandatory)] [string] $Package
+    [Parameter(Mandatory)] [string[]] $Package
 )
 
 $ErrorActionPreference = 'Stop'
 
-.\scripts\infra\managed\install-android-sdk.ps1
+& (Join-Path $PSScriptRoot 'install-android-sdk.ps1')
 
-$sdkmanager = "$env:ANDROID_SDK_MANAGER_PATH"
-
-Set-Content -Value "y" -Path "yes.txt"
-try {
-    if ($IsMacOS -or $IsLinux) {
-        sh -c "'$sdkmanager' '$Package' < yes.txt"
-    } else {
-        cmd /c "`"$sdkmanager`" `"$Package`" < yes.txt"
-    }
-} finally {
-    Remove-Item "yes.txt"
+$arguments = @('android', 'sdk', 'install', '--home', $env:ANDROID_SDK_ROOT)
+foreach ($item in ($Package | Select-Object -Unique)) {
+    $arguments += @('--package', $item)
 }
-
-exit $LASTEXITCODE
+dotnet @arguments
+if ($LASTEXITCODE -ne 0) { throw "Android package installation failed: $($Package -join ', ')" }

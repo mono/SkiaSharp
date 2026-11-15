@@ -1,41 +1,36 @@
 {
-  "theme": "3.119.1 servicing release",
-  "highlights_headline": "A focused servicing release with Metal disposal fixes, iOS 15 hotfix, zlib refresh and the new PostScriptName API.",
-  "highlights_body": null,
+  "theme": "Apple rendering and lifecycle fixes",
+  "highlights_headline": "SkiaSharp 3.119.1 improves Apple view reliability and fixes unpackaged WinUI applications.",
+  "highlights_body": "This servicing release also adds typeface PostScript names, corrects UTC date conversion, and makes canvas restoration safer after disposal.",
   "breaking": [],
   "categories": [
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "SKTypeface.PostScriptName",
-          "detail": "Exposes the PostScript name of a typeface, matching the SkTypeface upstream API.",
-          "prs": [3263]
-        }
-      ]
-    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Metal backend stability",
-          "detail": "Disposing GRContext no longer crashes on the Metal backend, and a hotfix restores rendering on iOS 15 and lower.",
-          "prs": [3258, 3293]
+          "lead": "Apple view behavior",
+          "detail": "Avoids initializing SKMetalView twice, fixes Metal on iOS 15 and earlier, and preserves SKXamlCanvas transparency on Mac Catalyst.",
+          "prs": [3256, 3293, 3236]
         },
         {
-          "lead": "UTC DateTime and Mac Catalyst opacity",
-          "detail": "Fixes an incorrect UTC DateTime conversion in the metadata helpers and stops SKXamlCanvas being forced opaque on Mac Catalyst.",
-          "prs": [3333, 3236]
+          "lead": "Safe canvas restoration and UTC handling",
+          "detail": "SKAutoCanvasRestore avoids crashing when the canvas has already been disposed. Date conversion handles UTC inputs rather than assuming every DateTime is local.",
+          "prs": [3291, 3333]
+        },
+        {
+          "lead": "Unpackaged WinUI applications",
+          "detail": "Corrects the EGL and GLESv2 build configuration for unpackaged WinUI apps and statically links the WinUI interop runtime.",
+          "prs": [3338, 3341]
         }
       ]
     },
     {
-      "heading": "Platform",
+      "heading": "API Surface",
       "bullets": [
         {
-          "lead": "WinUI native build hardening",
-          "detail": "Builds the WinUI interop as /MT and rebuilds EGL as win32 and GLESv2 as WASDK for compatibility with modern Windows App SDK consumers.",
-          "prs": [3341, 3338]
+          "lead": "Typeface PostScript names",
+          "detail": "Adds SKTypeface.PostScriptName for identifying a font's PostScript name.",
+          "prs": [3263]
         }
       ]
     },
@@ -43,22 +38,22 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "zlib refreshed to 1.3.0.1+",
-          "detail": "Updates the bundled zlib to 1.3.0.1+ to pick up upstream fixes.",
+          "lead": "Updated zlib dependency",
+          "detail": "Refreshes bundled zlib to a 1.3.0.1-based revision.",
           "prs": [3058]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeremy-visionaid": "Avoided initializing SKMetalView twice, added the GRContext disposal test on Metal, and fixed the UTC DateTime conversion",
-    "taublast": "Hotfixed Metal on iOS 15 and lower and prevented SKAutoCanvasRestore from crashing when the canvas was already disposed",
-    "jonlipsky": "Added SKTypeface.PostScriptName",
-    "pjcollins": "Added CI triggers for the primary branches to azure-pipelines-native",
-    "spouliot": "Fixed SKXamlCanvas being forced opaque on Mac Catalyst"
+    "jeremy-visionaid": "Metal view initialization, Metal context disposal coverage, and UTC date conversion.",
+    "taublast": "Safe canvas restoration after disposal and Metal compatibility on older iOS versions.",
+    "jonlipsky": "Typeface PostScriptName support.",
+    "pjcollins": "Native pipeline branch triggers.",
+    "spouliot": "Transparent SKXamlCanvas rendering on Mac Catalyst."
   },
   "preview_summaries": {
-    "v3.119.1-preview.1.1": "Preview 1 collected the Metal disposal fixes, the iOS 15 hotfix, the PostScriptName API, the zlib refresh and the WinUI native build hardening."
+    "v3.119.1-preview.1.1": "Added typeface PostScript names and fixes for Apple views, canvas disposal, UTC conversion, and unpackaged WinUI applications."
   },
   "harfbuzz_summary": null
 }

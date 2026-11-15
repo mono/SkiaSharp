@@ -1,12 +1,14 @@
 {
-  "theme": "RAW decoding disabled",
-  "highlights_headline": "SkiaSharp 4.153.1 disables RAW and DNG image decoding.",
-  "highlights_body": "Use a dedicated RAW-image decoder before passing supported raster data to SkiaSharp.",
+  "theme": "RAW decoding retired",
+  "highlights_headline": "SkiaSharp 4.153.1 removes built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+  "highlights_body": null,
   "breaking": [
     {
-      "title": "RAW and DNG decoding disabled",
-      "body": "The bundled codec no longer decodes RAW or DNG images. Decode these formats with a dedicated library and provide a supported raster image to SkiaSharp instead.",
-      "prs": [5187]
+      "title": "Built-in RAW and DNG decoding removed",
+      "body": "RAW/DNG development and extraction of embedded JPEG previews are no longer supported. Use a separate RAW decoder or convert files before loading them. SKEncodedImageFormat.Dng retains its value of 10 for compatibility, but does not indicate codec support. Standalone JPEG decoding is unchanged.",
+      "prs": [
+        5187
+      ]
     }
   ],
   "categories": [],
@@ -15,8 +17,8 @@
   "harfbuzz_summary": null,
   "release_summaries": {
     "v4.153.1": {
-      "headline": "SkiaSharp 4.153.1 disables RAW and DNG image decoding.",
-      "body": "Applications that process these formats should decode them before handing raster data to SkiaSharp."
+      "headline": "SkiaSharp 4.153.1 removes built-in RAW/DNG decoding and embedded RAW-preview extraction.",
+      "body": null
     }
   }
 }

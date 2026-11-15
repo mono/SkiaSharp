@@ -18,7 +18,7 @@ Use the repository command as the source of release facts:
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.152
 ```
 
-The command is read-only and reports:
+The full command is read-only and reports:
 
 - maintenance and specific release branches;
 - exact public NuGet provenance, tags, and GitHub Releases;
@@ -28,9 +28,27 @@ The command is read-only and reports:
 - pending next-milestone transitions; and
 - dependency-ordered Finish, build, publication, sync, and Prepare actions.
 
+Report `Publication` and missing ID/version pairs for both families. The expected
+set comes from the shipment's source `scripts/VERSIONS.txt` and pack filter.
+Do not offer Finish or a new cut for partial/unavailable publication.
+
 Use `-Json` when coordinating several lines. Exit `0` means no action, `1`
 means work or inconsistency remains, and `2` means a required check was
 unavailable. Never reinterpret exit `2` as healthy.
+
+## Choose the question
+
+Use `-Check Upstream` for new upstream commits/sync PRs, `-Check Prepare` for
+bases ready to cut, `-Check Finish` for unfinished public shipments, or
+`-Check NuGet` for exact shipping-package availability. Omit it for `All`.
+Prepare checks all release gates; other checks skip unrelated collection.
+
+```powershell
+pwsh ./scripts/infra/publishing/audit-release-state.ps1 -Version 4.150-4.156 -Check Upstream -Json
+```
+
+Report only the requested view. Null facts were not checked; exit `0` applies
+only to the selected check. Retain all blockers in the `Prepare` view.
 
 ## Resolve requested lines
 
@@ -42,14 +60,17 @@ Accept these natural selectors:
 | `4.150-4.155` or `4.150..4.155` | Inclusive numeric range |
 | `4.15*` | Matching discovered release lines plus current/pending `main` |
 
-For a numeric range, expand each minor. For a wildcard, discover unique lines
+Pass a numeric range directly to the script. It checks every included line,
+returns a JSON array, preserves per-line failures, and exits with the highest
+per-line code. For a wildcard, discover unique lines
 from release branches, exact public NuGet versions, exact tags, current
 `main`, and the immediately following `skia-sync/mN -> main` transition.
 Do not invent empty lines beyond current or pending evidence.
 
 ## Run and aggregate
 
-Run independent line audits in parallel:
+For an exact line or numeric range, use one invocation. Run independently
+discovered wildcard lines in parallel:
 
 ```powershell
 pwsh ./scripts/infra/publishing/audit-release-state.ps1 `
@@ -64,25 +85,68 @@ BAR build on the exact branch commit; newer canceled or failed reruns are
 reported without displacing that build. A partially succeeded build with a
 BAR is reported for review, not marked ready.
 
-Lead with:
+## Report tables
 
-| Line | Current stage | Exact-tip build / BAR | Upstream / sync | Next action |
+Keep the three views below, in this order, and render each as a Markdown
+table, not paragraphs or bullet lists. Each view has its own build and action:
+ship the current cut, ready the maintenance branch, then land upstream work.
+Do not split public packages, prepared cuts, build evidence, and release actions
+into separate summaries.
+
+### 1. Current release — state as of the audit
+
+| Line | On NuGet | Prepared cut | Build / BAR | Release action |
 |---|---|---|---|---|
+| A.B | Exact public version | Cut awaiting publication, or None | Linked exact-cut build, result and BAR | Release action emitted by the audit |
 
-Then group exact actions under:
+The prepared cut is an existing release branch, not proof CI passed. Use only
+its own exact-SHA build/BAR here, never `.x`/`main` CI. Show Finish when public
+packages need tags/Releases; show Publish or Prepare only when emitted by the
+audit. If none is emitted, say so, rather than substituting a sync action.
+Keep partial builds, unavailable checks, provenance errors, and newer
+failed/canceled reruns explicit.
 
-1. **Finish now** — public packages with incomplete tags or Releases.
-2. **Resume publication** — prepared branches whose exact-tip build is green
-   and has one BAR ID.
-3. **Build blocked, running, or needing review** — missing, active, failed,
-   canceled, BAR-less, or partially succeeded exact-tip builds without a
-   succeeded BAR build.
-4. **Merge or synchronize before branching** — upstream work and sync PRs.
-5. **Start next releases** — only Prepare actions emitted by the script.
-6. **Unavailable or inconsistent checks** — every exit `2`, provenance
-   mismatch, ambiguous state, or unreachable service.
+Show the latest complete and partial shipments and every unresolved stable cut,
+including those marked `superseded`. Use each cut's own count/build/BAR; older
+missing cuts need review, not automatic publication. Unused preview/RC branches
+may remain in JSON only.
 
-Always name and link every `incomingPullRequest` in the line summary, including
+### 2. Branch readiness — get the base ready for Prepare
+
+| Line | Base branch / version | Additional commits | Open PRs | Build / BAR | Readiness action |
+|---|---|---|---|---|---|
+| A.B | `.x` or `main`, plus checked-in version | Merged since the latest cut, excluding the version bump | Linked PRs targeting this line | Linked exact-base build, result and BAR | Fix/review/wait for base CI, review pending PRs, or base ready |
+
+Use `openPullRequests` to retain the open work targeting each line, including
+backports and draft PRs. Name the target when a PR targets a cut branch rather
+than `.x`. Open PRs are not additional merged commits, nor automatically
+required for the release: review their inclusion rather than assuming all
+must merge. An older JSON snapshot without this check means Not checked,
+not None.
+
+This table's action concerns the source branch, not shipping an existing cut.
+Base readiness is not permission to Prepare: current-shipment and upstream
+gates still apply. The source version is not a public package version, and
+its BAR is not the prepared cut's BAR.
+
+### 3. Upstream / sync — land upstream changes
+
+| Line | Base branch | Upstream commits | Merge / sync PRs | Sync build | Sync action |
+|---|---|---|---|---|---|
+| A.B | Target `.x` or `main` | Gap and actual native branch compared | Native PR, then parent PR, with draft/open state | Linked exact-sync-branch package build, or Not checked / Not built / N/A | Sync action emitted by the audit |
+
+The sync build belongs to `incomingPullRequest.HeadBranch` at `HeadSha`,
+from `packageBuilds`; do not borrow maintenance or prepared-release CI, or
+call it a PR merge build. Keep all sync actions here. `Current` on an unmerged
+sync branch does not mean its changes landed in the release source.
+Upstream work concerns the next cut, not publication/Finish of an existing cut.
+
+Put full SHAs, exceptional details, and exact workflow inputs below their
+table when needed, without repeating rows as paragraphs. Keep the three
+tables together instead of adding a section per fact. Historical finished
+shipments remain in `-Json`. No reporting change bypasses release gates.
+
+Always name and link every `incomingPullRequest` in the upstream section, including
 draft PRs with `BlocksRelease: false`. Draft means not ready to merge, not
 absent: identify the review needed and do not describe the sync branch as
 already merged merely because its upstream comparison says `current`. For

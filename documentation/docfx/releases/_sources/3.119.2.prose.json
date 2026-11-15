@@ -1,15 +1,25 @@
 {
-  "theme": "Servicing and native hardening",
-  "highlights_headline": "SkiaSharp 3.119.2 adds missing tvOS surface overloads and strengthens native package protections.",
-  "highlights_body": "It also preserves Android symbols for improved diagnostics in deployed applications.",
+  "theme": "Native hardening and diagnostic assets",
+  "highlights_headline": "SkiaSharp 3.119.2 strengthens native binaries and makes Android native crashes easier to diagnose.",
+  "highlights_body": "The release also fills gaps in tvOS surface creation APIs without changing the engine milestone.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native binary hardening",
+          "detail": "Enables Control Flow Guard across Windows native DLLs and buffer security checks for HarfBuzz and ANGLE. Adds Spectre mitigation compiler flags for SkiaSharp native libraries on Windows and Linux.",
+          "prs": [3397, 3404, 3497, 3503]
+        }
+      ]
+    },
     {
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "tvOS surface creation overloads added",
-          "detail": "tvOS applications can use the missing SKSurface.Create overloads already available on the related Apple targets.",
+          "lead": "tvOS surface creation parity",
+          "detail": "Adds the missing SKSurface.Create overloads for tvOS.",
           "prs": [3342]
         }
       ]
@@ -18,21 +28,21 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Android native symbols preserved",
-          "detail": "Android symbol assets are packaged for more useful native crash diagnostics.",
+          "lead": "Android native symbols",
+          "detail": "Preserves and packages Android native symbols to support crash investigation.",
           "prs": [3374]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "Aguilex": "Windows native binary hardening",
-    "MartinZikmund": "Added missing tvOS SKSurface creation overloads"
+    "Aguilex": "Control Flow Guard and native buffer security checks.",
+    "MartinZikmund": "Missing tvOS SKSurface.Create overloads."
   },
   "preview_summaries": {
-    "v3.119.2-preview.3.1": "Preview 3 completed native binary hardening for the servicing release.",
-    "v3.119.2-preview.2.3": "Preview 2 added Windows native hardening and tvOS API coverage.",
-    "v3.119.2-preview.1.2": "Preview 1 introduced Android symbol packaging and the initial servicing changes."
+    "v3.119.2-preview.1.2": "Added missing tvOS surface creation overloads and packaged Android native symbols.",
+    "v3.119.2-preview.2.3": "Enabled Windows Control Flow Guard and native buffer security checks.",
+    "v3.119.2-preview.3.1": "Added Spectre mitigation flags for the Windows SkiaSharp native library."
   },
-  "harfbuzz_summary": "HarfBuzzSharp receives the accompanying native binary hardening updates."
+  "harfbuzz_summary": "HarfBuzzSharp Windows binaries gain Control Flow Guard and buffer security checks, and Android native symbols are preserved for diagnostics. These are package and native-build changes, not a HarfBuzz engine upgrade."
 }

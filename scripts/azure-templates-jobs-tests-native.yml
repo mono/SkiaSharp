@@ -1,0 +1,37 @@
+parameters:
+  buildAgent: {}
+
+jobs:
+  - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+    parameters:
+      name: tests_native_${{ parameters.buildAgent.pool.os }}
+      displayName: Native tests (${{ iif(eq(parameters.buildAgent.pool.os, 'windows'), 'Windows', 'Linux') }})
+      buildAgent: ${{ parameters.buildAgent }}
+      ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
+        docker: scripts/infra/tests/docker/native
+        dotnetSdks: []
+      target: tests-native
+      checkoutSubmodules: false
+      installAndroidSdk: false
+      installXcode: false
+      installNode: false
+      shouldPublish: false
+      retryCount: 0
+      requiredArtifacts:
+        - name: native
+        - name: native_msvc
+          dir: msvc
+      postBuildSteps:
+        - task: PublishTestResults@2
+          displayName: Publish native test results
+          condition: always()
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: output/logs/testlogs/SkiaSharp.Tests.Native/**/*.trx
+            testRunTitle: Native tests (${{ iif(eq(parameters.buildAgent.pool.os, 'windows'), 'Windows', 'Linux') }})
+            failTaskOnFailedTests: true
+            failTaskOnMissingResultsFile: true
+      publishArtifacts:
+        - name: testlogs_native_${{ parameters.buildAgent.pool.os }}
+          always: true
+          path: output/logs/testlogs/SkiaSharp.Tests.Native

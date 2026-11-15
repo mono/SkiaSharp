@@ -1,95 +1,43 @@
 {
-  "theme": "Skia m151 stable release",
-  "highlights_headline": "SkiaSharp 4.151.0 delivers Skia m151 with faster managed color, text, and shaping paths.",
-  "highlights_body": "It adds .NET 11 WebAssembly native assets, restores CPU raster shader compatibility, and fixes a native image-decoding resource leak.",
-  "breaking": [],
+  "theme": "Faster raster and text paths",
+  "highlights_headline": "SkiaSharp 4.151.0 restores CPU bitmap rendering performance and reduces overhead in color and text operations.",
+  "highlights_body": "The Skia m151 release also adds span-based parsing, fixes intermediate image cleanup and aligns WebAssembly native libraries with .NET 11.",
+  "breaking": [
+    {"title": "Remove whitespace after the color prefix", "body": "SKColor.Parse and TryParse now reject whitespace immediately after '#' in six- and eight-digit input. Remove that whitespace before parsing; case-insensitive hexadecimal input and surrounding whitespace remain supported.", "prs": [4345]}
+  ],
   "categories": [
-    {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "Skia updated to milestone m151",
-          "detail": "The bundled renderer moves to Chrome milestone 151 and incorporates subsequent upstream bug-fix and stability syncs.",
-          "prs": [4294, 4312, 4382, 4443, 4489, 4568]
-        },
-        {
-          "lead": "CPU raster shader compatibility restored",
-          "detail": "Restores the legacy shader-context configuration needed to avoid a CPU raster regression.",
-          "prs": [4428]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "Span-based color parsing",
-          "detail": "SKColor hex parsing adds ReadOnlySpan<char> overloads and avoids unnecessary parsing overhead.",
-          "prs": [4345]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Encoded-image subset resources released",
-          "detail": "SKImage.FromEncodedData with a subset rectangle no longer leaks its native resource.",
-          "prs": [3997]
-        }
-      ]
-    },
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": ".NET 11 WebAssembly assets",
-          "detail": "Adds Emscripten 5.0.6 static libraries and exception handling support for .NET 11 WebAssembly applications.",
-          "prs": [4459, 4487, 4488]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "Lower-allocation managed operations",
-          "detail": "Color conversion, premultiplication, text shaping, tags, and encoded text paths avoid repeated native calls or transient allocations.",
-          "prs": [4370, 4385, 4388, 4396, 4498]
-        },
-        {
-          "lead": "Faster HarfBuzz text shaping",
-          "detail": "HarfBuzzSharp avoids allocations when adding UTF-8 strings and parsing tags.",
-          "prs": [4376, 4408]
-        }
-      ]
-    }
+    {"heading": "Engine", "bullets": [
+      {"lead": "Skia m151", "detail": "Updates the bundled renderer to milestone 151 without changing the existing C API or managed binding surface in the engine update.", "prs": [4294]}
+    ]},
+    {"heading": "API Surface", "bullets": [
+      {"lead": "Parse directly from spans", "detail": "Adds ReadOnlySpan<char> overloads for SKColor.Parse/TryParse and SKFourByteTag.Parse, avoiding substring creation and unnecessary parsing work.", "prs": [4345, 4396]}
+    ]},
+    {"heading": "Bug Fixes", "bullets": [
+      {"lead": "CPU bitmap drawing performance restored", "detail": "Restores the optimized shader-context path for scaled and tiled CPU bitmap draws, addressing high CPU use, dropped frames and flicker in affected canvas applications.", "prs": [4428]},
+      {"lead": "Ganesh stencil and resolve handling", "detail": "Corrects stencil-clear coordinates, ensures stencil is cleared when preserving contents, and unwinds dirty tracking when a resolve task fails.", "prs": [4443, 4489]},
+      {"lead": "Malformed native text cleanup", "detail": "Corrects destruction ordering when corrupt Slug data fails to deserialize, avoiding reads and frees through already released backing memory.", "prs": [4382]}
+    ]},
+    {"heading": "Lifecycle & Internals", "bullets": [
+      {"lead": "Prompt subset-image cleanup", "detail": "SKImage.FromEncodedData(SKData, SKRectI) disposes the intermediate full image when Subset returns a different instance, while preserving same-instance results and decoded pixels.", "prs": [3997]},
+      {"lead": "Lower color and shaping overhead", "detail": "Moves single-color conversion and premultiplication math into managed code with native-equivalent results. SKShaper reads glyph buffers through zero-copy spans instead of allocating two temporary arrays.", "prs": [4370, 4385, 4388]}
+    ]},
+    {"heading": "Platform", "bullets": [
+      {"lead": "Matching .NET 11 WebAssembly libraries", "detail": "Ships Emscripten 5.0.6 variants for .NET 11 and compiles them with the new exception-handling model, correcting link failures and browser startup failures. .NET 8, 9 and 10 keep their existing native mappings.", "prs": [4459, 4487]}
+    ]}
   ],
   "contributor_summaries": {
-    "ramezgerges": "WebAssembly build cleanup, .NET 11 native assets, and HarfBuzzSharp performance improvements"
+    "ramezgerges": "Added .NET 11 WebAssembly native assets, introduced cross-backend visual regression coverage and removed a redundant WASM build define."
   },
   "preview_summaries": {
-    "v4.151.0-preview.1.1": "Preview 1 opened the m151 line and added the initial engine update and WebAssembly cleanup.",
-    "v4.151.0-preview.2.1": "Preview 2 focused on managed performance improvements, HarfBuzzSharp allocation reductions, and upstream m151 fixes.",
-    "v4.151.0-rc.1.1": "The release candidate added .NET 11 WebAssembly assets, restored CPU raster compatibility, and fixed encoded-image resource handling."
+    "v4.151.0-preview.1.1": "Opened the Skia m151 line without changes to the managed binding surface from the engine update.",
+    "v4.151.0-preview.2.1": "Added span-based color and tag parsing, reduced shaping allocations and corrected malformed native text cleanup. Color parsing now rejects whitespace immediately after '#'.",
+    "v4.151.0-rc.1.1": "Restored CPU bitmap performance, optimized single-color math and corrected subset-image cleanup. Added matching .NET 11 WebAssembly libraries and exception handling, plus Ganesh stencil and resolve fixes."
   },
-  "harfbuzz_summary": "Improves HarfBuzzSharp UTF-8 buffer population and tag parsing to eliminate recurring allocations.",
+  "harfbuzz_summary": "SkiaSharp.HarfBuzz 4.151.0 depends on HarfBuzzSharp 14.2.1. The span-based Tag.Parse overload collected in this development line first shipped in HarfBuzzSharp 14.2.1.102, co-shipped with SkiaSharp 4.151.2; it is not present in 4.151.0's default dependency.",
   "release_summaries": {
-    "v4.151.0-preview.1.1": {
-      "headline": "SkiaSharp 4.151.0 Preview 1 introduces the Skia m151 engine line.",
-      "body": "It begins the update with WebAssembly build cleanup."
-    },
-    "v4.151.0-preview.2.1": {
-      "headline": "SkiaSharp 4.151.0 Preview 2 improves managed rendering and shaping performance.",
-      "body": "It also incorporates current m151 engine fixes."
-    },
-    "v4.151.0-rc.1.1": {
-      "headline": "SkiaSharp 4.151.0 Release Candidate 1 adds .NET 11 WebAssembly assets and compatibility fixes.",
-      "body": "It restores CPU raster shader compatibility and fixes encoded-image resource handling."
-    },
-    "v4.151.0": {
-      "headline": "SkiaSharp 4.151.0 delivers the stable Skia m151 release.",
-      "body": null
-    }
+    "v4.151.0-preview.1.1": {"headline": "Preview 1 opened the Skia m151 line without changing the managed API surface.", "body": null},
+    "v4.151.0-preview.2.1": {"headline": "Preview 2 added span-based color and tag parsing, reduced shaping allocations, and corrected malformed native text cleanup.", "body": null},
+    "v4.151.0-rc.1.1": {"headline": "The release candidate restored CPU bitmap performance, optimized color math, fixed subset-image cleanup, and aligned .NET 11 WebAssembly assets and exception handling.", "body": null},
+    "v4.151.0": {"headline": "SkiaSharp 4.151.0 promotes the release candidate to stable without additional collected changes.", "body": null}
   }
 }

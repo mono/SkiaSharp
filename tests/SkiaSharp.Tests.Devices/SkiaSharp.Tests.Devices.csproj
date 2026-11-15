@@ -4,6 +4,7 @@
     <TargetFrameworks>$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
+    <ValidateXcodeVersion>true</ValidateXcodeVersion>
     <SingleProject>true</SingleProject>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
     <AssemblyName>SkiaSharp.Tests.Devices</AssemblyName>
@@ -12,6 +13,8 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Visual</GoldenRoot>
+    <EmbedGoldens>true</EmbedGoldens>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,9 +24,13 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
   <PropertyGroup>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">10.0</SupportedOSPlatformVersion>
@@ -73,6 +80,11 @@
     <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Wgl\*.cs" Link="SkiaSharp\GlContexts\Wgl\%(Filename)%(Extension)" />
+    <Compile Include="..\Tests\Utils\Win32\Gdi32.cs;..\Tests\Utils\Win32\PIXELFORMATDESCRIPTOR.cs" Link="Utils\Win32\%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\iOS\**\*.cs" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos'))" />
     <_PlatformCompile Include="Tests\Apple\**\*.cs;Tests\macOS\**\*.cs" Condition="$(TargetFramework.Contains('-macos'))" />
@@ -86,5 +98,7 @@
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
 
 </Project>

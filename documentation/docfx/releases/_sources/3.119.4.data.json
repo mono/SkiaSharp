@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "3.119.4",
   "family": "skiasharp",
   "status": "stable",
@@ -419,6 +419,7 @@
     "4045": {
       "url": "https://github.com/mono/SkiaSharp/pull/4045",
       "title": "[release/3.119.x] Fix CI failures: ANGLE, WASM 2.0.6, Tizen SDK, Alpine",
+      "body": "[CI] Fix native build failures on release/3.119.x (#4045)\n\nContext: #4014, #4022, #3743, #4013\n\nFour independent CI failures were blocking all builds on the 3.119.x\nrelease branch. Each fix is backported from main and adapted to the\nolder file layout (scripts/ vs scripts/infra/).\n\n~~ ANGLE WinAppSDK download (WinError 10013) ~~\n\nDevDiv 1ES agents block Python's urllib from making outbound HTTPS\nconnections. Replace the winappsdk_setup.py invocation with a Cake\nDownloadFile() from dnceng's dotnet-public feed, followed by a new\nPowerShell script (generate_winappsdk_headers.ps1) that runs winmdidl\n+ midlrt to produce the C++ headers ANGLE needs.\n\n~~ WASM Emscripten 2.0.6 hang ~~\n\nThe 2.0.6 build intermittently hangs in CI. No .NET release ever\nconsumed this version \u2014 it was a legacy artifact from early\nexperimentation. Remove it from the matrix and merge lists.\n\n~~ Tizen SDK 6.1 permanently broken ~~\n\nSamsung rebranded Tizen Studio to Tizen SDK starting with version 10.0\nand the old 6.1 Certificate-Manager package fails deterministically\nwith NoClassDefFoundError. Update to SDK 10.0 with the new URL pattern.\n\n~~ Alpine apk.static transient download failures ~~\n\nGitLab returns intermittent HTTP 5xx for apk.static. Without --fail,\ncurl silently saves the error body and the script tries to chmod +x a\nJSON string. Add --fail --retry 5 --retry-delay 10 --retry-all-errors.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed"
@@ -426,6 +427,7 @@
     "3728": {
       "url": "https://github.com/mono/SkiaSharp/pull/3728",
       "title": "[CI] Improve Android CI disk space and emulator startup (#3676)",
+      "body": "[CI] Improve Android CI disk space and emulator startup (#3676)\n\nThe Android test lane was failing with AVD startup and DEVICE_NOT_FOUND\nerrors that correlated with low disk space on the hosted Ubuntu image.\n\nReplace the bash-only free-disk-space-linux.sh with a cross-platform\nfree-disk-space.ps1 that runs on all hosted agents (no-op on Windows\nfor now). The new script uses environment variables ($AGENT_TOOLSDIRECTORY,\n$ANDROID_HOME) instead of hardcoded paths, and adds docker prune and\napt-get clean to the Linux cleanup. It also handles removing the\npre-installed .NET toolcache on Linux and macOS, which lets us drop the\nseparate per-platform cleanup step from the bootstrapper YAML.\n\nThe redundant inline disk cleanup that was added to the Android test\nstage preBuildSteps is removed since the bootstrapper already runs the\nscript earlier in the job.\n\nOther changes:\n- Bump androidsdk.tool from 0.18.0 to 0.35.1\n- Use swiftshader_indirect GPU mode on Linux emulators (more stable\n  than guest on headless agents)\n- Switch to the newer --wait flag for avd start\n\n\n(cherry picked from commit b5fd0a9577d53e549ab1a5ab56dcb3d177be2dce)\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -433,6 +435,7 @@
     "3723": {
       "url": "https://github.com/mono/SkiaSharp/pull/3723",
       "title": "Update libpng to 1.6.58",
+      "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -440,6 +443,7 @@
     "3716": {
       "url": "https://github.com/mono/SkiaSharp/pull/3716",
       "title": "[CI] Free disk space on hosted Linux agents (#3712)",
+      "body": "[CI] Free disk space on hosted Linux agents (#3712)\n\nLinux hosted agents (ubuntu-22.04/24.04) ship at ~93% disk usage,\nleaving only ~5 GB free on a 72 GB disk. This caused Android emulator\ntest jobs to be abandoned when the agent ran out of space mid-build.\n\nAdd `scripts/free-disk-space-linux.sh`, a reusable cleanup script that\nruns early in the bootstrapper for all hosted Linux builds. It removes\npre-installed toolchains and Android SDK components that SkiaSharp CI\nnever uses, freeing ~30 GB on current agent images:\n\n  * Unused toolchains: .NET (4.6G, we install our own via UseDotNet@2),\n    Swift (3.3G), Haskell (3.7G), Go (1.1G), CodeQL (1.7G), Julia (1G),\n    Python (1.7G), Miniconda (858M), PyPy (524M), Ruby (312M),\n    PowerShell modules (178M), Chromium, AWS CLI/SAM (515M)\n  * Android SDK: NDK (6.5G, native builds use Docker or install their\n    own), cmake, system-images, sources, extras, emulator (all\n    explicitly reinstalled by the Android test job when needed)\n  * Old build-tools versions (keeps only the latest)\n  * Unused platform versions (keeps only those in ANDROID_PLATFORM_VERSIONS)\n\nComponents the script preserves because the bootstrapper skips Android\nSDK installation on Linux (relies on the pre-installed SDK):\n  * cmdline-tools \u2014 sdkmanager, used by install-android-package.ps1\n  * platform-tools \u2014 adb, used for emulator communication\n  * latest build-tools \u2014 aapt/d8 for .NET Android builds\n  * required platforms \u2014 read from $ANDROID_PLATFORM_VERSIONS at runtime\n\nThe script is gated behind `pool.name == 'Azure Pipelines'` so it only\nruns on Microsoft-hosted images and does not touch self-hosted agents.\n\n---------\n\n\n(cherry picked from commit d19dfe54060d8250af1403ef787cac3957de219c)\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
@@ -447,6 +451,7 @@
     "3721": {
       "url": "https://github.com/mono/SkiaSharp/pull/3721",
       "title": "Fix cgmanifest.json Skia milestone mismatch on release/3.119.x",
+      "body": "The cgmanifest.json incorrectly declared Skia at chrome/m132 with a\ncommit hash from main, but the actual submodule on release/3.119.x\npoints to chrome/m119 (330baf49f6). This mismatch prevented Component\nGovernance from properly detecting Skia CVEs for this release branch.\n\nUpdated:\n- skia version: chrome/m132 \u2192 chrome/m119\n- chrome_milestone: 132 \u2192 119\n- mono/skia commitHash: 8c99e432ff \u2192 330baf49f6 (matches submodule)\n- upstream_merge_commit: \u2192 fcb55886b9 (chrome/m119 branch tip)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -454,6 +459,7 @@
     "3697": {
       "url": "https://github.com/mono/SkiaSharp/pull/3697",
       "title": "Move skills from .claude/ to .agents/",
+      "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -461,6 +467,7 @@
     "3696": {
       "url": "https://github.com/mono/SkiaSharp/pull/3696",
       "title": "Revert \"Add daily-digest agentic workflow (#3694)\"",
+      "body": "This reverts commit 6af78ecd5f69d0e499da550f680e216fd58280f0.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -468,6 +475,7 @@
     "3694": {
       "url": "https://github.com/mono/SkiaSharp/pull/3694",
       "title": "Add daily-digest agentic workflow",
+      "body": "Posts a 'Daily Digest' issue every weekday (08:00 UTC, Mon\u2013Fri)\nsummarising all open issues and PRs grouped by label. Also supports\nmanual runs via workflow_dispatch.\n\n- Scheduled trigger: cron 0 8 * * 1-5\n- Manual trigger: workflow_dispatch\n- Output: GitHub issue titled 'Daily Digest \u2013 YYYY-MM-DD'\n- Previous digest issues auto-closed; issues expire after 7 days\n- @mentions and #NNN references escaped to avoid notification noise\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -475,6 +483,7 @@
     "3692": {
       "url": "https://github.com/mono/SkiaSharp/pull/3692",
       "title": "Move AI agent config to shared location for Claude Code and GitHub Copilot",
+      "body": "Both tools now read from the same files:\n\n- AGENTS.md: shared project instructions (single source of truth)\n- .claude/skills/: shared skill definitions (17 skills)\n- CLAUDE.md: imports @AGENTS.md for Claude Code\n- .github/copilot-instructions.md: imports @AGENTS.md for Copilot\n\nSkills moved from .github/skills/ to .claude/skills/ since both\ntools discover skills there. All internal path references updated\nacross SKILL.md files, scripts, and documentation.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
       "author": "ramezgerges",
       "community": true,
       "tag": "internal"
@@ -482,6 +491,7 @@
     "3672": {
       "url": "https://github.com/mono/SkiaSharp/pull/3672",
       "title": "[build] Split Tizen native CI into per-architecture jobs",
+      "body": "[build] Split Tizen native CI into per-architecture jobs (#3672)\n\nContext: https://github.com/mono/SkiaSharp/issues/2933\nContext: https://github.com/mono/SkiaSharp/pull/3620\n\nAfter #3620 added x64 and arm64 Tizen build support, the single Tizen CI\njob built all 4 architectures sequentially (arm, x86, x64, arm64), hitting\nthe 3-hour AzDO worker timeout. This was the sole failure in 5 of the last\n6 main builds.\n\nSplit the monolithic Tizen job into 4 parallel per-architecture jobs on\nboth macOS and Windows, matching the existing pattern used by Android,\nWin32, WinUI, and ANGLE. The already-disabled Linux Tizen job (#2933) is\nremoved entirely. The merge stage now references the 4 per-arch Windows\nartifact names.",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed"
@@ -489,6 +499,7 @@
     "3675": {
       "url": "https://github.com/mono/SkiaSharp/pull/3675",
       "title": "Add release-notes-audit skill for Skia API gap analysis",
+      "body": "* Add release-notes-audit skill for Skia API gap analysis\n\nNew skill that audits Skia upstream release notes against SkiaSharp\nbindings to identify:\n- New APIs to add (missing bindings)\n- Deprecated APIs needing [Obsolete] markers\n- Removed APIs (correctly absent vs action needed)\n- Behavior changes requiring attention\n\nProduces structured JSON and standalone HTML report with:\n- Filterable item list grouped by milestone\n- Summary cards with binding coverage stats\n- Deprecation action items table\n- Prioritized next steps with skill handoff\n\nFollows the same pattern as the security-audit skill:\n- JSON schema in references/report-schema.md\n- Python renderer (render-release-notes-audit.py)\n- Bootstrap 5 HTML viewer template\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Improve release-notes-audit skill trigger phrases\n\nAdd trigger patterns for 'generate a report', 'release notes between',\n'between milestones', and other natural phrasings that users are likely\nto use when requesting a milestone-range report.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Optimize release-notes-audit skill description for triggering\n\nRewrite description as a single concise paragraph (731 chars, under\n1024 limit) following skill-creator best practices:\n- Imperative form ('Use this skill whenever...')\n- Explicit trigger phrases for natural language queries\n- DO NOT USE exclusions to avoid false triggers\n- Focuses on user intent vs implementation details\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -496,6 +507,7 @@
     "3671": {
       "url": "https://github.com/mono/SkiaSharp/pull/3671",
       "title": "Add weekly sweep to clean stale PR staging directories",
+      "body": "The existing per-PR cleanup workflow fires on pull_request.closed but can\nmiss PRs that were closed before the workflow existed. This adds a weekly\nscheduled job (Monday 06:00 UTC, also manual dispatch) that:\n\n1. Checks out the docs-live branch\n2. Iterates every staging/<PR> directory\n3. Queries each PR's state via gh CLI\n4. Removes directories for CLOSED or MERGED PRs\n5. Pushes the result, which triggers the go-live workflow\n\nAlso adds the new workflow name to build-site-go-live.yml triggers so\nGitHub Pages is re-deployed after a sweep.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -503,6 +515,7 @@
     "3217": {
       "url": "https://github.com/mono/SkiaSharp/pull/3217",
       "title": "Add Linux Bionic native assets support",
+      "body": "Context: https://github.com/mono/SkiaSharp/discussions/3205\nFixes: https://github.com/mono/SkiaSharp/issues/3206\n\nAndroid uses the Bionic libc rather than glibc or musl, so the existing Linux\nnative asset packages did not cover that environment. This change adds a\ndedicated `linux-bionic` runtime flavor for x64 and arm64, and wires it through\nthe SkiaSharp and HarfBuzzSharp packaging so those binaries can be restored and\ncopied like the existing Linux variants.\n\nThe build keeps the current `externals-linux` flow and teaches it about the\nBionic-specific differences required by the Android NDK toolchain: disable\nfontconfig, force the Unix debug path so `SkDebugf` is still provided, use the\nNDK clang/llvm-ar tools explicitly, and create the small pthread stub needed\nbecause the Linux GN configuration still links `-lpthread` even though Bionic\nfolds pthread support into libc.\n\nThis also adds the Docker-based local build environment and CI wiring needed to\nproduce the new assets reliably on both supported architectures. The Bionic jobs\nare handled explicitly in the Linux pipeline so they do not inherit the generic\nfontconfig expectations from the glibc builds, and the NoDependencies package\nreuses the same Bionic binaries since that build already excludes the external\nfontconfig dependency.\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "4Darmygeometry",
       "community": true,
       "tag": "product",
@@ -513,6 +526,7 @@
     "3662": {
       "url": "https://github.com/mono/SkiaSharp/pull/3662",
       "title": "Improve update-skia merge conflict guidance",
+      "body": "* Improve merge conflict guidance: require history check before --theirs\n\nAdd mandatory 'git log skiasharp -- <file>' step before resolving any\nmerge conflict. This prevents silently overwriting intentional fork\npatches with upstream code.\n\nAdds gotcha #15 documenting the m133 iOS GL file incident where\n--theirs replaced a deliberate dlsym(RTLD_DEFAULT) patch with an\nupstream macOS-only OpenGL.framework path.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Update known-gotchas.md\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -520,6 +534,7 @@
     "3670": {
       "url": "https://github.com/mono/SkiaSharp/pull/3670",
       "title": "Fix docs deploy race condition by serializing Go Live deployments",
+      "body": "Change cancel-in-progress from true to false on the docs-go-live\nconcurrency group. When cancel-in-progress is true, cancelling a\nrunning deploy-pages action orphans the in-progress GitHub Pages\ndeployment at the API level, which then blocks all subsequent\ndeployments with 'due to in progress deployment' errors.\n\nWith cancel-in-progress: false, each Go Live deployment completes\nfully before the next one starts. GitHub Actions concurrency ensures\nonly the latest pending run is kept, so stale deploys are still\n they just aren't cancelled mid-flight.skipped\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -527,6 +542,7 @@
     "3668": {
       "url": "https://github.com/mono/SkiaSharp/pull/3668",
       "title": "Redesign docs homepage: hero, code showcase, gallery, and resources",
+      "body": "Redesign the SkiaSharp GitHub Pages landing page with a modern layout\nfeaturing five distinct sections: hero, interactive code showcase,\ngallery, feature highlights, and documentation resources.\n\nHomepage layout:\n- Hero with install command and call-to-action buttons\n- Code showcase with collapsible/expandable C# sample, copy-to-clipboard,\n  and live SVG preview in a picture-frame design\n- Gallery section with Blazor WebAssembly (live) and upcoming galleries\n  for .NET MAUI, Uno Platform Web, and Uno Platform native\n- \"Why SkiaSharp?\" feature cards with platform pill rows (OS + frameworks)\n- Documentation/API/Source cards plus framework-specific resource cards\n  linking to Microsoft Learn and Uno Platform docs\n\nInfrastructure:\n- Light/dark theme toggle with localStorage persistence (try/catch for\n  private browsing) and flash-free synchronous init via theme-init.js\n- Extract all inline JS to external site.js and theme-init.js for CSP\n- Copy images/, JS files, and logos in build-site.yml Assemble step\n- Accessible: aria-pressed on toggle, aria-hidden on decorative SVGs,\n  semantic heading hierarchy, proper list markup for pill rows\n- Responsive: mobile (\u2264640px), tablet (\u2264900px), desktop (\u2265901px)\n\nNew assets:\n- Framework logos: Blazor (simple-icons, CC0), .NET MAUI (dotnet/maui),\n  Uno Platform (unoplatform/uno official SVG)\n- Site logo and favicon copied from docfx source\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -534,6 +550,7 @@
     "3669": {
       "url": "https://github.com/mono/SkiaSharp/pull/3669",
       "title": "[Gallery] Refine Image Decoder metadata overlay",
+      "body": "* [Gallery] Refine Image Decoder metadata overlay\n\nMake the metadata HUD much smaller and render it as a compact rounded card so the sample feels more polished and less intrusive.\n\nThis intentionally excludes the CICP-specific sample additions and just improves the presentation of the existing decoder sample.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* [Gallery] Show origin, frames, and color metadata\n\nAdd back the useful decode metadata (origin, frame count, and color-space/transfer details) while keeping the smaller rounded card UI. Also include the existing GIF asset as an image source so frame metadata is easy to verify interactively.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* [Gallery] Add CICP color metadata sample\n\nAdd a CICP PNG option to the image decoder sample and surface named color-space, transfer, ICC, and XYZ details using helper methods.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* [Gallery] Refine metadata layout\n\nSplit origin and frame details onto separate lines, make static images read more naturally, and place the metadata card at the bottom-right.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* [Gallery] Trigger PR update\n\nNo code changes.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -541,6 +558,7 @@
     "3667": {
       "url": "https://github.com/mono/SkiaSharp/pull/3667",
       "title": "Add submodule init and DEPS sync to review orchestrator",
+      "body": "The review orchestrator now automatically:\n- Initialises the skia submodule if missing (worktree environments)\n- Fixes the submodule origin remote if it doesn't point to mono/skia\n- Runs 'dotnet cake --target=git-sync-deps' to fetch third_party deps\n  (harfbuzz, freetype, etc.) before the generator step\n- Falls back to direct python git-sync-deps if cake fails\n\nThis prevents the recurring HarfBuzz generator failure caused by\nmissing third_party/externals/harfbuzz.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -548,6 +566,7 @@
     "3665": {
       "url": "https://github.com/mono/SkiaSharp/pull/3665",
       "title": "Fix review-skia-update milestone detection",
+      "body": "Read the old and new Skia milestones from the companion SkiaSharp PR base/head cgmanifest snapshots instead of the current worktree state. This keeps the orchestrator comparing the real pre-bump and post-bump upstream branches even when the local checkout already contains the milestone bump.\n\nAlso use the PR's declared base ref when fetching the mono/skia side instead of hardcoding the skiasharp branch.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -555,6 +574,7 @@
     "3658": {
       "url": "https://github.com/mono/SkiaSharp/pull/3658",
       "title": "Improve the update-skia skill from m119\u2192m133 lessons",
+      "body": "Improve the update-skia skill from m132\u2192m133 lessons (#3658)\n\nContext: https://github.com/mono/SkiaSharp/pull/3560\nContext: https://github.com/mono/SkiaSharp/pull/3644\n\nThe m132\u2192m133 bump work exposed a few places where `update-skia` was too easy\nto follow into the wrong answer: moved headers looked deleted, struct layout\nchanges were easy to miss until late validation, and reordered fields could be\nmisread as removed API. Some of the existing guidance also leaned on\n\"comment it out\" workarounds that hide the real upstream change.\n\nTighten the skill around those failure modes and fold the useful pieces of\n#3644 into a single, easier-to-follow workflow. The checklists and gotchas are\nnow consolidated instead of duplicated, validation explicitly calls out struct\nsize audits and relocation searches, and the guidance now pushes maintainers\ntoward investigating the replacement API or enum strategy rather than silently\nsuppressing the break.\n\n  * reorganize gotchas by topic and add recurring-pattern references\n  * bring merge strategy and `git blame` verification into the main flow\n  * treat removed enums and legacy BUILD.gn flags as compatibility work to\n    resolve, not shortcuts to paper over",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -562,6 +582,7 @@
     "3656": {
       "url": "https://github.com/mono/SkiaSharp/pull/3656",
       "title": "Fix cgmanifest.json version drift and overhaul security-audit skill",
+      "body": "Fix cgmanifest.json version drift and overhaul security-audit skill (#3656)\n\ncgmanifest.json had stale data that caused the security-audit skill to\nreport incorrect CVE exposure. The Skia milestone was listed as m119\nwhen the actual submodule was at m132. libpng was listed as 1.6.44\nwhen DEPS pinned 1.6.54. ANGLE and several Skia DEPS entries were\nmissing entirely.\n\n~~ cgmanifest.json ~~\n\nFixed 4 stale fields (Skia milestone, commitHash, upstream_merge_commit,\nlibpng version) and added 8 missing entries:\n\n  * ANGLE chromium/6275 + git ref (Windows-only WinUI component)\n  * ANGLE submodule deps: zlib 1.3.0.1, jsoncpp 1.9.4,\n    astc-encoder 573c4753, vulkan-deps 3834da20\n  * vulkan-headers 1.3.301, piex\n\nAll 23 registrations verified against actual DEPS commit hashes and\nupstream header files via Chromium mirror lookups.\n\n~~ security-audit skill ~~\n\nThe skill previously trusted cgmanifest.json for version data, which\nis manually maintained and drifts. Rewrote the verification workflow\nto treat the submodule and DEPS file as the source of truth:\n\n  * Step 2a now requires fetching the upstream google/skia branch and\n    running merge-base --is-ancestor to independently verify the\n    upstream merge point (marked MANDATORY \u2014 adding a git remote is\n    a read-only operation)\n  * Step 2b verifies dependency versions by fetching headers from\n    Chromium mirrors at the exact DEPS commit hashes\n  * Step 2c added for ANGLE: reads version from VERSIONS.txt, fetches\n    ANGLE DEPS from googlesource, checks submodule coverage\n  * Non-Chrome CVEs (Android/Huawei bulletins) are no longer dismissed\n    by vendor \u2014 the skill now checks if the vulnerable code path exists\n    in our fork via git grep\n  * CVEs where the NVD version range is wrong (fix commit already in\n    our tree) go in the false positive section with commit evidence\n  * CVEs without a CVSS score use the Chromium severity rating\n  * Skia bump recommendations target the highest-severity milestone\n\n~~ JSON + HTML report output ~~\n\nThe audit now produces structured JSON (report-schema.md) for dashboards\nand a self-contained Bootstrap 5 HTML report (render-security-audit.py +\nviewer.html) for human review. The HTML features:\n\n  * Dependency overview table grouped by CVE status, sorted by name,\n    with clickable rows that scroll to finding details\n  * Red-highlighted rows for cgmanifest.json version mismatches\n  * Collapsible finding cards with CVE tables linking to NVD\n  * Skia upstream verification panel with commit links to GitHub\n  * Prioritized next steps with severity-coded borders\n\n~~ Evals ~~\n\n22 assertions across 3 scenarios covering version verification, upstream\nancestry checks, CVE classification, false positive detection, and\nJSON+HTML output generation. Tested across 3 iterations (v1: 17/18,\nv2: 18/18, v3: 18/18 + 6/6 bonus) to validate each skill improvement.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -569,6 +590,7 @@
     "3076": {
       "url": "https://github.com/mono/SkiaSharp/pull/3076",
       "title": "[Android] Fix SKGLView not rendering after tab switch in MAUI TabBar",
+      "body": "[Android] Fix SKGLView not rendering after tab switch in MAUI TabBar (#3076)\n\nFixes: https://github.com/mono/SkiaSharp/issues/2550\nFixes: https://github.com/mono/SkiaSharp/issues/2445\n\nAn `SKGLView` placed inside a MAUI `TabBar` renders correctly on first\ndisplay but goes blank when the user switches to another tab and back.\nThe same symptom occurs when navigating away from a page containing an\n`SKGLView` and then returning.\n\nThe root cause is in `GLTextureView.OnAttachedToWindow()`. When the view\nis reattached, a new `GLThread` is created with `width = 0` and\n`height = 0`. The thread expects `OnLayoutChange()` to supply the real\ndimensions, but Android does not fire that callback when the view is\nreattached at the same size \u2014 the layout hasn't changed, so there is no\nevent. The GL surface is created at 0\u00d70 and nothing is drawn.\n\nPass the current `Width` and `Height` of the `GLTextureView` into the\n`GLThread` constructor so it starts with the correct dimensions\nimmediately. When the view appears for the first time, both values are\nstill 0, matching the previous default, so first-display behavior is\nunchanged.",
       "author": "SimonvBez",
       "community": true,
       "tag": "product",
@@ -581,6 +603,7 @@
     "3642": {
       "url": "https://github.com/mono/SkiaSharp/pull/3642",
       "title": "[build] Use PolySharp for C# 13 support on legacy TFMs",
+      "body": "[build] Use PolySharp for C# 13 support on legacy TFMs (#3642)\n\nSkiaSharp still ships net462 and netstandard2.x targets, so newer C# language\nfeatures need the compiler support attributes that newer frameworks already\nprovide. Add PolySharp as a private build-time dependency for those legacy\nTFMs and update the compatibility package versions used there.\n\nBecause PolySharp embeds the required System.Diagnostics.CodeAnalysis and\nSystem.Runtime.CompilerServices support types into the final assemblies, the\nrepo-local NullableAttributes.generated.cs shim and its build registration are\nno longer needed and can be removed.\n\nKeep the dependency metadata aligned with the final package set by recording the\nupdated System.Memory and System.Runtime.CompilerServices.Unsafe versions in\nVERSIONS.txt and the docs dependency scan. Microsoft.Bcl.AsyncInterfaces was\nevaluated during the work, but removed after validating that the legacy\nSkiaSharp builds still succeed without it.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "4Darmygeometry",
       "community": true,
       "tag": "product"
@@ -588,6 +611,7 @@
     "3620": {
       "url": "https://github.com/mono/SkiaSharp/pull/3620",
       "title": "[tizen] Add x64 and arm64 native build support",
+      "body": "Changes: https://github.com/mono/skia/pull/175\n\nAdd 64-bit (x86_64, aarch64) native library builds for Tizen alongside\nthe existing 32-bit armel and i586 targets. The new architectures use\nTizen 8.0 rootstraps while the 32-bit targets remain on mobile 6.0.\n\n  * native/tizen/build.cake: Refactor Build() to accept per-architecture\n    rootstrap, profile, and ncli_version. Add SetProjectProfile() helper\n    to dynamically switch the project_def.prop profile between builds.\n    Clean stale build directories before each architecture to prevent\n    cross-arch linker conflicts.\n  * binding/*.csproj and *.targets: Add PackageFile and TizenTpkFiles\n    entries for tizen-x64 and tizen-arm64 RIDs.\n  * externals/skia: Bump submodule to mono/skia@29675152de (GN config\n    for Tizen x64/arm64 target_cpu).\n\nAlso fixes a missing space in the HarfBuzzSharp tvos ItemGroup condition\n(`')and'` \u2192 `') and'`).\n\nRIDs follow Samsung's official RuntimeIdentifierGraph.json naming:\ntizen-x64 and tizen-arm64.",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -595,6 +619,7 @@
     "3653": {
       "url": "https://github.com/mono/SkiaSharp/pull/3653",
       "title": "Update build-site workflow to remove path filters",
+      "body": "* Update build-site workflow to remove path filters\n\nRemoved specific paths from the build-site workflow triggers.\n\n* Add concurrency group to cancel stale PR builds\n\nMain branch pushes always run to completion. PR builds cancel\nolder in-progress runs when new commits are pushed.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -602,6 +627,7 @@
     "3631": {
       "url": "https://github.com/mono/SkiaSharp/pull/3631",
       "title": "[build] Add net48 full-framework target and use it for Windows validation",
+      "body": "[build] Add net48 full-framework target and use it for Windows validation (#3631)\n\nContext: https://dotnet.microsoft.com/en-us/download/dotnet-framework\n\nSkiaSharp still needs to support existing .NET Framework consumers, but the repo's\nWindows validation path was still centered on `net472` and the docs did not make the\ncurrent recommendation clear. As .NET Framework 4.8 is the supported desktop baseline,\nwe should validate and document that runtime without immediately dropping `net462`\npackage compatibility.\n\nAdd `net48` alongside `net462` in `FullFrameworkTargetFrameworks`, move the Windows\ntest projects, benchmark job, and `tests-netfx` Cake target to `net48`, and update the\nWindows Forms sample plus README to reflect 4.8 as the recommended Full Framework\nversion. This keeps older consumers working while aligning our test matrix and guidance\nwith the framework version users are expected to install.",
       "author": "4Darmygeometry",
       "community": true,
       "tag": "product"
@@ -609,6 +635,7 @@
     "3651": {
       "url": "https://github.com/mono/SkiaSharp/pull/3651",
       "title": "Use MSIX packaging for WinUI sample",
+      "body": "Align the WinUI sample project file with its MSIX launch profile by switching WindowsPackageType from None to MSIX.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -616,6 +643,7 @@
     "3650": {
       "url": "https://github.com/mono/SkiaSharp/pull/3650",
       "title": "Fix staging docs PR checkout",
+      "body": "Make workflow-dispatched docs staging builds use the requested PR's merge ref instead of always building the selected branch.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -623,6 +651,7 @@
     "3648": {
       "url": "https://github.com/mono/SkiaSharp/pull/3648",
       "title": "Fix loongarch Linux build mapping",
+      "body": "Map the loongarch64 Linux build to Skia GN's expected loong64 target_cpu so the correct LoongArch-optimized sources are included during native linking.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed"
@@ -630,6 +659,7 @@
     "3641": {
       "url": "https://github.com/mono/SkiaSharp/pull/3641",
       "title": "Add a PR merge commit message skill (#3641)",
+      "body": "Context: based on a review of 100 recent Jon Pryor-authored commits in\n`dotnet/android`\n\nSkiaSharp merge commits often capture the diff but not enough of the\nengineering story behind it. That makes `git log` less useful when we\nneed to answer why a PR mattered, what failure or constraint prompted\nit, and how the chosen fix was validated.\n\nAdd a new `pr-commit-message` skill to help draft higher-signal merge\nand squash commit messages. The skill emphasizes the same structure seen\nthroughout the Pryor corpus:\n\n  * lead with durable context (`Context:`, `Fixes:`, `Changes:`)\n  * preserve the problem, evidence, reasoning, and solution\n  * match the length to the size and risk of the change\n  * keep the message useful even after the PR discussion is long gone\n\nThe skill package includes:\n\n  * `SKILL.md` guidance for drafting commit messages from PR, issue, and\n    diff context\n  * a Pryor-style reference guide distilled from the 100-commit corpus\n  * eval prompts covering bug fixes, dependency bumps, API work, and\n    real SkiaSharp PRs\n\nThis gives us a repeatable way to turn `merge PR` summaries into commit\nmessages that stand on their own in history.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -637,6 +667,7 @@
     "3633": {
       "url": "https://github.com/mono/SkiaSharp/pull/3633",
       "title": "Delay-load D3D12 DLLs to prevent crashes on systems without DX12",
+      "body": "Some Windows systems do not have the full Direct3D stack available,\nincluding d3d12.dll, dxgi.dll, or D3DCompiler_47.dll. Because\nlibSkiaSharp.dll linked against these DLLs as regular imports, the\nnative library could fail to load at process startup even for apps that\nonly use CPU rendering.\n\nUpdate the Windows native build to mark the Direct3D dependencies as\ndelay-loaded and link with delayimp.lib so they are only resolved when\nDirect3D is actually used. This preserves Direct3D support where it is\navailable, while allowing CPU-only scenarios to run on machines without\nthose components installed.\n\nAlso extend the Windows dependency verification step to distinguish\nbetween regular imports and delay-loaded imports so CI can assert the\nintended linker behavior.\n\nFixes #3267\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed",
@@ -647,6 +678,7 @@
     "3639": {
       "url": "https://github.com/mono/SkiaSharp/pull/3639",
       "title": "Refactor GitHub Pages: PR staging subfolders on docs-live branch",
+      "body": "Replace the dual-branch deployment model (gh-pages + staging branches)\nwith a single docs-live branch. Main deploys to root, PR previews\ndeploy to staging/{pr_number}/ subfolders, and a go-live workflow\npublishes the branch to GitHub Pages.\n\n- Rewrite build-site.yml: unified build job, deploy to docs-live branch\n- Add build-site-cleanup.yml: removes staging dir on PR close\n- Add build-site-go-live.yml: publishes docs-live via deploy-pages\n- Add SPA routing for gallery deep links (404.html + index.html)\n- Add build footer to docs and gallery (source, branch, commit)\n- Remove serve-site.ps1/.sh (no longer needed)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -654,6 +686,7 @@
     "3637": {
       "url": "https://github.com/mono/SkiaSharp/pull/3637",
       "title": "Fix get-skiasharp-pr.ps1 killing the shell when run via iex",
+      "body": "* Test: trigger PR artifacts comment workflow\n\nThis is a dummy PR to verify the pr-artifacts-comment workflow posts\na comment with download instructions.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix get-skiasharp-pr.ps1 killing the shell when run via iex\n\nReplace exit with return/throw so the script doesn't terminate\nthe host PowerShell session when invoked via iex.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Remove test file\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -661,6 +694,7 @@
     "3635": {
       "url": "https://github.com/mono/SkiaSharp/pull/3635",
       "title": "Add workflow to post PR artifacts comment",
+      "body": "Automatically posts a comment on every PR with one-liner commands\nto download and configure SkiaSharp packages from that PR's CI build.\n\nImprovements over the MAUI equivalent:\n- Includes the NuGet source setup step (Step 2)\n- Shows cleanup command to remove the source when done\n- Collapsible section with advanced options and manual download link\n- Uses GitHub alert syntax for the security warning\n- Paginates comment search for busy PRs\n- Derives script URLs from the repo slug instead of hardcoding\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -668,6 +702,7 @@
     "3634": {
       "url": "https://github.com/mono/SkiaSharp/pull/3634",
       "title": "Build WASM natives in docs workflow instead of downloading",
+      "body": "* Build WASM natives in docs workflow instead of downloading\n\nReplace the docs-download-output step (which downloads ALL platform\nNuGet packages from CI feed) with a Docker-based WASM native build\nthat produces only the two .a files needed for the Gallery Blazor app.\n\nChanges:\n- Add Docker WASM build step using build-local.sh (Emscripten 3.1.56,\n  variant _wasmeh,st)\n- Add submodules: recursive to checkout (needed for native build)\n- Remove docs-download-output, version detection, samples-generate,\n  and NuGet source steps (no longer needed)\n- Publish Gallery directly from source tree instead of generated\n  samples-preview copy (project already has ProjectReferences)\n- Remove git_branch workflow_dispatch input (was only used for CI\n  feed download)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix: add execute permission to build-local.sh\n\nThe CI runner fails with 'Permission denied' because the script\nwas committed with mode 100644 instead of 100755.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Use 'bash' to invoke build-local.sh instead of relying on +x\n\nAvoids permission issues since Windows may strip the execute bit.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Strip platform TFMs when publishing Gallery Blazor\n\nThe Blazor WASM project only needs net10.0, but SkiaSharp.csproj\nmulti-targets with android/ios/etc. Setting PlatformTargetFrameworks\nto empty avoids requiring those workloads on the docs runner.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix output dir ownership after Docker WASM build\n\nDocker runs as root, creating output/ owned by root. The runner\nuser then cannot create gallery-publish/ inside it. Fix by chowning\nthe output directory back to the runner user after the build.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -675,6 +710,7 @@
     "3624": {
       "url": "https://github.com/mono/SkiaSharp/pull/3624",
       "title": "Update rollForward from latestPatch to latestFeature",
+      "body": "* Update rollForward from latestPatch to latestFeature\n\nChange the SDK roll-forward policy in global.json from latestPatch to\nlatestFeature so builds can pick up newer .NET SDK feature bands.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Pin WinUI native build to latestPatch SDK rollforward\n\nThe WinUI native C++/WinRT projection is built via VS MSBuild (17.x),\nwhich is incompatible with SDK 10.0.2xx+ (requires MSBuild 18.0+).\nAdd a nested global.json to keep WinUI on the 10.0.1xx feature band\nwhile the rest of the repo uses latestFeature.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed"
@@ -682,6 +718,7 @@
     "3629": {
       "url": "https://github.com/mono/SkiaSharp/pull/3629",
       "title": "Enforce -Wl,--no-undefined linker flag for Linux and Android native builds",
+      "body": "Move -Wl,--no-undefined into the Skia GN build config (gn/skia/BUILD.gn)\nfor both is_linux and is_android, so all shared library builds get the\nflag from a single location. This causes the linker to fail at build time\nwhen undefined symbols are present, instead of silently producing binaries\nthat crash at runtime.\n\nThe submodule update also includes the libpng LoongArch LSX fix \u2014 adding\nthe missing loongarch/filter_lsx_intrinsics.c and loongarch_lsx_init.c\nsource files that were never included in Skia's GN build, which was a\nlatent undefined symbol now caught by this flag.\n\nSee mono/skia#176.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -689,6 +726,7 @@
     "3625": {
       "url": "https://github.com/mono/SkiaSharp/pull/3625",
       "title": "Reduce disk usage in Docker sample builds",
+      "body": "The Linux Samples CI job consistently runs out of disk space (95%+ used)\nbecause the samples-prepare task bulk-copies ALL platform nupkg files\n(Android, iOS, Win32, etc.) into every Docker sample's packages/ directory\nupfront. This wastes significant disk space on packages that will never be\nused by the Docker build.\n\nChanges:\n- Move nupkg staging from samples-prepare into the per-sample Docker loop\n  in samples-run, so only one set of packages exists on disk at a time\n- Filter nupkg files by platform: on Linux skip Android/iOS/macOS/Win32\n  native assets; on Windows skip Android/iOS/macOS/Linux native assets\n- Delete staged nupkg files immediately after each Docker sample completes\n- Remove Docker images (docker rmi) after each sample test to reclaim\n  image layer space\n- Run docker system prune after each Docker sample to clean up dangling\n  layers from failed or completed builds\n\nTogether these changes should recover several GB of disk space during the\nsamples stage, preventing the 'no space left on device' errors seen in\nbuilds 156518, 156522, and 156496.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -696,6 +734,7 @@
     "3626": {
       "url": "https://github.com/mono/SkiaSharp/pull/3626",
       "title": "Target net6.0-tizen8.0 in Tizen sample for broader device compatibility",
+      "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -703,6 +742,7 @@
     "3623": {
       "url": "https://github.com/mono/SkiaSharp/pull/3623",
       "title": "Add landing page, migrate docs to main, and unify site deployment",
+      "body": "Reorganize mono.github.io/SkiaSharp/ with a new URL structure:\n  /          \u2192 static landing page (dark/light theme, nav cards)\n  /docs/     \u2192 DocFX guides (basics, paths, transforms, bitmaps, effects)\n  /gallery/  \u2192 Blazor WASM interactive samples\n\nKey changes:\n- Migrate 54 DocFX pages + ~1,047 images from docs branch to main\n- Add responsive landing page with hero, install command, feature cards\n- Replace 3 workflows with unified build-site.yml (parallel jobs + artifacts)\n- Deploy: push\u2192docs-live, PRs\u2192docs-staging, forks\u2192build only\n- Add local preview scripts (scripts/serve-site.ps1, serve-site.sh)\n- Add developer guide (documentation/dev/site.md)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -710,6 +750,7 @@
     "3619": {
       "url": "https://github.com/mono/SkiaSharp/pull/3619",
       "title": "Update Tizen support: Studio 6.1, TFM fixes, and 3-tab sample",
+      "body": "* Update Tizen support: Studio 6.1, TFM fixes, and 3-tab sample\n\nTizen build infrastructure (from PR #3607, without submodule bump):\n- Upgrade Tizen Studio from 5.6 to 6.1 in install-tizen.ps1\n- Install both MOBILE-6.0 and TIZEN-8.0 NativeAppDevelopment packages\n- Add TFMMinimum=net6.0 and TPVTizenMinimum to SkiaSharp.Build.props\n- Refactor native/tizen/build.cake with helper functions for 4 archs\n- Add x64/arm64 entries to IncludeNativeAssets targets (with Exists guards)\n- Add x64/arm64 PackageFile entries to NativeAssets.Tizen csproj files\n- Add NET7_0_OR_GREATER guard for LibraryImport in GRGlInterface.cs\n- Add Tizen native build tasks to build.cake\n\nTizen sample (3-page TabView):\n- App.cs \u2014 Thin shell with NUI TabView and back-key handler\n- CpuPage.cs \u2014 Software-rendered gradient, circles, text with FPS counter\n- GpuPage.cs \u2014 Animated SkSL lava lamp shader with touch and FPS counter\n- DrawingPage.cs \u2014 Freehand touch drawing with 6-color palette and clear\n- FpsCounter.cs \u2014 Shared FPS counter utility (same as other platform samples)\n- SamplePage.cs \u2014 Page enum (Cpu, Gpu, Drawing)\n- Update tizen-manifest.xml api-version to 10 for net10.0-tizen\n\nNote: x64/arm64 native compilation requires the skia submodule GN config\nupdate (deferred to avoid conflicts with upcoming Skia bump).\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Remove x64/arm64 native asset references (deferred to next PR)\n\nRemove tizen-x64 and tizen-arm64 entries from IncludeNativeAssets\ntargets and NativeAssets.Tizen csproj files. These require the skia\nsubmodule GN config update and will be added back with the x64/arm64\nnative build support PR.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -717,6 +758,7 @@
     "3622": {
       "url": "https://github.com/mono/SkiaSharp/pull/3622",
       "title": "Add workflow to deploy Gallery WASM sample to GitHub Pages",
+      "body": "* Add GitHub Actions workflow to deploy Gallery WASM to GitHub Pages\n\nCreate .github/workflows/gallery.yml that:\n- Fetches latest nightly SkiaSharp/HarfBuzzSharp versions from the CI preview feed\n- Runs samples-generate to convert ProjectReference to PackageReference\n- Publishes the Gallery Blazor WASM app\n- Rewrites base href to /SkiaSharp/gallery/ for GitHub Pages subpath\n- Adds .nojekyll and SPA 404.html for client-side routing\n- Deploys to docs-live branch under gallery/ subdirectory\n\nTriggers: push to main (Gallery paths), workflow_dispatch, releases\nPR builds run as dry-run (build but don't deploy)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Use docs-download-output + samples-generate for proper CI package flow\n\nRewrite the gallery workflow to use the established two-step process:\n1. docs-download-output (--gitBranch=main) downloads nupkgs to output/nugets/\n2. Detect previewLabel and buildNumber from downloaded package filenames\n3. samples-generate with correct --previewLabel and --buildNumber\n4. Build gallery from output/samples-preview/ with local nuget source\n\nThis aligns with the documented building-samples.md workflow instead of\nquerying the CI feed API directly.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix version detection glob to not hardcode major version\n\nUse SkiaSharp.[0-9]*-*.nupkg instead of SkiaSharp.3*-*.nupkg so it\nworks if the major version is ever bumped.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Unify deploy step \u2014 dry run only skips push\n\nMatch the samples.yml pattern: single deploy step with a DRY_RUN flag\nthat does clone/add/commit always, and only skips the push on PRs or\nwhen dry_run input is true.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -724,6 +766,7 @@
     "3618": {
       "url": "https://github.com/mono/SkiaSharp/pull/3618",
       "title": "Fix WASM Docker build scripts for ARM hosts and add features argument",
+      "body": "* Fix WASM Docker build scripts for ARM hosts and add features argument\n\n- Add --platform linux/amd64 on ARM machines (Apple Silicon, aarch64)\n  since older emscripten versions don't publish arm64 Linux binaries\n- Add features parameter to bash script (was missing, only in ps1)\n- Fix ps1 to not pass empty --emscriptenFeatures when no features specified\n- Use Resolve-Path for proper path resolution in ps1\n- Quote paths consistently in bash script\n\nUsage:\n  bash build-local.sh 3.1.56 '_wasmeh,st'\n  pwsh build-local.ps1 -Version 3.1.56 -Features '_wasmeh,st,simd'\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Set WASM Docker build defaults to net9+ Blazor WASM values\n\nDefault emsdk version: 3.1.56 (required for net9+/net10)\nDefault features: _wasmeh,st (wasm exceptions + single-threaded)\n\nThis matches what a default Blazor WASM project uses, so running\nthe script with no arguments produces a working local build.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -731,6 +774,7 @@
     "3616": {
       "url": "https://github.com/mono/SkiaSharp/pull/3616",
       "title": "Validate-samples skill, samples build refactor, and stale file cleanup",
+      "body": "* Remove stale sample files re-added by revert commit\n\nThe revert in 76da5e16 ('Revert samples, source, and global.json\nchanges') re-added old sample files that had been replaced during the\nBasic samples refactoring. Also removes other unused files found during\na thorough audit of all Basic samples.\n\nStale files from revert:\n- iOS/macOS/tvOS: old ViewController.cs + .designer.cs replaced by\n  CpuViewController, DrawingViewController, GpuGLViewController, etc.\n- MAUI: old MainPage.xaml/.cs replaced by CpuPage/DrawingPage/GpuPage\n- BlazorWebAssembly: old Bootstrap NavMenu.razor/.css, Raster.razor,\n  bootstrap.min.css \u2014 app uses MudBlazor now\n- Web: duplicate root-level jquery-validation-unobtrusive JS files\n\nAdditional dead files found via audit:\n- BlazorWebAssembly: empty MainLayout.razor.css\n- Web: removed jQuery library (Bootstrap 5 doesn't need it, no jQuery\n  API calls in the sample) and unused _ValidationScriptsPartial.cshtml\n  + jquery-validation libraries (no forms in the sample)\n- Web: removed jQuery script tag from _Layout.cshtml\n- WindowsForms: empty CpuPage/DrawingPage/GpuPage.resx template files,\n  unused Properties/Resources.resx + Resources.Designer.cs\n- MacCatalyst: unreferenced Resources/LaunchScreen.xib (Info.plist uses\n  Main.storyboard, not this xib)\n- Android: stale drawable/ic_launcher_background.xml (launcher uses\n  @color/ic_launcher_background from values/ instead)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Claude Opus 4.6 <noreply@anthropic.com>\n\n* Add validate-samples skill and building-samples documentation\n\nAdd a Copilot skill that automates building and validating sample\nprojects using CI-produced NuGet packages, plus a developer guide\nexplaining the CI artifacts feed, cake targets, and troubleshooting.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Refactor samples build: extract tasks to scripts/cake/samples.cake\n\nMove the 4 samples-related cake targets (samples-generate, samples-prepare,\nsamples-run, samples) from build.cake into scripts/cake/samples.cake alongside\nthe existing CreateSamplesDirectory helper.\n\nKey improvements:\n- Split monolithic 'samples' task into prepare/run phases\n- Add --sample filter argument for building specific samples\n- Enable Docker sample builds (previously commented out)\n- Better error reporting: collect failures and report at the end\n- Cleaner classification: build vs skip with reasons logged upfront\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix inaccuracies in validate-samples skill and building-samples docs\n\n- Remove non-existent validate-samples-full target from Quick Reference\n- Fix --artifactsFeed to --previewFeed (correct cake argument name)\n- Fix stale line references pointing to build.cake instead of samples.cake\n- Replace simplified version construction with actual code including\n  FEATURE_NAME handling and conditional BUILD_NUMBER append\n- Fix download resolution to show actual PREVIEW_LABEL pattern\n- Remove incorrect externals-download ordering advice (both targets\n  clear ./output/ so neither order preserves both outputs)\n- Remove externals-download from building-samples.md targets table\n  and Building with Native Binaries section\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Simplify Step 3: use detect script instead of inline code\n\nRemove duplicated inline bash detection logic from SKILL.md and\nbuilding-samples.md. Both now reference the detect-preview-version.sh\nscript, which prints values the AI agent can parse from stdout.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Move deep dive content from skill to docs\n\nSKILL.md is now a lean AI runbook: just the 4 workflow steps,\ntroubleshooting, and a link to docs. Version construction details,\ndownload resolution, cake arguments reference, and samples-generate\ninternals now live exclusively in building-samples.md.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Replace step-by-step in docs with skill reference and example prompts\n\nThe docs no longer duplicate the workflow steps \u2014 they point to the\nvalidate-samples skill instead, with example prompts showing how to\ninvoke it.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Convert detect script to PowerShell and update all snippets\n\nReplace bash detect-preview-version.sh with detect-preview-version.ps1.\nConvert all inline code blocks in SKILL.md and building-samples.md to\nPowerShell using short aliases (rm, ls, etc.).\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Remove Quick Reference from skill to force step-by-step workflow\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* keep this\n\n* fixes\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Claude Opus 4.6 <noreply@anthropic.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -738,6 +782,7 @@
     "3614": {
       "url": "https://github.com/mono/SkiaSharp/pull/3614",
       "title": "Use DesignMode property directly in WindowsForms controls",
+      "body": "Remove the cached designMode field and LicenseManager check from\nSKControl and SKGLControl. The built-in DesignMode property already\nhandles design-time detection correctly.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -745,6 +790,7 @@
     "3613": {
       "url": "https://github.com/mono/SkiaSharp/pull/3613",
       "title": "Improve review-skia-update skill: fix header link, add expand/collapse, upgrade companion PR",
+      "body": "* Improve review-skia-update skill: fix header link, add expand/collapse, upgrade companion PR\n\n- Fix floating header SkiaSharp PR link (was pointing to mono/skia instead of mono/SkiaSharp)\n- Add Expand All / Collapse All buttons to each Integrity Review section\n- Replace companion PR findings table with full sourceFile-based file review:\n  - Uses same sourceFile structure as upstream/interop (path, summary, diff, relatedFiles)\n  - Full diff viewer with Direct/Patch/Old/New tabs for changed files\n  - Viewed checkboxes, type filters, cross-link navigation\n  - Remove findings[], filesReviewed, filesSkipped from schema\n  - Add status, added[], changed[], unchanged to companionPr\n- Update validator to check companion PR file items\n- Update reference docs (schema-cheatsheet, csharp-review, writing-summaries, SKILL.md)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Add check_companion.py: mechanically generate companion PR file data\n\n- New check_companion.py script: diffs companion PR against main, filters\n  generated files, produces same sourceFile structure as upstream/interop\n- Orchestrator (run_review.py) now runs it as Step 5, includes companionPr\n  in raw-results.json with prNumber, status, added[], changed[], unchanged\n- AI now just adds summaries to pre-generated companion PR data (same\n  workflow as upstream/interop/deps)\n- Update SKILL.md, schema-cheatsheet, csharp-review, writing-summaries\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -752,6 +798,7 @@
     "3589": {
       "url": "https://github.com/mono/SkiaSharp/pull/3589",
       "title": "Refactor SKManagedStream: replace parent/child chain with SKData snapshot",
+      "body": "Replace the fragile parent/child weak-reference ownership chain in\nSKManagedStream with a lazy SKData snapshot approach for duplicate/fork.\n\nOnDuplicate() now creates a native SkMemoryStream backed by a cached,\nref-counted SKData snapshot of the .NET stream. OnFork() duplicates and\nseeks to the current position. The original stream remains fully readable\nafter duplication, multiple duplicates are allowed, and each duplicate is\nan independent native stream with no managed interop overhead.\n\nThis is both simpler and faster than the old approach:\n- No parent/child weak references or ownership transfer logic\n- No VerifyOriginal() / InvalidOperationException on the original stream\n- Snapshot is cached (one read, shared by all duplicates)\n- Native SkMemoryStream duplicates expose getMemoryBase(), enabling\n  zero-copy fast paths in Skia (e.g. CoreText font loading on macOS)\n\nTests updated to reflect new semantics:\n- Removed SkipOnNonWindows() from 6 tests (no longer throws in native\n  delegates, so all platforms can run these tests now)\n- Added NonSeekableStreamDuplicateAndForkReturnNull test\n- Renamed DotNetStreamIsClosedWhenSKManagedStreamIsDisposed to document\n  that the .NET stream is closed when the parent is disposed (the\n  snapshot keeps duplicates alive independently via native ref-counting)\n\nBased on the original SKManagedStream refactoring from PR #3560.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Ramez Ragaa <66218781+ramezgerges@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Claude Opus 4.6 <noreply@anthropic.com>",
       "author": "Copilot",
       "community": false,
       "tag": "product"
@@ -759,6 +806,7 @@
     "3606": {
       "url": "https://github.com/mono/SkiaSharp/pull/3606",
       "title": "Restructure Docker samples and add READMEs",
+      "body": "- Move Docker/Console \u2192 DockerConsole (flat structure for CI)\n- Move Docker/WebApi \u2192 DockerWebApi (flat structure for CI)\n- Add READMEs with build instructions\n- Update Dockerfiles and run scripts\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -766,6 +814,7 @@
     "3605": {
       "url": "https://github.com/mono/SkiaSharp/pull/3605",
       "title": "Update Web (ASP.NET Core) sample with modernized code and README",
+      "body": "- Modernize controllers and Razor pages\n- Update layout and CSS\n- Add README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -773,6 +822,7 @@
     "3604": {
       "url": "https://github.com/mono/SkiaSharp/pull/3604",
       "title": "Update WinUI 3 sample with NavigationView, multi-page layout and README",
+      "body": "- Add CPU, GPU, and Drawing pages with XAML layouts\n- NavigationView sidebar navigation\n- Mouse/touch drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -780,6 +830,7 @@
     "3603": {
       "url": "https://github.com/mono/SkiaSharp/pull/3603",
       "title": "Update Windows Forms sample with multi-page layout, drawing support and README",
+      "body": "- Add CPU, GPU, and Drawing pages with designer-driven layout\n- TabControl navigation\n- Mouse drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -787,6 +838,7 @@
     "3602": {
       "url": "https://github.com/mono/SkiaSharp/pull/3602",
       "title": "Update WPF sample with multi-page layout, drawing support and README",
+      "body": "- Add CPU, GPU, and Drawing pages with XAML layouts\n- TabControl navigation\n- Mouse drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -794,6 +846,7 @@
     "3601": {
       "url": "https://github.com/mono/SkiaSharp/pull/3601",
       "title": "Update Blazor WebAssembly sample with multi-page layout and README",
+      "body": "- Add CPU, GPU, and Drawing pages with Razor components\n- Fluent UI Blazor navigation with sidebar\n- Mouse/touch drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -801,6 +854,7 @@
     "3600": {
       "url": "https://github.com/mono/SkiaSharp/pull/3600",
       "title": "Update MAUI sample with Shell flyout, multi-page layout and README",
+      "body": "- Add CPU, GPU, and Drawing pages with XAML layouts\n- Shell flyout navigation with SVG icons\n- Touch/mouse drawing with adaptive toolbox layout\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -808,6 +862,7 @@
     "3599": {
       "url": "https://github.com/mono/SkiaSharp/pull/3599",
       "title": "Update tvOS sample with tab bar, GPU pages and README",
+      "body": "- Add CPU, GPU (GL), and GPU (Metal) view controllers\n- Tab bar navigation via storyboard\n- FpsCounter for GPU shader timing\n- No drawing page (tvOS has no touch \u2014 Siri Remote only)\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -815,6 +870,7 @@
     "3598": {
       "url": "https://github.com/mono/SkiaSharp/pull/3598",
       "title": "Update macOS sample with toolbar tabs, multi-page layout and README",
+      "body": "- Add CPU, GPU (GL/Metal), and Drawing view controllers\n- NSTabViewController with toolbar-style tabs via storyboard\n- Mouse drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -822,6 +878,7 @@
     "3597": {
       "url": "https://github.com/mono/SkiaSharp/pull/3597",
       "title": "Update Mac Catalyst sample with tab bar, multi-page layout and README",
+      "body": "- Add CPU, GPU (Metal), and Drawing view controllers\n- Tab bar navigation via storyboard\n- Touch drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -829,6 +886,7 @@
     "3596": {
       "url": "https://github.com/mono/SkiaSharp/pull/3596",
       "title": "Update iOS sample with split-view sidebar, multi-page layout and README",
+      "body": "- Add CPU, GPU (GL/Metal), and Drawing view controllers\n- Split-view sidebar navigation via storyboard\n- Touch drawing with color picker toolbox\n- FpsCounter for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -836,6 +894,7 @@
     "3595": {
       "url": "https://github.com/mono/SkiaSharp/pull/3595",
       "title": "Update Android sample with Material 3, multi-page layout and README",
+      "body": "- Add CPU, GPU (Surface/Texture), and Drawing fragments\n- Material 3 theme with light/dark support\n- Bottom navigation with pill-style tabs\n- Touch drawing with color picker toolbox\n- FpsCounter utility for GPU shader timing\n- README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -843,6 +902,7 @@
     "3594": {
       "url": "https://github.com/mono/SkiaSharp/pull/3594",
       "title": "Update GTK 4 sample with CPU, Drawing pages and README",
+      "body": "- Add CpuPage with Blueprint UI for CPU rendering\n- Add DrawingPage with mouse/touch drawing support\n- Update MainWindow with sidebar navigation\n- Add README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -850,6 +910,7 @@
     "3593": {
       "url": "https://github.com/mono/SkiaSharp/pull/3593",
       "title": "Update GTK 3 sample with CPU, Drawing pages and README",
+      "body": "- Add CpuPage with Glade UI for CPU rendering\n- Add DrawingPage with mouse/touch drawing support\n- Update MainWindow with sidebar navigation\n- Add README with screenshots\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -857,6 +918,7 @@
     "3591": {
       "url": "https://github.com/mono/SkiaSharp/pull/3591",
       "title": "Update Browser WebAssembly sample with README and screenshot",
+      "body": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -864,6 +926,7 @@
     "3590": {
       "url": "https://github.com/mono/SkiaSharp/pull/3590",
       "title": "Update Console sample with improved drawing and README",
+      "body": "- Modernize Program.cs with better drawing code\n- Add README with build instructions and screenshot\n- Add screenshot\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -871,6 +934,7 @@
     "3584": {
       "url": "https://github.com/mono/SkiaSharp/pull/3584",
       "title": "Split NuGet mega-packages to stay under 500MB feed limit",
+      "body": "* Split NuGet mega-packages to stay under 500MB feed limit\n\nThe _NuGets, _NuGetsPreview, _Symbols, and _SymbolsPreview packages\nexceeded the Azure DevOps 500MB size limit. Split each into:\n  - .Managed (managed-only nupkgs, small)\n  - .NativeAssets (native asset nupkgs, large)\n  - Parent meta-package (depends on both sub-packages)\n\nThe download side (DownloadPackageAsync) already follows dependencies,\nso consumers automatically get both sub-packages when requesting the\nparent.\n\nNew nuspec templates:\n  _NuGets.Managed.nuspec, _NuGets.NativeAssets.nuspec\n  _NuGetsPreview.Managed.nuspec, _NuGetsPreview.NativeAssets.nuspec\n  _Symbols.Managed.nuspec, _Symbols.NativeAssets.nuspec\n  _SymbolsPreview.Managed.nuspec, _SymbolsPreview.NativeAssets.nuspec\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Replace Managed/NativeAssets split with dynamic bin-packing\n\nInstead of manually splitting _NuGets into .Managed and .NativeAssets\nsub-packages, dynamically bin-pack all nupkgs into ~200 MB numbered\nchunks (_NuGets.Dependencies.1, .2, .3, etc.). The parent meta-package\ndepends on all chunks.\n\nThis is self-balancing: as packages grow or shrink, the chunk count\nadjusts automatically without any manual curation.\n\n- Delete 8 .Managed/.NativeAssets nuspec files\n- Add generic _Dependencies.nuspec template for chunks\n- Rewrite nuget-special Cake target with first-fit decreasing bin-packing\n- _NativeAssets handling (raw native binaries) is unchanged\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -878,6 +942,7 @@
     "3586": {
       "url": "https://github.com/mono/SkiaSharp/pull/3586",
       "title": "Improve review-skia-update skill: require verification of removed patches",
+      "body": "* Improve review-skia-update skill: require verification of removed patches\n\nAdd mandatory verification step to Phase 2 of the Skia update review\nskill. When a fork patch is dropped during an upstream merge, the AI\nmust now check the new upstream code to determine WHY it was dropped\ninstead of speculating.\n\nChanges:\n- writing-summaries.md: Add 'Verifying Removed Patches (MANDATORY)'\n  section with 4-step verification process, resolution categories,\n  and explicit anti-pattern examples\n- SKILL.md: Add verification sub-step to Phase 2 instructions\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Update writing-summaries.md\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -885,6 +950,7 @@
     "3578": {
       "url": "https://github.com/mono/SkiaSharp/pull/3578",
       "title": "Redesign Gallery as interactive Blazor WASM showcase with 21 demos",
+      "body": "Replace 44 thin static samples with 21 rich interactive demos, each with\nlive controls (sliders, pickers, toggles, composable effect groups).\n\nProject structure:\n- Shared/ as net10.0 class library, Blazor/ as WASM host\n- Solution converted to .slnx format\n- Removed all legacy gallery platforms (UWP, WPF, Xamarin.Forms, etc.)\n\nArchitecture:\n- SampleBase \u2192 CanvasSampleBase + DocumentSampleBase\n- SliderControl/ToggleControl/PickerControl/GroupControl records\n- DI-based SampleService with reflection discovery\n- TreatWarningsAsErrors enabled, zero Gallery warnings\n\nDemos: 2D/3D Transforms, Blend Modes, Blur, GIF Player, Gradient,\nImage Decoder, Lottie Player, Nine-Patch, Noise Generator, Path Builder,\nPath Effects Lab, Photo Lab, Shader Playground (5 SkSL presets),\nText Lab, Text on Path, Vector Art, Vertex Mesh, World Text,\nPDF Composer (5-page with embedded viewer), Create XPS\n\nHome page: card grid with search, category filter chips, dark mode,\nBootstrap Icons, type badges, entrance animations\n\nCode quality: reviewed by 3 AI models, fixed memory leaks (SKPathEffect,\nSKPaint, CTS disposal), null safety, per-frame allocations, async void \u2192\nasync Task, bitmap caching, filter composition logic\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "Copilot",
       "community": false,
       "tag": "internal"
@@ -892,6 +958,7 @@
     "3585": {
       "url": "https://github.com/mono/SkiaSharp/pull/3585",
       "title": "review-skia-update: add relatedFiles cross-links and fix viewed checkbox",
+      "body": "Two improvements to the Skia review viewer:\n\n1. Related files cross-linking:\n   - Added optional 'relatedFiles' array to sourceFile in the schema\n   - Each entry has 'path' and optional 'relationship' label\n   - Viewer renders clickable pills below summaries\n   - Clicking navigates to the matching file (switch tab, scroll, highlight)\n   - Falls back to GitHub link if file not found in report\n   - Updated schema-cheatsheet.md and writing-summaries.md\n\n2. Bug fix: viewed checkbox now hides file immediately\n   - The 'Mark as viewed' checkbox did not call applyFilters()\n   - Checking a file as viewed with 'Show viewed' off had no effect\n   - Added change event listener on viewed checkboxes to trigger re-filter\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -899,6 +966,7 @@
     "3581": {
       "url": "https://github.com/mono/SkiaSharp/pull/3581",
       "title": "Improve HTML viewer: syntax highlighting, DEPS layout, companion PR",
+      "body": "* Improve HTML viewer: syntax highlighting, DEPS layout, companion PR\n\n1. Syntax highlighting: Switch to diff2html-ui-slim + highlight.js for\n   syntax-highlighted diffs (C++, Python, JSON, etc.)\n\n2. DEPS layout: Replace cramped 5-column table with card-based list.\n   Each dep shows name+badge, full-width summary, and compact\n   truncated SHA line (oldRev \u2192 newRev).\n\n3. Companion PR: Remove duplicate summary/stats card that squeezed\n   findings to half width. Replace with compact stats bar (PR link +\n   badge counts) above a full-width findings table.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Redesign integrity tabs: flat file list, viewed checkboxes, filter toggles\n\nIntegrity tabs (Upstream/Interop):\n- Replace nested group accordions with flat file list \u2014 all items visible\n- Add viewed checkbox on each file row (strikes through when checked)\n- Add 'Show viewed' toggle in header to hide reviewed items\n- Add Added/Removed/Changed filter toggle buttons with counts\n- Click file row to expand/collapse diff inline (chevron indicator)\n\nCompanion PR tab:\n- Remove duplicate stats from section summary card (was showing\n  files reviewed/skipped/findings twice)\n- Keep compact stats bar above findings table\n\nAlso add hover/transition CSS for file items.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Remove status strip, color tab badges by section status\n\n- Remove Status Overview pill strip (was just duplicating tab navigation)\n- Color the count badge in each tab with the section's status color\n  (green=PASS, red=FAIL, amber=REVIEW_REQUIRED)\n- Clean up unused CSS (status-strip, status-pill)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Hide diff2html file header bar (duplicate of our file row)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix companion PR: restore stats to section card, remove duplicate bar\n\nPut Files Reviewed / Files Skipped / Findings back into the main\nsection summary card (matching other tabs), remove the compact stats\nbar that was between the card and findings table. Remove PR Number\nfrom stats (already in page header).\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Move diff mode toggles to file header row for visibility\n\nDirect/Patch/Old/New buttons now appear on the file row itself (always\nvisible for changed items) rather than inside the collapsed diff body.\nWrapped in stopPropagation span so clicking buttons doesn't toggle the\ndiff open/closed.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -906,6 +974,7 @@
     "3582": {
       "url": "https://github.com/mono/SkiaSharp/pull/3582",
       "title": "Pin .NET SDK to 10.0.1xx band (10.0.105) to fix CI",
+      "body": "* Pin .NET SDK to 10.0.1xx band (10.0.105) to fix CI\n\nThe CI agents have .NET SDK 10.0.201 installed, which requires MSBuild\n18.0+ that isn't available in VS 2022. The global.json rollForward\npolicy 'latestFeature' was allowing the SDK to roll from 10.0.1xx to\n10.0.2xx, breaking the WinUI native build.\n\nChanges:\n- global.json: pin to 10.0.105, rollForward latestFeature -> latestPatch\n- azure-templates-variables.yml: DOTNET_VERSION and DOTNET_WORKLOAD_VERSION -> 10.0.105\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Pin .NET SDK to 10.0.1xx feature band\n\n- global.json: lower version floor to 10.0.100 so pre-installed 1xx SDKs are accepted\n- Docker (debian/10, debian/13, alpine): change dotnet-install.sh channel from 10.0 to 10.0.1xx\n- Docker (wasm): switch from mcr.microsoft.com/dotnet/sdk:10.0 base image to debian:12 + dotnet-install.sh with 10.0.1xx channel\n\nThe 10.0.2xx feature band has issues on Windows. This ensures all\nCI builds use the 1xx feature band consistently.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -913,6 +982,7 @@
     "3580": {
       "url": "https://github.com/mono/SkiaSharp/pull/3580",
       "title": "Add render step to review-skia-update skill Phase 4",
+      "body": "* Add render step to review-skia-update SKILL.md Phase 4\n\nAdds step 3 (Render HTML report) between Persist and Present summary,\ninstructing the skill to auto-generate an HTML report alongside the JSON.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Integrate HTML render into persist step\n\npersist-skia-review.ps1 now auto-generates the HTML report after copying\nthe JSON. SKILL.md updated to collapse the separate render step back into\nthe persist step description.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Add prompt to open HTML report after presenting summary\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -920,6 +990,7 @@
     "3579": {
       "url": "https://github.com/mono/SkiaSharp/pull/3579",
       "title": "Add HTML review viewer and direct diff for changed files",
+      "body": "- Add render-skia-review.py: Python script that injects review JSON into\n  viewer.html template to produce a self-contained HTML report\n- Add viewer.html: Bootstrap 5 + diff2html template with 5 tabs,\n  lazy diff rendering, and Direct/Patch/Old/New toggle buttons\n- Add direct branch-to-branch diff field to check_source.py for all\n  changed files (base\u2192PR head), shown as default view in the HTML viewer\n- Update schema and cheatsheet to document the new diff field\n\nThe direct diff solves the DEPS noise problem: the diff-of-diffs approach\nproduced 106-line patchDiffs for DEPS when the actual change was 3 lines,\nbecause upstream dep hashes change every milestone. The direct diff shows\nthe clean branch-to-branch delta.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -927,6 +998,7 @@
     "3577": {
       "url": "https://github.com/mono/SkiaSharp/pull/3577",
       "title": "Move documentation/ files to documentation/dev/ subfolder",
+      "body": "* Move documentation/ files to documentation/dev/ subfolder\n\nReorganize the documentation directory to support additional content\ncategories. All developer guides (architecture, building, APIs, memory\nmanagement, releasing, etc.) now live under documentation/dev/.\n\nUpdated all references across:\n- README.md and CONTRIBUTING.md\n- .github/copilot-instructions.md\n- All skill files (.github/skills/*/SKILL.md)\n- Issue triage reference files\n- Internal doc cross-references (releasing.md, writing-docs.md)\n- Self-reference in updating-dotnet-version.md\n\nAdded a new documentation/README.md as a directory index.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix broken relative link paths in issue-triage and copilot-instructions\n\nFix pre-existing broken relative paths that were using the wrong number\nof ../ levels, discovered during review of the documentation move:\n\n- .github/copilot-instructions.md: add missing ../ prefix\n- .github/skills/issue-triage/SKILL.md: ../../ \u2192 ../../../\n- .github/skills/issue-triage/references/*.md: ../../ \u2192 ../../../../\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix pre-existing broken links in documentation\n\n- dependencies.md: Convert root-absolute paths (/.github/...) to\n  relative paths (../../.github/...) for skill links\n- README.md, packages.md: Remove references to linux-assets.md which\n  has never existed in the repo\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -934,6 +1006,7 @@
     "3567": {
       "url": "https://github.com/mono/SkiaSharp/pull/3567",
       "title": "Add review-skia-update skill and unify persist pattern",
+      "body": "* Add review-skia-update skill with Python orchestrator\n\nStructured 4-phase workflow for reviewing Skia upstream merge PRs:\n- Phase 1: Python orchestrator (run_review.py) handles metadata, checkout, generator verification, source integrity, and DEPS audit\n- Phase 2: AI writes factual summaries and builds schema-validated JSON report\n- Phase 3: AI reviews companion SkiaSharp C# PR (wrappers, ABI, tests)\n- Phase 4: Validate and persist to output/ai/\n\nScripts: run_review.py, check_generated_files.py, check_source.py, check_deps.py\nAlso: persist-to-cache.ps1, generate.ps1 exit code fix\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Address review feedback on review-skia-update skill\n\n- Fix get_patch_content() to use '+++ '/'--- ' (with space) instead of\n  '++'/'--' prefix checks, preventing legitimate content lines like\n  '++i' from being silently dropped during patch comparison\n- Strip 'diff --git' and 'index' header lines from patchDiff output\n  so temp file paths don't leak into stored diffs\n- Add dirty-tree guard in run_review.py: check git status --porcelain\n  in both SkiaSharp and skia worktrees before any checkout operations\n- Wrap check execution (Steps 2-4) in try/except to save partial\n  raw-results.json when a check raises, instead of losing all output\n- Hoist Resolve-Path call outside foreach loop in persist-to-cache.ps1\n- Remove unused 're' import from check_source.py\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix review issues: error handling, process safety, validation parity\n\n- run_review.py: Check returncode on all git rev-parse calls; add\n  final base_sha validation after fallback chain\n- check_generated_files.py: Wrap Popen in try/finally to prevent\n  process leaks; add 600s timeout; check returncode on cleanup reverts\n- validate-skia-review.py/.ps1: Add all-PASS\u2192LOW risk validation so\n  inflated riskAssessment is rejected when all sections pass\n- persist-to-cache.ps1: Skip unnecessary rebase on final push retry\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -941,6 +1014,7 @@
     "3575": {
       "url": "https://github.com/mono/SkiaSharp/pull/3575",
       "title": "Update explore agent launch instructions in SKILL.md",
+      "body": "Clarify instructions for launching an explore agent with the appropriate model for breaking change analysis.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -948,6 +1022,7 @@
     "3574": {
       "url": "https://github.com/mono/SkiaSharp/pull/3574",
       "title": "Improve update-skia skill: extract references, add scripts, improve tone",
+      "body": "Restructure the update-skia skill to reduce SKILL.md from 559 to 428 lines and\nmake error-prone phases impossible to get wrong:\n\nReferences extracted:\n- references/known-gotchas.md \u2014 10 lessons learned + troubleshooting table\n- references/typical-changes.md \u2014 files changed in a typical update\n- references/validation-prompt.md \u2014 Phase 3 validation agent prompt template\n\nScripts added:\n- scripts/update-versions.ps1 \u2014 Phase 6: Updates ALL version files (VERSIONS.txt,\n  cgmanifest.json, azure-pipelines-variables.yml, SK_C_INCREMENT) and runs\n  mandatory verification greps. Exits non-zero if stale references remain.\n- scripts/regenerate-bindings.ps1 \u2014 Phase 7: Runs generator, PROACTIVELY reverts\n  HarfBuzz bindings, reports diff summary, lists new functions needing wrappers.\n\nTone improvements (per skill-creator guidelines):\n- Replace commanding caps (MANDATORY/MUST/NEVER) with explanations of WHY\n- Replace unusable checkbox pre-flight with workflow overview\n- Explain Phase 8 rationale instead of RE-READ warning\n- Add version-checking triggers to description\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -955,6 +1030,7 @@
     "3573": {
       "url": "https://github.com/mono/SkiaSharp/pull/3573",
       "title": "Strengthen update-skia skill enforcement after compliance failures",
+      "body": "* Strengthen update-skia skill enforcement after compliance failures\n\nRoot cause analysis from m119\u2192m120 update found 8 gaps where phases\nwere skipped or partially completed. Three systemic failure patterns:\n\n1. Momentum bias \u2014 stopped re-reading skill during execution\n2. Success-path shortcuts \u2014 passed builds meant skipped verification\n3. Weak gate language \u2014 advisory phases treated as optional\n\nChanges by phase:\n\nPhase 3 (Validation): Added concrete explore agent prompt template,\nMANDATORY blocking language, and explicit gate criteria. Previously\nwas advisory ('Have a separate agent validate') which was skipped.\n\nPhase 4 (Merge verification): Added explicit verification commands\n(ls C API files, check added/deleted files, git diff --check).\n\nPhase 6 (Version files): Added RE-READ directive, sed bulk-update\ncommands with concrete examples, and mandatory verification grep\nthat catches incomplete updates. Previously only milestone line\nwas updated out of 30+ version lines.\n\nPhase 7-8 (Bindings/Wrappers): Added explicit diff review step\nfor new generated functions. Previously skipped because build\npassed with 0 errors (success-path shortcut).\n\nPhase 9 (Tests): Moved --filter flag into main command (was buried\nin a note). Added --no-incremental and native lib copy steps.\n\nPhase 10 (PRs): Added cross-linking instruction.\n\nLessons Learned: Added #9 (DEPS fork-customized dependencies) and\n#10 (HarfBuzz version mismatch bindings) from real failures.\n\nTop-level: Added 'Why This Matters' section citing actual failures,\nRE-READ directives, and stronger enforcement language modeled on\nissue-fix skill's patterns.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Add Smoke test category and fix Phase 9 test approach\n\nAdd a 'Smoke' trait category with 13 fast tests covering:\n- Version compatibility (3 new tests in SKVersionTest.cs)\n- Surface/canvas creation (CanCreateSimpleSurface, CanDrawText, CanvasCanDrawRoundRect)\n- Paint properties (StrokePropertyValuesAreCorrect)\n- Image loading (TestLazyImage, TestImageFileDecodeDrawsCorrectly)\n- Bitmap interop (BitmapAndPixmapAreValid)\n- Font/typeface (TestFamilyName)\n- Codec (CanCreateStreamCodec)\n- Path (GetLastPoint)\n\nRun with: dotnet test --filter \"Category=Smoke\"\n\nAlso fix skill Phase 9:\n- Remove --no-incremental workaround (masks incomplete Phase 6)\n- Remove manual native lib copy hack\n- Remove 'pre-existing failures acceptable' escape hatch\n- Add smoke tests as first-pass verification\n- Rewrite Lesson #5 to say 'fix root cause, not workaround'\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Expand smoke tests to cover all major SkiaSharp areas (32 tests)\n\nAdd Smoke trait to one test per area for comprehensive native interop\ncoverage. 28 test files now have at least one smoke test.\n\nCoverage by area:\n- Version: NativeLibraryIsCompatible, NativeVersionIsNotZero, NativeMinimumMatchesNativeVersion\n- Core drawing: CanDrawText, CanvasCanDrawRoundRect, StrokePropertyValuesAreCorrect,\n  GetLastPoint, MatrixCanInvert, EmptyRegionIsEmpty\n- Surfaces/Images: CanCreateSimpleSurface, TestLazyImage, TestImageFileDecodeDrawsCorrectly,\n  BitmapAndPixmapAreValid, ReadPixelSucceeds\n- Text/Fonts: TestFamilyName, PlainGlyphsReturnsTheCorrectNumberOfCharacters,\n  TestFamilyCount, RunsAllocateNoPositions\n- Encoding/Data: CanCreateStreamCodec, ValidDataProperties, CanWriteTextToStream\n- Effects: LinearShaderDrawColorCorrectly, StaticSrgbToLinearIsReturnedAsTheStaticInstance,\n  ShaderFilterAcceptsNullParams, SameBlendModeReturnsSameBlenderInstance,\n  UndefinedFunctionsFailsCreation\n- Color: ColorWithComponent, CanCreateSrgb\n- Documents: CanCreatePdf\n- Other: CanConstructEmpty (RoundRect), CanSerializeToData (Picture),\n  CanAccessBounds (Drawable)\n\nAlso update skill Phase 9 to enforce smoke-then-full pattern:\nsmoke tests are a fast gate (~100ms), but the full suite MUST pass\nbefore any PR can be created.\n\nRun: dotnet test --filter \"Category=Smoke\" (32 tests, ~100ms)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Document SK_C_INCREMENT reset to 0 on milestone bump\n\nPhase 5: Clarify that SK_C_INCREMENT in sk_types.h must be reset to 0\nfor a new milestone (only bumped when adding new C API functions).\nPhase 6: Add verification that SK_C_INCREMENT is 0.\nThe build enforces SK_C_INCREMENT matches VERSIONS.txt increment.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Remove Multi-Milestone Jumps section \u2014 unnecessary complexity\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Convert trait-based test skips to runtime Skip.If() calls\n\nReplace all 30 passive [Trait(Traits.SkipOn/FailingOn...)] attributes with\nactive runtime Skip.If() calls. Tests now self-skip based on platform\ndetection, so `dotnet test` works without any external filter.\n\nAdded to BaseTest:\n- IsAndroid, IsIOS, IsMacCatalyst platform properties\n- SkipOnMono() \u2014 for Mono finalizer timing tests (14 tests)\n- SkipOnNonWindows() \u2014 for native delegate exception tests (7 tests)\n- SkipOnPlatform() \u2014 for other platform-specific skips (9 tests)\n\nRemoved from scripts/cake/UtilsManaged.cake:\n- UNSUPPORTED_TESTS dictionary\n- FailingOn/SkipOn trait filter construction in RunDotNetTest\n- ExcludeTrait calls in RunTests\n\nResult: `dotnet test` now runs the full suite without filters.\n5343 passed, 17 skipped, 0 failed (1 flaky GC test passes in isolation).\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Use dotnet test on solution across all skills and docs\n\nUse tests/SkiaSharp.Tests.Console.sln instead of individual .csproj.\nThe solution runs all test projects (core, Vulkan, Direct3D) in one\ncommand. Backend-specific tests self-skip when hardware isn't available.\nCI handles WASM/Android/iOS separately.\n\nUpdated:\n- update-skia/SKILL.md Phase 9 and Lesson #6\n- native-dependency-update/SKILL.md\n- add-api/SKILL.md\n- issue-fix/SKILL.md\n- documentation/README.md\n- documentation/adding-apis.md\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -962,6 +1038,7 @@
     "3571": {
       "url": "https://github.com/mono/SkiaSharp/pull/3571",
       "title": "Update issue pipeline skills: persist to output/ai/ and path fixes",
+      "body": "- Add persist scripts for issue-triage, issue-repro, and issue-fix\n- Persist to output/ai/ instead of auto-pushing to data-cache branch\n- Update all paths to use timestamped /tmp/skiasharp/ directories\n- Add mkdir -p before redirects for copy-paste safety\n- Simplify persist scripts to just copy validated JSON\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -969,6 +1046,7 @@
     "3570": {
       "url": "https://github.com/mono/SkiaSharp/pull/3570",
       "title": "Add GitHub workflow to publish samples using latest NuGet version",
+      "body": "* Initial plan\n\n* Add samples publish workflow using latest NuGet version\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nAgent-Logs-Url: https://github.com/mono/SkiaSharp/sessions/7a553d15-0ed2-4945-ad10-20c6c694c220\n\n* Update samples workflow: fixed branch, sha input, release trigger, no force push\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nAgent-Logs-Url: https://github.com/mono/SkiaSharp/sessions/7df4a82e-892a-4246-a50f-bdf62b51d869\n\n* Add dry run support: PR trigger + dry_run input skip the push step\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nAgent-Logs-Url: https://github.com/mono/SkiaSharp/sessions/45099523-5ea1-4052-8713-bc2528b91283\n\n* Trigger workflow on changes to the workflow file itself\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nAgent-Logs-Url: https://github.com/mono/SkiaSharp/sessions/538d4d10-8dc0-4a64-8c94-fdb8551af7f9\n\n* Update workflow triggers in samples.yml\n\nRemoved 'develop' and 'release/**' branches from workflow triggers.\n\n* Restructure dry-run: always git add+commit, skip push only\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nAgent-Logs-Url: https://github.com/mono/SkiaSharp/sessions/e5eda0ca-b53c-46ea-bc6c-d4503131d11f\n\n* Change samples branch name from 'samples' to 'docs-samples'\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nAgent-Logs-Url: https://github.com/mono/SkiaSharp/sessions/dab6ac4a-55a2-4976-9bd2-03126bd3b7c6\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "Copilot",
       "community": false,
       "tag": "internal"
@@ -976,6 +1054,7 @@
     "3569": {
       "url": "https://github.com/mono/SkiaSharp/pull/3569",
       "title": "Fix generate.ps1 error propagation",
+      "body": "- Replace Invoke-Expression with splatted args array ($runArgs) for proper\n  exit code propagation \u2014 Invoke-Expression silently swallows non-zero exits\n- Continue through all projects to report ALL failures, then exit 1\n- Use $LASTEXITCODE instead of $? for reliable native command error detection\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -983,6 +1062,7 @@
     "3568": {
       "url": "https://github.com/mono/SkiaSharp/pull/3568",
       "title": "Fix generator: add macOS SDK system includes for CppAst",
+      "body": "- Use SystemIncludeFolders instead of IncludeFolders for clang headers\n  (fixes #include_next resolution)\n- Auto-detect macOS SDK path via xcrun --show-sdk-path\n- Fallback to CommandLineTools SDK path\n- Fix trailing comma in launchSettings.json\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -990,6 +1070,7 @@
     "3566": {
       "url": "https://github.com/mono/SkiaSharp/pull/3566",
       "title": "Enable dotnetUseGlobalJson in Azure pipeline",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -997,6 +1078,7 @@
     "3564": {
       "url": "https://github.com/mono/SkiaSharp/pull/3564",
       "title": "Simplify Docker build infrastructure and fix CI",
+      "body": "- Switch all base images to MCR mirrors to fix Docker Hub\n  connectivity issues on 1ES hosted agents\n- Use devcontainers base:debian13 for loongarch64 builds since\n  mcr.microsoft.com/mirror/docker/library/debian:13 is not yet\n  available\n- Consolidate from 10 Dockerfiles down to 4 (alpine, debian/10,\n  debian/13, wasm)\n- Delete unused Dockerfiles: alpine/amd64, alpine/arm64v8,\n  debian/arm64v8, debian/amd64, debian/clang-cross/11,\n  debian/clang-cross/12\n- Flatten directory structure: remove clang-cross nesting\n- Move x64 native build to cross-compile path via debian/10\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1004,6 +1086,7 @@
     "3562": {
       "url": "https://github.com/mono/SkiaSharp/pull/3562",
       "title": "Fix Cairo assertion crash in GTK4 SKDrawingArea",
+      "body": "Add pix.Flush() before pix.MarkDirty() to properly release any\nexisting Cairo snapshot references before modifying pixel data.\n\nWithout this call, Cairo's internal snapshot mechanism can trigger\nan assertion failure (or corrupt rendering) because MarkDirty()\ninvalidates the surface while a snapshot still holds a reference\nto the underlying data. The Flush() call tells Cairo to finish\nany pending reads from prior snapshots, making it safe to then\nmark the surface as modified.\n\nThis matches the documented Cairo usage pattern:\n  cairo_surface_flush()   \u2014 complete pending reads\n  <modify pixel data>     \u2014 write via Skia\n  cairo_surface_mark_dirty() \u2014 notify Cairo of changes\n\nThe crash manifests as a SIGABRT or assertion on repeated redraws\nwhen Cairo internally snapshots the ImageSurface (e.g. during\nSetSourceSurface/Paint cycles).\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1011,6 +1094,7 @@
     "3563": {
       "url": "https://github.com/mono/SkiaSharp/pull/3563",
       "title": "Fix tvOS NativeReference targets to split device/simulator frameworks",
+      "body": "The tvOS ItemGroup in IncludeNativeAssets targets was using a single\nNativeReference pointing to the device framework for all tvOS builds.\nThis caused linker failures when building for the tvOS Simulator\nbecause the device framework contains arm64 binaries compiled for\ntvOS, not the x86_64/arm64 binaries compiled for tvOS Simulator.\n\nSplit the tvOS NativeReference to match the existing iOS pattern:\n- tvossimulator RID \u2192 tvossimulator/ framework\n- tvos device RID \u2192 tvos/ framework\n- Guard on RuntimeIdentifier != '' to avoid evaluation during\n  outer builds where RID is not yet resolved\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1018,6 +1102,7 @@
     "3561": {
       "url": "https://github.com/mono/SkiaSharp/pull/3561",
       "title": "Fix tvOS: split device/simulator native builds to match iOS pattern",
+      "body": "* Fix tvOS: split device/simulator native builds to match iOS pattern\n\nThe tvOS native build was combining device and simulator binaries into a\nsingle fat framework at output/native/tvos/, while the NuGet packaging\nonly included runtimes/tvos/native/ \u2014 missing runtimes/tvossimulator/.\nThis caused linker errors when building for tvOS simulator.\n\nChanges:\n- native/tvos/build.cake: Split output into tvos/ and tvossimulator/\n  directories, add ios_use_simulator flag, pass SKIA_PLATFORM property\n- SkiaSharp.NativeAssets.tvOS.csproj: Add tvossimulator PackageFile\n- HarfBuzzSharp.NativeAssets.tvOS.csproj: Add tvossimulator PackageFile\n\nThis mirrors the proven iOS build pattern that already correctly splits\ndevice (ios/) and simulator (iossimulator/) native assets.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Fix tvOS GnNinja to use min_tvos_version instead of min_ios_version\n\nThe tvOS build was incorrectly passing min_ios_version to GnNinja, which set\nthe iOS deployment target but left the tvOS deployment target at Skia's default\nof 9.0. This changes it to min_tvos_version so the -mtvos-version-min flag is\nset correctly to 11.0.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1025,6 +1110,7 @@
     "3514": {
       "url": "https://github.com/mono/SkiaSharp/pull/3514",
       "title": "Update to .NET 10 SDK with workload version set pinning",
+      "body": "Upgrade SkiaSharp from .NET 8 SDK to .NET 10 SDK with comprehensive build system,\nCI pipeline, TFM architecture, and workload management changes.\n\nTFM Architecture:\n- Restructured from Previous/Current/Next to Base/Previous/Current\n- TFMBase=net6.0 (class libraries), TFMPrevious=net9.0, TFMCurrent=net10.0\n- Dropped TFMNext (platform TFMs only support 2 versions at once)\n- Added Previous TPVs for all platforms alongside Current TPVs\n\nSDK & Tooling:\n- global.json: SDK 8.0.100 -> 10.0.100, rollForward latestMinor -> latestFeature\n- latestFeature allows any 10.0.xxx feature band across heterogeneous CI agents\n- .NET SDK pipeline variable: 8.0.304 -> 10.0.103\n- Xcode: 15.4 -> 26.2 (managed), 15.4 -> 16.2 (native)\n- Docker images: dotnet/sdk:8.0 -> dotnet/sdk:10.0\n- Emscripten: 3.1.34 -> 3.1.56\n- macOS agents: macos-14 -> macos-15\n- Android tests moved from macOS to Linux agents\n\nWorkload Management:\n- Replaced ad-hoc manifest mode with deterministic workload version set pinning\n- Official workloads install with 'dotnet workload install --version 10.0.104'\n- Tizen installs separately (not part of official workload sets)\n- Removed DOTNET_VERSION_PREVIEW, DOTNET_WORKLOAD_SOURCE, installPreviewVs\n- Removed manifest mode workarounds (--skip-manifest-update)\n\nPlatform Versions (Previous / Current):\n- Android: 35.0 / 36.0\n- iOS: 18.0 / 26.2\n- Mac Catalyst: 18.0 / 26.2\n- tvOS: 18.0 / 26.2\n- macOS: 15.0 / 26.2\n- Tizen: 8.0 / 10.0\n\nPackage Updates:\n- xunit: 2.4.2 -> 2.9.3\n- xharness CLI: 9.0.0-prerelease.24317.3 -> 11.0.0-prerelease.26107.1\n- DeviceRunners: 0.1.0-preview.1 -> 0.1.0-preview.6\n- TypeScript MSBuild: 5.7.1 -> 5.9.3\n- Uno.Sdk: 5.2.175 -> 6.5.31\n\nBlazor TypeScript Fix:\n- Replaced TypeScriptCompileBlocked with per-TFM TypeScriptOutDir to fix\n   multi-TFM parallel build race condition on shared wwwroot/*.js files\n\nCI Cleanup:\n- Removed old NuGet feeds (dotnet6/7/8, test-device-runners) from nuget.config\n- Fixed Android emulator XDG path mismatch on Linux via ANDROID_AVD_HOME\n- Added ANDROID_PLATFORM_VERSIONS: 21,35,36\n\nSamples:\n- MAUI: Removed Tizen platform folder, removed UseMauiCompatibility\n- Uno: Updated to 6.5, migrated to UnoPlatformHostBuilder\n- All: Updated TFMs and SupportedOSPlatformVersion minimums\n\nDocumentation:\n- New: documentation/updating-dotnet-version.md for future upgrades\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1032,6 +1118,7 @@
     "3558": {
       "url": "https://github.com/mono/SkiaSharp/pull/3558",
       "title": "Update skills: add update-skia, sync skill-creator from upstream",
+      "body": "* Add update-skia skill for Skia milestone updates\n\n10-phase workflow documenting the process for updating SkiaSharp's\nSkia dependency to a new Chrome milestone. Includes:\n- Breaking changes checklist template\n- C API impact analysis steps\n- Version file update procedures\n- Build and test verification steps\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Update skill-creator from upstream anthropics/skills\n\nSync with anthropics/skills@b0cbd3d:\n- SKILL.md: Add guidance for updating existing skills (preserve name,\n  copy to writeable location, stage in /tmp)\n- improve_description.py: Migrate from claude -p subprocess to\n  anthropic SDK with extended thinking for better description generation\n- run_loop.py: Pass anthropic client to improvement functions\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1039,6 +1126,7 @@
     "3556": {
       "url": "https://github.com/mono/SkiaSharp/pull/3556",
       "title": "Add Skia core CVE tracking to security audit skill",
+      "body": "Extend the security-audit skill to treat Skia core as a first-class\ndependency. Previously the skill only audited third-party libraries;\nSkia itself was invisible to Component Governance (no standalone CPE).\n\nChanges:\n- SKILL.md: NVD query workflow using chrome_milestone comparison\n- report-template.md: Skia-specific table formats and assessment guide\n- cgmanifest.json: chrome_milestone and upstream_merge_commit fields\n- dependencies.md: Skia CVE tracking methodology documentation\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1046,6 +1134,7 @@
     "3551": {
       "url": "https://github.com/mono/SkiaSharp/pull/3551",
       "title": "Enable blank issues in issue template configuration",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1053,6 +1142,7 @@
     "3550": {
       "url": "https://github.com/mono/SkiaSharp/pull/3550",
       "title": "Update skill-creator from upstream anthropics/skills",
+      "body": "Sync with anthropics/skills commit 7029232b. Major changes:\n\n- New eval framework: agents/ (grader, comparator, analyzer),\n  eval-viewer/ (generate_review.py, viewer.html), assets/\n- New scripts: run_eval.py, run_loop.py, aggregate_benchmark.py,\n  improve_description.py, generate_report.py, utils.py\n- Updated SKILL.md with full eval/iterate workflow\n- Added LICENSE.txt, references/schemas.md\n- Removed old files: output-patterns.md, workflows.md, init_skill.py\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1060,6 +1150,7 @@
     "3548": {
       "url": "https://github.com/mono/SkiaSharp/pull/3548",
       "title": "Make skill action schemas automation-ready with required data fields",
+      "body": "* Make add-comment risk dynamic based on content and confidence\n\nPreviously, all add-comment actions were hardcoded as 'high' risk regardless\nof content. This change makes the risk level dynamic:\n\n- low: factual content (repro findings, version matrix) with confidence >= 0.85\n- medium: workaround/suggestion content with confidence >= 0.85\n- high: close/reject content, or confidence < 0.70\n\nUpdated in both triage and repro schema cheatsheets and schema definitions.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Make skill action schemas automation-ready with required data fields\n\n- Add stateReason, category, milestone fields to both schemas\n- Remove update-project (not automatable)\n- Add Action Data Requirements section to repro cheatsheet\n- Document required fields for every action type in both cheatsheets\n- Prevents hollow actions (correct type but missing data)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1067,6 +1158,7 @@
     "3547": {
       "url": "https://github.com/mono/SkiaSharp/pull/3547",
       "title": "Make add-comment risk dynamic based on content and confidence",
+      "body": "Previously, all add-comment actions were hardcoded as 'high' risk regardless\nof content. This change makes the risk level dynamic:\n\n- low: factual content (repro findings, version matrix) with confidence >= 0.85\n- medium: workaround/suggestion content with confidence >= 0.85\n- high: close/reject content, or confidence < 0.70\n\nUpdated in both triage and repro schema cheatsheets and schema definitions.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1074,6 +1166,7 @@
     "3544": {
       "url": "https://github.com/mono/SkiaSharp/pull/3544",
       "title": "Fix artifact upload on Windows \u2014 collect from platform-specific tmp paths",
+      "body": "On Windows, /tmp resolves to the current drive root (e.g. D:\\tmp),\nnot a Unix path. Add a collect step that copies from all possible\nlocations to runner.temp before uploading.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1081,6 +1174,7 @@
     "3543": {
       "url": "https://github.com/mono/SkiaSharp/pull/3543",
       "title": "Add AI triage-and-repro workflow with Copilot CLI action",
+      "body": "- Add local Copilot CLI composite action (.github/actions/copilot-cli/)\n  Cross-platform, MCP support, artifact upload, PAT setup instructions\n- Accept comma/space-separated issue numbers for batch processing\n- Triage runs in parallel on Linux, determines repro platform per issue\n- Repro runs on the correct platform (linux/macos/windows) per issue\n- Add suggestedReproPlatform to triage schema and validator\n- Add confirmed/not-confirmed conclusions to repro skill\n- Lower PowerShell #requires from 7.5 to 7.4 for CI compatibility\n- Strengthen persist instructions in triage/repro skills\n- Add issue-bulk-process skill for batch triage+repro\n- Rename bug-pipeline.md \u2192 issue-pipeline.md\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1088,6 +1182,7 @@
     "3527": {
       "url": "https://github.com/mono/SkiaSharp/pull/3527",
       "title": "Add SkiaSharp.Views.Gtk4 using GirCore.Gtk-4.0 bindings",
+      "body": "Add GTK 4 views for SkiaSharp using GirCore.Gtk-4.0 (v0.7.0), mirroring\nthe existing GTK 3 views but using GTK 4 idioms.\n\nLibrary (source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/):\n- SKDrawingArea: extends Gtk.DrawingArea, renders via SetDrawFunc callback\n  to a Cairo ImageSurface using pix.Stride for correct row alignment\n- GTKExtensions: conversions between SK types and GTK 4 types\n  (Graphene.Point/Size/Rect/Point3D, Gdk.Rectangle, Gdk.RGBA \u2194\n  SKPoint/SKSize/SKRect/SKPoint3/SKRectI/SKColor/SKColorF)\n- Targets $(TFMCurrent), nullable enabled, proper Dispose override\n\nSample (samples/Basic/Gtk4/SkiaSharpSample/):\n- Minimal GTK 4 app using Application.New() + RunWithSynchronizationContext()\n  with ApplicationWindow and SKDrawingArea rendering centered text\n\nTests (tests/SkiaSharp.Views.Gtk4.Tests/):\n- 29 tests: Graphene point/size/rect/point3D conversions, Gdk rectangle\n  and RGBA color conversions, SKColorF round-trips, widget construction\n- ModuleInitializer registers GLib/Gdk/Cairo/Graphene DLL resolvers\n- SkippableFact for graceful skipping without GTK 4 native libraries\n\nInfrastructure:\n- build.cake: add SkiaSharp.Views.Gtk4 nuget version entry (3.119.0)\n- scripts/VERSIONS.txt: add nuget version for CI sample build\n- Solution and solution filter entries for Linux/Mac/Windows\n- .gitignore: add .nuget/ to prevent nuget.exe build artifact commits\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "Copilot",
       "community": false,
       "tag": "product"
@@ -1095,6 +1190,7 @@
     "3531": {
       "url": "https://github.com/mono/SkiaSharp/pull/3531",
       "title": "Update libfontconfig-dev for loong64 from 2.17.1-4 to 2.17.1-5",
+      "body": "* Initial plan\n\n* Update libfontconfig-dev version for loong64 from 2.17.1-4 to 2.17.1-5\n\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>\n\n---------\n\nCo-authored-by: copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>\nCo-authored-by: mattleibow <1096616+mattleibow@users.noreply.github.com>",
       "author": "Copilot",
       "community": false,
       "tag": "internal"
@@ -1102,6 +1198,7 @@
     "3532": {
       "url": "https://github.com/mono/SkiaSharp/pull/3532",
       "title": "Remove update-docs workflow (moved to mono/SkiaSharp-API-docs)",
+      "body": "The workflow now lives entirely in the docs repo where GITHUB_TOKEN\nhas native write access. It checks out this repo at a configurable\nbranch to get the Cake build scripts. No PATs or deploy keys needed.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1109,6 +1206,7 @@
     "3530": {
       "url": "https://github.com/mono/SkiaSharp/pull/3530",
       "title": "Add daily API docs generation workflow and rewrite docs guide",
+      "body": "- Add GitHub Actions workflow to regenerate XML API docs daily from\n     latest CI NuGet packages and create a PR on mono/SkiaSharp-API-docs\n   - Rewrite documentation/writing-docs.md with current commands,\n     automated pipeline docs, and cake targets reference\n   - Enhance api-docs skill with submodule context and regeneration steps\n\n---------\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1116,6 +1214,7 @@
     "3529": {
       "url": "https://github.com/mono/SkiaSharp/pull/3529",
       "title": "Add learnings from Copilot memory audit to docs and instructions",
+      "body": "Add 4 non-obvious patterns discovered from analyzing 159 Copilot memories:\n\n- Anti-pattern: pinned pointer lifetime with fixed blocks (memory-management.md\n  + copilot-instructions.md)\n- Anti-pattern: WASM stale artifact trap when testing across versions\n  (debugging-methodology.md + copilot-instructions.md)\n- Checklist: dual NuGet registration requirement for new packages\n  (adding-libraries.md)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1123,6 +1222,7 @@
     "3518": {
       "url": "https://github.com/mono/SkiaSharp/pull/3518",
       "title": "Overhaul AI bug pipeline: skills, persist scripts, benchmark runner",
+      "body": "Overhaul AI bug pipeline: skills, persist scripts, benchmark runner\n\nRename skills to consistent issue-* naming:\n  triage-issue \u2192 issue-triage\n  bug-repro \u2192 issue-repro\n  bug-fix \u2192 issue-fix\n\nSkill improvements (all 3):\n- Phase-gated workflows with mandatory reference file reads\n- Schema cheatsheets and anti-patterns reference files\n- Python validators alongside PowerShell for cross-platform use\n- store_memory ban to prevent polluting future sessions\n- Honesty rules: not-reproduced/needs-platform are valid conclusions\n\nAdd persist scripts (persist-triage/repro/fix.ps1):\n- Decouple git operations from skill logic\n- Support benchmark mode via $SKIASHARP_BENCHMARK env var\n- Support -NoPush switch for manual use\n\nStandardize /tmp/ paths to /tmp/skiasharp/{skill}/ structure:\n- triage/{number}.json, repro/{number}.json, fix/{number}.json\n- Explicit warning: use literal /tmp/skiasharp/, not $TMPDIR\n\nAdd scripts/benchmark-pipeline.sh:\n- Repeatable multi-model skill evaluation (Phase 1: runs,\n  Phase 2: cross-model analysis, Phase 3: final report)\n- Resume, dry-run, live ANSI log streaming, Ctrl+C cleanup\n- Uses --yolo --deny-tool 'shell(git push)'\n\nExpand schemas, add platform-specific repro guides (5 platforms),\nfix examples, Docker testing guide. Update copilot-instructions.md,\nrelease-publish paths, and bug-pipeline.md.\n\n50 files changed, +4743 / -2053\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1130,6 +1230,7 @@
     "3517": {
       "url": "https://github.com/mono/SkiaSharp/pull/3517",
       "title": "Bug pipeline: redesign triage/repro/fix schemas and skill improvements",
+      "body": "* bug-repro skill: require evidence for version blockers\n\nAdd mandatory nupkg feasibility check (Phase 2 step 2b) before\nwriting version-related blockers. Add anti-pattern #8 for\npre-emptive version assumptions. Add blocker evidence requirements\ntable to conclusion guide.\n\nMotivated by #2759 repro where agent assumed SkiaSharp 1.60.1 was\nincompatible with .NET 8 without checking \u2014 a 10-second nupkg\ninspection would have shown netstandard1.3 + runtimes/ layout.\n\n* Add optional content field to filesCreated for source code\n\nReproduction steps can now include the actual source code content\nin filesCreated entries, making reproductions self-contained.\nBinary/generated files can still omit content (field is optional).\n\n* Add maui workload to install list\n\n* bug-repro: enforce factual vs editorial separation in conclusions\n\nFixes the misclassification seen in #3279 where the agent marked\n'not-reproduced' despite observing the exact reported compiler errors,\nbecause it judged the behavior to be 'intentional API rename'.\n\nChanges across 5 files, informed by 4 model reviews (Sonnet 4, GPT-5,\nSonnet 4.5, Gemini 3 Pro):\n\nSchema (repro-schema.json):\n- Add constraint: not-reproduced MUST NOT have any steps with\n  result 'failure' or 'wrong-output' (machine-enforced prevention)\n- Add 'assessment' field for editorial opinions (working-as-designed,\n  breaking-change, etc.) separate from factual conclusion\n- Clarify stepResult description: TECHNICAL outcome only\n- Add schema v1.1 with exitCode validation\n\nGuidance (conclusion-guide.md):\n- Add 'Factual vs Editorial' principle section\n- Add WAD warning to 'reproduced' section with concrete example\n- Add 'this is NOT for it's not a bug' to 'not-reproduced' section\n- Document assessment field and notes as the place for editorial opinion\n\nInstructions (SKILL.md):\n- Add step result semantics table with anti-pattern example\n- Add Phase 4 critical warning with real #3279 failure example\n- Add anti-patterns #8 (editorial judgment) and #9 (mismarking steps)\n\nStrategies (repro-strategies.md):\n- Add API migration sub-pattern for version upgrade compiler errors\n- Add explicit guidance: build failure = result 'failure' even if expected\n\nValidator (validate-repro.ps1):\n- Add check: not-reproduced + failure/wrong-output steps = error\n\n* Restore 13 valuable fields to triage schema\n\nAudit of old vs new schemas identified 13 fields that were\nunnecessarily dropped during the v1.0 simplification. All are\noptional and don't break existing data files.\n\nRestored to evidence:\n- bugSignals.reproQuality (complete/partial/none)\n- bugSignals.targetFrameworks (TFM strings)\n- reproEvidence.relatedIssues (issue numbers)\n- reproEvidence.repoLinks ({url, description})\n- versionAnalysis.currentRelevance (likely/unlikely/unknown)\n- versionAnalysis.relevanceReason\n- regression object (isRegression, confidence, reason, versions)\n- fixStatus object (likelyFixed, confidence, relatedPRs, etc.)\n\nRestored to analysis:\n- keySignals[] ({text, source, interpretation})\n- resolution.proposals[].title\n- resolution.proposals[].codeSnippet\n- resolution.recommendedProposal\n- resolution.recommendedReason\n\nAll 46 existing triage files + 3 examples pass validation.\nTested on real issues #3421 and #2997 \u2014 both produce\nwell-populated restored fields.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1137,6 +1238,7 @@
     "3516": {
       "url": "https://github.com/mono/SkiaSharp/pull/3516",
       "title": "Add bug-repro skill for systematic bug reproduction",
+      "body": "* triage-issue: schema v2.1 \u2014 mandatory codeInvestigation + anti-patterns\n\n- Add sourceSignal $def and required codeInvestigation array to analysis\n- allOf: close-* actions require \u22652 code signals, unlikely relevance requires \u22651\n- Make code investigation mandatory in SKILL.md Phase 2\n- Add anti-pattern rules (no pre-baked delegation, no age-based closure, etc.)\n- Update all 3 triage examples with codeInvestigation entries\n- Bump schemaVersion from 2.0 to 2.1\n\n* Add bug-repro skill for systematic bug reproduction\n\nNew skill that creates standalone reproduction projects using released\nNuGet packages, tests across multiple SkiaSharp versions, and produces\nschema-validated JSON output.\n\nKey features:\n- 5-phase workflow: Setup \u2192 Assess \u2192 Reproduce \u2192 Generate \u2192 Persist\n- Multi-version testing: reporter's version \u2192 latest stable \u2192 main\n- Standalone console projects (not source builds)\n- Lean v1 JSON schema with validation script\n- Soft pipeline: optionally consumes triage data as hints\n- Output limits (2KB/4KB) and path redaction\n\nFiles:\n- SKILL.md: 5-phase workflow with frontmatter triggers\n- references/repro-schema.json: JSON Schema v1.0\n- references/repro-strategies.md: strategies by bug category\n- references/repro-examples.md: 3 validated example outputs\n- references/conclusion-guide.md: conclusion values and evidence\n- scripts/validate-repro.ps1: schema + semantic validation\n- copilot-instructions.md: routing table updated",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1144,6 +1246,7 @@
     "3515": {
       "url": "https://github.com/mono/SkiaSharp/pull/3515",
       "title": "triage-issue: schema v2.1 \u2014 mandatory codeInvestigation + anti-patterns",
+      "body": "- Add sourceSignal $def and required codeInvestigation array to analysis\n- allOf: close-* actions require \u22652 code signals, unlikely relevance requires \u22651\n- Make code investigation mandatory in SKILL.md Phase 2\n- Add anti-pattern rules (no pre-baked delegation, no age-based closure, etc.)\n- Update all 3 triage examples with codeInvestigation entries\n- Bump schemaVersion from 2.0 to 2.1",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1151,6 +1254,7 @@
     "3510": {
       "url": "https://github.com/mono/SkiaSharp/pull/3510",
       "title": "Add shared dependency verification and fix Docker fontconfig pins",
+      "body": "* Statically link CRT in ANGLE builds and add shared dependency verification\n\n- Add explicit /MT to ANGLE extra_cflags to ensure static CRT linking,\n  preventing potential crashes on Windows machines without VC++ Redistributable\n- Extract CheckWindowsDependencies() and CheckLinuxDependencies() into\n  scripts/cake/native-shared.cake for reuse across all native builds\n- Add dependency verification to ANGLE, libSkiaSharp, and libHarfBuzzSharp\n  Windows builds (reject VCRUNTIME/MSVCP dependencies)\n- Simplify native/winui/build.cake and native/linux/build.cake to delegate\n  to the shared functions\n\nCI verified all DLLs pass the dependency check (no VCRUNTIME/MSVCP deps).\n\nFixes #3346\nSee also: #136 (original static CRT fix for libSkiaSharp)\n\n* Fix loongarch64 Docker build: update fontconfig to 2.17.1-5\n\nlibfontconfig1_2.17.1-3_loong64.deb was removed from deb.debian.org\nwhen version -4 (Feb 3) and -5 (Feb 9) were published, causing the\nDocker image build to fail with 'file format not recognized' (curl\nsilently downloaded a 404 HTML page instead of the .deb).\n\n* Fix fontconfig version pins in Debian 11/12/13 Dockerfiles\n\nDebian removed fontconfig 2.13.1-2 from deb.debian.org pool. Update\neach Dockerfile to use the version that matches its Debian release:\n- Debian 11 (bullseye): 2.13.1-2 \u2192 2.13.1-4.2\n- Debian 12 (bookworm): 2.13.1-2 \u2192 2.14.1-4\n- Debian 13 (trixie) *: 2.13.1-2 \u2192 2.17.1-5\n\nDebian 10 is unaffected (uses archive.debian.org which retains old\npackages).\n\n* Use oldest available fontconfig versions in Dockerfiles\n\nUse the minimum available version on deb.debian.org to avoid pulling\nin newer fontconfig behavior:\n- Debian 12/13 wildcard: 2.13.1-4.2 (oldest on deb.debian.org)\n- Debian 13 loong64: 2.17.1-4 (oldest available for loong64)",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed",
@@ -1161,6 +1265,7 @@
     "3513": {
       "url": "https://github.com/mono/SkiaSharp/pull/3513",
       "title": "Add Triage AI Skill",
+      "body": "* Add triage-issue Copilot skill\n\nAI-powered issue triage that reads cached issue data, classifies across\nmultiple dimensions (type, area, platform, severity, etc.), validates\nagainst a JSON Schema, and writes structured triage JSON.\n\n- PowerShell 7.5+ scripts (pwsh only, no gh CLI needed)\n- JSON Schema draft 2020-12 with cross-field rules\n- Schema enums are source of truth for label values\n- Reads from docs-data-cache branch worktree\n- Added to copilot-instructions.md skill routing table\n\n* triage-issue: make stepsToReproduce an array, auto-push after triage\n\n- Changed stepsToReproduce from string|null to string[] in schema\n- Made Step 6 (push to cache branch) mandatory instead of optional\n- Added retry logic with rebase on push conflicts (up to 3 attempts)\n- On merge conflicts, ask user which version to keep\n\n* docs: add NuGet package reference and improve triage research\n\n- Add documentation/packages.md with comprehensive NuGet package reference\n  covering all 40+ packages (core, native assets, views, GPU, obsolete)\n- Update triage skill with docs worktree setup (Step 0c) and research\n  step (Step 1d) to check project docs, API docs, and MS Learn\n- Update copilot-instructions.md with docs worktree bootstrap\n- Add SkiaSharp.Views.NativeAssets.UWP to OBSOLETED_NUGETS in build.cake\n\nValidated against actual NuGet package contents (dependencies, file\nlayouts, architectures) and verified by 5-model cross-review.\n\n* ignore\n\n* more\n\n* good stuff here!\n\n* links\n\n* triage-issue: upgrade schema to v2.1 with actions and data reduction\n\nSchema v2.1 changes:\n- Grouped into 6 sections: meta, summary, classification, evidence, analysis, output\n- Classification values are full GitHub labels (e.g., 'type/bug', 'os/Linux')\n- Added output.actions array with 8 types (update-labels, add-comment, close-issue,\n  link-related, link-duplicate, convert-to-discussion, update-project, set-milestone)\n- Absorbed suggestedResponse into add-comment action\n- Absorbed closeable/closeReason/duplicateOf/abandoned into actions\n\nData reduction (8 cuts, ~25% smaller triage output):\n- Removed per-field reason from classification (fieldRationales is single source of truth)\n- Removed docsConsulted/docsNotConsulted (unverifiable audit trail)\n- Removed researchDone from resolution (same)\n- Simplified proposals to {title, description, confidence, effort}\n- Removed keySignals.supportedFields\n- Removed action.status (always 'pending', consumer adds it)\n- Removed versionAnalysis.era\n- Removed actionability closeable/closeReason/abandoned/duplicateOf\n\nValidator additions:\n- Unique action ID enforcement\n- dependsOn referential integrity check\n- dependsOn ordering validation\n\n* triage-issue: enforce fieldRationale coverage for all judgment fields\n\nSKILL.md: explicit list of 11 fields requiring rationales (4 always + 7 when set).\nValidator: checks every non-null judgment field has a matching fieldRationale entry.\nExamples: added missing rationales for platforms, tenets, actionability, area, severity.\n\n* triage-issue: enforce fieldRationale coverage via validator script\n\nSchema contains rules don't work reliably with PowerShell's Test-Json\n(applies contains constraints to all items instead of checking existence).\nEnforced via validator script instead: checks 4 always-required + 7 when-set\nfields. 25/30 cached triages now fail on missing rationales (need re-triage).\n\n* triage-issue: enforce fieldRationale coverage in schema via allOf/if-then/contains\n\n11 rules using contains with const (not enum \u2014 PowerShell's Test-Json\nhandles const correctly but leaks enum to all items). All rules are\nconditional (if/then): require rationale only when the field is actually\nset (non-null). Removed redundant PowerShell script check.\n\nRules: type, area, actionability.suggestedAction, bugSignals.severity,\nplatforms, tenets, backends, partner, regression, fixStatus, versionAnalysis\n\nValidated: 30/30 triages pass both PowerShell and Python jsonschema.\n\n* triage-issue: skill quality improvements from 5-model review\n\nChanges based on consensus from Opus, Gemini, GPT-5.2, Sonnet 4.5, GPT-5:\n\nSKILL.md (237\u2192179 lines, -24%):\n- Shortened frontmatter description by 50%\n- Removed generic AI knowledge (confidence scoring, null handling)\n- Removed redundant References table (inline links sufficient)\n- Compressed Phase 1 setup, Phase 4, Phase 5\n- Phase 3 now references labels.md instead of schema for enum values\n- fieldRationale list simplified to 2-tier (compulsory + when-set)\n\nlabels.md (60\u219242 lines, -30%):\n- Fixed contradiction: was 'use suffixes', now correctly 'use full labels'\n- Added all 44 enum values from schema (was missing most)\n- Now the single authoritative label taxonomy reference\n\nresponse-guidelines.md (43\u219226 lines, -40%):\n- Updated field ref: suggestedResponse.draft \u2192 add-comment payload.draftBody\n- Added max 2000 chars + requiresHumanEdit: true guidance\n- Compressed prose, removed URL rules section\n\ntriage-examples.md (291\u2192245 lines, -16%):\n- Compressed duplicate example from 93\u219247 lines (diff-style)\n\nValidated: 33/33 pass (30 triages + 3 examples)\n\n* triage-issue: cache-first with GitHub CLI/MCP fallback\n\n- Replace 'never call GitHub API' with cache-first + fallback policy\n- Local cache is primary (faster, searchable with grep)\n- gh CLI / GitHub MCP tools as fallback when issue not cached\n- Updated duplicate search guidance in research-by-type.md\n\n* triage-issue: improve frontmatter description for better triggering\n\n- Front-load what the skill produces (classification, response, actions)\n- Mention PR triage support\n- Expand trigger phrases\n\n* triage-issue: workaround-first triage with search + validation\n\nNew capabilities:\n- Phase 3.5: Systematic workaround search across 9 sources (cached triages,\n  closed issues, known patterns, source code, API docs, tutorials, samples,\n  GitHub API, web search) with concrete grep commands per issue type\n- Phase 3.7: 3-agent code validation (API correctness, behavioral correctness,\n  platform safety) using parallel Haiku agents. Gate: only triggers when code\n  blocks exist (~60% skip). Adds ~7% wall-clock amortized.\n- Response structure: Acknowledge \u2192 Workaround \u2192 Context (workaround-first)\n  with confidence-guided framing\n\nSchema additions (backward compatible, all optional):\n- resolutionProposal.category: workaround/fix/alternative/investigation\n- resolutionProposal.codeSnippet: copy-paste-ready code\n- resolutionProposal.validated: yes/no/untested\n\nUpdated files:\n- SKILL.md: new phases 3.5 + 3.7, updated phase overview\n- response-guidelines.md: workaround-first structure\n- research-by-type.md: links to workaround-search.md per type\n- triage-examples.md: bug + question examples use new fields\n- triage-schema.json: 3 optional fields on resolutionProposal\n- NEW: workaround-search.md (216 lines)\n- NEW: workaround-validation.md (172 lines)\n\nAll 33 files (30 triages + 3 examples) pass validation.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1168,6 +1273,7 @@
     "3508": {
       "url": "https://github.com/mono/SkiaSharp/pull/3508",
       "title": "Bump to the next version (3.119.4) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1175,6 +1281,7 @@
     "3507": {
       "url": "https://github.com/mono/SkiaSharp/pull/3507",
       "title": "Bump to the next version (3.119.3) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1182,6 +1289,7 @@
     "3506": {
       "url": "https://github.com/mono/SkiaSharp/pull/3506",
       "title": "Add Linux Docker integration tests for release testing",
+      "body": "- Add LinuxConsoleTests.cs that runs SkiaSharp and HarfBuzzSharp in\n  Docker Linux containers (mcr.microsoft.com/dotnet/sdk:8.0)\n- Uses SkiaSharp.NativeAssets.Linux.NoDependencies to avoid system\n  dependency issues in minimal containers\n- Tests are skipped when Docker is not available\n- Update release-testing skill docs (SKILL.md, setup.md, monitoring.md,\n  troubleshooting.md) to include Linux Docker tests in the test matrix",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1189,6 +1297,7 @@
     "3505": {
       "url": "https://github.com/mono/SkiaSharp/pull/3505",
       "title": "Fix stable version handling in release skills",
+      "body": "Update all 3 release skills to correctly document stable version\nnumbering: stable NuGet versions are just the base (e.g., 3.119.2)\nwith no build number appended. The build number only appears in the\ninternal feed as a prerelease tag (e.g., 3.119.2-stable.3).\n\n- release-testing: Split version resolution into preview vs stable\n  paths, add stable examples for CI version extraction and reporting\n- release-publish: Add NuGet version row to preview/stable table,\n  split version confirmation into preview vs stable formats\n- release-branch: Add NuGet version format note after release type\n  table",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1196,6 +1305,7 @@
     "3504": {
       "url": "https://github.com/mono/SkiaSharp/pull/3504",
       "title": "Add semver ordering guidance to release skills",
+      "body": "Prevents selecting the wrong release branch when both preview and\nstable branches exist (e.g., picking 3.119.2-preview.3 instead of\n3.119.2). In semver, bare versions are always newer than prerelease\nvariants of the same version.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1203,6 +1313,7 @@
     "3502": {
       "url": "https://github.com/mono/SkiaSharp/pull/3502",
       "title": "Add Spectre mitigation flag for libSkiaSharp.so.",
+      "body": "* Add Spectre mitigation flag for libSkiaSharp.so.\n\n* Use -mretpoline for x86/x64 and -mharden-sls=all for arm/arm64\n\n* Use same approach in spectreFlags as in wordSizeDefine - append leading comma.\n\n---------\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
       "author": "sshumakov",
       "community": true,
       "tag": "mixed"
@@ -1210,6 +1321,7 @@
     "3501": {
       "url": "https://github.com/mono/SkiaSharp/pull/3501",
       "title": "Fix release-testing skill consistency issues",
+      "body": "* Fix release-testing skill consistency issues\n\n- Require -wipe-data for Android emulators (CRITICAL for test reliability)\n- Add boot time note (60-120s for fresh wipe)\n- Standardize adb/emulator paths (use PATH, not full paths)\n- Add PATH fallback note in setup.md\n- Remove redundant 'Start Emulators First' section\n- Fix net9.0 \u2192 net8.0 to match actual project\n\n* fixes",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1217,6 +1329,7 @@
     "3496": {
       "url": "https://github.com/mono/SkiaSharp/pull/3496",
       "title": "Add Spectre mitigation flag for libSkiaSharp.dll.",
+      "body": "",
       "author": "sshumakov",
       "community": true,
       "tag": "mixed"
@@ -1224,6 +1337,7 @@
     "3494": {
       "url": "https://github.com/mono/SkiaSharp/pull/3494",
       "title": "Fix Linux ARM64 crash: add fontconfig runtime library to cross-compile sysroot",
+      "body": "## Summary\n\nFixes hard crash on Linux ARM64 with `undefined symbol: uuid_generate_random` by adding the fontconfig runtime library to all cross-compile Docker sysroots.\n\n## Root Cause\n\nThe ARM64 cross-compile Docker only downloaded `libfontconfig1-dev` which provides:\n- Headers and static library\n- **Broken symlink**: `libfontconfig.so -> libfontconfig.so.1.12.0` (target doesn't exist!)\n\nThe actual shared library is in the **runtime package** (`libfontconfig1`). The linker silently skipped `-lfontconfig` when the symlink target was missing, resulting in:\n- `libSkiaSharp.so` missing `libfontconfig.so.1` from DT_NEEDED\n- Runtime crash when fontconfig (loaded via freetype) called `uuid_generate_random()`\n\n## Changes\n\n- **Dockerfiles 10, 11, 12, 13**: Download both `libfontconfig1-dev` AND `libfontconfig1`\n- **native/linux/build.cake**: Add `--verifyIncluded` parameter (inverse of `verifyExcluded`)\n- **CI YAML**: Add `--verifyIncluded=fontconfig` to verify fontconfig is linked in regular builds\n- **Build scripts**: Pass through extra arguments to cake\n\n## Testing\n\n- \u2705 Local: Built arm64, arm, x86, loongarch64 with verifyIncluded=fontconfig\n- \u2705 CI: All native Linux builds passed with fontconfig verification\n\nFixes #3369\nFixes #3272  \nFixes #3436",
       "author": "mattleibow",
       "community": false,
       "tag": "mixed",
@@ -1236,6 +1350,7 @@
     "3495": {
       "url": "https://github.com/mono/SkiaSharp/pull/3495",
       "title": "Add 'copilot' label step to bug-fix skill PR workflow",
+      "body": "* Add 'copilot' label step to bug-fix PR creation\n\n* the copilot/ branch prevents other copilot things",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1243,6 +1358,7 @@
     "3485": {
       "url": "https://github.com/mono/SkiaSharp/pull/3485",
       "title": "Fix AoT crash when IlcDisableReflection=true",
+      "body": "Replace Enum.GetValues() with explicit array in SKBlender static constructor to support AoT builds with reflection disabled.\n\nThe static constructor was using Enum.GetValues(typeof(SKBlendMode)) which requires reflection. This caused TypeInitializationException in .NET AoT builds when IlcDisableReflection=true.\n\nChanges:\n- Replace reflection-based enum iteration with explicit array of all 29 SKBlendMode values\n- Add test to verify all blend modes are properly initialized (test uses Enum.GetValues to catch future enum additions)\n\nFixes #3238",
       "author": "Copilot",
       "community": false,
       "tag": "product",
@@ -1253,6 +1369,7 @@
     "3488": {
       "url": "https://github.com/mono/SkiaSharp/pull/3488",
       "title": "Improve AI instructions and skills",
+      "body": "* Branch protection and compliance\n* Build and test workflow improvements\n* Bug fix workflow separation\n* Checklist and documentation updates",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1260,6 +1377,7 @@
     "3483": {
       "url": "https://github.com/mono/SkiaSharp/pull/3483",
       "title": "Add structured workflow for adding APIs to SkiaSharp",
+      "body": "Introduces the `add-api` skill with a 6-phase workflow for exposing\nSkia C++ functionality in C#, and updates documentation to prevent\ncommon mistakes with the git submodule workflow.\n\nChanges:\n- Add `.github/skills/add-api/` skill with checklists and\n  troubleshooting guides\n- Update `copilot-instructions.md` with submodule workflow and new\n  rules for generated files and mandatory testing\n- Expand `documentation/adding-apis.md` with complete git submodule\n  steps and common mistakes table\n- Add pointer type decision tree to `documentation/memory-management.md`\n- Standardize generator command to `pwsh ./utils/generate.ps1`\n- Convert security-audit Mermaid diagram to ASCII for compatibility",
       "author": "Copilot",
       "community": false,
       "tag": "internal"
@@ -1267,6 +1385,7 @@
     "3486": {
       "url": "https://github.com/mono/SkiaSharp/pull/3486",
       "title": "Use the new CI feed to download the pre-built artifacts",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1274,6 +1393,7 @@
     "3479": {
       "url": "https://github.com/mono/SkiaSharp/pull/3479",
       "title": "Add NuGet feed management tools and PR package download script",
+      "body": "* Adding a migration script\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>\n\n* Add NuGet feed management script and GitHub Action\n\n- Script to move _* packages to archive feed and delete -pr versions\n- Supports phased migration (CopyOnly, DeleteOnly, All)\n- Local caching with integrity verification\n- Resumable with state file\n- GitHub Action with workflow_dispatch for manual runs\n- PAT read from AZURE_DEVOPS_PAT environment variable/secret\n\n* Add PR trigger to workflow for testing\n\n* Fix workflow inputs for PR triggers (use defaults when empty)\n\n* Add parallel matrix jobs for package processing\n\n- parallel-underscore: Run _NativeAssets, _NuGets, _NuGetsPreview, _Symbols, _SymbolsPreview in parallel\n- parallel-all: Also includes SkiaSharp, HarfBuzzSharp groups in parallel\n- single: Manual filter for specific packages\n- PR triggers run underscore packages in dry-run mode\n\n* GO!\n\n* LIVE!\n\n* Fix CI: handle non-interactive console and respect dry_run input\n\n- Wrap Console.KeyAvailable in try/catch for CI environments\n- Check IsInteractive before keyboard polling\n- Respect dry_run input in all parallel jobs (was hardcoded to Execute)\n\n* Always execute in CI - going live\n\n* Fix PadRight error when console width is 0 in CI\n\n* Check destination feed before downloading - skip if already exists\n\nThis saves significant time/bandwidth for large packages that were already copied.\n\n* Add _NativeAssets. prefixed packages to parallel matrix\n\n* Add PR package download script and update feed documentation\n\n- Add scripts/get-skiasharp-pr.ps1 for easy PR package downloads\n- Add nuget_preview artifact to pipeline (smaller, prerelease only)\n- Update versioning.md with simplified PR package instructions\n- Update releasing.md with CI feed documentation\n- No authentication required (public builds)\n\n* Remove package caching from feed management script\n\nSince we now check if packages exist in the destination feed before\ndownloading, caching is unnecessary. Packages are now downloaded to\na temp directory, pushed immediately, and cleaned up.\n\nThis fixes disk space issues on CI runners where caching thousands\nof large packages was filling up the runner.\n\n* Remove state file tracking from feed management script\n\nSince CI runs on fresh images, state file provides no value - packages\nare already checked against destination feed before download. Removed:\n\n- StateFile parameter\n- Get-State and Save-State functions\n- All state tracking (CopiedPackages, MovedPackages, DeletedVersions, etc.)\n- State artifact uploads from workflow\n\nThe script is now fully stateless and idempotent.\n\n* Allow PR script to find non-successful builds\n\nThe script now tries in order:\n1. Successful completed builds\n2. Any completed builds (failed tests but artifacts may be fine)\n3. In-progress builds (artifacts may already be published)\n\nThis allows downloading artifacts even when tests are still running\nor have failed, since the NuGet packages are typically ready earlier.\n\n* Simplify PR script: remove Filter param, add SuccessfulOnly flag\n\n- Remove -Filter parameter, always extract prerelease packages (*-*.nupkg)\n- Always find the latest build by default (regardless of status)\n- Add -SuccessfulOnly flag to restrict to successful builds only\n- Suggest -SuccessfulOnly when artifacts aren't available on latest build\n\n* Update PR packages docs with single-command iex usage\n\n* Add bash version of PR package download script\n\n- scripts/get-skiasharp-pr.sh - bash equivalent of the PowerShell script\n- Uses curl/jq/unzip (no gh cli or authentication needed)\n- Same options: --successful-only, --force, --list, --build-id\n- Updated docs with bash one-liner and options table\n\n* Split _NativeAssets.* into separate parallel jobs\n\nEach _NativeAssets.{platform} package now has its own job:\n- _NativeAssets.alpine, alpinenodeps, android, ios, iossimulator\n- _NativeAssets.linux, linuxnodeps, maccatalyst, nanoserver, osx\n- _NativeAssets.tizen, tvos, uwp, wasm, watchos, windows, winui\n\nThis prevents disk space exhaustion from processing all platforms in one job.\n\n---------\n\nCo-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1281,6 +1401,7 @@
     "3478": {
       "url": "https://github.com/mono/SkiaSharp/pull/3478",
       "title": "Update libwebp to 1.6.0",
+      "body": "- Update externals/skia submodule with libwebp 1.6.0 changes\n- Update cgmanifest.json version for CVE tracking",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1288,6 +1409,7 @@
     "3477": {
       "url": "https://github.com/mono/SkiaSharp/pull/3477",
       "title": "Improve native-dependency-update skill Phase 5 instructions",
+      "body": "- Add branch naming convention table for quick reference\n- Add numbered sub-steps for SkiaSharp PR creation\n- Add CRITICAL callout for submodule update requirement\n- Add Phase 5 completion checklist\n- Use natural language instead of rigid bash scripts",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1295,6 +1417,7 @@
     "3468": {
       "url": "https://github.com/mono/SkiaSharp/pull/3468",
       "title": "Add debugging methodology documentation",
+      "body": "Based on lessons learned from libwebp AVX2 debugging session.\n\nKey principles:\n- Establish baseline before investigating\n- Track changes and effects systematically\n- Trace conditional code completely for each platform\n- Use platform differences as diagnostic signals\n- One change at a time, verify, then proceed\n- Verify claims with evidence\n- Revert immediately if fixes make things worse\n\nIncludes common pitfalls like #if defined(X) vs #if X preprocessor gotchas.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1302,6 +1425,7 @@
     "3475": {
       "url": "https://github.com/mono/SkiaSharp/pull/3475",
       "title": "Strengthen skill guidance on submodule merge sequence",
+      "body": "Add explicit warning about squash-merge creating new commits and\nthe danger of orphaned submodule references. Include mandatory\nmerge sequence with exact commands to prevent this issue.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1309,6 +1433,7 @@
     "3474": {
       "url": "https://github.com/mono/SkiaSharp/pull/3474",
       "title": "Fix skia submodule to point to squashed commit",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1316,6 +1441,7 @@
     "3469": {
       "url": "https://github.com/mono/SkiaSharp/pull/3469",
       "title": "Update brotli to 1.2.0",
+      "body": "Fixes CVE-2025-6176 (HIGH 7.5) - DoS via decompression bomb.\n\nChanges:\n- Updated externals/skia submodule with brotli 1.2.0\n- Updated cgmanifest.json",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1323,6 +1449,7 @@
     "3458": {
       "url": "https://github.com/mono/SkiaSharp/pull/3458",
       "title": "Bump libexpat from 2.6.4 to 2.7.3",
+      "body": "Fixes CVE-2025-59375 (CVSS 7.5 HIGH) - Memory exhaustion DoS\nFixes CVE-2024-50602 (CVSS 5.9 Medium) - Parser crash",
       "author": "mattleibow",
       "community": false,
       "tag": "internal",
@@ -1334,6 +1461,7 @@
     "3463": {
       "url": "https://github.com/mono/SkiaSharp/pull/3463",
       "title": "Remove unused deps and add deps docs",
+      "body": "Remove 18 unused native dependencies from Skia's DEPS file to reduce attack surface and sync time. Add comprehensive dependency documentation.\n\nChanges:\n- Comment out 18 unused deps in DEPS (abseil-cpp, highway, imgui, libavif, libjxl, etc.)\n- Add documentation/dependencies.md with security-relevant deps, platform usage, and cgmanifest mapping\n- Update cgmanifest.json to match active dependencies\n- Update skills to reference central documentation\n\nRetained dependencies (15): brotli, d3d12allocator, dng_sdk, expat, freetype, harfbuzz, libjpeg-turbo, libpng, libwebp, piex, spirv-cross, vulkan-headers, vulkanmemoryallocator, wuffs, zlib",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1341,6 +1469,7 @@
     "3460": {
       "url": "https://github.com/mono/SkiaSharp/pull/3460",
       "title": "Update more skills",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1348,6 +1477,7 @@
     "3457": {
       "url": "https://github.com/mono/SkiaSharp/pull/3457",
       "title": "Update native-dependency-update skill with guardrails",
+      "body": "* Update native-dependency-update skill: add guardrails\n\n- Add mandatory 'Follow Every Phase' section at top\n- Add pre-flight checklist to confirm proper process\n- Add 'NEVER Do These' table of common shortcuts\n- Add explicit warnings against pushing directly to skiasharp/main\n- Emphasize cgmanifest.json is required\n- Emphasize build/test phase is required\n- Clarify 'do everything' means 'follow every step'\n- Add 'Fixes #NNNNN' guidance for auto-closing issues\n\n* Update skill: never revert or force push shared branches\n\nPushed commits are permanent. Fix mistakes forward with new commits.\n\n* Update skill: native builds are mandatory, never defer to CI\n\nCI is too slow to be the first place to discover build failures.\nNative builds must succeed locally before creating any PR.\n\n* Update skill: require externals/skia submodule update in SkiaSharp PR\n\nThe submodule update is critical - without it, SkiaSharp will still\nuse the old dependency version even though cgmanifest.json is updated.",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1355,6 +1485,7 @@
     "3459": {
       "url": "https://github.com/mono/SkiaSharp/pull/3459",
       "title": "Update SkiaSharp package source URL in nuget.config",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1362,6 +1493,7 @@
     "3455": {
       "url": "https://github.com/mono/SkiaSharp/pull/3455",
       "title": "Update the native dependency bump skills",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1369,6 +1501,7 @@
     "3452": {
       "url": "https://github.com/mono/SkiaSharp/pull/3452",
       "title": "Update libpng to 1.6.54",
+      "body": "* Update libpng to 1.6.54\n\n* Update skia submodule for libpng 1.6.54",
       "author": "mattleibow",
       "community": false,
       "tag": "product",
@@ -1379,6 +1512,7 @@
     "3454": {
       "url": "https://github.com/mono/SkiaSharp/pull/3454",
       "title": "Update docs submodule",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1386,6 +1520,7 @@
     "3453": {
       "url": "https://github.com/mono/SkiaSharp/pull/3453",
       "title": "Add native dependency update skill",
+      "body": "Add AI skill for updating native dependencies (libpng, zlib, harfbuzz, etc.)\nin SkiaSharp's Skia fork. Includes:\n\n- Step-by-step workflow for version bumps and security fixes\n- Breaking change analysis guidance\n- PR creation process with proper cross-linking\n- Common dependency reference table",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1393,6 +1528,7 @@
     "3451": {
       "url": "https://github.com/mono/SkiaSharp/pull/3451",
       "title": "Add AI release skills and integration test suite",
+      "body": "Documentation:\n- Add comprehensive API design guidelines (api-design.md)\n- Restructure copilot-instructions.md with skills section, testing guide,\n  API patterns, and ABI safety rules\n- Modernize building.md and building-linux.md for .NET 8\n- Add prerequisites to CONTRIBUTING.md and documentation/README.md\n\nNew skill:\n- Add implement-issue skill for GitHub issue implementation workflow\n- Includes references for new-api, bug-fix, and context-checklist\n\nBuild improvements:\n- Simplify SkiaSharp.Build.props workload detection (~50 lines removed)\n- Document SkiaSharp.Build.Override.in.props customization options\n- Add download progress indicator to UtilsManaged.cake\n- Pin SDK to .NET 8 in global.json",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1400,6 +1536,7 @@
     "3450": {
       "url": "https://github.com/mono/SkiaSharp/pull/3450",
       "title": "Fix the version processing",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1407,6 +1544,7 @@
     "3445": {
       "url": "https://github.com/mono/SkiaSharp/pull/3445",
       "title": "Add API guidelines and implement-issue skill",
+      "body": "Documentation:\n- Add comprehensive API design guidelines (api-design.md)\n- Restructure copilot-instructions.md with skills section, testing guide,\n  API patterns, and ABI safety rules\n- Modernize building.md and building-linux.md for .NET 8\n- Add prerequisites to CONTRIBUTING.md and documentation/README.md\n\nNew skill:\n- Add implement-issue skill for GitHub issue implementation workflow\n- Includes references for new-api, bug-fix, and context-checklist\n\nBuild improvements:\n- Simplify SkiaSharp.Build.props workload detection (~50 lines removed)\n- Document SkiaSharp.Build.Override.in.props customization options\n- Add download progress indicator to UtilsManaged.cake\n- Pin SDK to .NET 8 in global.json",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -1414,6 +1552,7 @@
     "3447": {
       "url": "https://github.com/mono/SkiaSharp/pull/3447",
       "title": "Document HarfBuzzSharp versioning in release process",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"
@@ -1421,6 +1560,7 @@
     "3446": {
       "url": "https://github.com/mono/SkiaSharp/pull/3446",
       "title": "Bump to the next version (3.119.3) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

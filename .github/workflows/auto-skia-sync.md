@@ -9,6 +9,10 @@ engine:
   max-continuations: 3
 model: gpt-5.6-sol
 
+# Run title is fixed at dispatch, before the detector resolves anything, so it shows the
+# requested inputs; the resolved target/branches are written to the run summary.
+run-name: "Sync - Skia Upstream (${{ github.event.inputs.target || 'rotate' }} -> ${{ github.event.inputs.target_branch || 'auto' }})"
+
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
 # it picks ONE supported line from versions.json per run, round-robin
@@ -23,7 +27,7 @@ on:
         required: false
         type: string
       target_branch:
-        description: "Optional mono/SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
+        description: "Optional mono/SkiaSharp base branch override. A release/<major>.<milestone>.x value must match the target milestone and selects that release line with its paired mono/skia release base. Empty uses normal main/release detection."
         required: false
         type: string
 
@@ -41,6 +45,7 @@ on:
       uses: actions/checkout@v7.0.1
       with:
         sparse-checkout: .github/scripts
+        persist-credentials: false
     - name: Detect milestone
       id: detect
       # Scheduled runs pass an empty target — the detector then ROTATES: it reads
@@ -53,12 +58,38 @@ on:
         SYNC_TARGET: ${{ github.event.inputs.target }}
         SYNC_BASE_BRANCH: ${{ github.event.inputs.target_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+      run: |
+        bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+    - name: Summarize resolved sync
+      if: always() && steps.detect.outcome == 'success'
+      env:
+        MODE: ${{ steps.detect.outputs.mode }}
+        TARGET: ${{ steps.detect.outputs.target }}
+        CURRENT: ${{ steps.detect.outputs.current }}
+        BASE: ${{ steps.detect.outputs.base_branch }}
+        SKIA_BASE: ${{ steps.detect.outputs.skia_base_branch }}
+        SKIP: ${{ steps.detect.outputs.skip }}
+      run: |
+        {
+          echo "### Skia sync: ${MODE} m${CURRENT} -> m${TARGET}"
+          echo "- mono/SkiaSharp base: \`${BASE}\`"
+          echo "- mono/skia base: \`${SKIA_BASE}\`"
+          echo "- skip: ${SKIP}"
+        } >>"$GITHUB_STEP_SUMMARY"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
 # Required: without this, ${{ needs.pre_activation.outputs.target }} is empty.
 jobs:
+  activation:
+    steps:
+      - name: Archive trusted agent configuration
+        # Keep modes and symlinks inside tar: Actions artifacts normalize loose
+        # files to 0644. The runtime uploads /tmp/gh-aw/base after these steps.
+        run: |
+          mv /tmp/gh-aw/base /tmp/gh-aw/base-unpacked
+          mkdir /tmp/gh-aw/base
+          tar -cf /tmp/gh-aw/base/agent-config.tar -C /tmp/gh-aw/base-unpacked .
   pre-activation:
     outputs:
       current: ${{ steps.detect.outputs.current }}
@@ -70,6 +101,48 @@ jobs:
       base_branch: ${{ steps.detect.outputs.base_branch }}
       skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
       head_branch: ${{ steps.detect.outputs.head_branch }}
+  publish-sync:
+    name: Publish original Skia and SkiaSharp history
+    runs-on: ubuntu-latest
+    needs: [agent, detection]
+    if: >-
+      needs.agent.result == 'success' &&
+      needs.detection.result == 'success' &&
+      needs.detection.outputs.detection_conclusion != 'failure'
+    permissions:
+      contents: read
+    steps:
+      - name: Check out trusted publishing scripts
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - name: Download sync handoff
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: skia-sync-publish
+          path: ${{ runner.temp }}/skia-sync-publish
+      - name: Restore validated sync branches
+        env:
+          SYNC_TARGET: ${{ github.event.inputs.target }}
+          SYNC_BASE_BRANCH: ${{ github.event.inputs.target_branch }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RESOLVED=$(mktemp)
+          bash .github/scripts/skia-sync-detect.sh --resolve-only --output "$RESOLVED" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+          # shellcheck disable=SC1090
+          . "$RESOLVED"
+          export EXPECTED_HEAD_BRANCH="$head_branch"
+          export EXPECTED_BASE_BRANCH="$base_branch"
+          export EXPECTED_SKIA_BASE_BRANCH="$skia_base_branch"
+          python3 .github/scripts/skia-sync-publish-handoff.py restore "$RUNNER_TEMP/skia-sync-publish"
+      - name: Push branches and create PRs
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: bash .github/scripts/skia-sync-push-prs.sh
 
 # -- Agent job gate --------------------------------------------------
 # Only run the agent if pre-activation succeeded and explicitly found work to do.
@@ -122,21 +195,9 @@ permissions:
   pull-requests: read
 
 # -- Safe outputs ------------------------------------------------------
-# All real GitHub writes (push, both PRs) are done in the post-step via bash with
-# SKIASHARP_AUTOBUMP_TOKEN — gh-aw can't create the mono/skia PR (the submodule's merge
-# commits live in a nested repo gh-aw sees only as a gitlink) and `staged: true` keeps the
-# agent from creating anything directly.
-#
-# `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
-# (preview-only — NO real PR is created), so a successful sync registers as a pull-request
-# output instead of being mislabeled a "no-op". The agent calls it when work was done and
-# `noop` only when there genuinely was none.
+# No PR safe-output: it would flatten the native merge history into a patch.
+# The ordinary publish-sync job pushes the exact commits from Git bundles.
 safe-outputs:
-  staged: true
-  create-pull-request:
-    staged: true
-    allowed-base-branches: "${{ github.event.inputs.target_branch || 'main,release/*' }}"
-    if-no-changes: ignore
   # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
   # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
   # to file a "no-op runs" issue.
@@ -157,6 +218,10 @@ sandbox:
 # Both steps: and pre-agent-steps: run on the HOST, not inside the AWF container.
 # The agent runs in an AWF chroot. sandbox.agent.mounts handles /etc/fonts.
 steps:
+  - name: Extract trusted agent configuration
+    # Runs after downloading activation, before the runtime restores trusted
+    # config over the checkout. The archive came from activation's own snapshot.
+    run: tar -xf /tmp/gh-aw/base/agent-config.tar -C /tmp/gh-aw/base
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
@@ -191,7 +256,6 @@ steps:
         printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$head_branch"
         printf 'SKIA_SYNC_PLATFORM=linux\n'
         printf 'SKIA_SYNC_ARCH=x64\n'
-        printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
       } >> "$GITHUB_ENV"
   - name: Stage immutable workflow assets
     run: |
@@ -199,6 +263,7 @@ steps:
       mkdir -p "$RUNTIME_DIR"
       cp -a .agents/skills/update-skia "$RUNTIME_DIR/update-skia"
       cp -a .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
+      cp -a .github/scripts/skia-sync-publish-handoff.py "$RUNTIME_DIR/skia-sync-publish-handoff.py"
       {
         printf 'SKIA_SYNC_RUNTIME_DIR=%s\n' "$RUNTIME_DIR"
         printf 'SKIA_SYNC_SKILL_DIR=%s\n' "$RUNTIME_DIR/update-skia"
@@ -280,8 +345,7 @@ pre-agent-steps:
       fi
       echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
 # -- Post-agent steps -----------------------------------------------
-# Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
-# then push branches and create/update PRs with the write credential.
+# Run AFTER the AI finishes. Finalize and package local commits without credentials.
 post-steps:
   - name: Finalize sync metadata
     env:
@@ -318,11 +382,15 @@ post-steps:
       fi
       git diff --quiet
       git diff --cached --quiet
-  - name: Push branches and create PRs
-    env:
-      GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
-    run: bash "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
+  - name: Package sync branches and validation reports
+    run: python3 "$SKIA_SYNC_RUNTIME_DIR/skia-sync-publish-handoff.py" pack "$RUNNER_TEMP/skia-sync-publish"
+  - name: Upload sync handoff
+    uses: actions/upload-artifact@v7.0.2
+    with:
+      name: skia-sync-publish
+      path: ${{ runner.temp }}/skia-sync-publish
+      if-no-files-found: error
+      retention-days: 7
 ---
 
 # Sync - Skia Upstream
@@ -379,5 +447,10 @@ the supplied values.
 
 After every gate passes, follow Phase 11's **Automated delivery** contract. Do not push branches or
 create real PRs/issues from the agent. Write the required artifacts under
-`/tmp/gh-aw/agent`, then invoke staged `create_pull_request` once as the completion signal.
-The deterministic post-step performs guarded pushes and creates the two cross-linked draft PRs.
+`/tmp/gh-aw/agent`, then call `noop` once to report that local validation is complete
+and publication is delegated to the host. This is a status signal only, not a claim
+that there was no engineering work or that PRs already exist.
+The host packages both committed branches and validation reports. The ordinary publishing
+job verifies the handoff against the resolved branch names, pushes the exact original
+commits, and creates the two cross-linked draft PRs using the workflow revision's scripts.
+Never use a PR safe-output or flatten the native merge into a patch.

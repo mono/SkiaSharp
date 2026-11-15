@@ -1,26 +1,38 @@
 {
-  "theme": "M150 bug fix servicing",
-  "highlights_headline": "SkiaSharp 4.150.2 backports Skia m150 bug fixes and a Ganesh update.",
+  "theme": "Ganesh and shader stability",
+  "highlights_headline": "SkiaSharp 4.150.2 improves Ganesh failure handling and fixes a native shader-code generation use-after-free.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Skia m150 bug fixes merged",
-          "detail": "Pulls in the latest upstream Chrome m150 bug fixes and a Ganesh renderer update for the 4.150.x line.",
-          "prs": [4517, 4561, 4648, 4663]
+          "lead": "Failed GPU work no longer leaves stale readbacks",
+          "detail": "Propagates failed flushes, restores resolve-task dirty tracking, and includes the Imagination GPU framebuffer-deletion workaround.",
+          "prs": [
+            4517,
+            4561
+          ]
+        },
+        {
+          "lead": "SkSL RasterPipeline lifetime corrected",
+          "detail": "Includes the upstream shader-code generation use-after-free correction and additional same-milestone fixes.",
+          "prs": [
+            4663,
+            4648
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {},
+  "harfbuzz_summary": null,
   "release_summaries": {
     "v4.150.2": {
-      "headline": "SkiaSharp 4.150.2 backports upstream Skia m150 bug fixes.",
-      "body": "It merges Chrome m150 fixes and a Ganesh update into the 4.150.x servicing line."
+      "headline": "SkiaSharp 4.150.2 improves Ganesh failure handling and fixes a native shader-code generation use-after-free.",
+      "body": null
     }
   }
 }

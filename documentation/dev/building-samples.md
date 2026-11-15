@@ -1,59 +1,46 @@
-# Building and Validating Samples
+# Building and validating samples
 
-The Samples suite builds generated applications against produced NuGet packages
-and runs the Console/Web samples on the host and in Docker.
+The sample suite builds generated applications against produced NuGet packages
+and runs supported Console, Web API, browser and Docker samples.
 
-## Run the suite
+## Prepare packages
 
-Install the repository SDK and the workloads required by your host's samples.
-Docker build/run tests run on any host with usable Docker, including macOS.
-Put `docker` on `PATH` and start a daemon using Windows containers on Windows
-or Linux containers on macOS/Linux. CI does not provision Docker on macOS.
-Unavailable Docker produces visible skips; wrong container mode and sample
-failures fail the tests.
+Install the repository SDK and required workloads. Docker tests require a
+running daemon in Windows-container mode on Windows or Linux-container mode on
+macOS/Linux.
 
-**Bootstrap before staging packages:** bootstrap resets `output/`.
-For managed-only work:
+Bootstrap before staging packages because bootstrap resets `output/`:
 
 ```sh
+# Managed-only changes
 dotnet cake --target=externals-download
 ```
 
-For native or Skia changes, build natives from source instead; see
-[AGENTS.md](../../AGENTS.md). Do not download prebuilt natives after native changes.
+Native or Skia changes must build natives from source instead; see
+[AGENTS.md](../../AGENTS.md).
 
-Stage one producing build's non-symbol packages in `output/nugets/`, including
-SkiaSharp, HarfBuzzSharp, and the required native/view packages. Its base versions
-must match `scripts/VERSIONS.txt`. Download the public `nuget` build artifact,
-or use the PR helper:
+Stage all non-symbol packages from one producing build in `output/nugets/`.
+Package base versions must match `scripts/VERSIONS.txt`. To download a PR build:
 
 ```powershell
-$pr = 1234 # Producing PR number.
+$pr = 1234
 pwsh scripts/get-skiasharp-pr.ps1 $pr -SuccessfulOnly -Force
 New-Item output/nugets -ItemType Directory -Force | Out-Null
 Copy-Item "$HOME/.skiasharp/hives/pr-$pr/packages/*.nupkg" output/nugets/
 ```
 
-Pass the producing package suffix explicitly. For example, packages ending in
-`-pr.1234.26509.10` require:
+Run the suite with the package suffix:
 
 ```sh
 dotnet cake --target=samples --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-This generates the samples and runs the suite. Do not mix producing builds:
-generation uses the supplied arguments, not package-filename version detection.
-Cake streams active-test progress and test output to the console while retaining
-TRX results and diagnostic artifacts.
+Use `--runGroup=Build`, `--runGroup=Host` or `--runGroup=Docker` for one
+execution group. Omit it for the full suite.
 
-To run one group, add `--runGroup=Build`, `--runGroup=Host`, or
-`--runGroup=Docker`. Omit `--runGroup` to run the full suite.
-Group names are case-sensitive.
+## IDE and direct runs
 
-## IDE and direct test runs
-
-After staging packages, generate once before opening the test project in an IDE
-or running it directly:
+Generate the sample projects once after staging packages:
 
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
@@ -61,46 +48,75 @@ dotnet test tests/SkiaSharp.Tests.Samples.slnx \
   -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
 ```
 
-The solution includes the runner's source dependencies; the properties above
-limit their build to the runner's .NET 10 target.
+Keep both framework properties so the runner uses only .NET 10 dependencies.
+Sample projects still build their declared target frameworks.
 
-Direct tests use the generated inputs without invoking Cake or downloading
-packages. The runner uses the repository SDK; sample builds use `dotnet` from
-the inherited `PATH`, without changing project TFMs. Set the intended SDK and
-platform environment before launching the terminal or IDE.
+`BuildSample`, `DotNet.Build` and `DotNet.Run` accept an optional
+`DotNetOptions` record for framework, configuration, additional properties,
+working directory and timeouts.
 
-## Coverage and diagnostics
+## Browser runs
 
-The suite builds host-eligible Basic and Gallery solutions. Gallery, WASM, and
-Blazor are build-only; Console/Web runtime tests check exit codes, HTTP responses,
-and PNGs on the host and in Docker. Generated-project tests check exact package
-versions and Uno's SkiaSharp override. Integration/MSBuild suites remain separate.
-
-| Group | Tests | CI hosts |
-| --- | --- | --- |
-| Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
-| Host | Console and Web sample execution | Windows, macOS, Linux |
-| Docker | Container image builds and sample execution | Windows, Linux |
-
-When adding tests, choose a `RunGroup` by execution target, not sample family.
-Each test requires exactly one typed attribute, such as
-`[RunGroup(SampleRunGroup.Build)]`. Apply it to a class only when every test uses
-the same group; otherwise annotate individual methods.
-
-Use IDE filters or select one test:
+Build the runner and install its matching Chromium:
 
 ```sh
+dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
+pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 \
+  install --with-deps chromium
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
-  -- --filter-method '*BasicSampleTests.WebSampleReturnsImage'
+  -- --filter-trait Category=Browser --report-trx
 ```
 
-Find stdout/stderr, binlogs, results, and images under
-`output/logs/testlogs/samples/`, or in CI's `sample_logs_*` artifact. For restore
-failures, compare generated versions with the staged packages and inspect the
-binlog. Tests use private workspaces/caches; do not clear shared caches.
+Use the Release script path for Release builds. CI installs Chromium for Host
+and unfiltered runs. Filtered runs do not replace the full suite.
 
-PNG references are platform-specific under `tests/SkiaSharp.Tests.Samples/Expected/`.
-Dimensions must match; at most **0.075%** of pixels may differ, with zero channel
-tolerance. Failures retain the actual image; mismatches also retain a diff.
-Review replacement references on the affected platform; tests never accept them
-automatically.
+## Test groups and diagnostics
+
+| Group | Coverage | CI hosts |
+| --- | --- | --- |
+| Build | Generated sample compilation and infrastructure checks | Windows, macOS, Linux |
+| Host | Console, Web API and browser execution | Windows, macOS, Linux |
+| Docker | Container builds and execution | Windows, Linux |
+
+Choose a `RunGroup` by execution target. Each test requires exactly one typed
+attribute such as `[RunGroup(SampleRunGroup.Build)]`; place it on the class only
+when every test uses the same group.
+
+Keep build, run and infrastructure checks in the existing purpose-based test
+classes. Browser and Docker workloads use their existing shared collections.
+
+Find output, binlogs, results and images under
+`output/logs/testlogs/samples/` or CI's `sample_logs_*` artifacts. For restore
+failures, confirm the generated versions match the staged package set.
+
+## Sample golden images
+
+References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
+`mac`, `linux` and `windows`; Docker uses `docker-linux` and `docker-windows`.
+Cases use paths such as `Console/output`, `Web/page` and
+`Blazor/drawing-drawn`.
+
+Use the sample helpers to select the profile:
+
+```csharp
+SampleImage.Host("Console/output").Verify(
+    GoldenInput.Path(actualPath),
+    new(expectedSize: new(800, 600)));
+
+SampleImage.Host("Web/output").Verify(
+    GoldenInput.Bytes(png, "output.png"),
+    new(expectedSize: new(512, 512)));
+
+await SampleImage.Browser("Blazor/cpu").VerifyAsync(
+    GoldenInput.Capture(app.Screenshot),
+    cancellationToken: TestContext.Current.CancellationToken);
+```
+
+Samples use zero channel tolerance and allow 0.075% differing pixels by
+default. Animated GPU pages may use a 6% mean RGBA error limit. Browser
+references use the operating-system architecture because Playwright selects its
+bundled browser for the host hardware independently of the managed process
+architecture.
+
+See [golden-image tests](golden-image-tests.md) for lookup, packaging,
+diagnostics and reference review.

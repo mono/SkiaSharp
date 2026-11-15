@@ -30,7 +30,7 @@ namespace SkiaSharp.Tests
 
 		/// <summary>
 		/// Lowercase name of the current host — <c>"macos"</c>, <c>"nanoserver"</c>,
-		/// <c>"unknown"</c>. Also the golden directory tag (see VisualPlatform).
+		/// <c>"unknown"</c>. GoldenStore normalizes golden directory tags.
 		/// </summary>
 		public string PlatformName =>
 			Platform == TestPlatforms.None ? "unknown" : Platform.ToString().ToLowerInvariant();

@@ -17,10 +17,10 @@ REPO = "mono/SkiaSharp"
 
 # Bump together with ``scripts/infra/docs/release-notes-data.py``'s
 # ``_DATA_JSON_FORMAT_VERSION`` -- a test in this package's ``tests/`` folder
-# asserts the two stay equal. Format 5 adds exact-shipment contributor,
-# first-time, automation, and AI attribution facts. Older data is safely skipped
+# asserts the two stay equal. Format 6 adds full merge-commit bodies to the PR
+# map, retaining format 5's exact-shipment attribution facts. Older data is safely skipped
 # until Prepare regenerates it rather than rendering an incomplete canonical body.
-DATA_FORMAT = 5
+DATA_FORMAT = 6
 
 # An exact release tag: ``vMAJOR.MINOR.PATCH[.HOTFIX][-{preview,rc}.N[.BUILD]]``.
 # Deliberately narrower than release-notes-data.py's lenient ``_parse_tag``

@@ -647,6 +647,64 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal(1, didDestroy);
 		}
 
+		[Fact]
+		public void CanDisposeFaceBeforeFontAndStillShape()
+		{
+			var didDestroy = 0;
+
+			using var face = new Face(
+				(_, tag) => Face.ReferenceTable(tag),
+				() => didDestroy++);
+			using var font = new Font(face);
+
+			face.Dispose();
+			Assert.Equal(0, didDestroy);
+
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("Hello");
+				buffer.GuessSegmentProperties();
+				font.Shape(buffer);
+				Assert.True(buffer.Length > 0);
+			}
+
+			font.Dispose();
+			Assert.Equal(1, didDestroy);
+		}
+
+		[Fact]
+		public unsafe void TableCallbackReturningNullOrTruncatedBlobDoesNotCrash()
+		{
+			using var missingTagsFace = new Face(
+				(_, tag) => (((uint)tag) & 1u) == 0 ? null : Face.ReferenceTable(tag));
+			using var missingTagsFont = new Font(missingTagsFace);
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("Hello");
+				buffer.GuessSegmentProperties();
+				missingTagsFont.Shape(buffer);
+			}
+
+			using var truncatedFace = new Face(
+				(_, tag) =>
+				{
+					using var source = Face.ReferenceTable(tag);
+					var span = source.AsSpan();
+					if (span.Length <= 4)
+						return Blob.Empty;
+
+					fixed (byte* ptr = span)
+						return new Blob((IntPtr)ptr, 4, MemoryMode.Duplicate);
+				});
+			using var truncatedFont = new Font(truncatedFace);
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("Hello");
+				buffer.GuessSegmentProperties();
+				truncatedFont.Shape(buffer);
+			}
+		}
+
 
 		[Fact]
 		public void EmptyFacesAreExactlyTheSameInstance()

@@ -1,5 +1,5 @@
 {
-  "format": 5,
+  "format": 6,
   "version": "4.150.1",
   "family": "skiasharp",
   "status": "stable",
@@ -72,6 +72,7 @@
     "4429": {
       "url": "https://github.com/mono/SkiaSharp/pull/4429",
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+      "body": "* [skia-sync] Merge upstream chrome/m150 bug fixes\n\nMerges 1 new upstream commit from google/skia chrome/m150 into the mono/skia\nrelease/4.150.x line.\n\nUpstream commit:\n- bee4c91722 Check clipped renderpass bounds against cleared stencil area\n\nSame-milestone bug-fix sync: no version changes; only cgmanifest.json's\ncommit hash and upstream_merge_commit are updated.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Point submodule at merged release/4.150.x tip (0aa2d542)\n\nCompanion mono/skia#283 is merged, so advance externals/skia and the\ncgmanifest.json commitHash from the pre-merge skia-sync branch head\n(06c4c54d) to the release/4.150.x merge tip (0aa2d542e8). Same-milestone\nm150 sync: no version bump, no C API change.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\nCopilot-Session: 51d95e80-1957-496e-ba25-8761691c7be5\n\n---------\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -79,6 +80,7 @@
     "4379": {
       "url": "https://github.com/mono/SkiaSharp/pull/4379",
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+      "body": "[skia-sync] Merge upstream chrome/m150 bug fixes (#4379)\n\nCompanion: mono/skia#281\nChanges: https://github.com/mono/skia/compare/280ec21ada...ef2ebb78c8\nUpstream CL: https://skia-review.googlesource.com/c/skia/+/1288679\nBug: skia:530646115 / Chromium 532102500\n\nAdvance the externals/skia submodule (and cgmanifest.json) on the\nrelease/4.150.x line to mono/skia@ef2ebb78c8, pulling in one upstream\nchrome/m150 bug fix:\n\n  * Fix Use-After-Free in SubRunAllocator (google/skia@3273c66a68)\n\nDeserializing a corrupt Slug buffer (SlugImpl::MakeFromBuffer) returns\nnullptr early and destroys a std::tuple whose member destruction order is\nunspecified, so SubRunInitializer freed the backing memory before\n~BagOfBytes in the SubRunAllocator read fEndByte out of it -- a\nuse-after-free read followed by a wild-free/double-free. Upstream replaces\nthe tuple with a struct that guarantees the allocator destructs before the\ninitializer frees the memory. See mono/skia#281 for the full analysis.\n\nSubmodule bump only: cgmanifest.json commitHash tracks the new mono/skia\ncommit; chrome_milestone (150) and upstream_merge_commit (3273c66a68) are\nunchanged (same-milestone release-line sync, no version bump). The upstream\nchange is internal C++ (src/text/gpu/SubRunAllocator.h) with no C API or\nbinding impact -- binding regeneration produced zero diff and the full\nSkiaSharp.Tests.Console suite passed (5584 passed, 0 failed, 172 skipped)\non Linux x64.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
@@ -86,6 +88,7 @@
     "4366": {
       "url": "https://github.com/mono/SkiaSharp/pull/4366",
       "title": "Bump to the next version (4.150.1) after release",
+      "body": "",
       "author": "mattleibow",
       "community": false,
       "tag": "internal"

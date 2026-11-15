@@ -97,8 +97,11 @@ Use the release-notes entry points for deterministic regeneration:
 ```bash
 dotnet tool restore
 .agents/skills/release-notes/scripts/prepare.sh --force
+# Write prose.json for each page listed in output/files-to-polish.txt.
 .agents/skills/release-notes/scripts/render.sh
 ```
 
-Do not hand-edit generated release pages. Change the owned facts, prose, or
-renderer and regenerate.
+Prepare collects machine-owned facts; it does not write the human prose. Do not hand-edit
+generated release pages or data JSON. Edit prose, maintainer `.notes.md` sidecars, or the
+owning generator/renderer and regenerate. The hosted workflow runs Prepare before the
+agent starts; its Polish agent uses the Python renderer directly and writes the PR description.

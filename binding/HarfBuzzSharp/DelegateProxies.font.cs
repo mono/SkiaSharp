@@ -119,24 +119,24 @@ namespace HarfBuzzSharp
 	{
 		// internal proxy implementations
 
-		private static partial bool FontGetFontExtentsProxyImplementation (IntPtr font, void* font_data, FontExtents* extents, void* user_data)
+		private static partial int FontGetFontExtentsProxyImplementation (IntPtr font, void* font_data, FontExtents* extents, void* user_data)
 		{
 			var del = GetMulti<FontExtentsDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, out var extentsManaged);
 			if (extents != null)
 				*extents = extentsManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
-		private static partial bool FontGetNominalGlyphProxyImplementation (IntPtr font, void* font_data, uint unicode, uint* glyph, void* user_data)
+		private static partial int FontGetNominalGlyphProxyImplementation (IntPtr font, void* font_data, uint unicode, uint* glyph, void* user_data)
 		{
 			var del = GetMulti<NominalGlyphDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, unicode, out var glyphManaged);
 			if (glyph != null)
 				*glyph = glyphManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
 		private static partial uint FontGetNominalGlyphsProxyImplementation (IntPtr font, void* font_data, uint count, uint* first_unicode, uint unicode_stride, uint* first_glyph, uint glyph_stride, void* user_data)
@@ -148,14 +148,14 @@ namespace HarfBuzzSharp
 			return del.Invoke (userData.Font, userData.FontData, count, unicodes, glyphs);
 		}
 
-		private static partial bool FontGetVariationGlyphProxyImplementation (IntPtr font, void* font_data, uint unicode, uint variation_selector, uint* glyph, void* user_data)
+		private static partial int FontGetVariationGlyphProxyImplementation (IntPtr font, void* font_data, uint unicode, uint variation_selector, uint* glyph, void* user_data)
 		{
 			var del = GetMulti<VariationGlyphDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, unicode, variation_selector, out var glyphManaged);
 			if (glyph != null)
 				*glyph = glyphManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
 		private static partial int FontGetGlyphAdvanceProxyImplementation (IntPtr font, void* font_data, uint glyph, void* user_data)
@@ -174,7 +174,7 @@ namespace HarfBuzzSharp
 			del.Invoke (userData.Font, userData.FontData, count, glyphs, advances);
 		}
 
-		private static partial bool FontGetGlyphOriginProxyImplementation (IntPtr font, void* font_data, uint glyph, int* x, int* y, void* user_data)
+		private static partial int FontGetGlyphOriginProxyImplementation (IntPtr font, void* font_data, uint glyph, int* x, int* y, void* user_data)
 		{
 			var del = GetMulti<GlyphOriginDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
@@ -183,7 +183,7 @@ namespace HarfBuzzSharp
 				*x = xManaged;
 			if (y != null)
 				*y = yManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
 		private static partial int FontGetGlyphKerningProxyImplementation (IntPtr font, void* font_data, uint first_glyph, uint second_glyph, void* user_data)
@@ -193,17 +193,17 @@ namespace HarfBuzzSharp
 			return del.Invoke (userData.Font, userData.FontData, first_glyph, second_glyph);
 		}
 
-		private static partial bool FontGetGlyphExtentsProxyImplementation (IntPtr font, void* font_data, uint glyph, GlyphExtents* extents, void* user_data)
+		private static partial int FontGetGlyphExtentsProxyImplementation (IntPtr font, void* font_data, uint glyph, GlyphExtents* extents, void* user_data)
 		{
 			var del = GetMulti<GlyphExtentsDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, glyph, out var extentsManaged);
 			if (extents != null)
 				*extents = extentsManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
-		private static partial bool FontGetGlyphContourPointProxyImplementation (IntPtr font, void* font_data, uint glyph, uint point_index, int* x, int* y, void* user_data)
+		private static partial int FontGetGlyphContourPointProxyImplementation (IntPtr font, void* font_data, uint glyph, uint point_index, int* x, int* y, void* user_data)
 		{
 			var del = GetMulti<GlyphContourPointDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
@@ -212,23 +212,25 @@ namespace HarfBuzzSharp
 				*x = xManaged;
 			if (y != null)
 				*y = yManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 
-		private static partial bool FontGetGlyphNameProxyImplementation (IntPtr font, void* font_data, uint glyph, void* name, uint size, void* user_data)
+		private static partial int FontGetGlyphNameProxyImplementation (IntPtr font, void* font_data, uint glyph, void* name, uint size, void* user_data)
 		{
 			var del = GetMulti<GlyphNameDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, glyph, out var realName);
+			if (!result)
+				return 0;
 
 			var nameSpan = realName.AsSpan ();
 			var bufferSpan = new Span<char> (name, (int)size);
 			nameSpan.CopyTo (bufferSpan);
 
-			return result;
+			return 1;
 		}
 
-		private static partial bool FontGetGlyphFromNameProxyImplementation (IntPtr font, void* font_data, void* name, int len, uint* glyph, void* user_data)
+		private static partial int FontGetGlyphFromNameProxyImplementation (IntPtr font, void* font_data, void* name, int len, uint* glyph, void* user_data)
 		{
 			var del = GetMulti<GlyphFromNameDelegate> ((IntPtr)user_data, out _);
 			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
@@ -240,7 +242,7 @@ namespace HarfBuzzSharp
 			var result = del.Invoke (userData.Font, userData.FontData, actualName, out var glyphManaged);
 			if (glyph != null)
 				*glyph = glyphManaged;
-			return result;
+			return result ? 1 : 0;
 		}
 	}
 }

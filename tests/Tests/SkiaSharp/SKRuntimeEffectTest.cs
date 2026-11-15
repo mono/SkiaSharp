@@ -420,7 +420,7 @@ namespace SkiaSharp.Tests
 				uniforms.Reset();
 
 				// after Reset(), the previous buffer must have been disposed and deregistered
-				Assert.False(SKObject.GetInstance<SKData>(oldHandle, out _));
+				SKHandleDictionaryTestHelpers.AssertDeregistered(oldHandle, oldData);
 
 				uniforms.Dispose();
 			}

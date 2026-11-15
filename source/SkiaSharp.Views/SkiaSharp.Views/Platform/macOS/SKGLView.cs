@@ -5,23 +5,13 @@ using CoreGraphics;
 using Foundation;
 using SkiaSharp.Views.GlesInterop;
 
-#if HAS_UNO_WINUI
-namespace SkiaSharp.Views.Windows
-#elif HAS_UNO
-namespace SkiaSharp.Views.UWP
-#else
 namespace SkiaSharp.Views.Mac
-#endif
 {
 	/// <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
 	/// <remarks />
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]
-#if HAS_UNO
-	internal
-#else
 	public
-#endif
 	partial class SKGLView : NSOpenGLView
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;

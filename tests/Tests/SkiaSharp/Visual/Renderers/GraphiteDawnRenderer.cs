@@ -10,10 +10,10 @@ namespace SkiaSharp.Tests.Visual
 	/// Graphite GPU backend over Dawn (WebGPU), for the Blazor WASM host.
 	/// <see cref="GpuPolicy"/> reports Dawn as not built anywhere but the browser,
 	/// so every other host skips before reaching this code. Bring-up walks
-	/// <c>JSHost.DotnetInstance → Module → WebGPU → mgr{Device,Queue,Texture}</c>
-	/// (the Emscripten-internal manager tables that vend integer handles for
-	/// WGPU* objects across the C ABI) and dispatches JS method calls through a
-	/// single variadic helper installed on <c>globalThis.__skiaCallMember</c>.
+	/// <c>JSHost.DotnetInstance → Module → WebGPU → importJs{Device,Queue,Texture}</c>
+	/// to import refcounted WGPU* handles across the C ABI. JavaScript helpers
+	/// are installed on <c>globalThis.skiaSharpWebGpu</c>, with the runtime's
+	/// module exposed as <c>globalThis.skiaSharpModule</c>.
 	///
 	/// <para>
 	/// Not compiled on <c>net48</c> (JSHost is unavailable there); the base
@@ -39,7 +39,7 @@ namespace SkiaSharp.Tests.Visual
 			if (!s_dawnReady)
 			{
 				// SKWebGpu's static ctor walks JSHost.DotnetInstance → Module → WebGPU →
-				// mgr{Device,Queue,Texture}. Any failure there (Module.WebGPU missing
+				// importJs{Device,Queue,Texture}. Any failure there (Module.WebGPU missing
 				// because EXPORTED_RUNTIME_METHODS lacks 'WebGPU', browser without
 				// WebGPU support, etc.) becomes a TypeInitializationException on the
 				// first SKWebGpu call. Dawn is required on the browser host, so that is
@@ -140,21 +140,9 @@ namespace SkiaSharp.Tests.Visual
 	// through them; that's the smallest globalThis footprint [JSImport] still
 	// permits (it binds free functions but not methods on a JSObject).
 	//
-	// The helpers accept native `Module.WebGPU` handles under either port:
-	//
-	//   * emsdk 3.1.34 with -sUSE_WEBGPU=1 (net8):  Module.WebGPU exposes
-	//     mgr{Device,Queue,Texture} HandleAllocator tables. Registering an
-	//     object gets an int handle back; releasing calls .release on the
-	//     table.
-	//   * emsdk 3.1.56 with Dawn's emdawnwebgpu port (net9+): the tables are
-	//     gone; Module.WebGPU exposes importJs{Device,Queue,Texture} which
-	//     allocate a real refcounted WGPU* handle via _emwgpuCreate*.
-	//     Release goes through the C ABI's wgpuTextureRelease
-	//     (Module._wgpuTextureRelease — exported by IncludeNativeAssets.SkiaSharp.targets
-	//     under the emdawnwebgpu path).
-	//
-	// Since the same test assembly runs against both ports, the JS helpers
-	// probe which surface is present and dispatch accordingly.
+	// Dawn's emdawnwebgpu port exposes importJs{Device,Queue,Texture} on
+	// Module.WebGPU. These allocate refcounted WGPU* handles; release textures
+	// through Module._wgpuTextureRelease.
 	internal static partial class SKWebGpu
 	{
 		[JSImport("globalThis.eval")]
@@ -193,36 +181,15 @@ namespace SkiaSharp.Tests.Visual
 					globalThis.skiaSharpWebGpu = {
 						requestAdapter: () => navigator.gpu && navigator.gpu.requestAdapter({ powerPreference: 'low-power' }),
 						createInstance: () => (typeof M._wgpuCreateInstance === 'function') ? M._wgpuCreateInstance(0) : 0,
-						// Port-agnostic handle registration. emdawnwebgpu ships
-						// importJs* on Module.WebGPU; the legacy -sUSE_WEBGPU=1
-						// port shipped mgr* HandleAllocator tables with .create.
 						// emdawnwebgpu tags each imported object's events with the
 						// parent EventSource's InstanceID; leaving parent=0 makes
 						// WaitAny assert(event->mInstanceId == instance) fire on
 						// the first async wait. Pass the current instance handle
 						// so device/queue events resolve against it.
-						registerDevice: (d, parent) => M.WebGPU.importJsDevice
-							? M.WebGPU.importJsDevice(d, parent)
-							: M.WebGPU.mgrDevice.create(d),
-						registerQueue: (q, parent) => M.WebGPU.importJsQueue
-							? M.WebGPU.importJsQueue(q, parent)
-							: M.WebGPU.mgrQueue.create(q),
-						registerTexture: (t) => M.WebGPU.importJsTexture
-							? M.WebGPU.importJsTexture(t)
-							: M.WebGPU.mgrTexture.create(t),
-						// Under emdawnwebgpu, released handles hold real
-						// refcounted C-side WGPUTexture objects — call the C ABI
-						// via the exported symbol. Under the legacy port they
-						// were HandleAllocator table entries with a JS-side
-						// .release. Try the C ABI first (it's the mandatory
-						// path under emdawnwebgpu), fall back to the JS table.
-						releaseTexture: (id) => {
-							if (typeof M._wgpuTextureRelease === 'function') {
-								M._wgpuTextureRelease(id);
-							} else if (M.WebGPU.mgrTexture) {
-								M.WebGPU.mgrTexture.release(id);
-							}
-						},
+						registerDevice: (d, parent) => M.WebGPU.importJsDevice(d, parent),
+						registerQueue: (q, parent) => M.WebGPU.importJsQueue(q, parent),
+						registerTexture: (t) => M.WebGPU.importJsTexture(t),
+						releaseTexture: (id) => M._wgpuTextureRelease(id),
 						requestDevice: (adapter) => adapter.requestDevice(),
 						deviceQueue: (d) => d.queue,
 						createTexture: (d, w, h) => d.createTexture({

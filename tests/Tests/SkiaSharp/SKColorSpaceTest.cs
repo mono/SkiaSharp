@@ -138,10 +138,6 @@ namespace SkiaSharp.Tests
 
 			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
 
-			CheckBeforeCollection(colorSpaceHandle);
-
-			CheckExistingImage(4, img, colorSpaceHandle);
-
 			CollectGarbage();
 
 			Assert.Null(weakColorspace.Target);
@@ -159,12 +155,6 @@ namespace SkiaSharp.Tests
 			Assert.Equal(2, colorSpaceHandle.GetReferenceCount(false));
 
 			GC.KeepAlive(img);
-
-			void CheckBeforeCollection(IntPtr csh)
-			{
-				Assert.NotNull(weakColorspace.Target);
-				Assert.Equal(3, csh.GetReferenceCount(false));
-			}
 
 			void CheckExistingImage(int expected, SKImage image, IntPtr csh)
 			{
@@ -199,6 +189,11 @@ namespace SkiaSharp.Tests
 				var image = SKImage.Create(info);
 
 				Assert.Equal(3, handle.GetReferenceCount(false));
+				Assert.NotNull(weak.Target);
+
+				CollectGarbage();
+				CheckExistingImage(4, image, handle);
+				GC.KeepAlive(colorspace);
 
 				return image;
 			}
