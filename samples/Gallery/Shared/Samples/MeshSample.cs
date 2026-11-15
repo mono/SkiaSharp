@@ -127,16 +127,8 @@ public class MeshSample : CanvasSampleBase
 				SKSamplingOptions.Default);
 		}
 
-		// Build the mesh specification with SkSL shaders.
-		var spec = SKMeshSpecification.Create(
-			Attrs, Stride, Varyings, VS, FS,
-			null, SKAlphaType.Premul,
-			out var errors);
-
-		if (spec != null)
-		{
-			builder = new SKMeshBuilder(spec);
-		}
+		// Build the mesh specification and builder with SkSL shaders.
+		builder = SKMeshSpecification.Build(Attrs, Stride, Varyings, VS, FS);
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
@@ -200,9 +192,9 @@ public class MeshSample : CanvasSampleBase
 			}
 		}
 
-		// Create GPU buffers
-		using var vb = SKMeshVertexBuffer.Make(MemoryMarshal.AsBytes(verts.AsSpan()));
-		using var ib = SKMeshIndexBuffer.Make(MemoryMarshal.AsBytes(indices.AsSpan()));
+		// Create buffers
+		using var vb = SKMeshVertexBuffer.Create(MemoryMarshal.AsBytes(verts.AsSpan()));
+		using var ib = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(indices.AsSpan()));
 
 		if (vb == null || ib == null)
 			return;

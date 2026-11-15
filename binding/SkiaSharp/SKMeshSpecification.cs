@@ -8,6 +8,21 @@ namespace SkiaSharp;
 /// <remarks />
 public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 {
+	/// <summary>The maximum allowed vertex stride, in bytes.</summary>
+	public const int MaxStride = 1024;
+
+	/// <summary>The maximum number of attributes allowed in a mesh specification.</summary>
+	public const int MaxAttributes = 8;
+
+	/// <summary>The required byte alignment for a vertex stride.</summary>
+	public const int StrideAlignment = 4;
+
+	/// <summary>The required byte alignment for an attribute offset.</summary>
+	public const int OffsetAlignment = 4;
+
+	/// <summary>The maximum number of varyings allowed in a mesh specification.</summary>
+	public const int MaxVaryings = 6;
+
 	private IReadOnlyList<string>? uniformNames;
 	private IReadOnlyList<string>? childNames;
 
@@ -75,13 +90,22 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			throw new ArgumentNullException (nameof (fragmentShader));
 		if (attributes.Length == 0)
 			throw new ArgumentException ("At least one attribute is required.", nameof (attributes));
+		if (vertexStride <= 0)
+			throw new ArgumentOutOfRangeException (nameof (vertexStride));
+
+		for (int i = 0; i < attributes.Length; i++)
+		{
+			if (attributes[i].Offset < 0)
+				throw new ArgumentOutOfRangeException (nameof (attributes), "Attribute offset cannot be negative.");
+		}
 
 		using var vs = new SKString (vertexShader);
 		using var fs = new SKString (fragmentShader);
 		using var errorString = new SKString ();
 
-		var nativeAttrs = stackalloc SKMeshSpecificationAttributeNative[attributes.Length];
-		var pinnedAttrNames = new byte*[attributes.Length];
+		var nativeAttrs = attributes.Length <= MaxAttributes
+			? stackalloc SKMeshSpecificationAttributeNative[attributes.Length]
+			: new SKMeshSpecificationAttributeNative[attributes.Length];
 		var attrNamePins = new System.Buffers.MemoryHandle[attributes.Length];
 
 		try
@@ -91,18 +115,18 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 				var nameBytes = StringUtilities.GetEncodedText (attributes[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
 				var pin = nameBytes.AsMemory ().Pin ();
 				attrNamePins[i] = pin;
-				pinnedAttrNames[i] = (byte*)pin.Pointer;
 
 				nativeAttrs[i] = new SKMeshSpecificationAttributeNative
 				{
 					fType = attributes[i].Type,
 					fOffset = (IntPtr)attributes[i].Offset,
-					fName = pinnedAttrNames[i],
+					fName = (byte*)pin.Pointer,
 				};
 			}
 
-			var nativeVaryings = stackalloc SKMeshSpecificationVaryingNative[varyings.Length];
-			var pinnedVaryingNames = new byte*[varyings.Length];
+			var nativeVaryings = varyings.Length <= MaxVaryings
+				? stackalloc SKMeshSpecificationVaryingNative[varyings.Length]
+				: new SKMeshSpecificationVaryingNative[varyings.Length];
 			var varyingNamePins = new System.Buffers.MemoryHandle[varyings.Length];
 
 			try
@@ -112,32 +136,37 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 					var nameBytes = StringUtilities.GetEncodedText (varyings[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
 					var pin = nameBytes.AsMemory ().Pin ();
 					varyingNamePins[i] = pin;
-					pinnedVaryingNames[i] = (byte*)pin.Pointer;
 
 					nativeVaryings[i] = new SKMeshSpecificationVaryingNative
 					{
 						fType = varyings[i].Type,
-						fName = pinnedVaryingNames[i],
+						fName = (byte*)pin.Pointer,
 					};
 				}
 
-				var spec = GetObject (SkiaApi.sk_meshspecification_make (
-					(IntPtr)nativeAttrs,
-					(IntPtr)attributes.Length,
-					(IntPtr)vertexStride,
-					(IntPtr)nativeVaryings,
-					(IntPtr)varyings.Length,
-					vs.Handle,
-					fs.Handle,
-					colorSpace?.Handle ?? IntPtr.Zero,
-					alphaType,
-					errorString.Handle));
+				fixed (SKMeshSpecificationAttributeNative* attrsPtr = nativeAttrs)
+				fixed (SKMeshSpecificationVaryingNative* varyingsPtr = nativeVaryings)
+				{
+					var spec = GetObject (SkiaApi.sk_meshspecification_make (
+						attrsPtr,
+						(IntPtr)attributes.Length,
+						(IntPtr)vertexStride,
+						varyingsPtr,
+						(IntPtr)varyings.Length,
+						vs.Handle,
+						fs.Handle,
+						colorSpace?.Handle ?? IntPtr.Zero,
+						alphaType,
+						errorString.Handle));
 
-				errors = errorString.ToString ();
-				if (errors?.Length == 0)
-					errors = null;
+					GC.KeepAlive (colorSpace);
 
-				return spec;
+					errors = errorString.ToString ();
+					if (errors?.Length == 0)
+						errors = null;
+
+					return spec;
+				}
 			}
 			finally
 			{
@@ -200,7 +229,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 				throw new SKMeshSpecificationException ($"Failed to create the mesh specification. There was an error: {errors}");
 		}
 
-		return new SKMeshBuilder (spec);
+		return new SKMeshBuilder (spec, true);
 	}
 
 	// Properties
@@ -214,6 +243,11 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 	/// <value>The total uniform size, in bytes.</value>
 	/// <remarks />
 	public int UniformSize => (int)SkiaApi.sk_meshspecification_get_uniform_byte_size (Handle);
+
+	/// <summary>Gets the color space of the color produced by the fragment program.</summary>
+	/// <value>The color space, or <see langword="null" /> if none was specified or the fragment program does not output a color.</value>
+	/// <remarks />
+	public SKColorSpace? ColorSpace => SKColorSpace.GetObject (SkiaApi.sk_meshspecification_get_colorspace (Handle));
 
 	/// <summary>Gets the names of the uniforms declared by the specification.</summary>
 	/// <value>A read-only list of uniform names.</value>
@@ -260,10 +294,8 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
 		int vertexOffset,
-		SKRect bounds)
-	{
-		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out _);
-	}
+		SKRect bounds) =>
+		ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out _);
 
 	/// <summary>Creates a non-indexed mesh from this specification, reporting any validation errors.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
@@ -280,18 +312,16 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int vertexCount,
 		int vertexOffset,
 		SKRect bounds,
-		out string? errors)
-	{
-		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out errors);
-	}
+		out string? errors) =>
+		ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out errors);
 
-	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniform data.</summary>
+	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniforms and child effects.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
 	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
 	/// <param name="vertexCount">The number of vertices to read.</param>
 	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
 	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
-	/// <param name="children">The child shaders for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
 	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
 	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
 	/// <remarks />
@@ -302,13 +332,36 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int vertexOffset,
 		SKRuntimeEffectUniforms? uniforms,
 		SKRuntimeEffectChildren? children,
-		SKRect bounds)
+		SKRect bounds) =>
+		ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, children, bounds, out _);
+
+	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniforms and child effects, reporting any validation errors.</summary>
+	/// <param name="mode">How the vertices are assembled into triangles.</param>
+	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
+	/// <param name="vertexCount">The number of vertices to read.</param>
+	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
+	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
+	/// <param name="errors">When this method returns, contains the message describing why creation failed, or <see langword="null" /> on success.</param>
+	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public SKMesh? ToMesh (
+		SKMeshMode mode,
+		SKMeshVertexBuffer vertexBuffer,
+		int vertexCount,
+		int vertexOffset,
+		SKRuntimeEffectUniforms? uniforms,
+		SKRuntimeEffectChildren? children,
+		SKRect bounds,
+		out string? errors)
 	{
+		using var data = uniforms?.ToData ();
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset,
-			uniforms?.ToData (), children?.ToArray (), bounds, out _);
+			data, children?.ToArray (), bounds, out errors);
 	}
 
-	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniform data, reporting any validation errors.</summary>
+	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniform data.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
 	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
 	/// <param name="vertexCount">The number of vertices to read.</param>
@@ -323,12 +376,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int vertexCount,
 		int vertexOffset,
 		SKData? uniforms,
-		SKRect bounds)
-	{
-		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out _);
-	}
+		SKRect bounds) =>
+		ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out _);
 
-	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniforms and child shaders.</summary>
+	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniform data, reporting any validation errors.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
 	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
 	/// <param name="vertexCount">The number of vertices to read.</param>
@@ -345,12 +396,41 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int vertexOffset,
 		SKData? uniforms,
 		SKRect bounds,
-		out string? errors)
-	{
-		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out errors);
-	}
+		out string? errors) =>
+		ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out errors);
 
-	private SKMesh? ToMesh (
+	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniform data and child effects.</summary>
+	/// <param name="mode">How the vertices are assembled into triangles.</param>
+	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
+	/// <param name="vertexCount">The number of vertices to read.</param>
+	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
+	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
+	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public SKMesh? ToMesh (
+		SKMeshMode mode,
+		SKMeshVertexBuffer vertexBuffer,
+		int vertexCount,
+		int vertexOffset,
+		SKData? uniforms,
+		SKObject?[]? children,
+		SKRect bounds) =>
+		ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, children, bounds, out _);
+
+	/// <summary>Creates a non-indexed mesh from this specification using the supplied uniform data and child effects, reporting any validation errors.</summary>
+	/// <param name="mode">How the vertices are assembled into triangles.</param>
+	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
+	/// <param name="vertexCount">The number of vertices to read.</param>
+	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
+	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
+	/// <param name="errors">When this method returns, contains the message describing why creation failed, or <see langword="null" /> on success.</param>
+	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -362,38 +442,38 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 	{
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
+		if (vertexCount <= 0)
+			throw new ArgumentOutOfRangeException (nameof (vertexCount));
+		if (vertexOffset < 0)
+			throw new ArgumentOutOfRangeException (nameof (vertexOffset));
 
-		var mesh = new SKMesh (SkiaApi.sk_mesh_new (), true);
-		SkiaApi.sk_mesh_set_spec (mesh.Handle, Handle);
-		SkiaApi.sk_mesh_set_mode (mesh.Handle, mode);
-		SkiaApi.sk_mesh_set_vertex_buffer (mesh.Handle, vertexBuffer.Handle, (IntPtr)vertexCount, (IntPtr)vertexOffset);
-
-		if (uniforms != null)
-			SkiaApi.sk_mesh_set_uniforms (mesh.Handle, uniforms.Handle);
-
-		if (children != null && children.Length > 0) {
-			var childHandles = stackalloc IntPtr[children.Length];
-			for (int i = 0; i < children.Length; i++)
-				childHandles[i] = children[i]?.Handle ?? IntPtr.Zero;
-			SkiaApi.sk_mesh_set_children (mesh.Handle, (IntPtr)childHandles, (IntPtr)children.Length);
-		}
-
-		var b = bounds;
-		SkiaApi.sk_mesh_set_bounds (mesh.Handle, (IntPtr)(&b));
-
+		using var childrenHandles = Utils.RentHandlesArray (children, true);
 		using var errorString = new SKString ();
-		if (!SkiaApi.sk_mesh_validate (mesh.Handle, errorString.Handle)) {
-			mesh.Dispose ();
+
+		fixed (IntPtr* ch = childrenHandles)
+		{
+			var mesh = SKMesh.GetObject (SkiaApi.sk_mesh_make (
+				Handle,
+				mode,
+				vertexBuffer.Handle,
+				(IntPtr)vertexCount,
+				(IntPtr)vertexOffset,
+				uniforms?.Handle ?? IntPtr.Zero,
+				ch,
+				(IntPtr)childrenHandles.Length,
+				&bounds,
+				errorString.Handle));
+
+			GC.KeepAlive (vertexBuffer);
+			GC.KeepAlive (uniforms);
+			GC.KeepAlive (children);
 
 			errors = errorString.ToString ();
 			if (errors?.Length == 0)
 				errors = null;
 
-			return null;
+			return mesh;
 		}
-
-		errors = null;
-		return mesh;
 	}
 
 	// ToMeshIndexed
@@ -417,11 +497,9 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		SKMeshIndexBuffer indexBuffer,
 		int indexCount,
 		int indexOffset,
-		SKRect bounds)
-	{
-		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
+		SKRect bounds) =>
+		ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
 			indexBuffer, indexCount, indexOffset, (SKData?)null, null, bounds, out _);
-	}
 
 	/// <summary>Creates an indexed mesh from this specification, reporting any validation errors.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
@@ -444,13 +522,11 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int indexCount,
 		int indexOffset,
 		SKRect bounds,
-		out string? errors)
-	{
-		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
+		out string? errors) =>
+		ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
 			indexBuffer, indexCount, indexOffset, (SKData?)null, null, bounds, out errors);
-	}
 
-	/// <summary>Creates an indexed mesh from this specification using the supplied uniform data.</summary>
+	/// <summary>Creates an indexed mesh from this specification using the supplied uniforms and child effects.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
 	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
 	/// <param name="vertexCount">The number of vertices to read.</param>
@@ -459,7 +535,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 	/// <param name="indexCount">The number of indices to read.</param>
 	/// <param name="indexOffset">The byte offset of the first index.</param>
 	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
-	/// <param name="children">The child shaders for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
 	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
 	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
 	/// <remarks />
@@ -473,14 +549,44 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int indexOffset,
 		SKRuntimeEffectUniforms? uniforms,
 		SKRuntimeEffectChildren? children,
-		SKRect bounds)
+		SKRect bounds) =>
+		ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
+			indexBuffer, indexCount, indexOffset, uniforms, children, bounds, out _);
+
+	/// <summary>Creates an indexed mesh from this specification using the supplied uniforms and child effects, reporting any validation errors.</summary>
+	/// <param name="mode">How the vertices are assembled into triangles.</param>
+	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
+	/// <param name="vertexCount">The number of vertices to read.</param>
+	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
+	/// <param name="indexBuffer">The buffer holding the index data.</param>
+	/// <param name="indexCount">The number of indices to read.</param>
+	/// <param name="indexOffset">The byte offset of the first index.</param>
+	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
+	/// <param name="errors">When this method returns, contains the message describing why creation failed, or <see langword="null" /> on success.</param>
+	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public SKMesh? ToMeshIndexed (
+		SKMeshMode mode,
+		SKMeshVertexBuffer vertexBuffer,
+		int vertexCount,
+		int vertexOffset,
+		SKMeshIndexBuffer indexBuffer,
+		int indexCount,
+		int indexOffset,
+		SKRuntimeEffectUniforms? uniforms,
+		SKRuntimeEffectChildren? children,
+		SKRect bounds,
+		out string? errors)
 	{
+		using var data = uniforms?.ToData ();
 		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
 			indexBuffer, indexCount, indexOffset,
-			uniforms?.ToData (), children?.ToArray (), bounds, out _);
+			data, children?.ToArray (), bounds, out errors);
 	}
 
-	/// <summary>Creates an indexed mesh from this specification using the supplied uniform data, reporting any validation errors.</summary>
+	/// <summary>Creates an indexed mesh from this specification using the supplied uniform data.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
 	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
 	/// <param name="vertexCount">The number of vertices to read.</param>
@@ -501,13 +607,11 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int indexCount,
 		int indexOffset,
 		SKData? uniforms,
-		SKRect bounds)
-	{
-		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
+		SKRect bounds) =>
+		ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
 			indexBuffer, indexCount, indexOffset, uniforms, null, bounds, out _);
-	}
 
-	/// <summary>Creates an indexed mesh from this specification using the supplied uniforms and child shaders.</summary>
+	/// <summary>Creates an indexed mesh from this specification using the supplied uniform data, reporting any validation errors.</summary>
 	/// <param name="mode">How the vertices are assembled into triangles.</param>
 	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
 	/// <param name="vertexCount">The number of vertices to read.</param>
@@ -530,13 +634,52 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		int indexOffset,
 		SKData? uniforms,
 		SKRect bounds,
-		out string? errors)
-	{
-		return ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
+		out string? errors) =>
+		ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
 			indexBuffer, indexCount, indexOffset, uniforms, null, bounds, out errors);
-	}
 
-	private SKMesh? ToMeshIndexed (
+	/// <summary>Creates an indexed mesh from this specification using the supplied uniform data and child effects.</summary>
+	/// <param name="mode">How the vertices are assembled into triangles.</param>
+	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
+	/// <param name="vertexCount">The number of vertices to read.</param>
+	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
+	/// <param name="indexBuffer">The buffer holding the index data.</param>
+	/// <param name="indexCount">The number of indices to read.</param>
+	/// <param name="indexOffset">The byte offset of the first index.</param>
+	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
+	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public SKMesh? ToMeshIndexed (
+		SKMeshMode mode,
+		SKMeshVertexBuffer vertexBuffer,
+		int vertexCount,
+		int vertexOffset,
+		SKMeshIndexBuffer indexBuffer,
+		int indexCount,
+		int indexOffset,
+		SKData? uniforms,
+		SKObject?[]? children,
+		SKRect bounds) =>
+		ToMeshIndexed (mode, vertexBuffer, vertexCount, vertexOffset,
+			indexBuffer, indexCount, indexOffset, uniforms, children, bounds, out _);
+
+	/// <summary>Creates an indexed mesh from this specification using the supplied uniform data and child effects, reporting any validation errors.</summary>
+	/// <param name="mode">How the vertices are assembled into triangles.</param>
+	/// <param name="vertexBuffer">The buffer holding the vertex data.</param>
+	/// <param name="vertexCount">The number of vertices to read.</param>
+	/// <param name="vertexOffset">The byte offset of the first vertex.</param>
+	/// <param name="indexBuffer">The buffer holding the index data.</param>
+	/// <param name="indexCount">The number of indices to read.</param>
+	/// <param name="indexOffset">The byte offset of the first index.</param>
+	/// <param name="uniforms">The uniform values for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="children">The child effects for the mesh programs, or <see langword="null" /> for none.</param>
+	/// <param name="bounds">The bounds of the drawn geometry, used for culling.</param>
+	/// <param name="errors">When this method returns, contains the message describing why creation failed, or <see langword="null" /> on success.</param>
+	/// <returns>The mesh, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -553,39 +696,46 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			throw new ArgumentNullException (nameof (vertexBuffer));
 		if (indexBuffer == null)
 			throw new ArgumentNullException (nameof (indexBuffer));
+		if (vertexCount <= 0)
+			throw new ArgumentOutOfRangeException (nameof (vertexCount));
+		if (vertexOffset < 0)
+			throw new ArgumentOutOfRangeException (nameof (vertexOffset));
+		if (indexCount <= 0)
+			throw new ArgumentOutOfRangeException (nameof (indexCount));
+		if (indexOffset < 0)
+			throw new ArgumentOutOfRangeException (nameof (indexOffset));
 
-		var mesh = new SKMesh (SkiaApi.sk_mesh_new (), true);
-		SkiaApi.sk_mesh_set_spec (mesh.Handle, Handle);
-		SkiaApi.sk_mesh_set_mode (mesh.Handle, mode);
-		SkiaApi.sk_mesh_set_vertex_buffer (mesh.Handle, vertexBuffer.Handle, (IntPtr)vertexCount, (IntPtr)vertexOffset);
-		SkiaApi.sk_mesh_set_index_buffer (mesh.Handle, indexBuffer.Handle, (IntPtr)indexCount, (IntPtr)indexOffset);
-
-		if (uniforms != null)
-			SkiaApi.sk_mesh_set_uniforms (mesh.Handle, uniforms.Handle);
-
-		if (children != null && children.Length > 0) {
-			var childHandles = stackalloc IntPtr[children.Length];
-			for (int i = 0; i < children.Length; i++)
-				childHandles[i] = children[i]?.Handle ?? IntPtr.Zero;
-			SkiaApi.sk_mesh_set_children (mesh.Handle, (IntPtr)childHandles, (IntPtr)children.Length);
-		}
-
-		var b = bounds;
-		SkiaApi.sk_mesh_set_bounds (mesh.Handle, (IntPtr)(&b));
-
+		using var childrenHandles = Utils.RentHandlesArray (children, true);
 		using var errorString = new SKString ();
-		if (!SkiaApi.sk_mesh_validate (mesh.Handle, errorString.Handle)) {
-			mesh.Dispose ();
+
+		fixed (IntPtr* ch = childrenHandles)
+		{
+			var mesh = SKMesh.GetObject (SkiaApi.sk_mesh_make_indexed (
+				Handle,
+				mode,
+				vertexBuffer.Handle,
+				(IntPtr)vertexCount,
+				(IntPtr)vertexOffset,
+				indexBuffer.Handle,
+				(IntPtr)indexCount,
+				(IntPtr)indexOffset,
+				uniforms?.Handle ?? IntPtr.Zero,
+				ch,
+				(IntPtr)childrenHandles.Length,
+				&bounds,
+				errorString.Handle));
+
+			GC.KeepAlive (vertexBuffer);
+			GC.KeepAlive (indexBuffer);
+			GC.KeepAlive (uniforms);
+			GC.KeepAlive (children);
 
 			errors = errorString.ToString ();
 			if (errors?.Length == 0)
 				errors = null;
 
-			return null;
+			return mesh;
 		}
-
-		errors = null;
-		return mesh;
 	}
 
 	internal static SKMeshSpecification? GetObject (IntPtr handle) =>

@@ -2,7 +2,7 @@ using System;
 
 namespace SkiaSharp;
 
-/// <summary>Represents a GPU-resident buffer holding the index data of a mesh.</summary>
+/// <summary>Represents a CPU- or GPU-backed buffer holding the index data of a mesh.</summary>
 /// <remarks />
 public unsafe class SKMeshIndexBuffer : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 {
@@ -17,35 +17,156 @@ public unsafe class SKMeshIndexBuffer : SKObject, ISKReferenceCounted, ISKSkipOb
 	protected override void Dispose (bool disposing) =>
 		base.Dispose (disposing);
 
-	/// <summary>Creates a index buffer containing a copy of the supplied data.</summary>
+	/// <summary>Creates a CPU-backed index buffer containing a copy of the supplied data.</summary>
 	/// <param name="data">The bytes to copy into the buffer.</param>
 	/// <returns>The new buffer, or <see langword="null" /> if it could not be created.</returns>
 	/// <remarks />
-	public static SKMeshIndexBuffer? Make (ReadOnlySpan<byte> data)
+	public static SKMeshIndexBuffer? Create (ReadOnlySpan<byte> data) =>
+		Create (null, data);
+
+	/// <summary>Creates an index buffer containing a copy of the supplied data.</summary>
+	/// <param name="context">The GPU context to upload the buffer to, or <see langword="null" /> to create a CPU-backed buffer.</param>
+	/// <param name="data">The bytes to copy into the buffer.</param>
+	/// <returns>The new buffer, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public static SKMeshIndexBuffer? Create (GRContext? context, ReadOnlySpan<byte> data)
 	{
+		if (data.IsEmpty)
+			throw new ArgumentException ("Data cannot be empty.", nameof (data));
+
 		fixed (byte* d = data)
 		{
-			return GetObject (SkiaApi.sk_mesh_index_buffer_make ((IntPtr)d, (IntPtr)data.Length));
+			return Create (context, (IntPtr)d, data.Length);
 		}
 	}
 
-	/// <summary>Creates a index buffer containing a copy of <paramref name="size" /> bytes read from <paramref name="data" />.</summary>
+	/// <summary>Creates a CPU-backed index buffer containing a copy of <paramref name="size" /> bytes read from <paramref name="data" />.</summary>
 	/// <param name="data">A pointer to the bytes to copy.</param>
 	/// <param name="size">The number of bytes to copy.</param>
 	/// <returns>The new buffer, or <see langword="null" /> if it could not be created.</returns>
 	/// <remarks />
-	public static SKMeshIndexBuffer? Make (IntPtr data, int size)
+	public static SKMeshIndexBuffer? Create (IntPtr data, int size) =>
+		Create (null, data, size);
+
+	/// <summary>Creates an index buffer containing a copy of <paramref name="size" /> bytes read from <paramref name="data" />.</summary>
+	/// <param name="context">The GPU context to upload the buffer to, or <see langword="null" /> to create a CPU-backed buffer.</param>
+	/// <param name="data">A pointer to the bytes to copy.</param>
+	/// <param name="size">The number of bytes to copy.</param>
+	/// <returns>The new buffer, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public static SKMeshIndexBuffer? Create (GRContext? context, IntPtr data, int size)
 	{
-		return GetObject (SkiaApi.sk_mesh_index_buffer_make (data, (IntPtr)size));
+		if (data == IntPtr.Zero)
+			throw new ArgumentNullException (nameof (data));
+		if (size <= 0)
+			throw new ArgumentOutOfRangeException (nameof (size));
+
+		return CreateCore (context, (void*)data, size);
 	}
 
-	/// <summary>Creates an uninitialized index buffer of the specified size.</summary>
+	/// <summary>Creates a zero-initialized CPU-backed index buffer of the specified size.</summary>
 	/// <param name="size">The size of the buffer, in bytes.</param>
 	/// <returns>The new buffer, or <see langword="null" /> if it could not be created.</returns>
 	/// <remarks />
-	public static SKMeshIndexBuffer? Make (int size)
+	public static SKMeshIndexBuffer? Create (int size) =>
+		Create (null, size);
+
+	/// <summary>Creates a zero-initialized index buffer of the specified size.</summary>
+	/// <param name="context">The GPU context to allocate the buffer on, or <see langword="null" /> to create a CPU-backed buffer.</param>
+	/// <param name="size">The size of the buffer, in bytes.</param>
+	/// <returns>The new buffer, or <see langword="null" /> if it could not be created.</returns>
+	/// <remarks />
+	public static SKMeshIndexBuffer? Create (GRContext? context, int size)
 	{
-		return GetObject (SkiaApi.sk_mesh_index_buffer_make (IntPtr.Zero, (IntPtr)size));
+		if (size <= 0)
+			throw new ArgumentOutOfRangeException (nameof (size));
+
+		return CreateCore (context, null, size);
+	}
+
+	private static SKMeshIndexBuffer? CreateCore (GRContext? context, void* data, int size)
+	{
+		if (context == null)
+			return GetObject (SkiaApi.sk_mesh_index_buffer_make (data, (IntPtr)size));
+
+		var result = GetObject (SkiaApi.sk_mesh_index_buffer_make_ganesh (context.Handle, data, (IntPtr)size));
+		GC.KeepAlive (context);
+		return result;
+	}
+
+	/// <summary>Creates a CPU-backed copy of this index buffer.</summary>
+	/// <returns>The copied buffer, or <see langword="null" /> if the buffer could not be copied.</returns>
+	/// <remarks>Copying is only supported when the source buffer is CPU-backed.</remarks>
+	public SKMeshIndexBuffer? Copy () =>
+		Copy (null);
+
+	/// <summary>Creates a copy of this index buffer.</summary>
+	/// <param name="context">The GPU context to upload the copy to, or <see langword="null" /> to create a CPU-backed copy.</param>
+	/// <returns>The copied buffer, or <see langword="null" /> if the buffer could not be copied.</returns>
+	/// <remarks>Copying is only supported when the source buffer is CPU-backed.</remarks>
+	public SKMeshIndexBuffer? Copy (GRContext? context)
+	{
+		if (context == null)
+			return GetObject (SkiaApi.sk_mesh_index_buffer_copy (Handle));
+
+		var result = GetObject (SkiaApi.sk_mesh_index_buffer_copy_ganesh (context.Handle, Handle));
+		GC.KeepAlive (context);
+		return result;
+	}
+
+	/// <summary>Updates a region of a CPU-backed index buffer with the supplied bytes.</summary>
+	/// <param name="data">The bytes to copy into the buffer.</param>
+	/// <param name="offset">The byte offset in the buffer, which must be a multiple of 4.</param>
+	/// <returns><see langword="true" /> if the update succeeded; otherwise <see langword="false" />.</returns>
+	/// <remarks>Both <paramref name="offset" /> and <paramref name="data" /> length must be multiples of 4 bytes.</remarks>
+	public bool Update (ReadOnlySpan<byte> data, int offset) =>
+		Update (null, data, offset);
+
+	/// <summary>Updates a region of the index buffer with the supplied bytes.</summary>
+	/// <param name="context">The GPU context that created the buffer, or <see langword="null" /> if the buffer is CPU-backed.</param>
+	/// <param name="data">The bytes to copy into the buffer.</param>
+	/// <param name="offset">The byte offset in the buffer, which must be a multiple of 4.</param>
+	/// <returns><see langword="true" /> if the update succeeded; otherwise <see langword="false" />.</returns>
+	/// <remarks>Both <paramref name="offset" /> and <paramref name="data" /> length must be multiples of 4 bytes.</remarks>
+	public bool Update (GRContext? context, ReadOnlySpan<byte> data, int offset)
+	{
+		if (data.IsEmpty)
+			throw new ArgumentException ("Data cannot be empty.", nameof (data));
+
+		fixed (byte* d = data)
+		{
+			return Update (context, (IntPtr)d, offset, data.Length);
+		}
+	}
+
+	/// <summary>Updates a region of a CPU-backed index buffer with <paramref name="size" /> bytes read from <paramref name="data" />.</summary>
+	/// <param name="data">A pointer to the bytes to copy.</param>
+	/// <param name="offset">The byte offset in the buffer, which must be a multiple of 4.</param>
+	/// <param name="size">The number of bytes to copy, which must be a multiple of 4.</param>
+	/// <returns><see langword="true" /> if the update succeeded; otherwise <see langword="false" />.</returns>
+	/// <remarks />
+	public bool Update (IntPtr data, int offset, int size) =>
+		Update (null, data, offset, size);
+
+	/// <summary>Updates a region of the index buffer with <paramref name="size" /> bytes read from <paramref name="data" />.</summary>
+	/// <param name="context">The GPU context that created the buffer, or <see langword="null" /> if the buffer is CPU-backed.</param>
+	/// <param name="data">A pointer to the bytes to copy.</param>
+	/// <param name="offset">The byte offset in the buffer, which must be a multiple of 4.</param>
+	/// <param name="size">The number of bytes to copy, which must be a multiple of 4.</param>
+	/// <returns><see langword="true" /> if the update succeeded; otherwise <see langword="false" />.</returns>
+	/// <remarks />
+	public bool Update (GRContext? context, IntPtr data, int offset, int size)
+	{
+		if (data == IntPtr.Zero)
+			throw new ArgumentNullException (nameof (data));
+		if (offset < 0)
+			throw new ArgumentOutOfRangeException (nameof (offset));
+		if (size <= 0)
+			throw new ArgumentOutOfRangeException (nameof (size));
+
+		var result = SkiaApi.sk_mesh_index_buffer_update (Handle, context?.Handle ?? IntPtr.Zero, (void*)data, (IntPtr)offset, (IntPtr)size);
+		GC.KeepAlive (context);
+		return result;
 	}
 
 	/// <summary>Gets the size of the buffer, in bytes.</summary>
