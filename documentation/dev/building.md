@@ -101,17 +101,18 @@ Once you are finished making changes, you can run the `tests` target and make su
 ## Native Building
 
 Build jobs in the internal Azure package and test pipelines fetch `externals/skia`
-from the `internal/mono-skia` mirror using step-scoped Git URL rewriting and a
+from the `internal/mono-skia` mirror using agent-user Git URL rewriting and a
 mirror-URL-scoped `System.AccessToken` header. Public CI and local builds keep
 using GitHub. All builds use the same `.gitmodules` URL, pinned commit and cache
 identity; a missing mirror commit fails checkout rather than falling back.
-The existing checkout steps select the mirror when `System.TeamProject` is
-`internal`, using Git's `-c` and `--config-env` options without a setup script
-or changes to inherited Git configuration. The token is supplied only in those
-steps' environment, not job-wide.
+Every internal bootstrapper job configures the rewrite once with
+`git config --global`, before checkout and regardless of cache or job type.
+The only routing condition is `System.TeamProject == internal`. Authentication
+uses `--config-env` with a complete authorization header in the checkout step's
+environment; the token is never stored in global Git configuration.
 
-The internal pipelines declare the `skiaMirror` repository resource, and jobs
-that initialize submodules reference it with `uses.repositories` (no additional
+The internal pipelines declare the `skiaMirror` repository resource, and all
+internal bootstrapper jobs reference it with `uses.repositories` (no additional
 checkout). Each pipeline must be authorized to use that resource, and its Build
 Service identity needs **Read** permission on `internal/mono-skia`. Keep repository
 protection enabled. Verify access with the pipeline's job token; a developer's
