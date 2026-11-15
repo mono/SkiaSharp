@@ -1,9 +1,20 @@
 {
-  "theme": "Next servicing development",
-  "highlights_headline": "The unreleased 4.156.2 line currently contains release preparation and build maintenance, with no collected consumer-facing changes.",
+  "theme": "Glyph rendering hardening",
+  "highlights_headline": "The next SkiaSharp 4.156.2 update improves mask-filtered glyph rendering when successive font-scaler loads disagree.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Handle changing glyph paths and mask layouts",
+          "detail": "Mask-filtered glyph rendering uses the reloaded glyph's path rather than a stale outline. Incompatible mask formats are rejected before copying, avoiding sub-byte buffer overwrites, while clipped embossed glyphs preserve full plane strides to prevent corrupted or uncleared mask planes.",
+          "prs": [5742]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

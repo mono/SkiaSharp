@@ -1,9 +1,25 @@
 {
-  "theme": "Documentation and test maintenance",
-  "highlights_headline": "The unreleased head contains documentation and test-infrastructure updates, with no collected consumer-facing changes.",
+  "theme": "Glyph and Vulkan reliability",
+  "highlights_headline": "The next SkiaSharp 4.159.0 update hardens glyph rendering and handles specific Vulkan allocation failures on Imagination drivers.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Handle changing glyph paths and mask layouts",
+          "detail": "Mask-filtered glyph rendering uses the reloaded glyph rather than stale initial state when successive loads disagree about paths, formats or bounds. Incompatible masks are cleared instead of overflowing sub-byte rows, and clipped embossed masks use full plane strides for correct copying.",
+          "prs": [5741]
+        },
+        {
+          "lead": "Avoid driver failures after Vulkan allocation errors",
+          "detail": "On Imagination drivers, Ganesh and Graphite abandon descriptor pools after descriptor-set allocation reports host or device out-of-memory, because destroying those pools can trigger a driver failure. Graphite also stops allocating through the abandoned handle. The workaround applies only to that vendor and those errors.",
+          "prs": [5741]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
