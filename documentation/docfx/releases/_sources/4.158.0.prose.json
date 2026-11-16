@@ -1,15 +1,15 @@
 {
-  "theme": "Renderer and shaping updates",
-  "highlights_headline": "SkiaSharp 4.158.0 previews Skia m158 alongside HarfBuzz 15.0.0 and GPU correctness fixes.",
-  "highlights_body": "HarfBuzzSharp adds 30 named script constants. Later previews improve reflected hairlines, text-atlas selection, clip recording and displacement precision while retaining SkiaSharp's managed API surface.",
+  "theme": "Skia m158 and HarfBuzz 15",
+  "highlights_headline": "SkiaSharp 4.158 previews Skia m158 alongside HarfBuzz 15 and GPU rendering corrections.",
+  "highlights_body": "HarfBuzzSharp adds 30 named script constants without changing its struct-based Script API. GPU fixes address reflected hairlines, text-atlas selection, Graphite clipping and displacement precision; the shared hash-code polyfill now seeds its per-process randomness from the operating system.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m158",
-          "detail": "Updates the bundled renderer to milestone 158 without adding C bridge exports or changing SkiaSharp managed signatures. The initial HarfBuzzSharp 14.4.0.300 revision still bundles HarfBuzz 14.4.0; Preview 2 upgrades that engine to 15.0.0.",
+          "lead": "Skia m158 engine",
+          "detail": "Updates the bundled renderer to milestone 158 without changing SkiaSharp's managed API surface. The first preview uses HarfBuzzSharp package revision 14.4.0.300 with native HarfBuzz 14.4.0; Preview 2 upgrades the engine to HarfBuzz 15.0.0.",
           "prs": [5634, 5554]
         }
       ]
@@ -19,7 +19,7 @@
       "bullets": [
         {
           "lead": "More named HarfBuzz scripts",
-          "detail": "HarfBuzzSharp adds Jurchen, ProtoCuneiform, Seal and 27 previously omitted Script constants. The existing 149 values, struct-based API, parsing, numeric conversions and direction lookup remain intact. The unused deprecated native font-face setter import is removed without removing a public member.",
+          "detail": "Adds 30 Script constants, including Jurchen, ProtoCuneiform and Seal, while retaining all existing fields and values. The Script struct keeps its parsing, numeric conversions and horizontal-direction lookup; no public managed member is removed.",
           "prs": [5554]
         }
       ]
@@ -28,14 +28,19 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Hairlines, text and clips",
-          "detail": "Corrects reflected zero-length hairline cap sizing and text-atlas sampler selection. Graphite counts undrawn clips when deciding to flush and logs and skips draws whose clip stack cannot fit a fresh pass, rather than overflowing pass capacity.",
+          "lead": "GPU hairlines, text and clipping",
+          "detail": "Corrects reflected zero-length square hairline caps and rounds text-atlas indices before sampler selection. Graphite counts pending clips before flushing and logs and skips draws whose clip stacks cannot fit a fresh pass, preventing pass-capacity overflow.",
           "prs": [5669]
         },
         {
-          "lead": "Vulkan waits and displacement precision",
-          "detail": "Adds a targeted 1 ms device-loss cleanup delay for ARM proprietary Vulkan drivers from version 42 through below 56. Native synchronous submission incorporates fence-wait failure; GRContext.Submit remains void. Displacement offsets use float precision to match filter bounds, with asynchronous submission unchanged.",
+          "lead": "Vulkan failure-path handling",
+          "detail": "Adds a targeted 1 ms device-loss cleanup delay for ARM proprietary drivers from 42 up to, but not including, 56. Native synchronous submission now includes fence-wait failure in its result without changing asynchronous submission; GRContext.Submit remains void with no new managed result.",
           "prs": [5669, 5712]
+        },
+        {
+          "lead": "Displacement sampling matches bounds precision",
+          "detail": "Uses fp32 displacement scale and offset arithmetic to match filter-bounds calculations, avoiding half-precision rounding differences in sample positions. Color samples and channel selectors retain half precision.",
+          "prs": [5712]
         }
       ]
     },
@@ -43,26 +48,26 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "OS-generated hash seeds",
-          "detail": "The shared HashCode polyfill in SkiaSharp and HarfBuzzSharp now seeds from RandomNumberGenerator instead of System.Random. Hash codes remain randomized between processes and stable within a process; first use now initializes the cryptography dependency.",
+          "lead": "OS-generated hash-code seeds",
+          "detail": "The shared hash-code polyfill in SkiaSharp and HarfBuzzSharp uses RandomNumberGenerator rather than System.Random for its per-process seed. Hash codes remain stable within a process and randomized between processes.",
           "prs": [5408]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "rolfbjarne": "Replaced the shared hash-code seed with OS-generated randomness and added analyzer enforcement for shipped code."
+    "rolfbjarne": "Replaced the shared hash-code polyfill's seed with OS-generated randomness and added analyzer safeguards against unjustified System.Random use in shipped code."
   },
   "preview_summaries": {
-    "v4.158.0-preview.3.26563.17": "Improves displacement-filter precision and native synchronous Vulkan fence-wait handling, without adding a managed Submit result. The shared hash-code polyfill now uses OS-generated randomness while preserving within-process stability.",
-    "v4.158.0-preview.2.26560.5": "Upgrades to HarfBuzz 15.0.0 and adds 30 Script constants. GPU fixes correct reflected hairlines, text-atlas selection and Graphite clip recording, with a targeted device-loss cleanup workaround for affected ARM Vulkan drivers.",
-    "v4.158.0-preview.1.26556.2": "Introduces Skia m158 without changing the managed API surface. HarfBuzzSharp moves to package revision 14.4.0.300 while retaining native HarfBuzz 14.4.0."
+    "v4.158.0-preview.1.26556.2": "Introduces the Skia m158 engine without changing SkiaSharp's managed API surface. HarfBuzzSharp advances to package revision 14.4.0.300 while native HarfBuzz remains 14.4.0.",
+    "v4.158.0-preview.2.26560.5": "Upgrades HarfBuzz to 15.0.0 and adds 30 named Script constants. GPU fixes correct reflected hairlines, text-atlas selection and Graphite clip recording, with a targeted device-loss cleanup workaround for affected ARM Vulkan drivers.",
+    "v4.158.0-preview.3.26563.17": "Improves displacement-filter precision and native synchronous Vulkan wait-result handling, without adding a managed submission result. The shared hash-code polyfill uses OS-generated per-process randomness while retaining within-process stability."
   },
-  "harfbuzz_summary": "HarfBuzzSharp upgrades the bundled engine to 15.0.0 and adds 30 named Script constants, including Jurchen, ProtoCuneiform and Seal. Existing script values and the struct-based programming model remain compatible.",
+  "harfbuzz_summary": "Upgrades native HarfBuzz to 15.0.0 and adds 30 named Script constants, including Jurchen, ProtoCuneiform and Seal. Existing Script fields, values and struct-based operations remain available; removing the unused internal deprecated font-face setter import removes no public managed API.",
   "release_summaries": {
     "v4.158.0-preview.1.26556.2": {
-      "headline": "SkiaSharp 4.158.0 Preview 1 updates the bundled renderer to Skia m158.",
-      "body": "The managed API surface is unchanged. HarfBuzzSharp packages move to revision 14.4.0.300 while the bundled HarfBuzz engine stays at 14.4.0."
+      "headline": "SkiaSharp 4.158.0 Preview 1 introduces the Skia m158 engine.",
+      "body": "SkiaSharp's managed API surface is unchanged. HarfBuzzSharp packages advance to revision 14.4.0.300 while the bundled HarfBuzz engine remains at 14.4.0."
     },
     "v4.158.0-preview.2.26560.5": {
       "headline": "Preview 2 adds HarfBuzz 15.0.0 and GPU correctness fixes.",

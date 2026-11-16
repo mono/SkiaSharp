@@ -17,13 +17,29 @@
   "tallies": {
     "product": 1,
     "mixed": 0,
-    "internal": 10
+    "internal": 12
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5735": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5735",
+      "title": "Use the internal Skia mirror for Azure build-job checkouts",
+      "body": "* Use the internal Skia mirror for Azure build-job checkouts\n\nRoute internal package and test job submodule fetches through the existing mono-skia mirror with process-scoped URL rewriting and repository-scoped OAuth authentication. Explicitly reference the repository for protected job access, retain pinned sources and public GitHub checkout, and document the separate 1ES SDL checkout limitation.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep mirror routing in the existing checkout steps\n\nSelect internal routing from System.TeamProject and use Git command-scoped configuration with a step-local authorization environment variable. Remove the separate checkout template and configuration setup script while preserving inherited Git configuration and cache-miss timing.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Configure the Skia mirror once for every internal build job\n\nApply the non-secret global URL rewrite before checkout, independent of native job type or cache status. Reference the mirror in every internal bootstrapper job and retain step-local, mirror-scoped OAuth headers without persisting tokens.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Use explicit submodule checkout in public and internal jobs\n\nAlways check out self without submodules and share the existing cache-aware Git step. Remove project and cache-configuration branching from full submodule initialization while respecting checkoutSubmodules and skipSteps.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Drop internal CI details from the developer build guide\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Expand optional mirror authentication in shared checkout commands\n\nSet SKIA_GIT_OPTIONS to the header config option only for internal jobs and to empty for public jobs, avoiding duplicated Git commands. Keep global routing and checkout-step token scope unchanged.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5759": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5759",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5741": {
       "url": "https://github.com/mono/SkiaSharp/pull/5741",
       "title": "[M159] Sync upstream glyph and Vulkan OOM fixes",

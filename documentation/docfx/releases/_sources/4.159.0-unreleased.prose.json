@@ -1,6 +1,6 @@
 {
-  "theme": "Glyph and Vulkan reliability",
-  "highlights_headline": "The unreleased 4.159.0 changes improve mask-filtered glyph rendering and handle specific Vulkan allocation failures on Imagination drivers.",
+  "theme": "Glyph and Vulkan hardening",
+  "highlights_headline": "Upcoming Skia m159 fixes harden mask-filtered glyph rendering and Imagination Vulkan allocation failure handling.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,13 +8,13 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyph rendering corrected",
-          "detail": "When successive loads from a stateful font scaler disagree about a glyph's path, format, or bounds, rendering now uses the reloaded glyph and clears incompatible masks instead of overflowing sub-byte rows. Clipped embossed glyphs also use full plane strides when copying mask data.",
+          "lead": "Mask-filtered glyphs handle changing scaler output",
+          "detail": "Uses the reloaded glyph's path when successive font-scaler loads disagree. Incompatible masks are cleared instead of copied, and clipped embossed masks retain full plane strides, avoiding stale outlines, sub-byte buffer overwrites and corrupted mask planes.",
           "prs": [5741]
         },
         {
-          "lead": "Imagination Vulkan allocation failures handled",
-          "detail": "Ganesh and Graphite abandon descriptor pools after descriptor-set allocation reports host or device out-of-memory on Imagination drivers, avoiding a driver failure during pool destruction. Graphite also prevents further allocation through the abandoned handle; other vendors and allocation errors are unaffected by this workaround.",
+          "lead": "Imagination Vulkan allocation failures avoid unsafe cleanup",
+          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, where destroying the pool can trigger a driver failure. Graphite also prevents further allocation through the abandoned handle.",
           "prs": [5741]
         }
       ]

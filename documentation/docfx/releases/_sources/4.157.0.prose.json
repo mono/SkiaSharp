@@ -1,11 +1,11 @@
 {
-  "theme": "Engine and GPU reliability",
-  "highlights_headline": "SkiaSharp 4.157.0 updates to Skia m157 with path, text and GPU correctness improvements.",
-  "highlights_body": "The collected changes also make LibraryImport calling conventions explicit and improve displacement-filter precision. Core managed APIs remain unchanged; the Graphite Metal runtime floor requires attention on Apple mobile targets.",
+  "theme": "Skia m157 rendering corrections",
+  "highlights_headline": "SkiaSharp 4.157 previews Skia m157 with raster, glyph-replay and GPU correctness fixes.",
+  "highlights_body": "The release also makes LibraryImport calling conventions explicit. Release Candidate 2 adds transformed-shape and displacement-filter corrections, safer Graphite clip recording and native Vulkan wait-result handling without changing managed API signatures.",
   "breaking": [
     {
-      "title": "Require iOS or tvOS 15 for Graphite Metal",
-      "body": "Graphite Metal adopts an iOS/tvOS 15 runtime minimum; macOS remains at 12. Raise deployment targets when using this backend, and keep any higher managed or application-framework requirement rather than treating the backend floor as the overall platform minimum.",
+      "title": "Graphite Metal requires iOS or tvOS 15",
+      "body": "Graphite Metal's native runtime minimum rises to iOS and tvOS 15; macOS remains at 12. If you use this backend, raise deployment targets as needed and continue to satisfy any higher managed or framework requirements.",
       "prs": [5542]
     }
   ],
@@ -14,8 +14,8 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m157",
-          "detail": "Moves the bundled renderer to milestone 157 without changing the managed binding surface. HarfBuzzSharp's 14.4.0.200 package revision continues to bundle native HarfBuzz 14.4.0.",
+          "lead": "Skia m157 engine",
+          "detail": "Updates the bundled renderer to milestone 157 while preserving the managed API surface. HarfBuzzSharp moves to package revision 14.4.0.200; the native HarfBuzz engine remains 14.4.0.",
           "prs": [5542]
         }
       ]
@@ -24,39 +24,40 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Path and glyph rendering",
-          "detail": "Corrects clipped convex-path rasterization, software coverage-mask bounds, serialized glyph replay and reflected hairline caps. Ganesh rounds text-atlas indices before sampler selection and corrects transformed ellipse and rounded-rectangle geometry, including overlapping corner radii.",
-          "prs": [5612, 5630, 5670, 5688]
+          "lead": "Explicit cdecl for LibraryImport",
+          "detail": "SkiaSharp, HarfBuzzSharp and companion bindings now explicitly select cdecl for LibraryImport, matching existing DllImport paths. This addresses an ABI mismatch that can affect Windows x86; runtime confirmation of the reported optimized-call stack-growth symptom remains outstanding.",
+          "prs": [5565]
         },
         {
-          "lead": "Graphite clipping and readback",
-          "detail": "Corrects clip-key packing, wedge bounds and alpha-to-RGBx GPU readback stride. Clip recording counts effective undrawn elements and warns and skips draws that cannot fit a fresh pass; empty Ganesh flushes no longer leave stale atlas work.",
+          "lead": "Safer rasterization and glyph replay",
+          "detail": "Fixes convex anti-aliased path buffer overflow across vertical clip gaps, coverage-mask clamping and device-space bounds. Direct-mask Slug replay rejects unsupported fractional cases and gains validation at deserialization and draw time.",
+          "prs": [5612, 5630]
+        },
+        {
+          "lead": "Correct GPU geometry and text selection",
+          "detail": "Corrects reflected zero-length square hairline caps, transformed ellipse and rounded-rectangle geometry, overlapping corner radii and text-atlas sampler selection. Empty Ganesh flushes no longer leave stale atlas work, and displacement offsets use fp32 arithmetic to match filter bounds.",
+          "prs": [5670, 5688, 5710]
+        },
+        {
+          "lead": "Graphite clipping and readback corrections",
+          "detail": "Fixes clip-key packing, wedge inflation and alpha-to-RGBx GPU readback stride. Clip recording counts pending clip elements before flushing; a draw whose clip stack cannot fit a fresh pass is warned about and skipped rather than exceeding pass capacity.",
           "prs": [5612, 5630, 5688]
         },
         {
-          "lead": "Vulkan cleanup and displacement filters",
-          "detail": "Adds a targeted 1 ms device-loss cleanup delay for ARM proprietary Vulkan driver versions 42 through below 56. Native synchronous submission now incorporates fence-wait failure without changing void GRContext.Submit. Float-precision displacement offsets match filter bounds.",
-          "prs": [5670, 5710]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "Explicit cdecl imports",
-          "detail": "Generated LibraryImport declarations now specify CallConvCdecl, matching existing DllImport and callback conventions across SkiaSharp, HarfBuzzSharp, Resources, SceneGraph and Skottie. This corrects the ABI selection that can differ on Windows x86 without changing public signatures.",
-          "prs": [5565]
+          "lead": "Vulkan synchronization and cleanup",
+          "detail": "Fixes render-pass pointer initialization and adds a targeted 1 ms device-loss cleanup delay for ARM proprietary drivers from 42 up to, but not including, 56. Native synchronous submission now accounts for fence-wait failures; GRContext.Submit remains void and exposes no new managed result.",
+          "prs": [5612, 5670, 5710]
         }
       ]
     }
   ],
   "contributor_summaries": {},
   "preview_summaries": {
-    "v4.157.0-rc.1.26560.6": "Corrects reflected hairline caps and text-atlas selection, with a targeted device-loss cleanup delay for affected ARM Vulkan drivers. Managed APIs are unchanged.",
-    "v4.157.0-preview.1.26556.1": "Introduces Skia m157 with rasterization, glyph-replay and Graphite readback fixes, plus explicit cdecl LibraryImport metadata. Graphite Metal requires iOS or tvOS 15, subject to higher framework minimums."
+    "v4.157.0-preview.1.26556.1": "Introduces Skia m157 with rasterization, glyph-replay and Graphite readback fixes, plus explicit cdecl LibraryImport metadata. Graphite Metal requires iOS or tvOS 15, subject to any higher framework minimums; HarfBuzzSharp's package revision changes without a native engine upgrade.",
+    "v4.157.0-rc.1.26560.6": "Corrects reflected hairline caps and text-atlas selection, and adds a targeted device-loss cleanup delay for affected ARM Vulkan drivers. Managed APIs are unchanged.",
+    "v4.157.0-rc.2.26563.19": "Corrects transformed ellipses and rounded rectangles, stale atlas work after empty flushes, Graphite clip-pass capacity and displacement precision. Native Vulkan submission accounts for synchronous fence-wait failures, but GRContext.Submit still exposes no result."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 14.4.0.200 retains native HarfBuzz 14.4.0. Its generated LibraryImport declarations now explicitly select cdecl without changing the public API.",
+  "harfbuzz_summary": "HarfBuzzSharp LibraryImport declarations now explicitly select cdecl, matching the existing DllImport convention. Package revision 14.4.0.200 continues to bundle native HarfBuzz 14.4.0.",
   "release_summaries": {
     "v4.157.0-preview.1.26556.1": {
       "headline": "Preview 1 brings Skia m157 with rasterization, glyph-replay and Graphite readback fixes.",
@@ -65,6 +66,10 @@
     "v4.157.0-rc.1.26560.6": {
       "headline": "Release Candidate 1 corrects reflected hairline caps and GPU text-atlas selection.",
       "body": "It also adds a targeted device-loss cleanup delay for affected ARM proprietary Vulkan drivers. These fixes do not change managed APIs."
+    },
+    "v4.157.0-rc.2.26563.19": {
+      "headline": "Release Candidate 2 improves transformed geometry, Graphite clipping and displacement-filter precision.",
+      "body": "Empty Ganesh flushes no longer leave stale atlas work. Native synchronous Vulkan submission accounts for failed fence waits, while GRContext.Submit remains void with no new managed result."
     }
   }
 }
