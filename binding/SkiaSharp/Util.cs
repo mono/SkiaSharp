@@ -128,49 +128,92 @@ namespace SkiaSharp
 				scope.Span;
 		}
 
-		public static RentedUtf8Strings RentUtf8Strings (int count) =>
-			count <= 0 ? default : new RentedUtf8Strings (count);
+		public static RentedUtf8Strings RentUtf8Strings (int count, int initialBufferLength = 256) =>
+			count <= 0 ? default : new RentedUtf8Strings (initialBufferLength);
 
 		internal ref struct RentedUtf8Strings
 		{
-			private RentedArray<byte[]> buffers;
-			private RentedArray<GCHandle> handles;
-			private int count;
+			private byte[] buffer;
+			private GCHandle handle;
+			private byte* basePtr;
+			private int offset;
+			private RentedArray<byte[]> overflowBuffers;
+			private RentedArray<GCHandle> overflowHandles;
+			private int overflowCount;
 
-			internal RentedUtf8Strings (int capacity)
+			internal RentedUtf8Strings (int initialBufferLength)
 			{
-				buffers = RentArray<byte[]> (capacity);
-				handles = RentArray<GCHandle> (capacity);
-				count = 0;
+				buffer = ArrayPool<byte>.Shared.Rent (initialBufferLength);
+				handle = GCHandle.Alloc (buffer, GCHandleType.Pinned);
+				basePtr = (byte*)handle.AddrOfPinnedObject ();
+				offset = 0;
+				overflowBuffers = default;
+				overflowHandles = default;
+				overflowCount = 0;
 			}
 
 			public void* Add (string value)
 			{
 				var span = (value ?? string.Empty).AsSpan ();
 				var byteCount = Encoding.UTF8.GetByteCount (span);
-				var buffer = ArrayPool<byte>.Shared.Rent (byteCount + 1);
-				var written = Encoding.UTF8.GetBytes (span, buffer);
-				buffer[written] = 0;
+				var needed = byteCount + 1;
 
-				var handle = GCHandle.Alloc (buffer, GCHandleType.Pinned);
-				buffers[count] = buffer;
-				handles[count] = handle;
-				count++;
+				if (buffer != null && offset + needed <= buffer.Length) {
+					var written = Encoding.UTF8.GetBytes (span, new Span<byte> (buffer, offset, byteCount));
+					var ptr = basePtr + offset;
+					ptr[written] = 0;
+					offset += written + 1;
+					return ptr;
+				}
 
-				return (void*)handle.AddrOfPinnedObject ();
+				return AddOverflow (span, byteCount, needed);
+			}
+
+			private void* AddOverflow (ReadOnlySpan<char> span, int byteCount, int needed)
+			{
+				if (overflowBuffers.Array == null) {
+					overflowBuffers = RentArray<byte[]> (16);
+					overflowHandles = RentArray<GCHandle> (16);
+				} else if (overflowCount == overflowBuffers.Length) {
+					var newBuffers = RentArray<byte[]> (overflowCount * 2);
+					var newHandles = RentArray<GCHandle> (overflowCount * 2);
+					overflowBuffers.Span.CopyTo (newBuffers.Span);
+					overflowHandles.Span.CopyTo (newHandles.Span);
+					overflowBuffers.Dispose ();
+					overflowHandles.Dispose ();
+					overflowBuffers = newBuffers;
+					overflowHandles = newHandles;
+				}
+
+				var extraBuffer = ArrayPool<byte>.Shared.Rent (needed);
+				var written = Encoding.UTF8.GetBytes (span, new Span<byte> (extraBuffer, 0, byteCount));
+				extraBuffer[written] = 0;
+
+				var extraHandle = GCHandle.Alloc (extraBuffer, GCHandleType.Pinned);
+				overflowBuffers[overflowCount] = extraBuffer;
+				overflowHandles[overflowCount] = extraHandle;
+				overflowCount++;
+
+				return (void*)extraHandle.AddrOfPinnedObject ();
 			}
 
 			public void Dispose ()
 			{
-				for (var i = 0; i < count; i++) {
-					if (handles[i].IsAllocated)
-						handles[i].Free ();
-					if (buffers[i] != null)
-						ArrayPool<byte>.Shared.Return (buffers[i]);
+				if (handle.IsAllocated)
+					handle.Free ();
+				if (buffer != null) {
+					ArrayPool<byte>.Shared.Return (buffer);
+					buffer = null;
 				}
-				handles.Dispose ();
-				buffers.Dispose ();
-				count = 0;
+				for (var i = 0; i < overflowCount; i++) {
+					if (overflowHandles[i].IsAllocated)
+						overflowHandles[i].Free ();
+					if (overflowBuffers[i] != null)
+						ArrayPool<byte>.Shared.Return (overflowBuffers[i]);
+				}
+				overflowHandles.Dispose ();
+				overflowBuffers.Dispose ();
+				overflowCount = 0;
 			}
 		}
 	}
