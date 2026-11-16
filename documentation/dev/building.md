@@ -110,6 +110,10 @@ Every internal bootstrapper job configures the rewrite once with
 The only routing condition is `System.TeamProject == internal`. Authentication
 uses `--config-env` with a complete authorization header in the checkout step's
 environment; the token is never stored in global Git configuration.
+Both public and internal bootstrapper jobs check out `self` without submodules,
+then initialize the pinned submodules in an explicit Git step on cache misses.
+Native source jobs initialize only Skia; other builds honor `checkoutSubmodules`,
+and merge-only jobs do not initialize submodules.
 
 The internal pipelines declare the `skiaMirror` repository resource, and all
 internal bootstrapper jobs reference it with `uses.repositories` (no additional

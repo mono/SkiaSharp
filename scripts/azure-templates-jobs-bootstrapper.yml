@@ -159,12 +159,8 @@ jobs:
             }
           displayName: Evaluate cache decision
       - ${{ else }}:
-        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true'), ne(variables['System.TeamProject'], 'internal')) }}:
-          - checkout: self
-            submodules: recursive
-        - ${{ else }}:
-          - checkout: self
-            submodules: false
+        - checkout: self
+          submodules: false
         - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
 
@@ -186,7 +182,7 @@ jobs:
             pwsh: git submodule update --init --recursive externals/skia
           displayName: Checkout native build submodules
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-      - ${{ if and(not(startsWith(parameters.name, 'native_')), eq(parameters.checkoutSubmodules, 'true'), or(and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)), and(eq(variables['System.TeamProject'], 'internal'), ne(parameters.skipSteps, 'true')))) }}:
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true')) }}:
         - ${{ if eq(variables['System.TeamProject'], 'internal') }}:
             pwsh: git --config-env=http.https://dev.azure.com/dnceng/internal/_git/mono-skia.extraheader=SKIA_MIRROR_AUTH_HEADER submodule update --init --recursive
             env:
