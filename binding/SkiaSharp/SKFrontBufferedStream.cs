@@ -6,7 +6,12 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
-	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
+	/// <remarks>
+	/// <para>For image decoding, pass the original stream directly to <see cref="SKCodec.Create(Stream)" /> or <see cref="SKBitmap.Decode(Stream)" />; these methods handle front buffering for non-seekable input.</para>
+	/// <para>For explicit Skia stream buffering, use <see cref="SKFrontBufferedManagedStream" />. That adapter derives from <see cref="SKStream" />, not <see cref="Stream" />, and is not a general-purpose .NET stream replacement.</para>
+	/// <para>This class is retained for compatibility. It reports <see cref="CanSeek" /> as <see langword="true" /> for limited buffered seeking and returns -1 from <see cref="Length" /> when the length is unknown.</para>
+	/// </remarks>
+	[Obsolete ("Use SKFrontBufferedManagedStream for Skia stream buffering, or pass the original Stream directly to SKCodec.Create or SKBitmap.Decode.")]
 	public class SKFrontBufferedStream : Stream
 	{
 		/// <summary>The default number of bytes to buffer (4096 bytes).</summary>
@@ -50,14 +55,23 @@ namespace SkiaSharp
 
 		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
 		/// <param name="stream">The stream to buffer.</param>
-		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer, from zero to <see cref="int.MaxValue" />.</param>
 		/// <param name="disposeUnderlyingStream"><see langword="true" /> to dispose the underlying stream when this stream is disposed; otherwise, <see langword="false" />.</param>
 		/// <remarks />
+		/// <exception cref="ArgumentNullException"><paramref name="stream" /> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="bufferSize" /> is outside the supported range.</exception>
 		public SKFrontBufferedStream(Stream stream, long bufferSize, bool disposeUnderlyingStream)
 		{
+			if (stream == null)
+				throw new ArgumentNullException(nameof(stream));
+			if (bufferSize < 0 || bufferSize > int.MaxValue)
+				throw new ArgumentOutOfRangeException(nameof(bufferSize));
+
 			underlyingStream = stream;
 			totalBufferSize = bufferSize;
-			totalLength = stream.CanSeek ? stream.Length : -1;
+			totalLength = stream.CanSeek && stream.Length >= 0
+				? Math.Max(0, stream.Length - stream.Position)
+				: -1;
 			disposeStream = disposeUnderlyingStream;
 		}
 
@@ -67,8 +81,8 @@ namespace SkiaSharp
 		public override bool CanRead => true;
 
 		/// <summary>Gets a value indicating whether the current stream supports seeking.</summary>
-		/// <value><see langword="true" /> if the stream supports seeking; otherwise, <see langword="false" />.</value>
-		/// <remarks />
+		/// <value>Always <see langword="true" />, for compatibility.</value>
+		/// <remarks>Seeking is limited to the buffered prefix. Once reading advances past that prefix, attempts to seek throw <see cref="InvalidOperationException" />.</remarks>
 		public override bool CanSeek => true; // we can seek if we are in the buffer
 
 		/// <summary>Gets a value indicating whether the current stream supports writing.</summary>
@@ -77,8 +91,8 @@ namespace SkiaSharp
 		public override bool CanWrite => false; // we don't write
 
 		/// <summary>Gets the stream length in bytes.</summary>
-		/// <value>The length of the stream in bytes.</value>
-		/// <remarks />
+		/// <value>The recorded stream length in bytes, or -1 when the length is unknown.</value>
+		/// <remarks>The negative unknown-length value is retained for compatibility; it is not a standard <see cref="Stream.Length" /> convention.</remarks>
 		public override long Length => totalLength;
 
 		/// <summary>Gets or sets the position within the current stream.</summary>
@@ -102,9 +116,28 @@ namespace SkiaSharp
 		/// <param name="offset">The byte offset in the buffer at which to begin reading bytes.</param>
 		/// <param name="count">The number of bytes to be read.</param>
 		/// <returns>Returns the total number of bytes read into the buffer array.</returns>
-		/// <remarks />
+		/// <remarks>Reads until <paramref name="count" /> bytes have been copied or the underlying stream returns zero bytes.</remarks>
+		/// <exception cref="ArgumentNullException"><paramref name="buffer" /> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The buffer offset or byte count is outside the buffer.</exception>
 		public override int Read(byte[] buffer, int offset, int count)
 		{
+			if (buffer == null)
+				throw new ArgumentNullException(nameof(buffer));
+			if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(offset));
+			if (count < 0)
+				throw new ArgumentOutOfRangeException(nameof(count));
+			if (count > buffer.Length - offset)
+				throw new ArgumentOutOfRangeException(nameof(count));
+
+			return ReadInternal(buffer, offset, count);
+		}
+
+		private int ReadInternal(byte[] buffer, int offset, int count)
+		{
+			if (count == 0)
+				return 0;
+
 			var start = currentOffset;
 
 			if (internalBuffer == null && currentOffset < totalBufferSize)
@@ -129,18 +162,12 @@ namespace SkiaSharp
 				offset += buffered;
 			}
 
-			// just read from the stream
-			if (count > 0)
+			// just read from the stream once the front buffer is full
+			if (count > 0 && bufferedSoFar >= totalBufferSize)
 			{
 				var direct = ReadDirectlyFromStream(buffer, offset, count);
 				count -= direct;
 				offset += direct;
-
-				if (direct > 0)
-				{
-					// if we are here, we are past the buffer and can't go back
-					internalBuffer = null;
-				}
 			}
 
 			return (int)(currentOffset - start);
@@ -150,15 +177,9 @@ namespace SkiaSharp
 		/// <param name="offset">The byte offset relative to the specified origin.</param>
 		/// <param name="origin">The reference point from which to obtain the new position.</param>
 		/// <returns>Returns the new position within the current buffered stream.</returns>
-		/// <remarks />
+		/// <remarks>Forward seeking advances through the underlying stream and stops at its end. Backward seeking is supported only until bytes beyond the front buffer have been consumed.</remarks>
 		public override long Seek(long offset, SeekOrigin origin)
 		{
-			// we are outside the buffer, so throw
-			if (currentOffset > totalBufferSize)
-			{
-				throw new InvalidOperationException("The position cannot be changed once the stream has moved past the buffer.");
-			}
-
 			// find the absolute position
 			var absolute = offset;
 			if (origin == SeekOrigin.Current)
@@ -174,6 +195,16 @@ namespace SkiaSharp
 				absolute = Length + offset;
 			}
 
+			if (absolute < 0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(offset), "Cannot seek before the beginning of the stream.");
+			}
+
+			if (currentOffset > totalBufferSize && absolute < currentOffset)
+			{
+				throw new InvalidOperationException("The position cannot be moved backward once the stream has moved past the buffer.");
+			}
+
 			// move to the position
 			if (absolute <= currentOffset)
 			{
@@ -182,9 +213,16 @@ namespace SkiaSharp
 			}
 			else
 			{
-				// we are moving forward, so we have to read into the buffer
+				// we are moving forward, so we have to read into (or past) the buffer
 				var toMove = absolute - currentOffset;
-				currentOffset += Read(null, 0, (int)toMove);
+				while (toMove > 0)
+				{
+					var step = (int)Math.Min(toMove, SKData.CopyBufferSize);
+					var moved = ReadInternal(null, 0, step);
+					if (moved <= 0)
+						break;
+					toMove -= moved;
+				}
 			}
 
 			return Position;
@@ -212,7 +250,7 @@ namespace SkiaSharp
 		{
 			var bytesToCopy = Math.Min(size, (int)(bufferedSoFar - currentOffset));
 
-			if (dst != null && offset < dst.Length)
+			if (dst != null)
 			{
 				Buffer.BlockCopy(internalBuffer, (int)currentOffset, dst, offset, bytesToCopy);
 			}
@@ -225,35 +263,58 @@ namespace SkiaSharp
 		private int BufferAndWriteTo(byte[] dst, int offset, int size)
 		{
 			var bytesToBuffer = Math.Min(size, (int)(totalBufferSize - bufferedSoFar));
-			var buffered = underlyingStream.Read(internalBuffer, (int)currentOffset, bytesToBuffer);
+			var totalBuffered = 0;
 
-			if (dst != null && offset < dst.Length)
+			while (totalBuffered < bytesToBuffer)
 			{
-				Buffer.BlockCopy(internalBuffer, (int)currentOffset, dst, offset, buffered);
+				var read = underlyingStream.Read(internalBuffer, (int)bufferedSoFar, bytesToBuffer - totalBuffered);
+				if (read <= 0)
+					break;
+
+				if (dst != null)
+				{
+					Buffer.BlockCopy(internalBuffer, (int)bufferedSoFar, dst, offset + totalBuffered, read);
+				}
+
+				bufferedSoFar += read;
+				currentOffset = bufferedSoFar;
+				totalBuffered += read;
 			}
 
-			bufferedSoFar += buffered;
-			currentOffset = bufferedSoFar;
-
-			return buffered;
+			return totalBuffered;
 		}
 
 		private int ReadDirectlyFromStream(byte[] dst, int offset, int size)
 		{
-			long bytesReadDirectly = 0;
-
-			if (dst == null)
+			if (dst == null && underlyingStream.CanSeek && underlyingStream.Length >= 0)
 			{
-				bytesReadDirectly = underlyingStream.Seek(size, SeekOrigin.Current);
+				var available = Math.Max(0, underlyingStream.Length - underlyingStream.Position);
+				var skipped = (int)Math.Min(size, available);
+				underlyingStream.Position += skipped;
+				currentOffset += skipped;
+				if (skipped > 0)
+					internalBuffer = null;
+				return skipped;
 			}
-			else
+
+			using var scratch = dst == null
+				? Utils.RentArray<byte>(Math.Min(size, SKData.CopyBufferSize))
+				: default;
+			var buffer = dst ?? scratch.Array;
+			var totalRead = 0;
+			while (totalRead < size)
 			{
-				bytesReadDirectly = underlyingStream.Read(dst, offset, size);
+				var toRead = dst == null ? Math.Min(size - totalRead, scratch.Length) : size - totalRead;
+				var read = underlyingStream.Read(buffer, dst == null ? 0 : offset + totalRead, toRead);
+				if (read <= 0)
+					break;
+
+				internalBuffer = null;
+				currentOffset += read;
+				totalRead += read;
 			}
 
-			currentOffset += bytesReadDirectly;
-
-			return (int)bytesReadDirectly;
+			return totalRead;
 		}
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKFrontBufferedStream" /> and optionally releases the managed resources.</summary>
