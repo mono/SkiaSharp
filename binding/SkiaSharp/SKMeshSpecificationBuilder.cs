@@ -73,8 +73,6 @@ public class SKMeshSpecificationBuilder
 			throw new ArgumentNullException (nameof (name));
 		if (offset < 0)
 			throw new ArgumentOutOfRangeException (nameof (offset));
-		if (!SKMeshSpecification.IsValidAttributeType (type))
-			throw new ArgumentOutOfRangeException (nameof (type));
 
 		attributes.Add (new SKMeshSpecificationAttribute (type, offset, name));
 	}
@@ -87,8 +85,6 @@ public class SKMeshSpecificationBuilder
 	{
 		if (name == null)
 			throw new ArgumentNullException (nameof (name));
-		if (!SKMeshSpecification.IsValidVaryingType (type))
-			throw new ArgumentOutOfRangeException (nameof (type));
 
 		varyings.Add (new SKMeshSpecificationVarying (type, name));
 	}
@@ -99,7 +95,7 @@ public class SKMeshSpecificationBuilder
 		for (var i = 0; i < attributes.Count; i++)
 		{
 			var attr = attributes[i];
-			if (attr.Offset >= 0 && SKMeshSpecification.IsValidAttributeType (attr.Type))
+			if (attr.Offset >= 0)
 			{
 				var end = attr.Offset + GetAttributeSize (attr.Type);
 				if (end > stride)

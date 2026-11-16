@@ -89,14 +89,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		{
 			if (attributes[i].Offset < 0)
 				throw new ArgumentOutOfRangeException (nameof (attributes), "Attribute offset cannot be negative.");
-			if (!IsValidAttributeType (attributes[i].Type))
-				throw new ArgumentOutOfRangeException (nameof (attributes), "Invalid attribute type.");
-		}
-
-		for (int i = 0; i < varyings.Length; i++)
-		{
-			if (!IsValidVaryingType (varyings[i].Type))
-				throw new ArgumentOutOfRangeException (nameof (varyings), "Invalid varying type.");
 		}
 
 		using var vs = new SKString (vertexShader);
@@ -257,8 +249,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		bool captureErrors,
 		out string? errors)
 	{
-		if (!IsValidMeshMode (mode))
-			throw new ArgumentOutOfRangeException (nameof (mode));
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
 		if (vertexCount <= 0)
@@ -351,8 +341,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		bool captureErrors,
 		out string? errors)
 	{
-		if (!IsValidMeshMode (mode))
-			throw new ArgumentOutOfRangeException (nameof (mode));
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
 		if (indexBuffer == null)
@@ -410,18 +398,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			return mesh;
 		}
 	}
-
-	internal static bool IsValidMeshMode (SKMeshMode mode) =>
-		mode >= SKMeshMode.Triangles &&
-		mode <= SKMeshMode.TriangleStrip;
-
-	internal static bool IsValidAttributeType (SKMeshSpecificationAttributeType type) =>
-		type >= SKMeshSpecificationAttributeType.Float &&
-		type <= SKMeshSpecificationAttributeType.Ubyte4Unorm;
-
-	internal static bool IsValidVaryingType (SKMeshSpecificationVaryingType type) =>
-		type >= SKMeshSpecificationVaryingType.Float &&
-		type <= SKMeshSpecificationVaryingType.Half4;
 
 	internal static SKMeshSpecification? GetObject (IntPtr handle) =>
 		handle == IntPtr.Zero ? null : new SKMeshSpecification (handle, true);

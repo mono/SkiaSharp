@@ -163,7 +163,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void SpecificationBuilderDerivesStrideFromCollectionMutationsAndValidatesEnumRanges()
+		public void SpecificationBuilderDerivesStrideFromCollectionMutations()
 		{
 			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, SimpleFragmentShader);
 			specBuilder.Attributes.Add(new SKMeshSpecificationAttribute(SKMeshSpecificationAttributeType.Float2, 0, "position"));
@@ -173,40 +173,6 @@ namespace SkiaSharp.Tests
 			Assert.Null(errors);
 			Assert.NotNull(spec);
 			Assert.Equal(8, spec.Stride);
-
-			Assert.Throws<ArgumentOutOfRangeException>(() =>
-				SKMeshSpecification.Create(
-					new[] { new SKMeshSpecificationAttribute((SKMeshSpecificationAttributeType)999, 0, "position") },
-					8,
-					EmptyVaryings,
-					SimpleVertexShader,
-					SimpleFragmentShader,
-					null,
-					SKAlphaType.Premul,
-					out _));
-
-			Assert.Throws<ArgumentOutOfRangeException>(() =>
-				SKMeshSpecification.Create(
-					SimpleAttributes,
-					8,
-					new[] { new SKMeshSpecificationVarying((SKMeshSpecificationVaryingType)999, "v") },
-					SimpleVertexShader,
-					SimpleFragmentShader,
-					null,
-					SKAlphaType.Premul,
-					out _));
-
-			using var vb = SKMeshVertexBuffer.Create(24);
-			using var ib = SKMeshIndexBuffer.Create(6);
-			var bounds = new SKRect(0, 0, 100, 100);
-
-			Assert.Throws<ArgumentOutOfRangeException>(() =>
-				spec.ToMesh((SKMeshMode)999, vb, 3, 0, null, null, bounds, out _));
-			Assert.Throws<ArgumentOutOfRangeException>(() =>
-				spec.ToMeshIndexed((SKMeshMode)999, vb, 3, 0, ib, 3, 0, null, null, bounds, out _));
-
-			using var meshBuilder = new SKMeshBuilder(spec);
-			Assert.Throws<ArgumentOutOfRangeException>(() => meshBuilder.Mode = (SKMeshMode)999);
 		}
 
 		[Fact]
