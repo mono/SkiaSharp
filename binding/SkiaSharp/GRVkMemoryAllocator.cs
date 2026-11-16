@@ -33,6 +33,7 @@ namespace SkiaSharp
 		/// <param name="vkInstance">A handle to the Vulkan instance.</param>
 		/// <param name="vkPhysicalDevice">A handle to the Vulkan physical device.</param>
 		/// <param name="vkDevice">A handle to the Vulkan logical device.</param>
+		/// <param name="vkQueue">A handle to the Vulkan queue the context will use. Required: Skia's allocator factory asserts it is set.</param>
 		/// <param name="maxApiVersion">The highest Vulkan API version the allocator may use.</param>
 		/// <param name="getProcedureAddress">The delegate that resolves Vulkan function addresses by name.</param>
 		/// <returns>The new allocator, or <see langword="null" /> if Vulkan support is not available or initialization failed.</returns>
@@ -41,14 +42,16 @@ namespace SkiaSharp
 			IntPtr vkInstance,
 			IntPtr vkPhysicalDevice,
 			IntPtr vkDevice,
+			IntPtr vkQueue,
 			uint maxApiVersion,
 			GRVkGetProcedureAddressDelegate getProcedureAddress) =>
-			CreateDefault (vkInstance, vkPhysicalDevice, vkDevice, maxApiVersion, getProcedureAddress, false, false);
+			CreateDefault (vkInstance, vkPhysicalDevice, vkDevice, vkQueue, maxApiVersion, getProcedureAddress, false, false);
 
 		/// <summary>Creates the default Vulkan memory allocator, optionally making it thread-safe.</summary>
 		/// <param name="vkInstance">A handle to the Vulkan instance.</param>
 		/// <param name="vkPhysicalDevice">A handle to the Vulkan physical device.</param>
 		/// <param name="vkDevice">A handle to the Vulkan logical device.</param>
+		/// <param name="vkQueue">A handle to the Vulkan queue the context will use. Required: Skia's allocator factory asserts it is set.</param>
 		/// <param name="maxApiVersion">The highest Vulkan API version the allocator may use.</param>
 		/// <param name="getProcedureAddress">The delegate that resolves Vulkan function addresses by name.</param>
 		/// <param name="threadSafe"><see langword="true" /> if the allocator may be used from more than one thread; otherwise <see langword="false" />.</param>
@@ -58,15 +61,17 @@ namespace SkiaSharp
 			IntPtr vkInstance,
 			IntPtr vkPhysicalDevice,
 			IntPtr vkDevice,
+			IntPtr vkQueue,
 			uint maxApiVersion,
 			GRVkGetProcedureAddressDelegate getProcedureAddress,
 			bool threadSafe) =>
-			CreateDefault (vkInstance, vkPhysicalDevice, vkDevice, maxApiVersion, getProcedureAddress, threadSafe, false);
+			CreateDefault (vkInstance, vkPhysicalDevice, vkDevice, vkQueue, maxApiVersion, getProcedureAddress, threadSafe, false);
 
 		/// <summary>Creates the default Vulkan memory allocator, optionally making it thread-safe and serving protected memory.</summary>
 		/// <param name="vkInstance">A handle to the Vulkan instance.</param>
 		/// <param name="vkPhysicalDevice">A handle to the Vulkan physical device.</param>
 		/// <param name="vkDevice">A handle to the Vulkan logical device.</param>
+		/// <param name="vkQueue">A handle to the Vulkan queue the context will use. Required: Skia's allocator factory asserts it is set.</param>
 		/// <param name="maxApiVersion">The highest Vulkan API version the allocator may use.</param>
 		/// <param name="getProcedureAddress">The delegate that resolves Vulkan function addresses by name.</param>
 		/// <param name="threadSafe"><see langword="true" /> if the allocator may be used from more than one thread; otherwise <see langword="false" />.</param>
@@ -77,6 +82,7 @@ namespace SkiaSharp
 			IntPtr vkInstance,
 			IntPtr vkPhysicalDevice,
 			IntPtr vkDevice,
+			IntPtr vkQueue,
 			uint maxApiVersion,
 			GRVkGetProcedureAddressDelegate getProcedureAddress,
 			bool threadSafe,
@@ -88,6 +94,8 @@ namespace SkiaSharp
 				throw new ArgumentException ("Must be non-null.", nameof (vkPhysicalDevice));
 			if (vkDevice == IntPtr.Zero)
 				throw new ArgumentException ("Must be non-null.", nameof (vkDevice));
+			if (vkQueue == IntPtr.Zero)
+				throw new ArgumentException ("Must be non-null.", nameof (vkQueue));
 			if (getProcedureAddress is null)
 				throw new ArgumentNullException (nameof (getProcedureAddress));
 
@@ -97,6 +105,7 @@ namespace SkiaSharp
 					fInstance         = vkInstance,
 					fPhysicalDevice   = vkPhysicalDevice,
 					fDevice           = vkDevice,
+					fQueue            = vkQueue,
 					fMaxAPIVersion    = maxApiVersion,
 					fGetProc          = DelegateProxies.GRVkGetProcProxy,
 					fGetProcUserData  = (void*)ctx,

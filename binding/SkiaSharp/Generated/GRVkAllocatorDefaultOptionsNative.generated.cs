@@ -22,6 +22,9 @@ namespace SkiaSharp
 		// public vk_device_t* fDevice
 		public vk_device_t fDevice;
 
+		// public vk_queue_t* fQueue
+		public vk_queue_t fQueue;
+
 		// public uint32_t fMaxAPIVersion
 		public UInt32 fMaxAPIVersion;
 
@@ -43,7 +46,7 @@ namespace SkiaSharp
 
 		public readonly bool Equals (GRVkAllocatorDefaultOptionsNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fThreadSafe == obj.fThreadSafe;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fThreadSafe == obj.fThreadSafe;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -61,6 +64,7 @@ namespace SkiaSharp
 			hash.Add (fInstance);
 			hash.Add (fPhysicalDevice);
 			hash.Add (fDevice);
+			hash.Add (fQueue);
 			hash.Add (fMaxAPIVersion);
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);

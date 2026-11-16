@@ -11,22 +11,28 @@ namespace SkiaSharp.Vulkan.Tests
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[Fact]
-		public void CreateDefaultRejectsNullHandlesAndGetProc()
+		public void CreateDefaultRejectsNullHandlesQueueAndGetProc()
 		{
 			Assert.Throws<ArgumentException>(() => GRVkMemoryAllocator.CreateDefault(
-				vkInstance: IntPtr.Zero, vkPhysicalDevice: (IntPtr)1, vkDevice: (IntPtr)2,
+				vkInstance: IntPtr.Zero, vkPhysicalDevice: (IntPtr)1, vkDevice: (IntPtr)2, vkQueue: (IntPtr)4,
 				maxApiVersion: 0, getProcedureAddress: (n, i, d) => IntPtr.Zero));
 
 			Assert.Throws<ArgumentException>(() => GRVkMemoryAllocator.CreateDefault(
-				vkInstance: (IntPtr)1, vkPhysicalDevice: IntPtr.Zero, vkDevice: (IntPtr)2,
+				vkInstance: (IntPtr)1, vkPhysicalDevice: IntPtr.Zero, vkDevice: (IntPtr)2, vkQueue: (IntPtr)4,
 				maxApiVersion: 0, getProcedureAddress: (n, i, d) => IntPtr.Zero));
 
 			Assert.Throws<ArgumentException>(() => GRVkMemoryAllocator.CreateDefault(
-				vkInstance: (IntPtr)1, vkPhysicalDevice: (IntPtr)2, vkDevice: IntPtr.Zero,
+				vkInstance: (IntPtr)1, vkPhysicalDevice: (IntPtr)2, vkDevice: IntPtr.Zero, vkQueue: (IntPtr)4,
+				maxApiVersion: 0, getProcedureAddress: (n, i, d) => IntPtr.Zero));
+
+			// The queue is required: skgpu::VulkanMemoryAllocators::Make asserts it is set, and a
+			// missing one used to abort Vulkan-enabled debug builds (#4585 review).
+			Assert.Throws<ArgumentException>(() => GRVkMemoryAllocator.CreateDefault(
+				vkInstance: (IntPtr)1, vkPhysicalDevice: (IntPtr)2, vkDevice: (IntPtr)3, vkQueue: IntPtr.Zero,
 				maxApiVersion: 0, getProcedureAddress: (n, i, d) => IntPtr.Zero));
 
 			Assert.Throws<ArgumentNullException>(() => GRVkMemoryAllocator.CreateDefault(
-				vkInstance: (IntPtr)1, vkPhysicalDevice: (IntPtr)2, vkDevice: (IntPtr)3,
+				vkInstance: (IntPtr)1, vkPhysicalDevice: (IntPtr)2, vkDevice: (IntPtr)3, vkQueue: (IntPtr)4,
 				maxApiVersion: 0, getProcedureAddress: null));
 		}
 
@@ -40,6 +46,7 @@ namespace SkiaSharp.Vulkan.Tests
 				ctx.Instance.Handle,
 				ctx.PhysicalDevice.Handle,
 				ctx.Device.Handle,
+				ctx.GraphicsQueue.Handle,
 				SilkVkContext.ApiVersion,
 				(name, instance, device) => ctx.BaseGetProc(name, instance, device));
 
@@ -59,6 +66,7 @@ namespace SkiaSharp.Vulkan.Tests
 				ctx.Instance.Handle,
 				ctx.PhysicalDevice.Handle,
 				ctx.Device.Handle,
+				ctx.GraphicsQueue.Handle,
 				SilkVkContext.ApiVersion,
 				(name, instance, device) => ctx.BaseGetProc(name, instance, device));
 			Assert.NotNull(allocator);
@@ -103,6 +111,7 @@ namespace SkiaSharp.Vulkan.Tests
 				ctx.Instance.Handle,
 				ctx.PhysicalDevice.Handle,
 				ctx.Device.Handle,
+				ctx.GraphicsQueue.Handle,
 				SilkVkContext.ApiVersion,
 				(name, instance, device) => ctx.BaseGetProc(name, instance, device));
 			Assert.NotNull(allocator);
@@ -151,6 +160,7 @@ namespace SkiaSharp.Vulkan.Tests
 				ctx.Instance.Handle,
 				ctx.PhysicalDevice.Handle,
 				ctx.Device.Handle,
+				ctx.GraphicsQueue.Handle,
 				SilkVkContext.ApiVersion,
 				(name, instance, device) =>
 				{
@@ -212,6 +222,7 @@ namespace SkiaSharp.Vulkan.Tests
 				ctx.Instance.Handle,
 				ctx.PhysicalDevice.Handle,
 				ctx.Device.Handle,
+				ctx.GraphicsQueue.Handle,
 				SilkVkContext.ApiVersion,
 				(name, instance, device) => ctx.BaseGetProc(name, instance, device),
 				threadSafe: true);
@@ -238,6 +249,7 @@ namespace SkiaSharp.Vulkan.Tests
 				ctx.Instance.Handle,
 				ctx.PhysicalDevice.Handle,
 				ctx.Device.Handle,
+				ctx.GraphicsQueue.Handle,
 				SilkVkContext.ApiVersion,
 				getProc);
 			return (allocator, new WeakReference(getProc));
