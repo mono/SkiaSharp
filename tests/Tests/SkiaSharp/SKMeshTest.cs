@@ -1,9 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using SkiaSharp.Tests.Visual;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(GpuRenderingCollection.Name)]
 	public class SKMeshTest : SKTest
 	{
 		// Simple SkSL programs for testing
@@ -939,6 +946,91 @@ namespace SkiaSharp.Tests
 			using var paint = new SKPaint { Shader = shader };
 			canvas.DrawMesh(mesh, paint);
 			canvas.Flush();
+		}
+
+		public static IEnumerable<object[]> GpuRendererNames()
+		{
+			foreach (var name in RendererCatalog.NamesIn(Assembly.GetExecutingAssembly()))
+			{
+				if (name != GpuBackends.Raster)
+					yield return new object[] { name };
+			}
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Theory]
+		[MemberData(nameof(GpuRendererNames))]
+		public async Task MeshRendersAcrossAllGpuRenderersIncludingGraphite(string rendererName)
+		{
+			GpuPolicy.RequireOrSkip(rendererName);
+
+			var renderer = RendererCatalog.Get(rendererName);
+			var scene = new MeshRenderTestScene();
+			var pixels = await renderer.RenderAsync(scene, scene.Info, TestContext.Current.CancellationToken);
+
+			// Center of the 100x100 surface (50, 50) in RGBA8888 premul should be Lime (0, 255, 0, 255).
+			var offset = (50 * scene.Info.Width + 50) * 4;
+			Assert.Equal(0, pixels[offset + 0]);
+			Assert.Equal(255, pixels[offset + 1]);
+			Assert.Equal(0, pixels[offset + 2]);
+			Assert.Equal(255, pixels[offset + 3]);
+		}
+
+		private sealed class MeshRenderTestScene : ISkiaScene
+		{
+			public string Name => "mesh-render-test";
+
+			public SKImageInfo Info => new(100, 100);
+
+			public void Draw(SKCanvas canvas)
+			{
+				const string vs = @"
+					Varyings main(const Attributes attrs) {
+						Varyings v;
+						v.position = attrs.position;
+						return v;
+					}";
+
+				const string fs = @"
+					uniform float uScale;
+					uniform shader uChild;
+					float2 main(const Varyings varyings, out half4 color) {
+						color = uChild.eval(varyings.position * uScale);
+						return varyings.position;
+					}";
+
+				using var cs = SKColorSpace.CreateSrgb();
+				var specBuilder = new SKMeshSpecificationBuilder(vs, fs)
+				{
+					ColorSpace = cs,
+					AlphaType = SKAlphaType.Premul,
+				};
+				specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+				using var spec = specBuilder.Build(out var errors);
+				Assert.NotNull(spec);
+				Assert.Null(errors);
+
+				using var vb = SKMeshVertexBuffer.Create(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
+				using var ib = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
+				using var childShader = SKShader.CreateColor(SKColors.Lime);
+
+				using var builder = new SKMeshBuilder(spec)
+				{
+					Bounds = new SKRect(0, 0, 100, 100),
+				};
+				builder.Uniforms["uScale"] = 1f;
+				builder.Children["uChild"] = childShader;
+				builder.SetVertexBuffer(vb);
+				builder.SetIndexBuffer(ib);
+
+				using var mesh = builder.Build();
+				Assert.NotNull(mesh);
+				Assert.True(mesh.IsValid);
+
+				canvas.Clear(SKColors.Blue);
+				using var paint = new SKPaint { Color = SKColors.White };
+				canvas.DrawMesh(mesh, paint);
+			}
 		}
 
 	}
