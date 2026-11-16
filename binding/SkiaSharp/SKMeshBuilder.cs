@@ -31,10 +31,19 @@ public class SKMeshBuilder : IDisposable
 	/// <remarks />
 	public SKRuntimeEffectChildren Children { get; }
 
+	private SKMeshMode mode = SKMeshMode.Triangles;
+
 	/// <summary>Gets or sets how the vertices are assembled into triangles.</summary>
 	/// <value>The assembly mode. The default is <see cref="F:SkiaSharp.SKMeshMode.Triangles" />.</value>
 	/// <remarks />
-	public SKMeshMode Mode { get; set; } = SKMeshMode.Triangles;
+	public SKMeshMode Mode {
+		get => mode;
+		set {
+			if (!SKMeshSpecification.IsValidMeshMode (value))
+				throw new ArgumentOutOfRangeException (nameof (value));
+			mode = value;
+		}
+	}
 
 	/// <summary>Gets or sets the bounds of the mesh, used for culling.</summary>
 	/// <value>A rectangle that contains the drawn geometry.</value>

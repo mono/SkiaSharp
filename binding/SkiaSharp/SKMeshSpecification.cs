@@ -257,6 +257,8 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		bool captureErrors,
 		out string? errors)
 	{
+		if (!IsValidMeshMode (mode))
+			throw new ArgumentOutOfRangeException (nameof (mode));
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
 		if (vertexCount <= 0)
@@ -349,6 +351,8 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		bool captureErrors,
 		out string? errors)
 	{
+		if (!IsValidMeshMode (mode))
+			throw new ArgumentOutOfRangeException (nameof (mode));
 		if (vertexBuffer == null)
 			throw new ArgumentNullException (nameof (vertexBuffer));
 		if (indexBuffer == null)
@@ -406,6 +410,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			return mesh;
 		}
 	}
+
+	internal static bool IsValidMeshMode (SKMeshMode mode) =>
+		mode >= SKMeshMode.Triangles &&
+		mode <= SKMeshMode.TriangleStrip;
 
 	internal static bool IsValidAttributeType (SKMeshSpecificationAttributeType type) =>
 		type >= SKMeshSpecificationAttributeType.Float &&

@@ -205,6 +205,18 @@ namespace SkiaSharp.Tests
 					null,
 					SKAlphaType.Premul,
 					out _));
+
+			using var vb = SKMeshVertexBuffer.Create(24);
+			using var ib = SKMeshIndexBuffer.Create(6);
+			var bounds = new SKRect(0, 0, 100, 100);
+
+			Assert.Throws<ArgumentOutOfRangeException>(() =>
+				spec.ToMesh((SKMeshMode)999, vb, 3, 0, null, null, bounds, out _));
+			Assert.Throws<ArgumentOutOfRangeException>(() =>
+				spec.ToMeshIndexed((SKMeshMode)999, vb, 3, 0, ib, 3, 0, null, null, bounds, out _));
+
+			using var meshBuilder = new SKMeshBuilder(spec);
+			Assert.Throws<ArgumentOutOfRangeException>(() => meshBuilder.Mode = (SKMeshMode)999);
 		}
 
 		[Fact]
