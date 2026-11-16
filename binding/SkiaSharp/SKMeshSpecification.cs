@@ -257,10 +257,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			throw new ArgumentOutOfRangeException (nameof (vertexOffset));
 
 		var rawData = uniforms?.RawData;
-		var childrenArray = children?.ChildrenArray;
+		var rawChildren = children?.RawChildren;
 
-		using var childrenHandles = childrenArray != null && childrenArray.Length > 0
-			? Utils.RentHandlesArray (childrenArray, true)
+		using var childrenHandles = rawChildren != null && rawChildren.Length > 0
+			? Utils.RentHandlesArray (rawChildren, true)
 			: default;
 		using var errorString = captureErrors ? new SKString () : null;
 
@@ -286,7 +286,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 			GC.KeepAlive (vertexBuffer);
 			GC.KeepAlive (rawData);
-			GC.KeepAlive (childrenArray);
+			GC.KeepAlive (rawChildren);
 			GC.KeepAlive (this);
 
 			errors = errorString?.ToString ();
@@ -355,10 +355,10 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			throw new ArgumentOutOfRangeException (nameof (indexOffset));
 
 		var rawData = uniforms?.RawData;
-		var childrenArray = children?.ChildrenArray;
+		var rawChildren = children?.RawChildren;
 
-		using var childrenHandles = childrenArray != null && childrenArray.Length > 0
-			? Utils.RentHandlesArray (childrenArray, true)
+		using var childrenHandles = rawChildren != null && rawChildren.Length > 0
+			? Utils.RentHandlesArray (rawChildren, true)
 			: default;
 		using var errorString = captureErrors ? new SKString () : null;
 
@@ -388,7 +388,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			GC.KeepAlive (vertexBuffer);
 			GC.KeepAlive (indexBuffer);
 			GC.KeepAlive (rawData);
-			GC.KeepAlive (childrenArray);
+			GC.KeepAlive (rawChildren);
 			GC.KeepAlive (this);
 
 			errors = errorString?.ToString ();

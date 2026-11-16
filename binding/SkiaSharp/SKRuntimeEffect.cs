@@ -604,7 +604,7 @@ namespace SkiaSharp
 		public SKObject[] ToArray () =>
 			children.ToArray ();
 
-		internal SKObject[] ChildrenArray => children;
+		internal SKObject[] RawChildren => children;
 
 		/// <summary>Returns an enumerator that iterates through the child slot names.</summary>
 		/// <returns>An enumerator for the child slot names.</returns>
