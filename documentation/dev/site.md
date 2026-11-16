@@ -4,15 +4,18 @@ This guide covers how to build, preview, and iterate on the SkiaSharp documentat
 
 ## Site Structure
 
-The published site is assembled from three independently-built components:
+The published site is assembled from independently-built components:
 
 | URL Path | Source | Build Tool |
 |----------|--------|------------|
 | `/` | `documentation/site/` | Static HTML/CSS (no build) |
 | `/docs/` | `documentation/docfx/` | [DocFX](https://dotnet.github.io/docfx/) |
 | `/gallery/` | `samples/Gallery/Blazor/` | Blazor WASM (`dotnet publish`) |
+| `/gallery-uno/` | `samples/Gallery/Uno/` | Uno WASM (`dotnet publish`) |
+| `/fiddle/` | `samples/SkiaFiddle/` | Uno WASM (`dotnet publish`) |
 
-The CI workflow (`build-site.yml`) builds all three in parallel, then assembles and deploys them.
+The CI workflow (`build-site.yml`) builds the docs and apps in parallel, then
+assembles the site. Deployment is restricted to `main` and opted-in PR previews.
 
 ## Prerequisites
 
@@ -134,20 +137,37 @@ combines them in a quick assemble job:
 └───────┘                                         └───────────┘
 ```
 
-Each app uploads its output only after it builds and passes its smoke test.
+Each app uploads its output only after it builds and any configured smoke test passes.
 The assemble job copies whichever apps are present and warns about any that
 are missing.
 
 | Trigger | Validates | Publishes |
 |---------|-----------|-----------|
 | Push to `main` | Yes | `docs-live` (production) |
-| Any PR, including forks | Yes, failures fail the PR | No |
-| Same-repo PR with `automation/staging` | Yes, failures fail the PR | `staging/<PR_NUMBER>/` |
-| Manual dispatch | Yes | Production, or a labeled PR's staging preview |
+| Any PR, including forks | Yes, failures fail the run | No |
+| Same-repo PR with `automation/staging` | Yes, failures fail the run | `staging/<PR_NUMBER>/`, only if all builds pass |
+| Manual dispatch | Yes | Production only from `main`, or a labeled same-repo PR's staging preview |
 
 On pull requests a failing docs or app build fails the run. On `main` and
 manual dispatches a failing app is left out of the site so the docs still
 publish; a failing docs build still blocks publishing.
+
+Building and deploying are separate. Every PR builds, including label changes,
+but forks never deploy, even with `automation/staging`. Removing the label
+returns a same-repo PR to validation-only builds and removes its preview.
+
+Deployment has two steps:
+
+1. **Pages - Deploy / Deploy** writes the assembled site to `docs-live`: production
+   at the root, or an opted-in PR preview under `staging/<PR_NUMBER>/`.
+2. **Pages - Go Live!** publishes `docs-live` to GitHub Pages only after the
+   upstream publishing job succeeds. A successful validation-only build or dry
+   run does not publish. Cleanup jobs also trigger publication so removed
+   previews disappear from the live site. A manual Go Live run is allowed only
+   from `main`.
+
+These are workflow checks; making them mandatory merge gates also requires
+configuring the repository's required status checks.
 
 ## Customizing DocFX
 

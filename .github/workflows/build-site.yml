@@ -20,13 +20,7 @@ on:
         type: boolean
 
 concurrency:
-  # Label edits other than automation/staging get their own group so they do
-  # not cancel an in-progress PR validation build.
-  group: >-
-    ${{ github.workflow }}-${{ github.ref }}${{
-    (github.event.action == 'labeled' || github.event.action == 'unlabeled') &&
-    github.event.label.name != 'automation/staging' &&
-    format('-label-{0}', github.run_id) || '' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # Default to no permissions— each job declares only what it needs.
@@ -43,12 +37,6 @@ jobs:
   # dispatches a failing app is left out of the site so the docs still ship.
   setup:
     name: Setup
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.action == 'opened' ||
-      github.event.action == 'synchronize' ||
-      github.event.action == 'reopened' ||
-      (github.event.action == 'labeled' && github.event.label.name == 'automation/staging')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -108,7 +96,10 @@ jobs:
             PR_NUMBER=""
             CHECKOUT_REF="$GITHUB_REF"
             BRANCH_NAME="${GITHUB_REF_NAME}"
-            PUBLISH=true
+            PUBLISH=false
+            if [ "$GITHUB_REF" == "refs/heads/main" ]; then
+              PUBLISH=true
+            fi
           fi
           echo "publish=${PUBLISH}" >> $GITHUB_OUTPUT
 
@@ -484,7 +475,7 @@ jobs:
   # ── Deploy to docs-live ───────────────────────────────────────
   deploy:
     name: Deploy
-    needs: [setup, assemble]
+    needs: [setup, app, assemble]
     runs-on: ubuntu-latest
     # Serialize deploys: main deploys serialize together, each PR gets its
     # own group. cancel-in-progress ensures newer commits win over older ones.
@@ -494,6 +485,7 @@ jobs:
     if: |
       always() &&
       needs.assemble.result == 'success' &&
+      (github.event_name != 'pull_request' || needs.app.result == 'success') &&
       !inputs.dry_run &&
       needs.setup.outputs.publish == 'true'
     permissions:
