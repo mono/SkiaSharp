@@ -1,20 +1,20 @@
 {
-  "theme": "Glyph and Vulkan reliability",
-  "highlights_headline": "The unreleased 4.159.0 changes improve mask-filtered glyph rendering and handle specific Vulkan allocation failures on Imagination drivers.",
-  "highlights_body": null,
+  "theme": "Glyph and Vulkan resilience",
+  "highlights_headline": "Upcoming fixes harden mask-filtered glyph rendering and Imagination Vulkan allocation failure handling.",
+  "highlights_body": "These same-milestone native fixes leave package versions and the managed API unchanged.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyph rendering corrected",
-          "detail": "When successive loads from a stateful font scaler disagree about a glyph's path, format, or bounds, rendering now uses the reloaded glyph and clears incompatible masks instead of overflowing sub-byte rows. Clipped embossed glyphs also use full plane strides when copying mask data.",
+          "lead": "Mask-filtered glyphs handle changing scaler output",
+          "detail": "Rendering uses the reloaded glyph's path, format and bounds when successive font-scaler loads differ. Incompatible masks are cleared instead of overflowing sub-byte rows, and clipped embossed masks retain the correct plane strides.",
           "prs": [5741]
         },
         {
-          "lead": "Imagination Vulkan allocation failures handled",
-          "detail": "Ganesh and Graphite abandon descriptor pools after descriptor-set allocation reports host or device out-of-memory on Imagination drivers, avoiding a driver failure during pool destruction. Graphite also prevents further allocation through the abandoned handle; other vendors and allocation errors are unaffected by this workaround.",
+          "lead": "Imagination Vulkan allocation failures avoid unsafe pool destruction",
+          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, where destroying the pool can trigger a driver failure. Graphite also stops allocating through the abandoned handle; other vendors and errors are unaffected.",
           "prs": [5741]
         }
       ]
