@@ -384,6 +384,7 @@ namespace SkiaSharp
 				SkiaApi.sk_meshspecification_get_uniform_from_index (specification.Handle, i, &uniform);
 				uniforms[name] = new Variable (i, name, uniform);
 			}
+			GC.KeepAlive (specification);
 		}
 
 		/// <summary>Gets the list of uniform names defined by the runtime effect.</summary>
