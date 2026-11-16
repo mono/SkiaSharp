@@ -184,12 +184,11 @@ public class MeshSample : CanvasSampleBase
 			ColorSpace = SKColorSpace.CreateSrgb(),
 			AlphaType = SKAlphaType.Premul,
 		};
-		specBuilder
-			.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-			.AddAttribute("uvDepth", SKMeshSpecificationAttributeType.Float4)
-			.AddAttribute("normalKind", SKMeshSpecificationAttributeType.Float4)
-			.AddVarying("uvDepth", SKMeshSpecificationVaryingType.Float4)
-			.AddVarying("normalKind", SKMeshSpecificationVaryingType.Float4);
+		specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+		specBuilder.AddAttribute("uvDepth", SKMeshSpecificationAttributeType.Float4);
+		specBuilder.AddAttribute("normalKind", SKMeshSpecificationAttributeType.Float4);
+		specBuilder.AddVarying("uvDepth", SKMeshSpecificationVaryingType.Float4);
+		specBuilder.AddVarying("normalKind", SKMeshSpecificationVaryingType.Float4);
 
 		spec = specBuilder.Build(out _);
 		if (spec == null)

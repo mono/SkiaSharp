@@ -59,18 +59,16 @@ public class SKMeshSpecificationBuilder
 	/// <summary>Adds a vertex attribute immediately after the previous attribute and advances the calculated stride by the attribute size.</summary>
 	/// <param name="name">The name of the attribute as referenced in the SkSL vertex program.</param>
 	/// <param name="type">The data type of the attribute.</param>
-	/// <returns>This builder instance.</returns>
 	/// <remarks />
-	public SKMeshSpecificationBuilder AddAttribute (string name, SKMeshSpecificationAttributeType type) =>
+	public void AddAttribute (string name, SKMeshSpecificationAttributeType type) =>
 		AddAttribute (name, type, calculatedVertexStride);
 
 	/// <summary>Adds a vertex attribute at the specified byte offset and updates the calculated stride if needed.</summary>
 	/// <param name="name">The name of the attribute as referenced in the SkSL vertex program.</param>
 	/// <param name="type">The data type of the attribute.</param>
 	/// <param name="offset">The byte offset of the attribute within a vertex.</param>
-	/// <returns>This builder instance.</returns>
 	/// <remarks />
-	public SKMeshSpecificationBuilder AddAttribute (string name, SKMeshSpecificationAttributeType type, int offset)
+	public void AddAttribute (string name, SKMeshSpecificationAttributeType type, int offset)
 	{
 		if (name == null)
 			throw new ArgumentNullException (nameof (name));
@@ -81,22 +79,18 @@ public class SKMeshSpecificationBuilder
 		var end = offset + GetAttributeSize (type);
 		if (end > calculatedVertexStride)
 			calculatedVertexStride = end;
-
-		return this;
 	}
 
 	/// <summary>Adds a varying passed from the vertex program to the fragment program.</summary>
 	/// <param name="name">The name of the varying as referenced in the SkSL programs.</param>
 	/// <param name="type">The data type of the varying.</param>
-	/// <returns>This builder instance.</returns>
 	/// <remarks />
-	public SKMeshSpecificationBuilder AddVarying (string name, SKMeshSpecificationVaryingType type)
+	public void AddVarying (string name, SKMeshSpecificationVaryingType type)
 	{
 		if (name == null)
 			throw new ArgumentNullException (nameof (name));
 
 		varyings.Add (new SKMeshSpecificationVarying (type, name));
-		return this;
 	}
 
 	/// <summary>Builds the mesh specification.</summary>

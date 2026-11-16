@@ -137,8 +137,8 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void SpecificationBuilderReturnsNullAndErrorOnInvalidShader()
 		{
-			var specBuilder = new SKMeshSpecificationBuilder("invalid shader code", SimpleFragmentShader)
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			var specBuilder = new SKMeshSpecificationBuilder("invalid shader code", SimpleFragmentShader);
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
 
 			var spec = specBuilder.Build(out var errors);
 
@@ -149,10 +149,10 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void SpecificationBuilderComputesOffsetsAndStride()
 		{
-			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, SimpleFragmentShader)
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-				.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2)
-				.AddAttribute("color", SKMeshSpecificationAttributeType.Ubyte4Unorm);
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, SimpleFragmentShader);
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			specBuilder.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2);
+			specBuilder.AddAttribute("color", SKMeshSpecificationAttributeType.Ubyte4Unorm);
 
 			Assert.Equal(20, specBuilder.VertexStride);
 			Assert.Equal(0, specBuilder.Attributes[0].Offset);
@@ -188,9 +188,9 @@ namespace SkiaSharp.Tests
 					return varyings.position * uImageSize;
 				}";
 
-			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, fragmentShaderWithUniform)
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-				.Build(out var errors);
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, fragmentShaderWithUniform);
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			using var spec = specBuilder.Build(out var errors);
 
 			Assert.Null(errors);
 			Assert.NotNull(spec);
@@ -365,9 +365,9 @@ namespace SkiaSharp.Tests
 					return varyings.position * uScale;
 				}";
 
-			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, fsWithUniform)
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-				.Build(out var specErrors);
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, fsWithUniform);
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			using var spec = specBuilder.Build(out var specErrors);
 			Assert.NotNull(spec);
 			Assert.Null(specErrors);
 
@@ -470,13 +470,13 @@ namespace SkiaSharp.Tests
 		public void CanDrawMesh()
 		{
 			using var cs = SKColorSpace.CreateSrgb();
-			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, ColorFragmentShader)
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, ColorFragmentShader)
 			{
 				ColorSpace = cs,
 				AlphaType = SKAlphaType.Premul,
-			}
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-				.Build(out _);
+			};
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			using var spec = specBuilder.Build(out _);
 
 			Assert.NotNull(spec);
 			Assert.NotNull(spec.ColorSpace);
@@ -506,13 +506,13 @@ namespace SkiaSharp.Tests
 		public void DrawMeshWithBlender()
 		{
 			using var cs = SKColorSpace.CreateSrgb();
-			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, ColorFragmentShader)
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, ColorFragmentShader)
 			{
 				ColorSpace = cs,
 				AlphaType = SKAlphaType.Premul,
-			}
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-				.Build(out _);
+			};
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			using var spec = specBuilder.Build(out _);
 
 			Assert.NotNull(spec);
 
@@ -885,11 +885,11 @@ namespace SkiaSharp.Tests
 					return varyings.uv * float2(100.0, 100.0);
 				}";
 
-			using var spec = new SKMeshSpecificationBuilder(vs, fs)
-				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
-				.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2)
-				.AddVarying("uv", SKMeshSpecificationVaryingType.Float2)
-				.Build(out var errors);
+			var specBuilder = new SKMeshSpecificationBuilder(vs, fs);
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			specBuilder.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2);
+			specBuilder.AddVarying("uv", SKMeshSpecificationVaryingType.Float2);
+			using var spec = specBuilder.Build(out var errors);
 			Assert.NotNull(spec);
 			Assert.Null(errors);
 
