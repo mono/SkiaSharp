@@ -851,6 +851,46 @@ namespace SkiaSharp
 			(gr_direct_context_make_vulkan_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan> ("gr_direct_context_make_vulkan")).Invoke (vkBackendContext);
 		#endif
 
+		// gr_direct_context_t* gr_direct_context_make_vulkan_v2(const gr_vk_backendcontext_v2_t vkBackendContext)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial gr_direct_context_t gr_direct_context_make_vulkan_v2 (GRVkBackendContextV2Native vkBackendContext);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_vulkan_v2 (GRVkBackendContextV2Native vkBackendContext);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_vulkan_v2 (GRVkBackendContextV2Native vkBackendContext);
+		}
+		private static Delegates.gr_direct_context_make_vulkan_v2 gr_direct_context_make_vulkan_v2_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_vulkan_v2 (GRVkBackendContextV2Native vkBackendContext) =>
+			(gr_direct_context_make_vulkan_v2_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan_v2> ("gr_direct_context_make_vulkan_v2")).Invoke (vkBackendContext);
+		#endif
+
+		// gr_direct_context_t* gr_direct_context_make_vulkan_v2_with_options(const gr_vk_backendcontext_v2_t vkBackendContext, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial gr_direct_context_t gr_direct_context_make_vulkan_v2_with_options (GRVkBackendContextV2Native vkBackendContext, GRContextOptionsNative* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_vulkan_v2_with_options (GRVkBackendContextV2Native vkBackendContext, GRContextOptionsNative* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_vulkan_v2_with_options (GRVkBackendContextV2Native vkBackendContext, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_direct_context_make_vulkan_v2_with_options gr_direct_context_make_vulkan_v2_with_options_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_vulkan_v2_with_options (GRVkBackendContextV2Native vkBackendContext, GRContextOptionsNative* options) =>
+			(gr_direct_context_make_vulkan_v2_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan_v2_with_options> ("gr_direct_context_make_vulkan_v2_with_options")).Invoke (vkBackendContext, options);
+		#endif
+
 		// gr_direct_context_t* gr_direct_context_make_vulkan_with_options(const gr_vk_backendcontext_t vkBackendContext, const gr_context_options_t* options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

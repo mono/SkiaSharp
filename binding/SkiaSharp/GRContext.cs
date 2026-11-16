@@ -92,10 +92,13 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 
 			if (options == null) {
-				return GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
+				// Always the v2 entry point: the original takes the frozen struct, which has no
+				// device-lost field. The v1 symbol stays exported for binaries built against the
+				// old header (see include/c/sk_types.h).
+				return GetObject (SkiaApi.gr_direct_context_make_vulkan_v2 (backendContext.ToNativeV2 ()));
 			} else {
 				var opts = options.ToNative ();
-				return GetObject (SkiaApi.gr_direct_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+				return GetObject (SkiaApi.gr_direct_context_make_vulkan_v2_with_options (backendContext.ToNativeV2 (), &opts));
 			}
 		}
 

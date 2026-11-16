@@ -155,10 +155,6 @@ namespace SkiaSharp
 			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
 		}
 
-		// Fixed-size buffer for the driver-supplied description on VkDeviceFaultVendorInfoEXT.
-		// Kept as a compile-time constant so the walk below stays independent of Vulkan.h
-		// (which SkiaSharp does not include on the managed side). Matches VK_MAX_DESCRIPTION_SIZE.
-		private const int VkDeviceFaultVendorDescriptionSize = 256;
 
 		private static partial void GRVkDeviceLostProxyImplementation (void* userData, GRVkDeviceLostInfoNative* info)
 		{
@@ -189,20 +185,15 @@ namespace SkiaSharp
 						a->fAddressPrecision);
 				}
 
-				// gr_vk_device_fault_vendor_info_t carries a fixed char[256] description
-				// followed by two uint64_t fields — total 272 bytes. The generator emits
-				// the description slot as a pointer (fixed-size arrays are unsupported),
-				// so we walk the array with byte* arithmetic instead of using the
-				// generated struct's layout.
-				const int vendorInfoStride = VkDeviceFaultVendorDescriptionSize + 8 + 8;
+				// GRVkDeviceFaultVendorInfoNative now mirrors the native layout exactly (the
+				// generator emits the char[256] as a fixed buffer), so index the array normally
+				// rather than hand-rolling the stride. GRVkDeviceLostLayoutTest pins the size and
+				// field offsets so a regression here fails a test instead of mis-reading a fault.
 				var vendorInfos = new GRVkDeviceFaultVendorInfo[native.fVendorInfoCount];
-				var vendorBase = (byte*)native.fVendorInfos;
 				for (int i = 0; i < native.fVendorInfoCount; i++) {
-					var record = vendorBase + i * vendorInfoStride;
-					var desc = Marshal.PtrToStringAnsi ((IntPtr)record) ?? string.Empty;
-					var code = *(ulong*)(record + VkDeviceFaultVendorDescriptionSize);
-					var data = *(ulong*)(record + VkDeviceFaultVendorDescriptionSize + 8);
-					vendorInfos[i] = new GRVkDeviceFaultVendorInfo (desc, code, data);
+					var record = native.fVendorInfos + i;
+					var desc = Marshal.PtrToStringAnsi ((IntPtr)record->fDescription) ?? string.Empty;
+					vendorInfos[i] = new GRVkDeviceFaultVendorInfo (desc, record->fVendorFaultCode, record->fVendorFaultData);
 				}
 
 				var binarySize = (int)native.fVendorBinaryDataSize;

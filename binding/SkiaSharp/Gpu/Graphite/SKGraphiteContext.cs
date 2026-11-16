@@ -146,8 +146,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var init = backendContext.ToNative ();
-			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &options);
+			var init = backendContext.ToNativeV2 ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan_v2 (init, &options);
 			if (handle == IntPtr.Zero)
 				return null;
 

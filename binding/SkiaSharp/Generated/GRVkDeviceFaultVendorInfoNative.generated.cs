@@ -14,8 +14,7 @@ namespace SkiaSharp
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRVkDeviceFaultVendorInfoNative : IEquatable<GRVkDeviceFaultVendorInfoNative> {
 		// public char[256] fDescription
-		public /* char */ void* fDescription;
-
+		public fixed Byte fDescription[256];
 		// public uint64_t fVendorFaultCode
 		public UInt64 fVendorFaultCode;
 
@@ -24,7 +23,7 @@ namespace SkiaSharp
 
 		public readonly bool Equals (GRVkDeviceFaultVendorInfoNative obj) =>
 #pragma warning disable CS8909
-			fDescription == obj.fDescription && fVendorFaultCode == obj.fVendorFaultCode && fVendorFaultData == obj.fVendorFaultData;
+			fVendorFaultCode == obj.fVendorFaultCode && fVendorFaultData == obj.fVendorFaultData;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -39,7 +38,6 @@ namespace SkiaSharp
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
-			hash.Add (fDescription);
 			hash.Add (fVendorFaultCode);
 			hash.Add (fVendorFaultData);
 			return hash.ToHashCode ();

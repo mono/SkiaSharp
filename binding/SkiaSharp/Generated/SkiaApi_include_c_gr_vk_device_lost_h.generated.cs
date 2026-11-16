@@ -13,26 +13,6 @@ namespace SkiaSharp
 	{
 		#region gr_vk_device_lost.h
 
-		// void gr_vk_device_lost_handler_delete(gr_vk_device_lost_handler_t* handler)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler);
-		}
-		private static Delegates.gr_vk_device_lost_handler_delete gr_vk_device_lost_handler_delete_delegate;
-		internal static void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler) =>
-			(gr_vk_device_lost_handler_delete_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_handler_delete> ("gr_vk_device_lost_handler_delete")).Invoke (handler);
-		#endif
-
 		// gr_vk_device_lost_handler_t* gr_vk_device_lost_handler_new(gr_vk_device_lost_proc proc, void* userData)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
