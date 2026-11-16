@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
     "internal": 1
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5739": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5739",
+      "title": "[M158] Sync mask-filtered glyph image hardening",
+      "body": "[M158] Sync mask-filtered glyph image hardening (#5739)\n\nRequires: https://github.com/mono/skia/pull/452\nContext: https://github.com/mono/SkiaSharp/pull/5754\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1680827\nChanges: https://github.com/mono/skia/compare/c8c6d08ae1ce0578c4e440dd2fe7449460f513f5...8574d140652232fd643c67f04efcd18118643518\n\nBring the chrome/m158 SkScalerContext::getImage correction into\nrelease/4.158.x. This is a same-milestone native correctness update;\npackage versions and the managed API remain unchanged.\n\n~~ Respect regenerated glyph formats and buffer layout ~~\n\nMask filtering reloads an unfiltered glyph whose path, format or bounds\ncan differ from the original when a font scaler retains state. Using\nthe original glyph's stale properties could select incompatible path\nrasterization or copy operations, causing sub-byte buffer overwrites,\nformat assertions and corrupted or uncleared 3D mask planes.\n\nThe native update rasterizes paths through\ngenerateImageFromPath(*unfilteredGlyph, ...), requires matching\nbyte-per-pixel A8, 3D or SDF masks before copying filtered overlap, and\nrejects incompatible or sub-byte masks with zeroed output. Clipping\nclears the full destination image; 3D copies advance by full, unclipped\nplane strides rather than multiplying the clipped row count.\n\nUpstream SkStrikeTest.cpp adds regression cases for format mismatch and\nsub-byte masks, clipped 3D and SDF masks, and path divergence. These are\nnative regression cases, not additions to the managed test suite.\n\n~~ Record landed native ancestry without changing reviewed sources ~~\n\nAdvance externals/skia and its Component Governance registration from\nc8c6d08ae1ce0578c4e440dd2fe7449460f513f5 to actual native merge\n8574d140652232fd643c67f04efcd18118643518. Record upstream commit\n707e33875fb45f2997a4d781128bec122fb777b4 while retaining milestone 158\nand upstream_ref chrome/m158.\n\nThe dependent repin in #5754 changes the gitlink and matching manifest\nhash from reviewed head 32d6e44d3a89dbb684fcf83b27db4d9fac638433 to the\nlanded merge. That merge has two parents, directly includes the reviewed\nhead and shares its exact tree,\n6980ccf2d17f5b6a15f272dc870ee1252a3dfd09. Preserve this ancestry so\nfuture syncs can identify integrated upstream work.\n\nThe completed source review verified upstream-change and fork-patch\npreservation, unchanged C API and dependency policy, and matching\ngenerated bindings. The parent delta changes the gitlink and manifest\nprovenance, not managed wrappers, generated bindings, dependency versions\nor package/ABI version inputs.\n\nRequired mono-SkiaSharp build 1680827 passed at pre-repin parent head\n0ef797a7da4e76789068dd42418bfc5586a7d769. Native tree equality preserves\nthat reviewed content through the repin; it is not a new runtime test\nrun or proof that managed CI executes the upstream regression cases.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5725": {
       "url": "https://github.com/mono/SkiaSharp/pull/5725",
       "title": "Fix OpenJDK validation with JVM diagnostics and task retries",

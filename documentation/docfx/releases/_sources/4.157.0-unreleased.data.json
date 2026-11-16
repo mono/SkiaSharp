@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
     "internal": 1
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5748": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5748",
+      "title": "[M157] Integrate mask-filtered glyph hardening",
+      "body": "[M157] Integrate mask-filtered glyph hardening (#5748)\n\nRequires: https://github.com/mono/skia/pull/455\nContext: https://github.com/mono/SkiaSharp/pull/5755\nChanges: https://github.com/mono/skia/compare/ee5ff28274c8cd3f637f26cf9eed88a8cff1d96e...4c6bb29f2d638cbc60528c84e54f6a777a474a07\n\nBring Google's mask-filtered SkScalerContext::getImage hardening into\nrelease/4.157.x. Consecutive glyph loads can disagree in outline availability,\nformat, or bounds; the native update handles those differences without\nchanging managed wrappers, generated bindings, or milestone identity.\n\n~~ Rasterize the reloaded glyph rather than stale outline state ~~\n\nMask filtering regenerates an unfiltered glyph with a second makeGlyph call,\nbut path rendering inspected the first glyph's path and format. Divergent\nloads could hit the unsupported ARGB32 path assertion or rasterize a stale\noutline into the new glyph bounds.\n\nInspect and rasterize unfilteredGlyph's own path through\ngenerateImageFromPath, falling back to generateImage when it has no path.\nThe native regression cases exercise outline/raster transitions in both\ndirections and changed outlines with overlapping bounds.\n\n~~ Reject incompatible masks before byte-per-pixel copies ~~\n\nThe filtered-overlap copy assumed matching byte-per-pixel formats. A\nsecond load returning a 1-bit mask could copy 64 bytes into an 8-byte row;\nmismatched filter output could instead terminate on a release assertion.\n\nRequire matching A8, 3D, or SDF formats before copying, clearing the\ndestination for incompatible formats or non-overlapping bounds. Native\nregressions check zeroed output for sub-byte and mismatched emboss masks.\n\nThe earlier bounds guard and its regression test remain present. Those\ntwo files came from one Google change,\nfef85164f8f030f886f411d81bca95b50dbddcdf, previously inherited through the\nm156 backport. The new m157 upstream baseline contains that fix, so its\ndisappearance from the fork delta is convergence, not lost fork-authored work.\n\n~~ Preserve full plane strides when clipping embossed glyphs ~~\n\nMultiplying the clipped row count by three ignored the original full-image\nstride between k3D planes. Clearing height * rowBytes also left the\nmultiply and add planes dirty.\n\nCapture full plane strides before clipping, clear origGlyph.imageSize,\nand copy each plane's overlap separately. Native regression cases check\ncleared clipped rows in the three embossed planes, retained alpha/multiply\noverlap, and nonzero SDF overlap with clipped columns cleared.\n\n~~ Record landed native ancestry without changing reviewed content ~~\n\nUpdate externals/skia and its Component Governance registration from\nee5ff28274c8cd3f637f26cf9eed88a8cff1d96e to the actual native merge,\n4c6bb29f2d638cbc60528c84e54f6a777a474a07. Record upstream chrome/m157 at\n7edab85755a05bd01372693b7fbfa7ac401c9760 while retaining milestone 157.\n\nThe native merge has two parents and directly contains reviewed head\n8dca124f83a0f1b164933a1231f0ba1ee9a10021. Both have tree\n42fefc6114c82dbd1030295a6d1c7371e3158d42. Dependent repin #5755 changed\nonly the gitlink and matching manifest SHA, preserving the reviewed source.\n\nRequired CI build 1681743 succeeded for the pre-repin parent head.\nTree equality preserves the accepted native-source and binding-regeneration\nevidence; it is not an additional execution test of the glyph regressions.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5727": {
       "url": "https://github.com/mono/SkiaSharp/pull/5727",
       "title": "Fix OpenJDK validation with JVM diagnostics and task retries",

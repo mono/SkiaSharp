@@ -15,15 +15,55 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
-    "internal": 6
+    "internal": 10
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5741": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5741",
+      "title": "[M159] Sync upstream glyph and Vulkan OOM fixes",
+      "body": "[M159] Sync upstream glyph and Vulkan OOM fixes (#5741)\n\nContext: https://github.com/mono/skia/pull/453\nContext: https://github.com/mono/SkiaSharp/pull/5757\nChanges: https://github.com/mono/skia/compare/1b7b8c4340f57877940b47d24ada18eb6ec66e68...96ee011489be9ba83512abb766d0712a27eb1f18\n\nAdvance the Skia gitlink and Component Governance registration to the landed\nnative merge, 96ee011489be9ba83512abb766d0712a27eb1f18, and record upstream\nchrome/m159 revision 7a06b6cf9fc9fe32f8906c63da21a4e35f7e9f15.\nThis is a same-milestone servicing sync; package and ABI versions remain\nunchanged.\n\nThe dependent repin records the actual two-parent native merge rather than\nthe reviewed branch head. Its tree was verified identical to reviewed commit\n9f50c1175e1de5b949820c9528594ccc3fde3979, preserving the reviewed native\ncontents while retaining the landed merge ancestry.\n\n~~ Mask-filtered glyph reload divergence ~~\n\nBring in the SkScalerContext::getImage hardening for stateful font scalers\nwhose successive glyph loads disagree about paths, mask formats or bounds.\nThe native fix rasterizes the reloaded glyph rather than stale initial\nstate, clears incompatible masks instead of overflowing sub-byte rows, and\nuses full plane strides when copying clipped emboss masks. Regression cases\nalso preserve overlapping SDF data and exercise changing path geometry.\n\n~~ Imagination Vulkan descriptor allocation failures ~~\n\nBring in the Ganesh and Graphite workaround for descriptor-set allocation\nreturning host or device OOM on Imagination drivers. The affected pool is\ndeliberately abandoned because destroying it can trigger a driver failure;\nGraphite also refuses further allocation through the abandoned handle.\nThe workaround is restricted to that vendor and those allocation errors.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5752": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5752",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5745": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5745",
+      "title": "Update 4.159 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5749": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5749",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5744": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5744",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5734": {
       "url": "https://github.com/mono/SkiaSharp/pull/5734",
       "title": "docs: regenerate API diffs and release notes",
