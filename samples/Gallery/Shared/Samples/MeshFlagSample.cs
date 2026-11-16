@@ -252,9 +252,12 @@ public class MeshFlagSample : CanvasSampleBase
 		specBuilder.AddVarying("uvDepth", SKMeshSpecificationVaryingType.Float4);
 		specBuilder.AddVarying("normalFold", SKMeshSpecificationVaryingType.Float4);
 
-		spec = specBuilder.Build(out _);
+		spec = specBuilder.Build(out var errors);
 		if (spec == null)
+		{
+			Console.WriteLine($"Failed to build mesh specification: {errors}");
 			return;
+		}
 
 		var i = 0;
 		for (var r = 0; r < Rows - 1; r++)
@@ -753,9 +756,11 @@ public class MeshFlagSample : CanvasSampleBase
 		builder.Bounds = new SKRect(0, 0, width, height);
 		builder.SetVertexBuffer(vertexBuffer, NodeCount);
 
-		using var mesh = builder.Build();
+		using var mesh = builder.Build(out var errors);
 		if (mesh != null)
 			canvas.DrawMesh(mesh, meshPaint);
+		else
+			Console.WriteLine($"Failed to build mesh: {errors}");
 
 		if (showWireframe && wirePaint != null)
 			DrawWireframe(canvas, wirePaint);

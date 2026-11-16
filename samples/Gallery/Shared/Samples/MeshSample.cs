@@ -190,9 +190,12 @@ public class MeshSample : CanvasSampleBase
 		specBuilder.AddVarying("uvDepth", SKMeshSpecificationVaryingType.Float4);
 		specBuilder.AddVarying("normalKind", SKMeshSpecificationVaryingType.Float4);
 
-		spec = specBuilder.Build(out _);
+		spec = specBuilder.Build(out var errors);
 		if (spec == null)
+		{
+			Console.WriteLine($"Failed to build mesh specification: {errors}");
 			return;
+		}
 
 		// Pre-populate static quad index pattern (0,1,2, 0,2,3 for each quad)
 		for (var q = 0; q < MaxQuads; q++)
@@ -413,9 +416,11 @@ public class MeshSample : CanvasSampleBase
 		builder.SetVertexBuffer(vertexBuffer, activeVerts);
 		builder.SetIndexBuffer(indexBuffer, activeIndices);
 
-		using var mesh = builder.Build();
+		using var mesh = builder.Build(out var errors);
 		if (mesh != null)
 			canvas.DrawMesh(mesh, meshPaint);
+		else
+			Console.WriteLine($"Failed to build mesh: {errors}");
 
 		if (showWireframe && wirePaint != null)
 			DrawWireframe(canvas, quadCount, wirePaint);
