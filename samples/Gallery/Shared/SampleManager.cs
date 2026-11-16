@@ -101,6 +101,7 @@ public static class SampleManager
 		["Variable Font"]         = ("bi-sliders",             "\uf556"),
 		["Vector Art"]            = ("bi-vector-pen",          "\uf604"),
 		["Vertex Mesh"]           = ("bi-diagram-3",           "\uf2ee"),
+		["Custom Mesh (3D Tunnel)"] = ("bi-diagram-3",         "\uf2ee"),
 		["Wide-Gamut P3"]         = ("bi-rainbow",             "\uf50d"),
 		["World Text"]            = ("bi-globe2",              "\uf3ef"),
 	};

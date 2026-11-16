@@ -16,6 +16,7 @@ namespace SkiaSharpSample.Samples;
 /// </summary>
 public class MeshSample : CanvasSampleBase
 {
+	public override DateOnly? DateAdded => new DateOnly(2026, 11, 16);
 	private const string VS = @"
 		Varyings main(const Attributes attrs) {
 			Varyings v;
@@ -411,7 +412,16 @@ public class MeshSample : CanvasSampleBase
 			DrawWireframe(canvas, quadCount, wirePaint);
 
 		if (hudPaint != null && hudFont != null)
-			canvas.DrawText($"Orbs: {orbsCollected}   Tris: {quadCount * 2}", 16, 28, SKTextAlign.Left, hudFont, hudPaint);
+		{
+			if (canvas.Context == null)
+			{
+				canvas.DrawText("SKMesh requires GPU rendering — switch from CPU to GPU in the top bar.", 16, height * 0.5f, SKTextAlign.Left, hudFont, hudPaint);
+			}
+			else
+			{
+				canvas.DrawText($"Orbs: {orbsCollected}   Tris: {quadCount * 2}", 16, 28, SKTextAlign.Left, hudFont, hudPaint);
+			}
+		}
 	}
 
 	private static void GetPaletteColors(int index, out float[] torch, out float[] orb)
