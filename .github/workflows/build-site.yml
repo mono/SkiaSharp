@@ -27,13 +27,16 @@ concurrency:
 permissions: {}
 
 jobs:
-  # ── Build the complete site ──────────────────────────────────
-  build:
-    name: Build Site
-    if: >-
-      github.event_name != 'pull_request' ||
-      (github.event.pull_request.head.repo.full_name == github.repository &&
-       contains(github.event.pull_request.labels.*.name, 'automation/staging'))
+  # ── Resolve build variables ──────────────────────────────────
+  # Every PR (including forks) builds and smoke-tests the site so a broken
+  # docs, Gallery or SkiaFiddle build fails the PR. Only same-repo PRs with
+  # the automation/staging label are published as a staging preview.
+  #
+  # The docs and each app build in parallel, then a quick assemble job
+  # combines them. On PRs any failure fails the run. On main and manual
+  # dispatches a failing app is left out of the site so the docs still ship.
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,6 +45,12 @@ jobs:
       artifact_name: ${{ steps.vars.outputs.artifact_name }}
       is_staging: ${{ steps.vars.outputs.is_staging }}
       pr_number: ${{ steps.vars.outputs.pr_number }}
+      publish: ${{ steps.vars.outputs.publish }}
+      checkout_ref: ${{ steps.vars.outputs.checkout_ref }}
+      build_footer: ${{ steps.vars.outputs.build_footer }}
+      gallery_base_href: ${{ steps.vars.outputs.gallery_base_href }}
+      uno_gallery_base_href: ${{ steps.vars.outputs.uno_gallery_base_href }}
+      fiddle_base_href: ${{ steps.vars.outputs.fiddle_base_href }}
     steps:
       - name: Setup build variables
         id: vars
@@ -49,6 +58,10 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER_EVENT: ${{ github.event.number }}
           PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+          PR_STAGING: >-
+            ${{ github.event_name == 'pull_request' &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            contains(github.event.pull_request.labels.*.name, 'automation/staging') }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         shell: bash
@@ -57,6 +70,8 @@ jobs:
             PR_NUMBER="$PR_NUMBER_EVENT"
             CHECKOUT_REF="$GITHUB_REF"
             BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+            # Unlabeled and fork PRs are validated but never published.
+            PUBLISH="$PR_STAGING"
           elif [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$PR_NUMBER_INPUT" ]; then
             PR_NUMBER="$PR_NUMBER_INPUT"
             # Staging is an explicit opt-in even for manual dispatches.
@@ -76,11 +91,17 @@ jobs:
             fi
             CHECKOUT_REF="refs/pull/${PR_NUMBER}/merge"
             BRANCH_NAME="pr/${PR_NUMBER}"
+            PUBLISH=true
           else
             PR_NUMBER=""
             CHECKOUT_REF="$GITHUB_REF"
             BRANCH_NAME="${GITHUB_REF_NAME}"
+            PUBLISH=false
+            if [ "$GITHUB_REF" == "refs/heads/main" ]; then
+              PUBLISH=true
+            fi
           fi
+          echo "publish=${PUBLISH}" >> $GITHUB_OUTPUT
 
           if [ -n "$PR_NUMBER" ]; then
             # Validate PR_NUMBER is a positive integer
@@ -95,8 +116,7 @@ jobs:
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
-            echo "source_label=PR #${PR_NUMBER}" >> $GITHUB_OUTPUT
-            echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+            SOURCE_LABEL="PR #${PR_NUMBER}"
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
@@ -105,15 +125,114 @@ jobs:
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
-            echo "source_label=main" >> $GITHUB_OUTPUT
-            echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+            SOURCE_LABEL="main"
           fi
+          echo "build_footer=${SOURCE_LABEL} · ${BRANCH_NAME} · ${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
 
+  # ── Build DocFX documentation ────────────────────────────────
+  docs:
+    name: Build Docs
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.vars.outputs.checkout_ref }}
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Build DocFX
+        env:
+          APP_FOOTER: ${{ needs.setup.outputs.build_footer }}
+        run: |
+          jq --arg footer "$APP_FOOTER" \
+            '.build.globalMetadata._appFooter = $footer' \
+            documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
+          dotnet docfx documentation/docfx/docfx-build.json
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-docs
+          path: output/site/docs
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Build WASM native libraries for the apps ─────────────────
+  wasm-natives:
+    name: Build WASM Natives
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
           submodules: recursive
+
+      - name: Build WASM native libraries
+        run: |
+          bash scripts/infra/native/wasm/docker/build-local.sh 3.1.56 "_wasmeh,st"
+          sudo chown -R $(id -u):$(id -g) output
+
+      - name: Upload WASM natives
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-natives
+          path: output/native/wasm
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Build and smoke-test each WASM app ───────────────────────
+  app:
+    name: Build ${{ matrix.name }}
+    needs: [setup, wasm-natives]
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: gallery
+            name: Gallery (Blazor)
+            project: samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj
+            publish_args: ''
+            smoke: ''
+          - id: gallery-uno
+            name: Gallery (Uno Platform)
+            project: samples/Gallery/Uno/SkiaSharpSample.Uno.csproj
+            publish_args: -f net10.0-browserwasm -p:WasmEnableSIMD=false
+            smoke: samples/Gallery/Uno/scripts/smoke.sh
+          - id: fiddle
+            name: SkiaFiddle
+            project: samples/SkiaFiddle/SkiaFiddle.csproj
+            publish_args: -f net10.0-browserwasm -p:WasmEnableSIMD=false
+            smoke: samples/SkiaFiddle/scripts/smoke.sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+
+      - name: Download WASM natives
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-natives
+          path: output/native/wasm
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -126,110 +245,86 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
-      # ── Build DocFX documentation ──────────────────────────────
-      - name: Build DocFX
+      - name: Publish ${{ matrix.name }}
         env:
-          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
-          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
+          PROJECT: ${{ matrix.project }}
+          PUBLISH_ARGS: ${{ matrix.publish_args }}
+          BUILD_FOOTER: ${{ needs.setup.outputs.build_footer }}
         run: |
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          APP_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          jq --arg footer "$APP_FOOTER" \
-            '.build.globalMetadata._appFooter = $footer' \
-            documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
-          dotnet docfx documentation/docfx/docfx-build.json
-
-      # ── Build Gallery Blazor WASM app ──────────────────────────
-      - name: Build WASM native libraries
-        run: |
-          bash scripts/infra/native/wasm/docker/build-local.sh 3.1.56 "_wasmeh,st"
-          sudo chown -R $(id -u):$(id -g) output
-
-      - name: Publish Gallery Blazor WASM
-        env:
-          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
-          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
-        run: |
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
+          # PUBLISH_ARGS is intentionally word-split into separate arguments.
+          # shellcheck disable=SC2086
+          dotnet publish "$PROJECT" \
             -c Release \
-            -o output/gallery-publish \
+            -o output/app-publish \
             -p:PlatformTargetFrameworks="" \
-            -p:BuildFooter="$BUILD_FOOTER"
+            -p:BuildFooter="$BUILD_FOOTER" \
+            $PUBLISH_ARGS
 
-      # ── Build Gallery Uno Platform WASM app ──────────────────────
-      - name: Publish Gallery Uno WASM
+      - name: Smoke test ${{ matrix.name }}
+        if: matrix.smoke != ''
         env:
-          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
-          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
+          SMOKE: ${{ matrix.smoke }}
         run: |
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          dotnet publish "samples/Gallery/Uno/SkiaSharpSample.Uno.csproj" \
-            -c Release \
-            -f net10.0-browserwasm \
-            -o output/gallery-uno-publish \
-            -p:PlatformTargetFrameworks="" \
-            -p:WasmEnableSIMD=false \
-            -p:BuildFooter="$BUILD_FOOTER"
+          bash "$SMOKE" \
+            output/app-publish/wwwroot \
+            --screenshot output/app-smoke.png
 
-      - name: Smoke test Gallery Uno WASM
-        run: |
-          bash samples/Gallery/Uno/scripts/smoke.sh \
-            output/gallery-uno-publish/wwwroot \
-            --screenshot output/gallery-uno-publish/smoke.png
-
-      - name: Upload Uno gallery smoke screenshot on failure
-        if: failure()
+      - name: Upload smoke screenshot on failure
+        if: failure() && matrix.smoke != ''
         uses: actions/upload-artifact@v4
         with:
-          name: uno-gallery-smoke-screenshot
-          path: output/gallery-uno-publish/smoke.png
+          name: ${{ matrix.id }}-smoke-screenshot
+          path: output/app-smoke.png
           if-no-files-found: ignore
 
-      # ── Build SkiaFiddle Uno WASM app ────────────────────────────
-      - name: Publish SkiaFiddle WASM
-        env:
-          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
-          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
-        run: |
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
-          dotnet publish "samples/SkiaFiddle/SkiaFiddle.csproj" \
-            -c Release \
-            -f net10.0-browserwasm \
-            -o output/skia-fiddle-publish \
-            -p:PlatformTargetFrameworks="" \
-            -p:WasmEnableSIMD=false \
-            -p:BuildFooter="$BUILD_FOOTER"
-
-      - name: Smoke test SkiaFiddle WASM
-        run: |
-          bash samples/SkiaFiddle/scripts/smoke.sh \
-            output/skia-fiddle-publish/wwwroot \
-            --screenshot output/skia-fiddle-publish/smoke.png
-
-      - name: Upload SkiaFiddle smoke screenshot on failure
-        if: failure()
+      # Only uploaded once the app has built and passed its smoke test, so
+      # the assemble job copies nothing for an app that failed.
+      - name: Upload ${{ matrix.name }}
         uses: actions/upload-artifact@v4
         with:
-          name: skia-fiddle-smoke-screenshot
-          path: output/skia-fiddle-publish/smoke.png
-          if-no-files-found: ignore
+          name: site-app-${{ matrix.id }}
+          path: output/app-publish/wwwroot
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Assemble complete site ───────────────────────────────────
+  assemble:
+    name: Assemble Site
+    needs: [setup, docs, app]
+    if: >-
+      always() &&
+      needs.setup.result == 'success' &&
+      needs.docs.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+
+      - name: Download docs
+        uses: actions/download-artifact@v4
+        with:
+          name: site-docs
+          path: output/site/docs
+
+      - name: Download apps
+        uses: actions/download-artifact@v4
+        with:
+          pattern: site-app-*
+          path: output/apps
 
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
         env:
-          GALLERY_BASE_HREF: ${{ steps.vars.outputs.gallery_base_href }}
-          UNO_GALLERY_BASE_HREF: ${{ steps.vars.outputs.uno_gallery_base_href }}
-          FIDDLE_BASE_HREF: ${{ steps.vars.outputs.fiddle_base_href }}
-          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
-          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
+          GALLERY_BASE_HREF: ${{ needs.setup.outputs.gallery_base_href }}
+          UNO_GALLERY_BASE_HREF: ${{ needs.setup.outputs.uno_gallery_base_href }}
+          FIDDLE_BASE_HREF: ${{ needs.setup.outputs.fiddle_base_href }}
+          BUILD_FOOTER: ${{ needs.setup.outputs.build_footer }}
         shell: bash
         run: |
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
 
           mkdir -p site
 
@@ -276,14 +371,23 @@ jobs:
           mkdir -p site/perf
           cp scripts/infra/perf/templates/dashboard.html site/perf/index.html
 
+          # Apps are only present if they built and passed their smoke test.
+          # A missing app is left out of the site so the docs still publish.
+          app_available() {
+            if [ -d "output/apps/site-app-$1" ]; then
+              return 0
+            fi
+            echo "::warning::$2 was not built or failed its smoke test; it is omitted from the site"
+            return 1
+          }
+
           # Gallery (Blazor) → /gallery/
-          cp -r output/gallery-publish/wwwroot site/gallery
+          if app_available gallery "Gallery (Blazor)"; then
+            cp -r output/apps/site-app-gallery site/gallery
+            # Rewrite gallery base href for deployment path
+            sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
+          fi
 
-          # Rewrite gallery base href for deployment path
-          sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
-
-          # Gallery (Uno Platform) → /gallery-uno/
-          cp -r output/gallery-uno-publish/wwwroot site/gallery-uno
 
           # Rewrite absolute asset paths in the Uno gallery for the deployment prefix.
           # Uno.Wasm.Bootstrap uses absolute "/package_<hash>/..." references in
@@ -320,6 +424,7 @@ jobs:
             local prefix="$2"
             uno_rewrite_file "$dir/index.html" "$prefix"
             for cfg in "$dir"/package_*/uno-config.js; do
+              [ -f "$cfg" ] || continue
               uno_rewrite_file "$cfg" "$prefix"
               # UNO_BOOTSTRAP_WEBAPP_BASE_PATH governs the service-worker scope.
               # The rewrite above doesn't touch it because the value is the bare
@@ -340,11 +445,18 @@ jobs:
             find "$dir" -path '*/package_*/uno-config.js.br' -delete
             find "$dir" -path '*/package_*/uno-config.js.gz' -delete
           }
-          uno_rewrite_dir site/gallery-uno "${UNO_GALLERY_BASE_HREF%/}"
+
+          # Gallery (Uno Platform) → /gallery-uno/
+          if app_available gallery-uno "Gallery (Uno Platform)"; then
+            cp -r output/apps/site-app-gallery-uno site/gallery-uno
+            uno_rewrite_dir site/gallery-uno "${UNO_GALLERY_BASE_HREF%/}"
+          fi
 
           # SkiaFiddle (Uno Platform) → /fiddle/
-          cp -r output/skia-fiddle-publish/wwwroot site/fiddle
-          uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
+          if app_available fiddle "SkiaFiddle"; then
+            cp -r output/apps/site-app-fiddle site/fiddle
+            uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
+          fi
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
@@ -352,25 +464,30 @@ jobs:
           echo "Total files: $(find site -type f | wc -l)"
 
       - name: Upload site artifact
+        if: needs.setup.outputs.publish == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.vars.outputs.artifact_name }}
+          name: ${{ needs.setup.outputs.artifact_name }}
           path: site
+          include-hidden-files: true
           retention-days: 1
 
   # ── Deploy to docs-live ───────────────────────────────────────
   deploy:
     name: Deploy
-    needs: build
+    needs: [setup, app, assemble]
     runs-on: ubuntu-latest
     # Serialize deploys: main deploys serialize together, each PR gets its
     # own group. cancel-in-progress ensures newer commits win over older ones.
     concurrency:
-      group: "docs-deploy-${{ needs.build.outputs.is_staging == 'true' && format('pr-{0}', needs.build.outputs.pr_number) || 'main' }}"
+      group: "docs-deploy-${{ needs.setup.outputs.is_staging == 'true' && format('pr-{0}', needs.setup.outputs.pr_number) || 'main' }}"
       cancel-in-progress: true
     if: |
+      always() &&
+      needs.assemble.result == 'success' &&
+      (github.event_name != 'pull_request' || needs.app.result == 'success') &&
       !inputs.dry_run &&
-      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      needs.setup.outputs.publish == 'true'
     permissions:
       contents: write
     steps:
@@ -405,11 +522,11 @@ jobs:
       - name: Download site artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.artifact_name }}
+          name: ${{ needs.setup.outputs.artifact_name }}
           path: /tmp/site-temp
 
       - name: Deploy main site content
-        if: needs.build.outputs.is_staging == 'false'
+        if: needs.setup.outputs.is_staging == 'false'
         run: |
           # Remove everything except staging/ and .git/
           find . -maxdepth 1 \
@@ -460,9 +577,9 @@ jobs:
           rm -rf /tmp/site-temp
 
       - name: Deploy staging site content
-        if: needs.build.outputs.is_staging == 'true'
+        if: needs.setup.outputs.is_staging == 'true'
         env:
-          PR_NUMBER: ${{ needs.build.outputs.pr_number }}
+          PR_NUMBER: ${{ needs.setup.outputs.pr_number }}
         run: |
           # Validate PR_NUMBER is a positive integer before using in paths
           if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
@@ -531,7 +648,7 @@ jobs:
               marker,
               '📖 **Documentation Preview**',
               '',
-              'Add the `automation/staging` label to build and publish a documentation preview for this PR.',
+              'Every PR builds and smoke-tests the site. Add the `automation/staging` label to also publish a documentation preview for this PR.',
               '',
               'Removing the label removes the preview. While the label is present, each new commit updates it.',
               '',
@@ -568,10 +685,11 @@ jobs:
   # ── Comment on PR with preview URL ──────────────────────────
   comment:
     name: Comment on PR
-    needs: [build, deploy]
+    needs: [setup, deploy]
     runs-on: ubuntu-latest
     if: |
-      needs.build.outputs.is_staging == 'true' &&
+      needs.setup.outputs.is_staging == 'true' &&
+      needs.setup.outputs.publish == 'true' &&
       (github.event_name == 'pull_request' &&
        (github.event.action == 'opened' || github.event.action == 'reopened' ||
         github.event.action == 'synchronize' || github.event.action == 'labeled'))
@@ -582,7 +700,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = ${{ needs.build.outputs.pr_number }};
+            const prNumber = ${{ needs.setup.outputs.pr_number }};
             const stagingUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/`;
             const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
             const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
