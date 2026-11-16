@@ -106,11 +106,15 @@ public unsafe class SKMeshVertexBuffer : SKObject, ISKReferenceCounted, ISKSkipO
 	/// <remarks>Copying is only supported when the source buffer is CPU-backed.</remarks>
 	public SKMeshVertexBuffer? Copy (GRContext? context)
 	{
-		if (context == null)
-			return GetObject (SkiaApi.sk_mesh_vertex_buffer_copy (Handle));
+		if (context == null) {
+			var cpuResult = GetObject (SkiaApi.sk_mesh_vertex_buffer_copy (Handle));
+			GC.KeepAlive (this);
+			return cpuResult;
+		}
 
 		var result = GetObject (SkiaApi.sk_mesh_vertex_buffer_copy_ganesh (context.Handle, Handle));
 		GC.KeepAlive (context);
+		GC.KeepAlive (this);
 		return result;
 	}
 
@@ -166,6 +170,7 @@ public unsafe class SKMeshVertexBuffer : SKObject, ISKReferenceCounted, ISKSkipO
 
 		var result = SkiaApi.sk_mesh_vertex_buffer_update (Handle, context?.Handle ?? IntPtr.Zero, (void*)data, (IntPtr)offset, (IntPtr)size);
 		GC.KeepAlive (context);
+		GC.KeepAlive (this);
 		return result;
 	}
 

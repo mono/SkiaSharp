@@ -11,6 +11,8 @@ public class SKMeshSpecificationBuilder
 	private readonly string fragmentShader;
 	private readonly List<SKMeshSpecificationAttribute> attributes = new ();
 	private readonly List<SKMeshSpecificationVarying> varyings = new ();
+	private int? explicitVertexStride;
+	private int calculatedVertexStride;
 
 	/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKMeshSpecificationBuilder" /> class with the specified vertex and fragment SkSL programs.</summary>
 	/// <param name="vertexShader">The SkSL source of the vertex program.</param>
@@ -32,10 +34,17 @@ public class SKMeshSpecificationBuilder
 	/// <remarks />
 	public IList<SKMeshSpecificationVarying> Varyings => varyings;
 
-	/// <summary>Gets or sets the byte stride of a single vertex.</summary>
+	/// <summary>Gets or sets the byte stride of a single vertex. When not explicitly set, returns the stride calculated from the added attributes.</summary>
 	/// <value>The vertex stride, in bytes.</value>
 	/// <remarks />
-	public int VertexStride { get; set; }
+	public int VertexStride {
+		get => explicitVertexStride ?? calculatedVertexStride;
+		set {
+			if (value <= 0)
+				throw new ArgumentOutOfRangeException (nameof (value));
+			explicitVertexStride = value;
+		}
+	}
 
 	/// <summary>Gets or sets the color space of the color produced by the fragment program.</summary>
 	/// <value>The color space, or <see langword="null" /> for none.</value>
@@ -47,15 +56,15 @@ public class SKMeshSpecificationBuilder
 	/// <remarks />
 	public SKAlphaType AlphaType { get; set; } = SKAlphaType.Premul;
 
-	/// <summary>Adds a vertex attribute at the current <see cref="P:SkiaSharp.SKMeshSpecificationBuilder.VertexStride" /> offset and advances the stride by the attribute size.</summary>
+	/// <summary>Adds a vertex attribute immediately after the previous attribute and advances the calculated stride by the attribute size.</summary>
 	/// <param name="name">The name of the attribute as referenced in the SkSL vertex program.</param>
 	/// <param name="type">The data type of the attribute.</param>
 	/// <returns>This builder instance.</returns>
 	/// <remarks />
 	public SKMeshSpecificationBuilder AddAttribute (string name, SKMeshSpecificationAttributeType type) =>
-		AddAttribute (name, type, VertexStride);
+		AddAttribute (name, type, calculatedVertexStride);
 
-	/// <summary>Adds a vertex attribute at the specified byte offset and updates <see cref="P:SkiaSharp.SKMeshSpecificationBuilder.VertexStride" /> if needed.</summary>
+	/// <summary>Adds a vertex attribute at the specified byte offset and updates the calculated stride if needed.</summary>
 	/// <param name="name">The name of the attribute as referenced in the SkSL vertex program.</param>
 	/// <param name="type">The data type of the attribute.</param>
 	/// <param name="offset">The byte offset of the attribute within a vertex.</param>
@@ -70,8 +79,8 @@ public class SKMeshSpecificationBuilder
 
 		attributes.Add (new SKMeshSpecificationAttribute (type, offset, name));
 		var end = offset + GetAttributeSize (type);
-		if (end > VertexStride)
-			VertexStride = end;
+		if (end > calculatedVertexStride)
+			calculatedVertexStride = end;
 
 		return this;
 	}

@@ -2192,6 +2192,10 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_mesh (Handle, mesh.Handle, blender?.Handle ?? IntPtr.Zero, paint.Handle);
+			GC.KeepAlive (mesh);
+			GC.KeepAlive (blender);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawArc

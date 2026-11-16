@@ -287,6 +287,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			GC.KeepAlive (vertexBuffer);
 			GC.KeepAlive (rawData);
 			GC.KeepAlive (childrenArray);
+			GC.KeepAlive (this);
 
 			errors = errorString?.ToString ();
 			if (errors?.Length == 0)
@@ -388,6 +389,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			GC.KeepAlive (indexBuffer);
 			GC.KeepAlive (rawData);
 			GC.KeepAlive (childrenArray);
+			GC.KeepAlive (this);
 
 			errors = errorString?.ToString ();
 			if (errors?.Length == 0)

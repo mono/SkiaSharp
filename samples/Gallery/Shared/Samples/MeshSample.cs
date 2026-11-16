@@ -107,6 +107,8 @@ public class MeshSample : CanvasSampleBase
 	private float curvature = 1.0f;
 	private bool showWireframe;
 	private DateTime startTime;
+	private DateTime lastFrameTime;
+	private float cameraDistance;
 	private int orbsCollected;
 	private int lastOrbRing = -1;
 
@@ -156,7 +158,10 @@ public class MeshSample : CanvasSampleBase
 
 	protected override Task OnInit()
 	{
-		startTime = DateTime.UtcNow;
+		var now = DateTime.UtcNow;
+		startTime = now;
+		lastFrameTime = now;
+		cameraDistance = 0f;
 		orbsCollected = 0;
 		lastOrbRing = -1;
 		return base.OnInit();
@@ -289,8 +294,13 @@ public class MeshSample : CanvasSampleBase
 		if (builder == null || vertexBuffer == null || indexBuffer == null || meshPaint == null)
 			return;
 
-		var t = (float)(DateTime.UtcNow - startTime).TotalSeconds;
-		var camZ = t * 6.0f * speed;
+		var now = DateTime.UtcNow;
+		var dt = Math.Clamp((float)(now - lastFrameTime).TotalSeconds, 0f, 0.1f);
+		lastFrameTime = now;
+
+		var t = (float)(now - startTime).TotalSeconds;
+		cameraDistance += dt * 6.0f * speed;
+		var camZ = cameraDistance;
 		var baseRing = (int)MathF.Floor(camZ);
 
 		// Count orbs as the camera flies through each ring
