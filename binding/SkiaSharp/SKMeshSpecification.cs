@@ -85,12 +85,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (vertexStride <= 0)
 			throw new ArgumentOutOfRangeException (nameof (vertexStride));
 
-		for (int i = 0; i < attributes.Length; i++)
-		{
-			if (attributes[i].Offset < 0)
-				throw new ArgumentOutOfRangeException (nameof (attributes), "Attribute offset cannot be negative.");
-		}
-
 		using var vs = new SKString (vertexShader);
 		using var fs = new SKString (fragmentShader);
 		using var errorString = captureErrors ? new SKString () : null;

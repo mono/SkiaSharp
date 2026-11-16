@@ -67,27 +67,15 @@ public class SKMeshSpecificationBuilder
 	/// <param name="type">The data type of the attribute.</param>
 	/// <param name="offset">The byte offset of the attribute within a vertex.</param>
 	/// <remarks />
-	public void AddAttribute (string name, SKMeshSpecificationAttributeType type, int offset)
-	{
-		if (name == null)
-			throw new ArgumentNullException (nameof (name));
-		if (offset < 0)
-			throw new ArgumentOutOfRangeException (nameof (offset));
-
+	public void AddAttribute (string name, SKMeshSpecificationAttributeType type, int offset) =>
 		attributes.Add (new SKMeshSpecificationAttribute (type, offset, name));
-	}
 
 	/// <summary>Adds a varying passed from the vertex program to the fragment program.</summary>
 	/// <param name="name">The name of the varying as referenced in the SkSL programs.</param>
 	/// <param name="type">The data type of the varying.</param>
 	/// <remarks />
-	public void AddVarying (string name, SKMeshSpecificationVaryingType type)
-	{
-		if (name == null)
-			throw new ArgumentNullException (nameof (name));
-
+	public void AddVarying (string name, SKMeshSpecificationVaryingType type) =>
 		varyings.Add (new SKMeshSpecificationVarying (type, name));
-	}
 
 	private int CalculateVertexStride ()
 	{
@@ -95,12 +83,9 @@ public class SKMeshSpecificationBuilder
 		for (var i = 0; i < attributes.Count; i++)
 		{
 			var attr = attributes[i];
-			if (attr.Offset >= 0)
-			{
-				var end = attr.Offset + GetAttributeSize (attr.Type);
-				if (end > stride)
-					stride = end;
-			}
+			var end = attr.Offset + GetAttributeSize (attr.Type);
+			if (end > stride)
+				stride = end;
 		}
 		return stride;
 	}
