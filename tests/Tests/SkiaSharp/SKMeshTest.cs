@@ -32,18 +32,23 @@ namespace SkiaSharp.Tests
 
 		private static SKMeshSpecificationVarying[] EmptyVaryings => Array.Empty<SKMeshSpecificationVarying>();
 
-		// Specification tests
-
-		[Fact]
-		public void CanCreateSpecification()
-		{
-			var spec = SKMeshSpecification.Create(
+		private static SKMeshSpecification CreateSimpleSpec(out string errors) =>
+			SKMeshSpecification.Create(
 				SimpleAttributes,
 				sizeof(float) * 2,
 				EmptyVaryings,
 				SimpleVertexShader,
 				SimpleFragmentShader,
-				out var errors);
+				null,
+				SKAlphaType.Premul,
+				out errors);
+
+		// Specification tests
+
+		[Fact]
+		public void CanCreateSpecification()
+		{
+			var spec = CreateSimpleSpec(out var errors);
 
 			Assert.Null(errors);
 			Assert.NotNull(spec);
@@ -82,6 +87,8 @@ namespace SkiaSharp.Tests
 				EmptyVaryings,
 				"invalid shader code",
 				SimpleFragmentShader,
+				null,
+				SKAlphaType.Premul,
 				out var errors);
 
 			Assert.Null(spec);
@@ -91,13 +98,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void SpecificationStrideMatchesInput()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
+			using var spec = CreateSimpleSpec(out _);
 
 			Assert.NotNull(spec);
 			Assert.Equal(sizeof(float) * 2, spec.Stride);
@@ -113,6 +114,8 @@ namespace SkiaSharp.Tests
 					EmptyVaryings,
 					SimpleVertexShader,
 					SimpleFragmentShader,
+					null,
+					SKAlphaType.Premul,
 					out _));
 		}
 
@@ -126,47 +129,46 @@ namespace SkiaSharp.Tests
 					EmptyVaryings,
 					null,
 					SimpleFragmentShader,
+					null,
+					SKAlphaType.Premul,
 					out _));
 		}
 
 		[Fact]
-		public void BuildThrowsOnInvalidShader()
+		public void SpecificationBuilderReturnsNullAndErrorOnInvalidShader()
 		{
-			Assert.Throws<SKMeshSpecificationException>(() =>
-				SKMeshSpecification.Build(
-					SimpleAttributes,
-					sizeof(float) * 2,
-					EmptyVaryings,
-					"invalid shader code",
-					SimpleFragmentShader));
+			var specBuilder = new SKMeshSpecificationBuilder("invalid shader code", SimpleFragmentShader)
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+
+			var spec = specBuilder.Build(out var errors);
+
+			Assert.Null(spec);
+			Assert.NotNull(errors);
 		}
 
 		[Fact]
-		public void BuildReturnsMeshBuilder()
+		public void SpecificationBuilderComputesOffsetsAndStride()
 		{
-			using var builder = SKMeshSpecification.Build(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader);
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, SimpleFragmentShader)
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
+				.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2)
+				.AddAttribute("color", SKMeshSpecificationAttributeType.Ubyte4Unorm);
 
-			Assert.NotNull(builder);
-			Assert.NotNull(builder.Specification);
-			Assert.NotNull(builder.Uniforms);
-			Assert.NotNull(builder.Children);
+			Assert.Equal(20, specBuilder.VertexStride);
+			Assert.Equal(0, specBuilder.Attributes[0].Offset);
+			Assert.Equal(8, specBuilder.Attributes[1].Offset);
+			Assert.Equal(16, specBuilder.Attributes[2].Offset);
+
+			using var spec = specBuilder.Build(out var errors);
+			Assert.Null(errors);
+			Assert.NotNull(spec);
+			Assert.Equal(20, spec.Stride);
 		}
 
 		[Fact]
 		public void UniformsAndChildrenProperties()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
+			using var spec = CreateSimpleSpec(out _);
 
 			Assert.NotNull(spec);
 			Assert.NotNull(spec.Uniforms);
@@ -186,13 +188,9 @@ namespace SkiaSharp.Tests
 					return varyings.position * uImageSize;
 				}";
 
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				fragmentShaderWithUniform,
-				out var errors);
+			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, fragmentShaderWithUniform)
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
+				.Build(out var errors);
 
 			Assert.Null(errors);
 			Assert.NotNull(spec);
@@ -290,14 +288,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void CanCreateNonIndexedMesh()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
-
+			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
 
 			var vertices = new float[] { 0, 0, 100, 0, 50, 100 };
@@ -310,6 +301,8 @@ namespace SkiaSharp.Tests
 				vb,
 				3,
 				0,
+				null,
+				null,
 				bounds,
 				out var errors);
 
@@ -327,14 +320,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void CanCreateIndexedMesh()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
-
+			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
 
 			var vertices = new float[] { 0, 0, 100, 0, 100, 100, 0, 100 };
@@ -354,6 +340,8 @@ namespace SkiaSharp.Tests
 				ib,
 				6,
 				0,
+				null,
+				null,
 				bounds,
 				out var errors);
 
@@ -377,13 +365,9 @@ namespace SkiaSharp.Tests
 					return varyings.position * uScale;
 				}";
 
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				fsWithUniform,
-				out var specErrors);
+			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, fsWithUniform)
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
+				.Build(out var specErrors);
 			Assert.NotNull(spec);
 			Assert.Null(specErrors);
 
@@ -393,6 +377,8 @@ namespace SkiaSharp.Tests
 				vb,
 				3,
 				0,
+				null,
+				null,
 				new SKRect(0, 0, 100, 100),
 				out var meshErrors);
 
@@ -404,27 +390,23 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DisposingBorrowedMeshBuilderDoesNotDisposeSharedSpecification()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
+			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
 
 			using var vb = SKMeshVertexBuffer.Create(MemoryMarshal.AsBytes(new float[] { 0, 0, 100, 0, 50, 100 }.AsSpan()));
 
 			using (var firstBuilder = new SKMeshBuilder(spec) { Bounds = new SKRect(0, 0, 100, 100) })
 			{
-				using var firstMesh = firstBuilder.Build(vb, 3, 0);
+				firstBuilder.SetVertexBuffer(vb);
+				using var firstMesh = firstBuilder.Build();
 				Assert.NotNull(firstMesh);
 			}
 
 			// Specification is still alive after firstBuilder.Dispose() and can be used by a second builder.
 			Assert.NotEqual(IntPtr.Zero, spec.Handle);
 			using var secondBuilder = new SKMeshBuilder(spec) { Bounds = new SKRect(0, 0, 100, 100) };
-			using var secondMesh = secondBuilder.Build(vb, 3, 0, out var errors);
+			secondBuilder.SetVertexBuffer(vb);
+			using var secondMesh = secondBuilder.Build(out var errors);
 			Assert.Null(errors);
 			Assert.NotNull(secondMesh);
 			Assert.True(secondMesh.IsValid);
@@ -434,9 +416,9 @@ namespace SkiaSharp.Tests
 		public void SpecificationAndToMeshValidateNegativeParameters()
 		{
 			Assert.Throws<ArgumentOutOfRangeException>(() =>
-				SKMeshSpecification.Create(SimpleAttributes, 0, EmptyVaryings, SimpleVertexShader, SimpleFragmentShader, out _));
+				SKMeshSpecification.Create(SimpleAttributes, 0, EmptyVaryings, SimpleVertexShader, SimpleFragmentShader, null, SKAlphaType.Premul, out _));
 			Assert.Throws<ArgumentOutOfRangeException>(() =>
-				SKMeshSpecification.Create(SimpleAttributes, -8, EmptyVaryings, SimpleVertexShader, SimpleFragmentShader, out _));
+				SKMeshSpecification.Create(SimpleAttributes, -8, EmptyVaryings, SimpleVertexShader, SimpleFragmentShader, null, SKAlphaType.Premul, out _));
 			Assert.Throws<ArgumentOutOfRangeException>(() =>
 				SKMeshSpecification.Create(
 					new[] { new SKMeshSpecificationAttribute(SKMeshSpecificationAttributeType.Float2, -4, "position") },
@@ -444,59 +426,42 @@ namespace SkiaSharp.Tests
 					EmptyVaryings,
 					SimpleVertexShader,
 					SimpleFragmentShader,
+					null,
+					SKAlphaType.Premul,
 					out _));
 
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
+			using var spec = CreateSimpleSpec(out _);
 			using var vb = SKMeshVertexBuffer.Create(24);
 			using var ib = SKMeshIndexBuffer.Create(6);
 			var bounds = new SKRect(0, 0, 100, 100);
 
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMesh(SKMeshMode.Triangles, vb, 0, 0, bounds));
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMesh(SKMeshMode.Triangles, vb, -1, 0, bounds));
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMesh(SKMeshMode.Triangles, vb, 3, -8, bounds));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMesh(SKMeshMode.Triangles, vb, 0, 0, null, null, bounds, out _));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMesh(SKMeshMode.Triangles, vb, -1, 0, null, null, bounds, out _));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMesh(SKMeshMode.Triangles, vb, 3, -8, null, null, bounds, out _));
 
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 0, 0, ib, 3, 0, bounds));
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 3, -8, ib, 3, 0, bounds));
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 3, 0, ib, 0, 0, bounds));
-			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 3, 0, ib, 3, -2, bounds));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 0, 0, ib, 3, 0, null, null, bounds, out _));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 3, -8, ib, 3, 0, null, null, bounds, out _));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 3, 0, ib, 0, 0, null, null, bounds, out _));
+			Assert.Throws<ArgumentOutOfRangeException>(() => spec.ToMeshIndexed(SKMeshMode.Triangles, vb, 3, 0, ib, 3, -2, null, null, bounds, out _));
 		}
 
 		[Fact]
 		public void ToMeshRequiresVertexBuffer()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
+			using var spec = CreateSimpleSpec(out _);
 
 			Assert.Throws<ArgumentNullException>(() =>
-				spec.ToMesh(SKMeshMode.Triangles, null, 3, 0, new SKRect(0, 0, 100, 100)));
+				spec.ToMesh(SKMeshMode.Triangles, null, 3, 0, null, null, new SKRect(0, 0, 100, 100), out _));
 		}
 
 		[Fact]
 		public void ToMeshIndexedRequiresVertexBuffer()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
-
+			using var spec = CreateSimpleSpec(out _);
 			using var ib = SKMeshIndexBuffer.Create(6);
 
 			Assert.Throws<ArgumentNullException>(() =>
-				spec.ToMeshIndexed(SKMeshMode.Triangles, null, 3, 0, ib, 3, 0, new SKRect(0, 0, 100, 100)));
+				spec.ToMeshIndexed(SKMeshMode.Triangles, null, 3, 0, ib, 3, 0, null, null, new SKRect(0, 0, 100, 100), out _));
 		}
 
 		// Drawing tests
@@ -505,15 +470,13 @@ namespace SkiaSharp.Tests
 		public void CanDrawMesh()
 		{
 			using var cs = SKColorSpace.CreateSrgb();
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				ColorFragmentShader,
-				cs,
-				SKAlphaType.Premul,
-				out _);
+			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, ColorFragmentShader)
+			{
+				ColorSpace = cs,
+				AlphaType = SKAlphaType.Premul,
+			}
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
+				.Build(out _);
 
 			Assert.NotNull(spec);
 			Assert.NotNull(spec.ColorSpace);
@@ -522,12 +485,9 @@ namespace SkiaSharp.Tests
 			var data = MemoryMarshal.AsBytes(vertices.AsSpan());
 			using var vb = SKMeshVertexBuffer.Create(data);
 
-			using var mesh = spec.ToMesh(
-				SKMeshMode.Triangles,
-				vb,
-				3,
-				0,
-				new SKRect(0, 0, 100, 100));
+			using var builder = new SKMeshBuilder(spec) { Bounds = new SKRect(0, 0, 100, 100) };
+			builder.SetVertexBuffer(vb);
+			using var mesh = builder.Build();
 
 			Assert.NotNull(mesh);
 
@@ -546,15 +506,13 @@ namespace SkiaSharp.Tests
 		public void DrawMeshWithBlender()
 		{
 			using var cs = SKColorSpace.CreateSrgb();
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				ColorFragmentShader,
-				cs,
-				SKAlphaType.Premul,
-				out _);
+			using var spec = new SKMeshSpecificationBuilder(SimpleVertexShader, ColorFragmentShader)
+			{
+				ColorSpace = cs,
+				AlphaType = SKAlphaType.Premul,
+			}
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
+				.Build(out _);
 
 			Assert.NotNull(spec);
 
@@ -562,12 +520,9 @@ namespace SkiaSharp.Tests
 			var data = MemoryMarshal.AsBytes(vertices.AsSpan());
 			using var vb = SKMeshVertexBuffer.Create(data);
 
-			using var mesh = spec.ToMesh(
-				SKMeshMode.Triangles,
-				vb,
-				3,
-				0,
-				new SKRect(0, 0, 100, 100));
+			using var builder = new SKMeshBuilder(spec) { Bounds = new SKRect(0, 0, 100, 100) };
+			builder.SetVertexBuffer(vb);
+			using var mesh = builder.Build();
 
 			Assert.NotNull(mesh);
 
@@ -596,24 +551,15 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DrawMeshRequiresPaint()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
+			using var spec = CreateSimpleSpec(out _);
 
 			var vertices = new float[] { 0, 0, 100, 0, 50, 100 };
 			var data = MemoryMarshal.AsBytes(vertices.AsSpan());
 			using var vb = SKMeshVertexBuffer.Create(data);
 
-			using var mesh = spec.ToMesh(
-				SKMeshMode.Triangles,
-				vb,
-				3,
-				0,
-				new SKRect(0, 0, 100, 100));
+			using var builder = new SKMeshBuilder(spec) { Bounds = new SKRect(0, 0, 100, 100) };
+			builder.SetVertexBuffer(vb);
+			using var mesh = builder.Build();
 
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 			var canvas = surface.Canvas;
@@ -624,14 +570,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void TriangleStripModeWorks()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
-
+			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
 
 			// 4 vertices forming a triangle strip (two triangles)
@@ -639,13 +578,13 @@ namespace SkiaSharp.Tests
 			var data = MemoryMarshal.AsBytes(vertices.AsSpan());
 			using var vb = SKMeshVertexBuffer.Create(data);
 
-			using var mesh = spec.ToMesh(
-				SKMeshMode.TriangleStrip,
-				vb,
-				4,
-				0,
-				new SKRect(0, 0, 100, 100),
-				out var errors);
+			using var builder = new SKMeshBuilder(spec)
+			{
+				Mode = SKMeshMode.TriangleStrip,
+				Bounds = new SKRect(0, 0, 100, 100),
+			};
+			builder.SetVertexBuffer(vb);
+			using var mesh = builder.Build(out var errors);
 
 			Assert.Null(errors);
 			Assert.NotNull(mesh);
@@ -655,14 +594,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MeshBuilderCreatesNonIndexedMesh()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
-
+			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
 
 			var vertices = new float[] { 0, 0, 100, 0, 50, 100 };
@@ -672,8 +604,13 @@ namespace SkiaSharp.Tests
 			using var builder = new SKMeshBuilder(spec);
 			builder.Mode = SKMeshMode.Triangles;
 			builder.Bounds = new SKRect(0, 0, 100, 100);
+			builder.SetVertexBuffer(vb);
 
-			using var mesh = builder.Build(vb, 3, 0);
+			Assert.Equal(vb, builder.VertexBuffer);
+			Assert.Equal(3, builder.VertexCount);
+			Assert.Equal(0, builder.VertexOffset);
+
+			using var mesh = builder.Build();
 
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
@@ -682,14 +619,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MeshBuilderCreatesIndexedMesh()
 		{
-			using var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				SimpleFragmentShader,
-				out _);
-
+			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
 
 			var vertices = new float[] { 0, 0, 100, 0, 100, 100, 0, 100 };
@@ -703,8 +633,14 @@ namespace SkiaSharp.Tests
 			using var builder = new SKMeshBuilder(spec);
 			builder.Mode = SKMeshMode.Triangles;
 			builder.Bounds = new SKRect(0, 0, 100, 100);
+			builder.SetVertexBuffer(vb);
+			builder.SetIndexBuffer(ib);
 
-			using var mesh = builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+			Assert.Equal(ib, builder.IndexBuffer);
+			Assert.Equal(6, builder.IndexCount);
+			Assert.Equal(0, builder.IndexOffset);
+
+			using var mesh = builder.Build();
 
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
@@ -718,7 +654,9 @@ namespace SkiaSharp.Tests
 			SKMeshVertexBuffer vb, SKMeshIndexBuffer ib)
 		{
 			builder.Bounds = new SKRect(0, 0, 100, 100);
-			return builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+			builder.SetVertexBuffer(vb);
+			builder.SetIndexBuffer(ib);
+			return builder.Build();
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
@@ -821,8 +759,10 @@ namespace SkiaSharp.Tests
 			};
 			builder.Uniforms["uScale"] = 1f;
 			builder.Children["uChild"] = childShader;
+			builder.SetVertexBuffer(vb);
+			builder.SetIndexBuffer(ib);
 
-			using var mesh = builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+			using var mesh = builder.Build();
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
 
@@ -945,15 +885,11 @@ namespace SkiaSharp.Tests
 					return varyings.uv * float2(100.0, 100.0);
 				}";
 
-			var attrs = new SKMeshSpecificationAttribute[] {
-				new(SKMeshSpecificationAttributeType.Float2, 0, "position"),
-				new(SKMeshSpecificationAttributeType.Float2, 8, "uv"),
-			};
-			var varyings = new SKMeshSpecificationVarying[] {
-				new(SKMeshSpecificationVaryingType.Float2, "uv"),
-			};
-
-			using var spec = SKMeshSpecification.Create(attrs, 16, varyings, vs, fs, out var errors);
+			using var spec = new SKMeshSpecificationBuilder(vs, fs)
+				.AddAttribute("position", SKMeshSpecificationAttributeType.Float2)
+				.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2)
+				.AddVarying("uv", SKMeshSpecificationVaryingType.Float2)
+				.Build(out var errors);
 			Assert.NotNull(spec);
 			Assert.Null(errors);
 
@@ -971,8 +907,10 @@ namespace SkiaSharp.Tests
 
 			using var builder = new SKMeshBuilder(spec);
 			builder.Bounds = new SKRect(0, 0, 100, 100);
+			builder.SetVertexBuffer(vb);
+			builder.SetIndexBuffer(ib);
 
-			using var mesh = builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+			using var mesh = builder.Build();
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
 

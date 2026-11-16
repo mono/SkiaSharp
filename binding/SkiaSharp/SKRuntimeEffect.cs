@@ -468,6 +468,8 @@ namespace SkiaSharp
 			return SKData.CreateCopy (data.Data, data.Size);
 		}
 
+		internal SKData RawData => data;
+
 		/// <summary>Returns an enumerator that iterates through the uniform names.</summary>
 		/// <returns>An enumerator that can be used to iterate through the uniform names.</returns>
 		/// <remarks />
@@ -601,6 +603,8 @@ namespace SkiaSharp
 		/// <remarks />
 		public SKObject[] ToArray () =>
 			children.ToArray ();
+
+		internal SKObject[] ChildrenArray => children;
 
 		/// <summary>Returns an enumerator that iterates through the child slot names.</summary>
 		/// <returns>An enumerator for the child slot names.</returns>

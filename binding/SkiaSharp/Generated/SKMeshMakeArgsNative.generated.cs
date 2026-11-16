@@ -25,8 +25,11 @@ namespace SkiaSharp
 		// public size_t fVOffset
 		public /* size_t */ IntPtr fVOffset;
 
-		// public const sk_data_t* fUniforms
-		public sk_data_t fUniforms;
+		// public const void* fUniformData
+		public void* fUniformData;
+
+		// public size_t fUniformSize
+		public /* size_t */ IntPtr fUniformSize;
 
 		// public sk_flattenable_t** fChildren
 		public sk_flattenable_t* fChildren;
@@ -39,7 +42,7 @@ namespace SkiaSharp
 
 		public readonly bool Equals (SKMeshMakeArgsNative obj) =>
 #pragma warning disable CS8909
-			fMode == obj.fMode && fVB == obj.fVB && fVCount == obj.fVCount && fVOffset == obj.fVOffset && fUniforms == obj.fUniforms && fChildren == obj.fChildren && fChildCount == obj.fChildCount && fBounds == obj.fBounds;
+			fMode == obj.fMode && fVB == obj.fVB && fVCount == obj.fVCount && fVOffset == obj.fVOffset && fUniformData == obj.fUniformData && fUniformSize == obj.fUniformSize && fChildren == obj.fChildren && fChildCount == obj.fChildCount && fBounds == obj.fBounds;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -58,7 +61,8 @@ namespace SkiaSharp
 			hash.Add (fVB);
 			hash.Add (fVCount);
 			hash.Add (fVOffset);
-			hash.Add (fUniforms);
+			hash.Add (fUniformData);
+			hash.Add (fUniformSize);
 			hash.Add (fChildren);
 			hash.Add (fChildCount);
 			hash.Add (fBounds);
