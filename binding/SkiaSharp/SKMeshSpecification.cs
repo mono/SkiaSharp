@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace SkiaSharp;
 
@@ -98,49 +97,30 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 		using var nativeAttrs = Utils.RentArray<SKMeshSpecificationAttributeNative> (attributes.Length);
 		using var nativeVaryings = Utils.RentArray<SKMeshSpecificationVaryingNative> (varyings.Length, true);
+		using var names = Utils.RentUtf8Strings (attributes.Length + varyings.Length);
 
-		var totalNameBytes = 0;
 		for (int i = 0; i < attributes.Length; i++)
-			totalNameBytes += Encoding.UTF8.GetByteCount (attributes[i].Name ?? string.Empty) + 1;
-		for (int i = 0; i < varyings.Length; i++)
-			totalNameBytes += Encoding.UTF8.GetByteCount (varyings[i].Name ?? string.Empty) + 1;
+		{
+			nativeAttrs[i] = new SKMeshSpecificationAttributeNative
+			{
+				fType = attributes[i].Type,
+				fOffset = (IntPtr)attributes[i].Offset,
+				fName = names.Add (attributes[i].Name),
+			};
+		}
 
-		using var nameBytes = Utils.RentArray<byte> (totalNameBytes);
-		nameBytes.Span.Clear ();
+		for (int i = 0; i < varyings.Length; i++)
+		{
+			nativeVaryings[i] = new SKMeshSpecificationVaryingNative
+			{
+				fType = varyings[i].Type,
+				fName = names.Add (varyings[i].Name),
+			};
+		}
 
 		fixed (SKMeshSpecificationAttributeNative* attrsPtr = nativeAttrs)
 		fixed (SKMeshSpecificationVaryingNative* varyingsPtr = nativeVaryings)
-		fixed (byte* namesPtr = nameBytes)
 		{
-			var nameOffset = 0;
-
-			for (int i = 0; i < attributes.Length; i++)
-			{
-				var name = attributes[i].Name ?? string.Empty;
-				var written = Encoding.UTF8.GetBytes (name.AsSpan (), nameBytes.Span.Slice (nameOffset));
-
-				attrsPtr[i] = new SKMeshSpecificationAttributeNative
-				{
-					fType = attributes[i].Type,
-					fOffset = (IntPtr)attributes[i].Offset,
-					fName = namesPtr + nameOffset,
-				};
-				nameOffset += written + 1;
-			}
-
-			for (int i = 0; i < varyings.Length; i++)
-			{
-				var name = varyings[i].Name ?? string.Empty;
-				var written = Encoding.UTF8.GetBytes (name.AsSpan (), nameBytes.Span.Slice (nameOffset));
-
-				varyingsPtr[i] = new SKMeshSpecificationVaryingNative
-				{
-					fType = varyings[i].Type,
-					fName = namesPtr + nameOffset,
-				};
-				nameOffset += written + 1;
-			}
-
 			var spec = GetObject (SkiaApi.sk_meshspecification_make (
 				attrsPtr,
 				(IntPtr)attributes.Length,

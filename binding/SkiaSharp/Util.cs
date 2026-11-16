@@ -3,6 +3,7 @@
 using System;
 using System.Buffers;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace SkiaSharp
@@ -125,6 +126,52 @@ namespace SkiaSharp
 
 			public static implicit operator ReadOnlySpan<T> (RentedArray<T> scope) =>
 				scope.Span;
+		}
+
+		public static RentedUtf8Strings RentUtf8Strings (int count) =>
+			count <= 0 ? default : new RentedUtf8Strings (count);
+
+		internal ref struct RentedUtf8Strings
+		{
+			private RentedArray<byte[]> buffers;
+			private RentedArray<GCHandle> handles;
+			private int count;
+
+			internal RentedUtf8Strings (int capacity)
+			{
+				buffers = RentArray<byte[]> (capacity);
+				handles = RentArray<GCHandle> (capacity);
+				count = 0;
+			}
+
+			public void* Add (string value)
+			{
+				var span = (value ?? string.Empty).AsSpan ();
+				var byteCount = Encoding.UTF8.GetByteCount (span);
+				var buffer = ArrayPool<byte>.Shared.Rent (byteCount + 1);
+				var written = Encoding.UTF8.GetBytes (span, buffer);
+				buffer[written] = 0;
+
+				var handle = GCHandle.Alloc (buffer, GCHandleType.Pinned);
+				buffers[count] = buffer;
+				handles[count] = handle;
+				count++;
+
+				return (void*)handle.AddrOfPinnedObject ();
+			}
+
+			public void Dispose ()
+			{
+				for (var i = 0; i < count; i++) {
+					if (handles[i].IsAllocated)
+						handles[i].Free ();
+					if (buffers[i] != null)
+						ArrayPool<byte>.Shared.Return (buffers[i]);
+				}
+				handles.Dispose ();
+				buffers.Dispose ();
+				count = 0;
+			}
 		}
 	}
 
