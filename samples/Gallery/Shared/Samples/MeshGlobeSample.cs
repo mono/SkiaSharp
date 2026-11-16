@@ -38,63 +38,49 @@ public class MeshGlobeSample : CanvasSampleBase
 			float2 uv = clamp(v.uvDepth.xy / invZ, float2(0.0), float2(1.0));
 			float3 n = normalize(v.normalSpec.xyz);
 			float lat = (0.5 - uv.y) * 3.14159265;
-			float landMask = clamp(v.normalSpec.w, 0.0, 1.0);
-			float oceanMask = 1.0 - landMask;
 
-			// Sample procedural equirectangular Earth texture (512x256, opaque Premul).
-			half4 tex = uEarthTex.eval(uv * float2(512.0, 256.0));
+			// Sample the NASA Blue Marble equirectangular Earth texture (2048x1024).
+			half4 tex = uEarthTex.eval(uv * float2(2048.0, 1024.0));
 			float3 baseCol = float3(tex.rgb);
 
-			// Animated procedural cloud layer drifting slowly across longitude
-			float2 cloudUv = uv * float2(10.0, 5.0) + float2(-uTime * 0.025, 0.0);
-			float c1 = sin(cloudUv.x * 2.3 + sin(cloudUv.y * 2.7 + uTime * 0.08));
-			float c2 = cos(cloudUv.x * 5.1 - cloudUv.y * 3.9 + sin(cloudUv.x * 1.9));
-			float c3 = sin((cloudUv.x + cloudUv.y) * 8.5 - uTime * 0.12);
-			float cloudBands = smoothstep(0.28, 0.82, (c1 * 0.45 + c2 * 0.35 + c3 * 0.20) * 0.5 + 0.5);
-			cloudBands *= smoothstep(1.48, 0.85, abs(lat)); // taper near poles
+			// Detect ocean vs land/ice directly from the Blue Marble pixel chromaticity (oceans are deep blue)
+			float oceanMask = clamp((baseCol.b - max(baseCol.r, baseCol.g) * 0.92) * 5.0, 0.0, 1.0);
+			float landMask = 1.0 - oceanMask;
 
 			// Sun direction in view space controlled by uSunAngle
-			float3 lightDir = normalize(float3(sin(uSunAngle), -0.24, cos(uSunAngle)));
+			float3 lightDir = normalize(float3(sin(uSunAngle), -0.22, cos(uSunAngle)));
 			float3 viewDir  = float3(0.0, 0.0, 1.0);
 			float3 halfVec  = normalize(lightDir + viewDir);
 
 			float ndotl = dot(n, lightDir);
-			float dayFactor = smoothstep(-0.16, 0.22, ndotl);
-			float twilight  = smoothstep(-0.22, 0.04, ndotl) * (1.0 - smoothstep(0.04, 0.32, ndotl));
-			float diffuse   = 0.10 + 0.90 * clamp((ndotl + 0.12) / 1.12, 0.0, 1.0);
+			float dayFactor = smoothstep(-0.18, 0.22, ndotl);
+			float twilight  = smoothstep(-0.22, 0.04, ndotl) * (1.0 - smoothstep(0.04, 0.30, ndotl));
+			float diffuse   = 0.14 + 0.86 * clamp((ndotl + 0.15) / 1.15, 0.0, 1.0);
 
 			// Ocean sun glint & specular highlight
 			float specAngle = max(dot(n, halfVec), 0.0);
-			float oceanSpec = pow(specAngle, 28.0) * 0.80 * oceanMask * dayFactor
-			                + pow(specAngle, 8.0) * 0.16 * oceanMask * dayFactor;
+			float oceanSpec = pow(specAngle, 32.0) * 0.55 * oceanMask * dayFactor
+			                + pow(specAngle, 10.0) * 0.12 * oceanMask * dayFactor;
 
-			// Subtle latitude/longitude graticule lines every 15 degrees
-			float2 gridPhase = abs(fract(uv * float2(24.0, 12.0)) - 0.5);
-			float gridLine = 1.0 - smoothstep(0.012, 0.028, min(gridPhase.x, gridPhase.y));
-			baseCol = mix(baseCol, baseCol + float3(0.10, 0.22, 0.36), gridLine * 0.22);
-
-			// Combine surface diffuse + clouds on the day side
-			float3 daySurface = mix(baseCol, float3(0.96, 0.98, 1.0), cloudBands * 0.52);
-			float3 lit = daySurface * diffuse + float3(1.0, 0.95, 0.82) * oceanSpec;
+			float3 lit = baseCol * diffuse + float3(1.0, 0.96, 0.86) * oceanSpec;
 
 			// Warm sunset/sunrise scattering along the day-night terminator
-			lit += float3(0.85, 0.32, 0.10) * twilight * (0.35 + 0.35 * cloudBands);
+			lit += float3(0.80, 0.30, 0.10) * twilight * 0.35;
 
 			// Night-side city lights glowing on continents when rotated into shadow
-			float nightFactor = smoothstep(0.10, -0.25, ndotl);
-			float cityCluster1 = sin(uv.x * 190.0) * cos(uv.y * 95.0);
-			float cityCluster2 = sin(uv.x * 420.0 + 1.3) * sin(uv.y * 210.0 + 0.7);
-			float coastalWeight = smoothstep(0.15, 0.65, landMask) * smoothstep(0.95, 0.45, abs(lat));
-			float citySpark = smoothstep(0.56, 0.86, cityCluster1 * 0.55 + cityCluster2 * 0.45)
-			                * landMask * coastalWeight * (1.0 - cloudBands * 0.65);
-			lit += float3(1.0, 0.76, 0.34) * citySpark * nightFactor * 1.15;
-			lit += float3(0.02, 0.04, 0.09) * nightFactor;
+			float nightFactor = smoothstep(0.08, -0.24, ndotl);
+			float cityCluster1 = sin(uv.x * 220.0) * cos(uv.y * 110.0);
+			float cityCluster2 = sin(uv.x * 480.0 + 1.3) * sin(uv.y * 240.0 + 0.7);
+			float citySpark = smoothstep(0.62, 0.88, cityCluster1 * 0.55 + cityCluster2 * 0.45)
+			                * landMask * smoothstep(1.15, 0.55, abs(lat));
+			lit += float3(1.0, 0.76, 0.34) * citySpark * nightFactor * 0.95;
+			lit += baseCol * 0.06 * nightFactor;
 
 			// Fresnel atmospheric limb glow around the sphere horizon
-			float fresnel = pow(clamp(1.0 - max(n.z, 0.0), 0.0, 1.0), 2.8);
-			float3 atmoColor = mix(float3(0.16, 0.48, 0.95), float3(0.45, 0.78, 1.0), dayFactor);
-			lit = mix(lit, atmoColor, fresnel * 0.62 * clamp(uAtmosphere, 0.0, 2.0));
-			lit += atmoColor * pow(fresnel, 1.8) * 0.35 * uAtmosphere * (0.35 + 0.65 * dayFactor);
+			float fresnel = pow(clamp(1.0 - max(n.z, 0.0), 0.0, 1.0), 3.0);
+			float3 atmoColor = mix(float3(0.18, 0.50, 0.96), float3(0.46, 0.78, 1.0), dayFactor);
+			lit = mix(lit, atmoColor, fresnel * 0.55 * clamp(uAtmosphere, 0.0, 2.0));
+			lit += atmoColor * pow(fresnel, 2.0) * 0.30 * uAtmosphere * (0.35 + 0.65 * dayFactor);
 
 			color = half4(half3(clamp(lit, 0.0, 1.0)), 1.0);
 			return v.position;
@@ -107,8 +93,6 @@ public class MeshGlobeSample : CanvasSampleBase
 	private const int VertexCount = GridCols * GridRows;
 	private const int MaxQuadCount = LatSteps * LonSteps;
 	private const int FloatsPerVertex = 10; // pos(2) + uvDepth(4) + normalSpec(4)
-	private const int MapW = 512;
-	private const int MapH = 256;
 
 	private readonly record struct CityPin(string Name, string Country, float Lat, float Lon);
 
@@ -134,13 +118,12 @@ public class MeshGlobeSample : CanvasSampleBase
 		"Rio de Janeiro, Brazil",
 	];
 
-	// Precomputed unit-sphere coordinates, UVs, and land mask for the (LatSteps + 1) x (LonSteps + 1) grid
+	// Precomputed unit-sphere coordinates and UVs for the (LatSteps + 1) x (LonSteps + 1) grid
 	private readonly float[] sphereX = new float[VertexCount];
 	private readonly float[] sphereY = new float[VertexCount];
 	private readonly float[] sphereZ = new float[VertexCount];
 	private readonly float[] sphereU = new float[VertexCount];
 	private readonly float[] sphereV = new float[VertexCount];
-	private readonly float[] sphereLand = new float[VertexCount];
 
 	// Per-frame transformed view-space Z and 2D screen positions for back-face culling & wireframe
 	private readonly float[] viewZ = new float[VertexCount];
@@ -301,13 +284,6 @@ public class MeshGlobeSample : CanvasSampleBase
 				sphereZ[idx] = cosLat * sinLon;
 				sphereU[idx] = 1.0f - uFrac;
 				sphereV[idx] = v;
-
-				var latDeg = (0.5f - v) * 180f;
-				var lonDeg = sphereU[idx] * 360f - 180f;
-				var elev = SampleContinentElevation(latDeg, lonDeg);
-				var antarctic = SmoothStep(-66f, -76f, latDeg) + 0.25f * MathF.Sin(lonDeg * 0.08f);
-				var arctic = SmoothStep(78f, 86f, latDeg + 3f * MathF.Cos(lonDeg * 0.06f));
-				sphereLand[idx] = (elev > 0f || antarctic > 0.55f || arctic > 0.65f) ? 1.0f : 0.0f;
 			}
 		}
 	}
@@ -475,160 +451,14 @@ public class MeshGlobeSample : CanvasSampleBase
 	}
 
 	/// <summary>
-	/// Builds a 512×256 equirectangular Blue Marble world map texture in code.
-	/// RGB stores the surface albedo (bathymetric ocean + continents + mountains + polar ice caps),
-	/// while Alpha stores the land mask (0 = ocean, 255 = continent/ice) so the SkSL shader can
-	/// apply specular sun glint only to oceans and city lights only to continents.
+	/// Loads the embedded public-domain NASA Blue Marble equirectangular Earth texture (2048×1024).
 	/// </summary>
-	private static SKShader CreateEarthMapShader()
+	private static SKShader? CreateEarthMapShader()
 	{
-		var info = new SKImageInfo(MapW, MapH, SKColorType.Rgba8888, SKAlphaType.Premul);
-		using var bmp = new SKBitmap(info);
-		var span = bmp.GetPixelSpan();
-		var pixels = MemoryMarshal.Cast<byte, uint>(span);
-
-		for (var y = 0; y < MapH; y++)
-		{
-			var v = (y + 0.5f) / MapH;
-			var lat = (0.5f - v) * 180f; // +90 (north) .. -90 (south)
-			var absLat = MathF.Abs(lat);
-			var rowOffset = y * MapW;
-
-			for (var x = 0; x < MapW; x++)
-			{
-				var u = (x + 0.5f) / MapW;
-				var lon = u * 360f - 180f; // -180 .. +180
-
-				var elev = SampleContinentElevation(lat, lon);
-
-				// Polar ice caps (Antarctica & high Arctic pack ice)
-				var antarctic = SmoothStep(-66f, -76f, lat) + 0.25f * MathF.Sin(lon * 0.08f);
-				var arctic = SmoothStep(78f, 86f, lat + 3f * MathF.Cos(lon * 0.06f));
-
-				uint r, g, b;
-				if (antarctic > 0.55f || arctic > 0.65f)
-				{
-					r = 236;
-					g = 244;
-					b = 252;
-				}
-				else if (elev > 0f)
-				{
-					var arid = MathF.Exp(-MathF.Pow((absLat - 23f) / 11f, 2f))
-					         * SmoothStep(-15f, 55f, lon) * SmoothStep(115f, 65f, lon);
-					var snow = SmoothStep(58f, 74f, absLat + elev * 22f);
-					var highland = Math.Clamp(elev, 0f, 1f);
-
-					float lr = 36f + 58f * highland;
-					float lg = 108f + 42f * (1f - absLat / 90f) - 25f * highland;
-					float lb = 38f + 22f * highland;
-
-					lr = Lerp(lr, 194f, arid * 0.82f);
-					lg = Lerp(lg, 162f, arid * 0.78f);
-					lb = Lerp(lb, 98f, arid * 0.75f);
-
-					lr = Lerp(lr, 232f, snow);
-					lg = Lerp(lg, 238f, snow);
-					lb = Lerp(lb, 246f, snow);
-
-					r = (uint)Math.Clamp((int)lr, 0, 255);
-					g = (uint)Math.Clamp((int)lg, 0, 255);
-					b = (uint)Math.Clamp((int)lb, 0, 255);
-				}
-				else
-				{
-					var shelf = MathF.Exp(elev * 5.5f);
-					var latCool = 1f - 0.22f * (absLat / 90f);
-					var or = Lerp(12f, 36f, shelf) * latCool;
-					var og = Lerp(48f, 128f, shelf) * latCool;
-					var ob = Lerp(116f, 192f, shelf);
-
-					r = (uint)Math.Clamp((int)or, 0, 255);
-					g = (uint)Math.Clamp((int)og, 0, 255);
-					b = (uint)Math.Clamp((int)ob, 0, 255);
-				}
-
-				pixels[rowOffset + x] = r | (g << 8) | (b << 16) | (255u << 24);
-			}
-		}
-
-		using var img = SKImage.FromBitmap(bmp);
-		return img.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Linear));
+		using var stream = SampleMedia.Images.Earth;
+		using var img = SKImage.FromEncodedData(stream);
+		return img?.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Linear));
 	}
-
-	private static float SampleContinentElevation(float lat, float lon)
-	{
-		// Multi-frequency coastline fractal perturbation
-		var latRad = lat * (MathF.PI / 180f);
-		var lonRad = lon * (MathF.PI / 180f);
-		var detail = 0.14f * MathF.Sin(lonRad * 7f + MathF.Cos(latRad * 6f))
-		           + 0.09f * MathF.Cos(lonRad * 15f - latRad * 11f)
-		           + 0.05f * MathF.Sin(lonRad * 29f + latRad * 23f);
-
-		var d = -1.0f;
-
-		// North America
-		d = MathF.Max(d, Blob(lat, lon, 48f, -102f, 22f, 32f, -0.25f));
-		d = MathF.Max(d, Blob(lat, lon, 62f, -118f, 12f, 26f, 0.1f));
-		d = MathF.Max(d, Blob(lat, lon, 32f, -98f, 14f, 18f, -0.2f));
-		d = MathF.Max(d, Blob(lat, lon, 18f, -92f, 8f, 12f, -0.45f));
-		// Greenland
-		d = MathF.Max(d, Blob(lat, lon, 72f, -42f, 10f, 16f, 0.2f));
-
-		// South America
-		d = MathF.Max(d, Blob(lat, lon, -8f, -58f, 18f, 16f, -0.15f));
-		d = MathF.Max(d, Blob(lat, lon, -26f, -62f, 20f, 10f, 0.2f));
-		d = MathF.Max(d, Blob(lat, lon, -44f, -69f, 12f, 6f, 0.1f));
-
-		// Africa
-		d = MathF.Max(d, Blob(lat, lon, 18f, 12f, 18f, 24f, 0.0f));
-		d = MathF.Max(d, Blob(lat, lon, 2f, 24f, 16f, 14f, -0.1f));
-		d = MathF.Max(d, Blob(lat, lon, -18f, 24f, 18f, 11f, 0.05f));
-		// Madagascar
-		d = MathF.Max(d, Blob(lat, lon, -19f, 47f, 6f, 3.5f, 0.2f));
-
-		// Europe & British Isles / Scandinavia
-		d = MathF.Max(d, Blob(lat, lon, 48f, 14f, 11f, 18f, 0.1f));
-		d = MathF.Max(d, Blob(lat, lon, 41f, -4f, 6f, 8f, 0.0f));
-		d = MathF.Max(d, Blob(lat, lon, 62f, 16f, 9f, 12f, 0.25f));
-		d = MathF.Max(d, Blob(lat, lon, 54f, -2f, 5.5f, 4.5f, 0.1f)); // UK
-
-		// Eurasia / Asia
-		d = MathF.Max(d, Blob(lat, lon, 56f, 68f, 16f, 46f, 0.05f));
-		d = MathF.Max(d, Blob(lat, lon, 62f, 118f, 14f, 38f, -0.1f));
-		d = MathF.Max(d, Blob(lat, lon, 36f, 98f, 18f, 28f, -0.15f));
-		d = MathF.Max(d, Blob(lat, lon, 24f, 46f, 11f, 12f, -0.25f)); // Arabia
-		d = MathF.Max(d, Blob(lat, lon, 20f, 78f, 13f, 9f, 0.0f));    // India
-		d = MathF.Max(d, Blob(lat, lon, 14f, 102f, 11f, 8f, -0.2f));  // SE Asia
-		// Japan
-		d = MathF.Max(d, Blob(lat, lon, 36f, 139f, 7.5f, 4.5f, 0.35f));
-		// Indonesia / Maritime SE Asia
-		d = MathF.Max(d, Blob(lat, lon, -2f, 114f, 6f, 16f, -0.15f));
-
-		// Australia & New Zealand
-		d = MathF.Max(d, Blob(lat, lon, -25f, 134f, 13f, 19f, -0.1f));
-		d = MathF.Max(d, Blob(lat, lon, -41f, 173f, 5.5f, 3.5f, 0.3f));
-
-		return d + detail;
-	}
-
-	private static float Blob(float lat, float lon, float cLat, float cLon, float rLat, float rLon, float tilt)
-	{
-		var dy = (lat - cLat) / rLat;
-		var dx = (lon - cLon) / rLon;
-		var rx = dx + dy * tilt;
-		var distSq = rx * rx + dy * dy;
-		return 1.0f - MathF.Sqrt(distSq);
-	}
-
-	private static float SmoothStep(float edge0, float edge1, float x)
-	{
-		var t = Math.Clamp((x - edge0) / (edge1 - edge0), 0f, 1f);
-		return t * t * (3f - 2f * t);
-	}
-
-	private static float Lerp(float a, float b, float t) =>
-		a + (b - a) * Math.Clamp(t, 0f, 1f);
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
@@ -731,7 +561,7 @@ public class MeshGlobeSample : CanvasSampleBase
 			vertices[b + 6] = vx;
 			vertices[b + 7] = vy;
 			vertices[b + 8] = vz;
-			vertices[b + 9] = sphereLand[i];
+			vertices[b + 9] = 1.0f;
 		}
 
 		// Emit only front-facing quads (back-face culling gives exact occlusion for a convex sphere)
