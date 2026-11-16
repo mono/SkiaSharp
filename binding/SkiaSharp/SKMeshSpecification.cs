@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace SkiaSharp;
 
@@ -95,75 +96,70 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		using var fs = new SKString (fragmentShader);
 		using var errorString = captureErrors ? new SKString () : null;
 
-		var attrArray = attributes.Length > MaxAttributes ? new SKMeshSpecificationAttributeNative[attributes.Length] : null;
-		var varyingArray = varyings.Length > MaxVaryings ? new SKMeshSpecificationVaryingNative[varyings.Length] : null;
-		var attrNamePins = new System.Buffers.MemoryHandle[attributes.Length];
-		var varyingNamePins = new System.Buffers.MemoryHandle[varyings.Length];
+		using var nativeAttrs = Utils.RentArray<SKMeshSpecificationAttributeNative> (attributes.Length);
+		using var nativeVaryings = Utils.RentArray<SKMeshSpecificationVaryingNative> (varyings.Length, true);
 
-		fixed (SKMeshSpecificationAttributeNative* pinnedAttrs = attrArray)
-		fixed (SKMeshSpecificationVaryingNative* pinnedVaryings = varyingArray)
+		var totalNameBytes = 0;
+		for (int i = 0; i < attributes.Length; i++)
+			totalNameBytes += Encoding.UTF8.GetByteCount (attributes[i].Name ?? string.Empty) + 1;
+		for (int i = 0; i < varyings.Length; i++)
+			totalNameBytes += Encoding.UTF8.GetByteCount (varyings[i].Name ?? string.Empty) + 1;
+
+		using var nameBytes = Utils.RentArray<byte> (totalNameBytes);
+		nameBytes.Span.Clear ();
+
+		fixed (SKMeshSpecificationAttributeNative* attrsPtr = nativeAttrs)
+		fixed (SKMeshSpecificationVaryingNative* varyingsPtr = nativeVaryings)
+		fixed (byte* namesPtr = nameBytes)
 		{
-			var stackAttrs = stackalloc SKMeshSpecificationAttributeNative[attributes.Length <= MaxAttributes ? attributes.Length : 0];
-			var stackVaryings = stackalloc SKMeshSpecificationVaryingNative[varyings.Length <= MaxVaryings ? varyings.Length : 0];
-			var nativeAttrs = attrArray != null ? pinnedAttrs : stackAttrs;
-			var nativeVaryings = varyingArray != null ? pinnedVaryings : stackVaryings;
+			var nameOffset = 0;
 
-			try
+			for (int i = 0; i < attributes.Length; i++)
 			{
-				for (int i = 0; i < attributes.Length; i++)
+				var name = attributes[i].Name ?? string.Empty;
+				var written = Encoding.UTF8.GetBytes (name.AsSpan (), nameBytes.Span.Slice (nameOffset));
+
+				attrsPtr[i] = new SKMeshSpecificationAttributeNative
 				{
-					var nameBytes = StringUtilities.GetEncodedText (attributes[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
-					var pin = nameBytes.AsMemory ().Pin ();
-					attrNamePins[i] = pin;
-
-					nativeAttrs[i] = new SKMeshSpecificationAttributeNative
-					{
-						fType = attributes[i].Type,
-						fOffset = (IntPtr)attributes[i].Offset,
-						fName = (byte*)pin.Pointer,
-					};
-				}
-
-				for (int i = 0; i < varyings.Length; i++)
-				{
-					var nameBytes = StringUtilities.GetEncodedText (varyings[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
-					var pin = nameBytes.AsMemory ().Pin ();
-					varyingNamePins[i] = pin;
-
-					nativeVaryings[i] = new SKMeshSpecificationVaryingNative
-					{
-						fType = varyings[i].Type,
-						fName = (byte*)pin.Pointer,
-					};
-				}
-
-				var spec = GetObject (SkiaApi.sk_meshspecification_make (
-					nativeAttrs,
-					(IntPtr)attributes.Length,
-					(IntPtr)vertexStride,
-					nativeVaryings,
-					(IntPtr)varyings.Length,
-					vs.Handle,
-					fs.Handle,
-					colorSpace?.Handle ?? IntPtr.Zero,
-					alphaType,
-					errorString?.Handle ?? IntPtr.Zero));
-
-				GC.KeepAlive (colorSpace);
-
-				errors = errorString?.ToString ();
-				if (errors?.Length == 0)
-					errors = null;
-
-				return spec;
+					fType = attributes[i].Type,
+					fOffset = (IntPtr)attributes[i].Offset,
+					fName = namesPtr + nameOffset,
+				};
+				nameOffset += written + 1;
 			}
-			finally
+
+			for (int i = 0; i < varyings.Length; i++)
 			{
-				for (int i = 0; i < varyings.Length; i++)
-					varyingNamePins[i].Dispose ();
-				for (int i = 0; i < attributes.Length; i++)
-					attrNamePins[i].Dispose ();
+				var name = varyings[i].Name ?? string.Empty;
+				var written = Encoding.UTF8.GetBytes (name.AsSpan (), nameBytes.Span.Slice (nameOffset));
+
+				varyingsPtr[i] = new SKMeshSpecificationVaryingNative
+				{
+					fType = varyings[i].Type,
+					fName = namesPtr + nameOffset,
+				};
+				nameOffset += written + 1;
 			}
+
+			var spec = GetObject (SkiaApi.sk_meshspecification_make (
+				attrsPtr,
+				(IntPtr)attributes.Length,
+				(IntPtr)vertexStride,
+				varyingsPtr,
+				(IntPtr)varyings.Length,
+				vs.Handle,
+				fs.Handle,
+				colorSpace?.Handle ?? IntPtr.Zero,
+				alphaType,
+				errorString?.Handle ?? IntPtr.Zero));
+
+			GC.KeepAlive (colorSpace);
+
+			errors = errorString?.ToString ();
+			if (errors?.Length == 0)
+				errors = null;
+
+			return spec;
 		}
 	}
 
