@@ -12,7 +12,6 @@ public class SKMeshSpecificationBuilder
 	private readonly List<SKMeshSpecificationAttribute> attributes = new ();
 	private readonly List<SKMeshSpecificationVarying> varyings = new ();
 	private int? explicitVertexStride;
-	private int calculatedVertexStride;
 
 	/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKMeshSpecificationBuilder" /> class with the specified vertex and fragment SkSL programs.</summary>
 	/// <param name="vertexShader">The SkSL source of the vertex program.</param>
@@ -38,7 +37,7 @@ public class SKMeshSpecificationBuilder
 	/// <value>The vertex stride, in bytes.</value>
 	/// <remarks />
 	public int VertexStride {
-		get => explicitVertexStride ?? calculatedVertexStride;
+		get => explicitVertexStride ?? CalculateVertexStride ();
 		set {
 			if (value <= 0)
 				throw new ArgumentOutOfRangeException (nameof (value));
@@ -61,7 +60,7 @@ public class SKMeshSpecificationBuilder
 	/// <param name="type">The data type of the attribute.</param>
 	/// <remarks />
 	public void AddAttribute (string name, SKMeshSpecificationAttributeType type) =>
-		AddAttribute (name, type, calculatedVertexStride);
+		AddAttribute (name, type, CalculateVertexStride ());
 
 	/// <summary>Adds a vertex attribute at the specified byte offset and updates the calculated stride if needed.</summary>
 	/// <param name="name">The name of the attribute as referenced in the SkSL vertex program.</param>
@@ -74,11 +73,10 @@ public class SKMeshSpecificationBuilder
 			throw new ArgumentNullException (nameof (name));
 		if (offset < 0)
 			throw new ArgumentOutOfRangeException (nameof (offset));
+		if (!SKMeshSpecification.IsValidAttributeType (type))
+			throw new ArgumentOutOfRangeException (nameof (type));
 
 		attributes.Add (new SKMeshSpecificationAttribute (type, offset, name));
-		var end = offset + GetAttributeSize (type);
-		if (end > calculatedVertexStride)
-			calculatedVertexStride = end;
 	}
 
 	/// <summary>Adds a varying passed from the vertex program to the fragment program.</summary>
@@ -89,8 +87,26 @@ public class SKMeshSpecificationBuilder
 	{
 		if (name == null)
 			throw new ArgumentNullException (nameof (name));
+		if (!SKMeshSpecification.IsValidVaryingType (type))
+			throw new ArgumentOutOfRangeException (nameof (type));
 
 		varyings.Add (new SKMeshSpecificationVarying (type, name));
+	}
+
+	private int CalculateVertexStride ()
+	{
+		var stride = 0;
+		for (var i = 0; i < attributes.Count; i++)
+		{
+			var attr = attributes[i];
+			if (attr.Offset >= 0 && SKMeshSpecification.IsValidAttributeType (attr.Type))
+			{
+				var end = attr.Offset + GetAttributeSize (attr.Type);
+				if (end > stride)
+					stride = end;
+			}
+		}
+		return stride;
 	}
 
 	/// <summary>Builds the mesh specification.</summary>

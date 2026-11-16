@@ -173,6 +173,41 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void SpecificationBuilderDerivesStrideFromCollectionMutationsAndValidatesEnumRanges()
+		{
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, SimpleFragmentShader);
+			specBuilder.Attributes.Add(new SKMeshSpecificationAttribute(SKMeshSpecificationAttributeType.Float2, 0, "position"));
+
+			Assert.Equal(8, specBuilder.VertexStride);
+			using var spec = specBuilder.Build(out var errors);
+			Assert.Null(errors);
+			Assert.NotNull(spec);
+			Assert.Equal(8, spec.Stride);
+
+			Assert.Throws<ArgumentOutOfRangeException>(() =>
+				SKMeshSpecification.Create(
+					new[] { new SKMeshSpecificationAttribute((SKMeshSpecificationAttributeType)999, 0, "position") },
+					8,
+					EmptyVaryings,
+					SimpleVertexShader,
+					SimpleFragmentShader,
+					null,
+					SKAlphaType.Premul,
+					out _));
+
+			Assert.Throws<ArgumentOutOfRangeException>(() =>
+				SKMeshSpecification.Create(
+					SimpleAttributes,
+					8,
+					new[] { new SKMeshSpecificationVarying((SKMeshSpecificationVaryingType)999, "v") },
+					SimpleVertexShader,
+					SimpleFragmentShader,
+					null,
+					SKAlphaType.Premul,
+					out _));
+		}
+
+		[Fact]
 		public void UniformsAndChildrenProperties()
 		{
 			using var spec = CreateSimpleSpec(out _);
