@@ -441,11 +441,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (vertexOffset < 0)
 			throw new ArgumentOutOfRangeException (nameof (vertexOffset));
 
-		if (children != null && children.Length != Children.Count) {
-			errors = $"The mesh specification declares {Children.Count} child effects, but the mesh supplies {children.Length}.";
-			return null;
-		}
-
 		using var childrenHandles = children != null && children.Length > 0
 			? Utils.RentHandlesArray (children, true)
 			: default;
@@ -453,15 +448,21 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 		fixed (IntPtr* ch = childrenHandles)
 		{
+			var args = new SKMeshMakeArgsNative
+			{
+				fMode = mode,
+				fVB = vertexBuffer.Handle,
+				fVCount = (IntPtr)vertexCount,
+				fVOffset = (IntPtr)vertexOffset,
+				fUniforms = uniforms?.Handle ?? IntPtr.Zero,
+				fChildren = ch,
+				fChildCount = (IntPtr)childrenHandles.Length,
+				fBounds = bounds,
+			};
+
 			var mesh = SKMesh.GetObject (SkiaApi.sk_mesh_make (
 				Handle,
-				mode,
-				vertexBuffer.Handle,
-				(IntPtr)vertexCount,
-				(IntPtr)vertexOffset,
-				uniforms?.Handle ?? IntPtr.Zero,
-				ch,
-				&bounds,
+				&args,
 				errorString.Handle));
 
 			GC.KeepAlive (vertexBuffer);
@@ -705,11 +706,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (indexOffset < 0)
 			throw new ArgumentOutOfRangeException (nameof (indexOffset));
 
-		if (children != null && children.Length != Children.Count) {
-			errors = $"The mesh specification declares {Children.Count} child effects, but the mesh supplies {children.Length}.";
-			return null;
-		}
-
 		using var childrenHandles = children != null && children.Length > 0
 			? Utils.RentHandlesArray (children, true)
 			: default;
@@ -717,18 +713,24 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 		fixed (IntPtr* ch = childrenHandles)
 		{
+			var args = new SKMeshMakeIndexedArgsNative
+			{
+				fMode = mode,
+				fVB = vertexBuffer.Handle,
+				fVCount = (IntPtr)vertexCount,
+				fVOffset = (IntPtr)vertexOffset,
+				fIB = indexBuffer.Handle,
+				fICount = (IntPtr)indexCount,
+				fIOffset = (IntPtr)indexOffset,
+				fUniforms = uniforms?.Handle ?? IntPtr.Zero,
+				fChildren = ch,
+				fChildCount = (IntPtr)childrenHandles.Length,
+				fBounds = bounds,
+			};
+
 			var mesh = SKMesh.GetObject (SkiaApi.sk_mesh_make_indexed (
 				Handle,
-				mode,
-				vertexBuffer.Handle,
-				(IntPtr)vertexCount,
-				(IntPtr)vertexOffset,
-				indexBuffer.Handle,
-				(IntPtr)indexCount,
-				(IntPtr)indexOffset,
-				uniforms?.Handle ?? IntPtr.Zero,
-				ch,
-				&bounds,
+				&args,
 				errorString.Handle));
 
 			GC.KeepAlive (vertexBuffer);
