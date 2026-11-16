@@ -449,7 +449,7 @@ namespace SkiaSharp
 			var uniform = uniforms[name];
 
 			// validate the types first
-			if (!ValidateTypes (value.Type, uniform.Type, uniform.Flags.HasFlag (SKRuntimeEffectUniformFlagsNative.Array), uniform.Count))
+			if (!ValidateTypes (value.Type, uniform.Type, (uniform.Flags & SKRuntimeEffectUniformFlagsNative.Array) != 0, uniform.Count))
 				throw new ArgumentOutOfRangeException (nameof (value), $"Unable to write a '{value.Type}' value to a '{uniform.Type}' uniform.");
 
 			var slice = data.Span.Slice (uniform.Offset, uniform.Size);

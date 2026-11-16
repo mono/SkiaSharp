@@ -103,6 +103,7 @@ public static class SampleManager
 		["Vertex Mesh"]           = ("bi-diagram-3",           "\uf2ee"),
 		["Custom Mesh (3D Tunnel)"] = ("bi-diagram-3",         "\uf2ee"),
 		["SkiaSharp Flag (Cloth Mesh)"] = ("bi-flag",          "\uf3cb"),
+		["3D Earth Globe (City Pins)"] = ("bi-globe-americas", "\uf882"),
 		["Wide-Gamut P3"]         = ("bi-rainbow",             "\uf50d"),
 		["World Text"]            = ("bi-globe2",              "\uf3ef"),
 	};
