@@ -49,8 +49,6 @@ jobs:
       checkout_ref: ${{ steps.vars.outputs.checkout_ref }}
       build_footer: ${{ steps.vars.outputs.build_footer }}
       gallery_base_href: ${{ steps.vars.outputs.gallery_base_href }}
-      uno_gallery_base_href: ${{ steps.vars.outputs.uno_gallery_base_href }}
-      fiddle_base_href: ${{ steps.vars.outputs.fiddle_base_href }}
     steps:
       - name: Setup build variables
         id: vars
@@ -111,8 +109,6 @@ jobs:
             fi
             echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
-            echo "uno_gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery-uno/" >> $GITHUB_OUTPUT
-            echo "fiddle_base_href=/SkiaSharp/staging/${PR_NUMBER}/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -120,8 +116,6 @@ jobs:
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
-            echo "uno_gallery_base_href=/SkiaSharp/gallery-uno/" >> $GITHUB_OUTPUT
-            echo "fiddle_base_href=/SkiaSharp/fiddle/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
@@ -269,6 +263,27 @@ jobs:
             output/app-publish/wwwroot \
             --screenshot output/app-smoke.png
 
+      # The Uno apps publish with WasmShellWebAppBasePath=./ so they load under
+      # any prefix (/gallery-uno/, /staging/<PR>/fiddle/). Fail the app if a
+      # root-absolute asset reference creeps back in (for example after an
+      # Uno.Wasm.Bootstrap update); the site then omits it like any failed app.
+      - name: Check ${{ matrix.name }} asset paths are relative
+        if: matrix.smoke != ''
+        env:
+          APP_NAME: ${{ matrix.name }}
+        run: |
+          dir=output/app-publish/wwwroot
+          # A quoted string that starts with "/" (or is exactly "/"), for
+          # example "/package_<hash>/...", "/_framework/...", "/uno-config.js".
+          pattern="[\"']/([A-Za-z0-9_.-][^\"']*)?[\"']"
+          hits=$(grep -HnoE "$pattern" \
+            "$dir/index.html" "$dir/uno-config.js" "$dir/service-worker.js" || true)
+          if [ -n "$hits" ]; then
+            echo "::error::$APP_NAME contains root-absolute asset references; it will not load under its deployment prefix:"
+            echo "$hits" | head -20
+            exit 1
+          fi
+
       - name: Upload smoke screenshot on failure
         if: failure() && matrix.smoke != ''
         uses: actions/upload-artifact@v4
@@ -320,8 +335,6 @@ jobs:
       - name: Assemble site
         env:
           GALLERY_BASE_HREF: ${{ needs.setup.outputs.gallery_base_href }}
-          UNO_GALLERY_BASE_HREF: ${{ needs.setup.outputs.uno_gallery_base_href }}
-          FIDDLE_BASE_HREF: ${{ needs.setup.outputs.fiddle_base_href }}
           BUILD_FOOTER: ${{ needs.setup.outputs.build_footer }}
         shell: bash
         run: |
@@ -388,74 +401,18 @@ jobs:
             sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
           fi
 
-
-          # Rewrite absolute asset paths in the Uno gallery for the deployment prefix.
-          # Uno.Wasm.Bootstrap uses absolute "/package_<hash>/..." references in
-          # index.html and duplicates the root in package_<hash>/uno-config.js
-          # (config.uno_app_base, offline_files). Unlike Blazor there is no
-          # single <base href> to rewrite — we prefix each absolute asset path.
-          uno_rewrite_file() {
-            # Rewrite Uno.Wasm.Bootstrap absolute asset paths in one file so it
-            # works under a deployment prefix.
-            # Args:  $1 — file to rewrite
-            #        $2 — prefix (with leading slash, no trailing slash)
-            local f="$1"
-            local prefix="$2"
-            if grep -q "${prefix}/package_" "$f" 2>/dev/null; then
-              return  # guard against double-rewrites if this step is re-run
-            fi
-            sed -i \
-              -e "s|\"/package_|\"${prefix}/package_|g" \
-              -e "s|\"/_framework/|\"${prefix}/_framework/|g" \
-              -e "s|\"/manifest\.webmanifest\"|\"${prefix}/manifest.webmanifest\"|g" \
-              -e "s|\"/service-worker\.js\"|\"${prefix}/service-worker.js\"|g" \
-              -e "s|\"/favicon\.ico\"|\"${prefix}/favicon.ico\"|g" \
-              -e "s|\"/staticwebapp\.config\.json\"|\"${prefix}/staticwebapp.config.json\"|g" \
-              -e "s|\"/web\.config\"|\"${prefix}/web.config\"|g" \
-              -e "s|\"/index\.html\"|\"${prefix}/index.html\"|g" \
-              -e "s|\"/\\.\"|\"${prefix}/\"|g" \
-              "$f"
-          }
-          uno_rewrite_dir() {
-            # Rewrite a published wwwroot copy so it works under a deployment prefix.
-            # Args:  $1 — site sub-directory (relative to repo root)
-            #        $2 — prefix (with leading slash, no trailing slash)
-            local dir="$1"
-            local prefix="$2"
-            uno_rewrite_file "$dir/index.html" "$prefix"
-            for cfg in "$dir"/package_*/uno-config.js; do
-              [ -f "$cfg" ] || continue
-              uno_rewrite_file "$cfg" "$prefix"
-              # UNO_BOOTSTRAP_WEBAPP_BASE_PATH governs the service-worker scope.
-              # The rewrite above doesn't touch it because the value is the bare
-              # "/" string, not a path under our prefix.
-              sed -i \
-                -e "s|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"\\] = \"/\"|UNO_BOOTSTRAP_WEBAPP_BASE_PATH\"] = \"${prefix}/\"|g" \
-                "$cfg"
-            done
-            # service-worker.js contains an absolute `import from
-            # "/package_XXX/uno-config.js"` that also needs the deployment prefix.
-            if [ -f "$dir/service-worker.js" ]; then
-              uno_rewrite_file "$dir/service-worker.js" "$prefix"
-            fi
-            # Pre-compressed .br / .gz copies of the rewritten files are stale —
-            # delete so the server falls back to the freshly rewritten plain ones.
-            find "$dir" -maxdepth 1 -name 'index.html.br' -delete
-            find "$dir" -maxdepth 1 -name 'index.html.gz' -delete
-            find "$dir" -path '*/package_*/uno-config.js.br' -delete
-            find "$dir" -path '*/package_*/uno-config.js.gz' -delete
-          }
+          # The Uno apps publish with WasmShellWebAppBasePath=./ (set in their
+          # projects), so every asset path is relative and the copies work under
+          # any prefix as-is. Their app jobs verify this before uploading.
 
           # Gallery (Uno Platform) → /gallery-uno/
           if app_available gallery-uno "Gallery (Uno Platform)"; then
             cp -r output/apps/site-app-gallery-uno site/gallery-uno
-            uno_rewrite_dir site/gallery-uno "${UNO_GALLERY_BASE_HREF%/}"
           fi
 
           # SkiaFiddle (Uno Platform) → /fiddle/
           if app_available fiddle "SkiaFiddle"; then
             cp -r output/apps/site-app-fiddle site/fiddle
-            uno_rewrite_dir site/fiddle "${FIDDLE_BASE_HREF%/}"
           fi
 
           echo "=== Site layout ==="
