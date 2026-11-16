@@ -47,8 +47,16 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     continueOnError: ${{ parameters.continueOnError }}
+    ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+      uses:
+        repositories:
+          - skiaMirror
     variables:
       DOTNET_NOLOGO: true
+      ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+        SKIA_GIT_OPTIONS: --config-env=http.https://dev.azure.com/dnceng/internal/_git/mono-skia.extraheader=SKIA_MIRROR_AUTH_HEADER
+      ${{ else }}:
+        SKIA_GIT_OPTIONS: ''
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
@@ -81,6 +89,10 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+        - pwsh: git config --global --replace-all url.https://dev.azure.com/dnceng/internal/_git/mono-skia.insteadOf https://github.com/mono/skia.git
+          displayName: Configure internal Skia mirror
+
       - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
         displayName: Get the volume information before the run
         condition: always()
@@ -151,12 +163,8 @@ jobs:
             }
           displayName: Evaluate cache decision
       - ${{ else }}:
-        - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true')) }}:
-          - checkout: self
-            submodules: recursive
-        - ${{ else }}:
-          - checkout: self
-            submodules: false
+        - checkout: self
+          submodules: false
         - pwsh: ./scripts/infra/shared/set-build-variables.ps1
           displayName: Configure build variables
 
@@ -170,13 +178,19 @@ jobs:
 
       # Native source builds only use Skia. Merge-only jobs use no submodules.
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:
-        - pwsh: git submodule update --init --recursive externals/skia
+        - pwsh: git $(SKIA_GIT_OPTIONS) submodule update --init --recursive externals/skia
           displayName: Checkout native build submodules
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-      - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true), eq(parameters.checkoutSubmodules, 'true')) }}:
-        - pwsh: git submodule update --init --recursive
+          ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+            env:
+              SKIA_MIRROR_AUTH_HEADER: 'AUTHORIZATION: bearer $(System.AccessToken)'
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true')) }}:
+        - pwsh: git $(SKIA_GIT_OPTIONS) submodule update --init --recursive
           displayName: Full checkout (submodules)
           condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+            env:
+              SKIA_MIRROR_AUTH_HEADER: 'AUTHORIZATION: bearer $(System.AccessToken)'
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
