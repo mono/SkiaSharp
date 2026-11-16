@@ -118,7 +118,7 @@ public class MeshFlagSample : CanvasSampleBase
 	private readonly ushort[] indices = new ushort[QuadCount * 6];
 
 	private SKMeshSpecification? spec;
-	private SKMeshBuilder? builder;
+	private SKIndexedMeshBuilder? builder;
 	private SKMeshVertexBuffer? vertexBuffer;
 	private SKMeshIndexBuffer? indexBuffer;
 	private SKShader? bannerShader;
@@ -153,7 +153,7 @@ public class MeshFlagSample : CanvasSampleBase
 	public override IReadOnlyList<string> ApiTags =>
 	[
 		"SKMesh", "SKMeshSpecification", "SKMeshSpecificationBuilder",
-		"SKMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
+		"SKMeshBuilder", "SKIndexedMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
 		"SKCanvas.DrawMesh",
 	];
 
@@ -241,11 +241,9 @@ public class MeshFlagSample : CanvasSampleBase
 		bannerShader = CreateBannerShader();
 		weaveShader = CreateWeaveShader();
 
-		var specBuilder = new SKMeshSpecificationBuilder(VS, FS)
-		{
-			ColorSpace = SKColorSpace.CreateSrgb(),
-			AlphaType = SKAlphaType.Premul,
-		};
+		var specBuilder = SKMeshSpecification.CreateBuilder(VS, FS);
+		specBuilder.ColorSpace = SKColorSpace.CreateSrgb();
+		specBuilder.AlphaType = SKAlphaType.Premul;
 		specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
 		specBuilder.AddAttribute("uvDepth", SKMeshSpecificationAttributeType.Float4);
 		specBuilder.AddAttribute("normalFold", SKMeshSpecificationAttributeType.Float4);
@@ -281,12 +279,13 @@ public class MeshFlagSample : CanvasSampleBase
 		vertexBuffer = SKMeshVertexBuffer.Create(NodeCount * FloatsPerVertex * sizeof(float));
 		indexBuffer = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(indices.AsSpan()));
 
-		builder = new SKMeshBuilder(spec);
+		builder = spec.CreateIndexedMeshBuilder();
 		if (bannerShader != null)
 			builder.Children["uBannerTex"] = bannerShader;
 		if (weaveShader != null)
 			builder.Children["uWeaveTex"] = weaveShader;
-		builder.SetIndexBuffer(indexBuffer);
+		if (indexBuffer != null)
+			builder.SetIndexBuffer(indexBuffer);
 
 		meshPaint = new SKPaint { Color = SKColors.White };
 		wirePaint = new SKPaint

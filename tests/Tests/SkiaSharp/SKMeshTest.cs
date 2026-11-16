@@ -368,11 +368,12 @@ namespace SkiaSharp.Tests
 			var data = MemoryMarshal.AsBytes(vertices.AsSpan());
 			using var vb = SKMeshVertexBuffer.Create(data);
 
-			using var builder = new SKMeshBuilder(spec);
+			using var builder = spec.CreateMeshBuilder();
 			builder.Mode = SKMeshMode.Triangles;
 			builder.Bounds = new SKRect(0, 0, 100, 100);
 			builder.SetVertexBuffer(vb);
 
+			Assert.Equal(spec.VertexStride, builder.VertexStride);
 			Assert.Equal(vb, builder.VertexBuffer);
 			Assert.Equal(3, builder.VertexCount);
 			Assert.Equal(0, builder.VertexOffset);
@@ -384,7 +385,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void MeshBuilderCreatesIndexedMesh()
+		public void IndexedMeshBuilderCreatesIndexedMesh()
 		{
 			using var spec = CreateSimpleSpec(out _);
 			Assert.NotNull(spec);
@@ -397,27 +398,35 @@ namespace SkiaSharp.Tests
 			var iData = MemoryMarshal.AsBytes(indices.AsSpan());
 			using var ib = SKMeshIndexBuffer.Create(iData);
 
-			using var builder = new SKMeshBuilder(spec);
+			using var builder = SKMesh.CreateIndexedBuilder(spec);
 			builder.Mode = SKMeshMode.Triangles;
 			builder.Bounds = new SKRect(0, 0, 100, 100);
 			builder.SetVertexBuffer(vb);
+
+			// Building an indexed mesh before setting the index buffer must throw.
+			Assert.Throws<InvalidOperationException>(() => builder.Build());
+
 			builder.SetIndexBuffer(ib);
 
+			Assert.Equal(spec.VertexStride, builder.VertexStride);
 			Assert.Equal(ib, builder.IndexBuffer);
 			Assert.Equal(6, builder.IndexCount);
 			Assert.Equal(0, builder.IndexOffset);
 
-			using var mesh = builder.Build();
+			// Polymorphic Build() through SKMeshBuilder base reference must call SKIndexedMeshBuilder.Build()
+			SKMeshBuilder baseBuilder = builder;
+			using var mesh = baseBuilder.Build();
 
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
+			Assert.Equal(6, mesh.IndexCount);
 		}
 
 		// Full-canvas quad (two triangles) covering a 100x100 area.
 		private static readonly float[] QuadVertices = { 0, 0, 100, 0, 100, 100, 0, 100 };
 		private static readonly ushort[] QuadIndices = { 0, 1, 2, 0, 2, 3 };
 
-		private SKMesh CreateFullCanvasRedMesh(SKMeshSpecification spec, SKMeshBuilder builder,
+		private SKMesh CreateFullCanvasRedMesh(SKMeshSpecification spec, SKIndexedMeshBuilder builder,
 			SKMeshVertexBuffer vb, SKMeshIndexBuffer ib)
 		{
 			builder.Bounds = new SKRect(0, 0, 100, 100);
@@ -446,7 +455,7 @@ namespace SkiaSharp.Tests
 
 			using var vb = SKMeshVertexBuffer.Create(grContext, MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
 			using var ib = SKMeshIndexBuffer.Create(grContext, MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
-			using var builder = new SKMeshBuilder(spec);
+			using var builder = spec.CreateIndexedMeshBuilder();
 			using var mesh = CreateFullCanvasRedMesh(spec, builder, vb, ib);
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
@@ -520,7 +529,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, ibHandle.GetReferenceCount(true));
 			Assert.Equal(1, childHandle.GetReferenceCount(true));
 
-			var builder = new SKMeshBuilder(spec)
+			var builder = new SKIndexedMeshBuilder(spec)
 			{
 				Bounds = new SKRect(0, 0, 100, 100),
 			};
@@ -583,7 +592,7 @@ namespace SkiaSharp.Tests
 
 			using var vb = SKMeshVertexBuffer.Create(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
 			using var ib = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
-			using var builder = new SKMeshBuilder(spec);
+			using var builder = spec.CreateIndexedMeshBuilder();
 			using var mesh = CreateFullCanvasRedMesh(spec, builder, vb, ib);
 			Assert.NotNull(mesh);
 
@@ -616,7 +625,7 @@ namespace SkiaSharp.Tests
 
 			using var vb = SKMeshVertexBuffer.Create(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
 			using var ib = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
-			using var builder = new SKMeshBuilder(spec);
+			using var builder = spec.CreateIndexedMeshBuilder();
 			using var mesh = CreateFullCanvasRedMesh(spec, builder, vb, ib);
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
@@ -672,7 +681,7 @@ namespace SkiaSharp.Tests
 			using var vb = SKMeshVertexBuffer.Create(MemoryMarshal.AsBytes(verts.AsSpan()));
 			using var ib = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(indices.AsSpan()));
 
-			using var builder = new SKMeshBuilder(spec);
+			using var builder = spec.CreateIndexedMeshBuilder();
 			builder.Bounds = new SKRect(0, 0, 100, 100);
 			builder.SetVertexBuffer(vb);
 			builder.SetIndexBuffer(ib);
@@ -744,11 +753,9 @@ namespace SkiaSharp.Tests
 					}";
 
 				using var cs = SKColorSpace.CreateSrgb();
-				var specBuilder = new SKMeshSpecificationBuilder(vs, fs)
-				{
-					ColorSpace = cs,
-					AlphaType = SKAlphaType.Premul,
-				};
+				var specBuilder = SKMeshSpecification.CreateBuilder(vs, fs);
+				specBuilder.ColorSpace = cs;
+				specBuilder.AlphaType = SKAlphaType.Premul;
 				specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
 				using var spec = specBuilder.Build(out var errors);
 				Assert.NotNull(spec);
@@ -758,10 +765,8 @@ namespace SkiaSharp.Tests
 				using var ib = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
 				using var childShader = SKShader.CreateColor(SKColors.Lime);
 
-				using var builder = new SKMeshBuilder(spec)
-				{
-					Bounds = new SKRect(0, 0, 100, 100),
-				};
+				using var builder = spec.CreateIndexedMeshBuilder();
+				builder.Bounds = new SKRect(0, 0, 100, 100);
 				builder.Uniforms["uScale"] = 1f;
 				builder.Children["uChild"] = childShader;
 				builder.SetVertexBuffer(vb);

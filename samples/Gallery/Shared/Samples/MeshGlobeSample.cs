@@ -133,7 +133,7 @@ public class MeshGlobeSample : CanvasSampleBase
 	private readonly ushort[] indices = new ushort[MaxQuadCount * 6];
 
 	private SKMeshSpecification? spec;
-	private SKMeshBuilder? builder;
+	private SKIndexedMeshBuilder? builder;
 	private SKMeshVertexBuffer? vertexBuffer;
 	private SKMeshIndexBuffer? indexBuffer;
 	private SKShader? earthShader;
@@ -192,7 +192,7 @@ public class MeshGlobeSample : CanvasSampleBase
 	public override IReadOnlyList<string> ApiTags =>
 	[
 		"SKMesh", "SKMeshSpecification", "SKMeshSpecificationBuilder",
-		"SKMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
+		"SKMeshBuilder", "SKIndexedMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
 		"SKCanvas.DrawMesh",
 	];
 
@@ -357,11 +357,9 @@ public class MeshGlobeSample : CanvasSampleBase
 
 		earthShader = CreateEarthMapShader();
 
-		var specBuilder = new SKMeshSpecificationBuilder(VS, FS)
-		{
-			ColorSpace = SKColorSpace.CreateSrgb(),
-			AlphaType = SKAlphaType.Premul,
-		};
+		var specBuilder = SKMeshSpecification.CreateBuilder(VS, FS);
+		specBuilder.ColorSpace = SKColorSpace.CreateSrgb();
+		specBuilder.AlphaType = SKAlphaType.Premul;
 		specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
 		specBuilder.AddAttribute("uvDepth", SKMeshSpecificationAttributeType.Float4);
 		specBuilder.AddAttribute("normalSpec", SKMeshSpecificationAttributeType.Float4);
@@ -378,7 +376,7 @@ public class MeshGlobeSample : CanvasSampleBase
 		vertexBuffer = SKMeshVertexBuffer.Create(VertexCount * FloatsPerVertex * sizeof(float));
 		indexBuffer = SKMeshIndexBuffer.Create(MaxQuadCount * 6 * sizeof(ushort));
 
-		builder = new SKMeshBuilder(spec);
+		builder = spec.CreateIndexedMeshBuilder();
 		if (earthShader != null)
 			builder.Children["uEarthTex"] = earthShader;
 

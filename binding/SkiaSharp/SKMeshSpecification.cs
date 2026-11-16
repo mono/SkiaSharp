@@ -167,12 +167,34 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		}
 	}
 
+	// CreateBuilder
+
+	/// <summary>Creates a builder for an <see cref="T:SkiaSharp.SKMeshSpecification" /> with the specified vertex and fragment SkSL programs.</summary>
+	/// <param name="vertexShader">The SkSL source of the vertex program.</param>
+	/// <param name="fragmentShader">The SkSL source of the fragment program.</param>
+	/// <returns>A new specification builder.</returns>
+	/// <remarks />
+	public static SKMeshSpecificationBuilder CreateBuilder (string vertexShader, string fragmentShader) =>
+		new SKMeshSpecificationBuilder (vertexShader, fragmentShader);
+
+	/// <summary>Creates a builder for a non-indexed <see cref="T:SkiaSharp.SKMesh" /> using this specification.</summary>
+	/// <returns>A new mesh builder.</returns>
+	/// <remarks />
+	public SKMeshBuilder CreateMeshBuilder () =>
+		new SKMeshBuilder (this);
+
+	/// <summary>Creates a builder for an indexed <see cref="T:SkiaSharp.SKMesh" /> using this specification.</summary>
+	/// <returns>A new indexed mesh builder.</returns>
+	/// <remarks />
+	public SKIndexedMeshBuilder CreateIndexedMeshBuilder () =>
+		new SKIndexedMeshBuilder (this);
+
 	// Properties
 
 	/// <summary>Gets the size of a single vertex, in bytes.</summary>
 	/// <value>The vertex stride, in bytes.</value>
 	/// <remarks />
-	public int Stride => (int)SkiaApi.sk_meshspecification_get_stride (Handle);
+	public int VertexStride => (int)SkiaApi.sk_meshspecification_get_stride (Handle);
 
 	/// <summary>Gets the combined size of the uniforms, in bytes.</summary>
 	/// <value>The total uniform size, in bytes.</value>

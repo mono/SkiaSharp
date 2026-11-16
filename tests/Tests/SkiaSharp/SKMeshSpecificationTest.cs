@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 
 			Assert.Null(errors);
 			Assert.NotNull(spec);
-			Assert.Equal(sizeof(float) * 2, spec.Stride);
+			Assert.Equal(sizeof(float) * 2, spec.VertexStride);
 
 			spec.Dispose();
 		}
@@ -93,12 +93,12 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void SpecificationStrideMatchesInput()
+		public void SpecificationVertexStrideMatchesInput()
 		{
 			using var spec = CreateSimpleSpec(out _);
 
 			Assert.NotNull(spec);
-			Assert.Equal(sizeof(float) * 2, spec.Stride);
+			Assert.Equal(sizeof(float) * 2, spec.VertexStride);
 		}
 
 		[Fact]
@@ -146,7 +146,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void SpecificationBuilderComputesOffsetsAndStride()
 		{
-			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, SimpleFragmentShader);
+			var specBuilder = SKMeshSpecification.CreateBuilder(SimpleVertexShader, SimpleFragmentShader);
 			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
 			specBuilder.AddAttribute("uv", SKMeshSpecificationAttributeType.Float2);
 			specBuilder.AddAttribute("color", SKMeshSpecificationAttributeType.Ubyte4Unorm);
@@ -159,7 +159,7 @@ namespace SkiaSharp.Tests
 			using var spec = specBuilder.Build(out var errors);
 			Assert.Null(errors);
 			Assert.NotNull(spec);
-			Assert.Equal(20, spec.Stride);
+			Assert.Equal(20, spec.VertexStride);
 		}
 
 		[Fact]
@@ -172,7 +172,7 @@ namespace SkiaSharp.Tests
 			using var spec = specBuilder.Build(out var errors);
 			Assert.Null(errors);
 			Assert.NotNull(spec);
-			Assert.Equal(8, spec.Stride);
+			Assert.Equal(8, spec.VertexStride);
 		}
 
 		[Fact]

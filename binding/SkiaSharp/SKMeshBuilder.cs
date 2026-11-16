@@ -21,6 +21,11 @@ public class SKMeshBuilder : IDisposable
 	/// <remarks />
 	public SKMeshSpecification Specification { get; }
 
+	/// <summary>Gets the size of a single vertex, in bytes.</summary>
+	/// <value>The vertex stride, in bytes.</value>
+	/// <remarks />
+	public int VertexStride => Specification.VertexStride;
+
 	/// <summary>Gets the uniform values supplied to the mesh programs.</summary>
 	/// <value>The uniform collection declared by the specification.</value>
 	/// <remarks />
@@ -56,21 +61,6 @@ public class SKMeshBuilder : IDisposable
 	/// <remarks />
 	public int VertexOffset { get; private set; }
 
-	/// <summary>Gets the optional index buffer configured on the builder.</summary>
-	/// <value>The index buffer, or <see langword="null" /> for a non-indexed mesh.</value>
-	/// <remarks />
-	public SKMeshIndexBuffer? IndexBuffer { get; private set; }
-
-	/// <summary>Gets the number of indices configured on the builder.</summary>
-	/// <value>The index count, or 0 for a non-indexed mesh.</value>
-	/// <remarks />
-	public int IndexCount { get; private set; }
-
-	/// <summary>Gets the byte offset of the first index in <see cref="P:SkiaSharp.SKMeshBuilder.IndexBuffer" />.</summary>
-	/// <value>The index byte offset.</value>
-	/// <remarks />
-	public int IndexOffset { get; private set; }
-
 	/// <summary>Configures the vertex buffer using all vertices in the buffer starting at byte offset 0.</summary>
 	/// <param name="buffer">The buffer holding the vertex data.</param>
 	/// <remarks />
@@ -79,7 +69,7 @@ public class SKMeshBuilder : IDisposable
 		if (buffer == null)
 			throw new ArgumentNullException (nameof (buffer));
 
-		SetVertexBuffer (buffer, buffer.Size / Specification.Stride, 0);
+		SetVertexBuffer (buffer, buffer.Size / VertexStride, 0);
 	}
 
 	/// <summary>Configures the vertex buffer and vertex count starting at byte offset 0.</summary>
@@ -108,70 +98,13 @@ public class SKMeshBuilder : IDisposable
 		VertexOffset = offset;
 	}
 
-	/// <summary>Configures the index buffer using all 16-bit indices in the buffer starting at byte offset 0, or clears the index buffer when <paramref name="buffer" /> is <see langword="null" />.</summary>
-	/// <param name="buffer">The buffer holding the index data, or <see langword="null" /> to build a non-indexed mesh.</param>
-	/// <remarks />
-	public void SetIndexBuffer (SKMeshIndexBuffer? buffer)
-	{
-		if (buffer == null) {
-			IndexBuffer = null;
-			IndexCount = 0;
-			IndexOffset = 0;
-			return;
-		}
-
-		SetIndexBuffer (buffer, buffer.Size / sizeof (ushort), 0);
-	}
-
-	/// <summary>Configures the index buffer and index count starting at byte offset 0.</summary>
-	/// <param name="buffer">The buffer holding the index data.</param>
-	/// <param name="count">The number of indices to read.</param>
-	/// <remarks />
-	public void SetIndexBuffer (SKMeshIndexBuffer buffer, int count) =>
-		SetIndexBuffer (buffer, count, 0);
-
-	/// <summary>Configures the index buffer, index count, and byte offset.</summary>
-	/// <param name="buffer">The buffer holding the index data.</param>
-	/// <param name="count">The number of indices to read.</param>
-	/// <param name="offset">The byte offset of the first index.</param>
-	/// <remarks />
-	public void SetIndexBuffer (SKMeshIndexBuffer buffer, int count, int offset)
-	{
-		if (buffer == null)
-			throw new ArgumentNullException (nameof (buffer));
-		if (count <= 0)
-			throw new ArgumentOutOfRangeException (nameof (count));
-		if (offset < 0)
-			throw new ArgumentOutOfRangeException (nameof (offset));
-
-		IndexBuffer = buffer;
-		IndexCount = count;
-		IndexOffset = offset;
-	}
-
-	/// <summary>Builds a mesh using the configured vertex buffer, optional index buffer, uniforms, children, mode, and bounds.</summary>
+	/// <summary>Builds a non-indexed mesh using the configured vertex buffer, uniforms, children, mode, and bounds.</summary>
 	/// <returns>The mesh, or <see langword="null" /> if it could not be built.</returns>
 	/// <remarks />
-	public SKMesh? Build ()
+	public virtual SKMesh? Build ()
 	{
 		if (VertexBuffer == null)
 			throw new InvalidOperationException ("A vertex buffer must be set before building a mesh.");
-
-		if (IndexBuffer != null) {
-			return Specification.ToMeshIndexedCore (
-				Mode,
-				VertexBuffer,
-				VertexCount,
-				VertexOffset,
-				IndexBuffer,
-				IndexCount,
-				IndexOffset,
-				Uniforms,
-				Children,
-				Bounds,
-				captureErrors: false,
-				out _);
-		}
 
 		return Specification.ToMeshCore (
 			Mode,
@@ -185,29 +118,14 @@ public class SKMeshBuilder : IDisposable
 			out _);
 	}
 
-	/// <summary>Builds a mesh using the configured vertex buffer, optional index buffer, uniforms, children, mode, and bounds, reporting any validation errors.</summary>
+	/// <summary>Builds a non-indexed mesh using the configured vertex buffer, uniforms, children, mode, and bounds, reporting any validation errors.</summary>
 	/// <param name="errors">When this method returns, contains the message describing why creation failed, or <see langword="null" /> on success.</param>
 	/// <returns>The mesh, or <see langword="null" /> if it could not be built.</returns>
 	/// <remarks />
-	public SKMesh? Build (out string? errors)
+	public virtual SKMesh? Build (out string? errors)
 	{
 		if (VertexBuffer == null)
 			throw new InvalidOperationException ("A vertex buffer must be set before building a mesh.");
-
-		if (IndexBuffer != null) {
-			return Specification.ToMeshIndexed (
-				Mode,
-				VertexBuffer,
-				VertexCount,
-				VertexOffset,
-				IndexBuffer,
-				IndexCount,
-				IndexOffset,
-				Uniforms,
-				Children,
-				Bounds,
-				out errors);
-		}
 
 		return Specification.ToMesh (
 			Mode,

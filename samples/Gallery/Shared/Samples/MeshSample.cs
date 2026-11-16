@@ -93,7 +93,7 @@ public class MeshSample : CanvasSampleBase
 	private readonly ushort[] indices = new ushort[MaxIndices];
 
 	private SKMeshSpecification? spec;
-	private SKMeshBuilder? builder;
+	private SKIndexedMeshBuilder? builder;
 	private SKMeshVertexBuffer? vertexBuffer;
 	private SKMeshIndexBuffer? indexBuffer;
 	private SKShader? wallShader;
@@ -125,7 +125,7 @@ public class MeshSample : CanvasSampleBase
 	public override IReadOnlyList<string> ApiTags =>
 	[
 		"SKMesh", "SKMeshSpecification", "SKMeshSpecificationBuilder",
-		"SKMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
+		"SKMeshBuilder", "SKIndexedMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
 		"SKCanvas.DrawMesh",
 	];
 
@@ -179,11 +179,9 @@ public class MeshSample : CanvasSampleBase
 
 		wallShader = CreateProceduralStoneShader();
 
-		var specBuilder = new SKMeshSpecificationBuilder(VS, FS)
-		{
-			ColorSpace = SKColorSpace.CreateSrgb(),
-			AlphaType = SKAlphaType.Premul,
-		};
+		var specBuilder = SKMeshSpecification.CreateBuilder(VS, FS);
+		specBuilder.ColorSpace = SKColorSpace.CreateSrgb();
+		specBuilder.AlphaType = SKAlphaType.Premul;
 		specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
 		specBuilder.AddAttribute("uvDepth", SKMeshSpecificationAttributeType.Float4);
 		specBuilder.AddAttribute("normalKind", SKMeshSpecificationAttributeType.Float4);
@@ -213,7 +211,7 @@ public class MeshSample : CanvasSampleBase
 		vertexBuffer = SKMeshVertexBuffer.Create(MaxVertices * FloatsPerVertex * sizeof(float));
 		indexBuffer = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(indices.AsSpan()));
 
-		builder = new SKMeshBuilder(spec);
+		builder = spec.CreateIndexedMeshBuilder();
 		if (wallShader != null)
 			builder.Children["uWallTexture"] = wallShader;
 

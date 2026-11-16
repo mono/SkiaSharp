@@ -16,6 +16,20 @@ public unsafe class SKMesh : SKObject, ISKSkipObjectRegistration
 	protected override void DisposeNative () =>
 		SkiaApi.sk_mesh_delete (Handle);
 
+	/// <summary>Creates a builder for a non-indexed <see cref="T:SkiaSharp.SKMesh" /> using the specified specification.</summary>
+	/// <param name="specification">The specification describing the mesh attributes, varyings and programs.</param>
+	/// <returns>A new mesh builder.</returns>
+	/// <remarks />
+	public static SKMeshBuilder CreateBuilder (SKMeshSpecification specification) =>
+		new SKMeshBuilder (specification);
+
+	/// <summary>Creates a builder for an indexed <see cref="T:SkiaSharp.SKMesh" /> using the specified specification.</summary>
+	/// <param name="specification">The specification describing the mesh attributes, varyings and programs.</param>
+	/// <returns>A new indexed mesh builder.</returns>
+	/// <remarks />
+	public static SKIndexedMeshBuilder CreateIndexedBuilder (SKMeshSpecification specification) =>
+		new SKIndexedMeshBuilder (specification);
+
 	/// <summary>Gets a value indicating whether the mesh passed validation and can be drawn.</summary>
 	/// <value><see langword="true" /> if the mesh is valid; otherwise <see langword="false" />.</value>
 	/// <remarks />
