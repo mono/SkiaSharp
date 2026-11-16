@@ -299,44 +299,44 @@ namespace SkiaSharp
 			(sk_mesh_index_buffer_update_delegate ??= GetSymbol<Delegates.sk_mesh_index_buffer_update> ("sk_mesh_index_buffer_update")).Invoke (buffer, context, data, offset, size);
 		#endif
 
-		// sk_mesh_t* sk_mesh_make(sk_meshspecification_t* spec, sk_mesh_mode_t mode, sk_mesh_vertex_buffer_t* vb, size_t vertexCount, size_t vertexOffset, const sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, const sk_rect_t* bounds, sk_string_t* error)
+		// sk_mesh_t* sk_mesh_make(sk_meshspecification_t* spec, sk_mesh_mode_t mode, sk_mesh_vertex_buffer_t* vb, size_t vertexCount, size_t vertexOffset, const sk_data_t* uniforms, sk_flattenable_t** children, const sk_rect_t* bounds, sk_string_t* error)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error);
+		internal static partial sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error);
+		internal static extern sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error);
+			internal delegate sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error);
 		}
 		private static Delegates.sk_mesh_make sk_mesh_make_delegate;
-		internal static sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error) =>
-			(sk_mesh_make_delegate ??= GetSymbol<Delegates.sk_mesh_make> ("sk_mesh_make")).Invoke (spec, mode, vb, vertexCount, vertexOffset, uniforms, children, childCount, bounds, error);
+		internal static sk_mesh_t sk_mesh_make (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error) =>
+			(sk_mesh_make_delegate ??= GetSymbol<Delegates.sk_mesh_make> ("sk_mesh_make")).Invoke (spec, mode, vb, vertexCount, vertexOffset, uniforms, children, bounds, error);
 		#endif
 
-		// sk_mesh_t* sk_mesh_make_indexed(sk_meshspecification_t* spec, sk_mesh_mode_t mode, sk_mesh_vertex_buffer_t* vb, size_t vertexCount, size_t vertexOffset, sk_mesh_index_buffer_t* ib, size_t indexCount, size_t indexOffset, const sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, const sk_rect_t* bounds, sk_string_t* error)
+		// sk_mesh_t* sk_mesh_make_indexed(sk_meshspecification_t* spec, sk_mesh_mode_t mode, sk_mesh_vertex_buffer_t* vb, size_t vertexCount, size_t vertexOffset, sk_mesh_index_buffer_t* ib, size_t indexCount, size_t indexOffset, const sk_data_t* uniforms, sk_flattenable_t** children, const sk_rect_t* bounds, sk_string_t* error)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error);
+		internal static partial sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error);
+		internal static extern sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error);
+			internal delegate sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error);
 		}
 		private static Delegates.sk_mesh_make_indexed sk_mesh_make_indexed_delegate;
-		internal static sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, /* size_t */ IntPtr childCount, SKRect* bounds, sk_string_t error) =>
-			(sk_mesh_make_indexed_delegate ??= GetSymbol<Delegates.sk_mesh_make_indexed> ("sk_mesh_make_indexed")).Invoke (spec, mode, vb, vertexCount, vertexOffset, ib, indexCount, indexOffset, uniforms, children, childCount, bounds, error);
+		internal static sk_mesh_t sk_mesh_make_indexed (sk_meshspecification_t spec, SKMeshMode mode, sk_mesh_vertex_buffer_t vb, /* size_t */ IntPtr vertexCount, /* size_t */ IntPtr vertexOffset, sk_mesh_index_buffer_t ib, /* size_t */ IntPtr indexCount, /* size_t */ IntPtr indexOffset, sk_data_t uniforms, sk_flattenable_t* children, SKRect* bounds, sk_string_t error) =>
+			(sk_mesh_make_indexed_delegate ??= GetSymbol<Delegates.sk_mesh_make_indexed> ("sk_mesh_make_indexed")).Invoke (spec, mode, vb, vertexCount, vertexOffset, ib, indexCount, indexOffset, uniforms, children, bounds, error);
 		#endif
 
 		// sk_mesh_vertex_buffer_t* sk_mesh_vertex_buffer_copy(const sk_mesh_vertex_buffer_t* buffer)

@@ -103,34 +103,35 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		using var fs = new SKString (fragmentShader);
 		using var errorString = new SKString ();
 
-		var nativeAttrs = attributes.Length <= MaxAttributes
-			? stackalloc SKMeshSpecificationAttributeNative[attributes.Length]
-			: new SKMeshSpecificationAttributeNative[attributes.Length];
+		var attrArray = attributes.Length > MaxAttributes ? new SKMeshSpecificationAttributeNative[attributes.Length] : null;
+		var varyingArray = varyings.Length > MaxVaryings ? new SKMeshSpecificationVaryingNative[varyings.Length] : null;
 		var attrNamePins = new System.Buffers.MemoryHandle[attributes.Length];
+		var varyingNamePins = new System.Buffers.MemoryHandle[varyings.Length];
 
-		try
+		fixed (SKMeshSpecificationAttributeNative* pinnedAttrs = attrArray)
+		fixed (SKMeshSpecificationVaryingNative* pinnedVaryings = varyingArray)
 		{
-			for (int i = 0; i < attributes.Length; i++)
-			{
-				var nameBytes = StringUtilities.GetEncodedText (attributes[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
-				var pin = nameBytes.AsMemory ().Pin ();
-				attrNamePins[i] = pin;
-
-				nativeAttrs[i] = new SKMeshSpecificationAttributeNative
-				{
-					fType = attributes[i].Type,
-					fOffset = (IntPtr)attributes[i].Offset,
-					fName = (byte*)pin.Pointer,
-				};
-			}
-
-			var nativeVaryings = varyings.Length <= MaxVaryings
-				? stackalloc SKMeshSpecificationVaryingNative[varyings.Length]
-				: new SKMeshSpecificationVaryingNative[varyings.Length];
-			var varyingNamePins = new System.Buffers.MemoryHandle[varyings.Length];
+			var stackAttrs = stackalloc SKMeshSpecificationAttributeNative[attributes.Length <= MaxAttributes ? attributes.Length : 0];
+			var stackVaryings = stackalloc SKMeshSpecificationVaryingNative[varyings.Length <= MaxVaryings ? varyings.Length : 0];
+			var nativeAttrs = attrArray != null ? pinnedAttrs : stackAttrs;
+			var nativeVaryings = varyingArray != null ? pinnedVaryings : stackVaryings;
 
 			try
 			{
+				for (int i = 0; i < attributes.Length; i++)
+				{
+					var nameBytes = StringUtilities.GetEncodedText (attributes[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
+					var pin = nameBytes.AsMemory ().Pin ();
+					attrNamePins[i] = pin;
+
+					nativeAttrs[i] = new SKMeshSpecificationAttributeNative
+					{
+						fType = attributes[i].Type,
+						fOffset = (IntPtr)attributes[i].Offset,
+						fName = (byte*)pin.Pointer,
+					};
+				}
+
 				for (int i = 0; i < varyings.Length; i++)
 				{
 					var nameBytes = StringUtilities.GetEncodedText (varyings[i].Name ?? string.Empty, SKTextEncoding.Utf8, true);
@@ -144,40 +145,33 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 					};
 				}
 
-				fixed (SKMeshSpecificationAttributeNative* attrsPtr = nativeAttrs)
-				fixed (SKMeshSpecificationVaryingNative* varyingsPtr = nativeVaryings)
-				{
-					var spec = GetObject (SkiaApi.sk_meshspecification_make (
-						attrsPtr,
-						(IntPtr)attributes.Length,
-						(IntPtr)vertexStride,
-						varyingsPtr,
-						(IntPtr)varyings.Length,
-						vs.Handle,
-						fs.Handle,
-						colorSpace?.Handle ?? IntPtr.Zero,
-						alphaType,
-						errorString.Handle));
+				var spec = GetObject (SkiaApi.sk_meshspecification_make (
+					nativeAttrs,
+					(IntPtr)attributes.Length,
+					(IntPtr)vertexStride,
+					nativeVaryings,
+					(IntPtr)varyings.Length,
+					vs.Handle,
+					fs.Handle,
+					colorSpace?.Handle ?? IntPtr.Zero,
+					alphaType,
+					errorString.Handle));
 
-					GC.KeepAlive (colorSpace);
+				GC.KeepAlive (colorSpace);
 
-					errors = errorString.ToString ();
-					if (errors?.Length == 0)
-						errors = null;
+				errors = errorString.ToString ();
+				if (errors?.Length == 0)
+					errors = null;
 
-					return spec;
-				}
+				return spec;
 			}
 			finally
 			{
 				for (int i = 0; i < varyings.Length; i++)
 					varyingNamePins[i].Dispose ();
+				for (int i = 0; i < attributes.Length; i++)
+					attrNamePins[i].Dispose ();
 			}
-		}
-		finally
-		{
-			for (int i = 0; i < attributes.Length; i++)
-				attrNamePins[i].Dispose ();
 		}
 	}
 
@@ -447,7 +441,14 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (vertexOffset < 0)
 			throw new ArgumentOutOfRangeException (nameof (vertexOffset));
 
-		using var childrenHandles = Utils.RentHandlesArray (children, true);
+		if (children != null && children.Length != Children.Count) {
+			errors = $"The mesh specification declares {Children.Count} child effects, but the mesh supplies {children.Length}.";
+			return null;
+		}
+
+		using var childrenHandles = children != null && children.Length > 0
+			? Utils.RentHandlesArray (children, true)
+			: default;
 		using var errorString = new SKString ();
 
 		fixed (IntPtr* ch = childrenHandles)
@@ -460,7 +461,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 				(IntPtr)vertexOffset,
 				uniforms?.Handle ?? IntPtr.Zero,
 				ch,
-				(IntPtr)childrenHandles.Length,
 				&bounds,
 				errorString.Handle));
 
@@ -705,7 +705,14 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (indexOffset < 0)
 			throw new ArgumentOutOfRangeException (nameof (indexOffset));
 
-		using var childrenHandles = Utils.RentHandlesArray (children, true);
+		if (children != null && children.Length != Children.Count) {
+			errors = $"The mesh specification declares {Children.Count} child effects, but the mesh supplies {children.Length}.";
+			return null;
+		}
+
+		using var childrenHandles = children != null && children.Length > 0
+			? Utils.RentHandlesArray (children, true)
+			: default;
 		using var errorString = new SKString ();
 
 		fixed (IntPtr* ch = childrenHandles)
@@ -721,7 +728,6 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 				(IntPtr)indexOffset,
 				uniforms?.Handle ?? IntPtr.Zero,
 				ch,
-				(IntPtr)childrenHandles.Length,
 				&bounds,
 				errorString.Handle));
 
