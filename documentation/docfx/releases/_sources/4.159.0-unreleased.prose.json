@@ -1,9 +1,25 @@
 {
-  "theme": "Documentation and test maintenance",
-  "highlights_headline": "The unreleased head contains documentation and test-infrastructure updates, with no collected consumer-facing changes.",
+  "theme": "Glyph and Vulkan reliability",
+  "highlights_headline": "The unreleased 4.159.0 changes improve mask-filtered glyph rendering and handle specific Vulkan allocation failures on Imagination drivers.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Mask-filtered glyph rendering corrected",
+          "detail": "When successive loads from a stateful font scaler disagree about a glyph's path, format, or bounds, rendering now uses the reloaded glyph and clears incompatible masks instead of overflowing sub-byte rows. Clipped embossed glyphs also use full plane strides when copying mask data.",
+          "prs": [5741]
+        },
+        {
+          "lead": "Imagination Vulkan allocation failures handled",
+          "detail": "Ganesh and Graphite abandon descriptor pools after descriptor-set allocation reports host or device out-of-memory on Imagination drivers, avoiding a driver failure during pool destruction. Graphite also prevents further allocation through the abandoned handle; other vendors and allocation errors are unaffected by this workaround.",
+          "prs": [5741]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
