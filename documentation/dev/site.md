@@ -121,27 +121,33 @@ published from `main` at <https://mono.github.io/SkiaSharp/>.
 
 ## CI Workflow
 
-The `build-site.yml` workflow handles everything:
+The `build-site.yml` workflow builds the docs and each app in parallel, then
+combines them in a quick assemble job:
 
 ```
-┌─────────────┐  ┌───────────────┐  ┌───────────────┐
-│ build-docs  │  │ build-gallery │  │ build-landing │
-│  (DocFX)    │  │ (Blazor WASM) │  │ (static copy) │
-└──────┬──────┘  └───────┬───────┘  └───────┬───────┘
-       │                 │                   │
-       └────────────┬────┴───────────────────┘
-                    ▼
-              ┌──────────┐
-              │  deploy  │  Assembles all artifacts
-              └──────────┘  and pushes to branch
+┌───────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐
+│ setup │──▶│ wasm-natives │──▶│ app (matrix) │──▶│           │
+│       │   └──────────────┘   │ Gallery      │   │ assemble  │──▶ deploy
+│       │                      │ Gallery Uno  │   │           │
+│       │                      │ SkiaFiddle   │   │           │
+│       │──▶ docs (DocFX) ────────────────────────▶│           │
+└───────┘                                         └───────────┘
 ```
 
-| Trigger | Deploys to |
-|---------|------------|
-| Push to `main` | `docs-live` (production) |
-| PR (same repo) | `docs-staging` (preview) |
-| PR (fork) | Build only, no deploy |
-| Manual dispatch | Choice of `docs-live` or `docs-staging` |
+Each app uploads its output only after it builds and passes its smoke test.
+The assemble job copies whichever apps are present and warns about any that
+are missing.
+
+| Trigger | Validates | Publishes |
+|---------|-----------|-----------|
+| Push to `main` | Yes | `docs-live` (production) |
+| Any PR, including forks | Yes, failures fail the PR | No |
+| Same-repo PR with `automation/staging` | Yes, failures fail the PR | `staging/<PR_NUMBER>/` |
+| Manual dispatch | Yes | Production, or a labeled PR's staging preview |
+
+On pull requests a failing docs or app build fails the run. On `main` and
+manual dispatches a failing app is left out of the site so the docs still
+publish; a failing docs build still blocks publishing.
 
 ## Customizing DocFX
 
