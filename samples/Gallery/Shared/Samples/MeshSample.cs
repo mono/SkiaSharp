@@ -84,18 +84,15 @@ public class MeshSample : CanvasSampleBase
 	private const int Rings = 28;
 	private const int Sides = 8; // octagonal winding tunnel
 	private const int MaxQuads = Rings * Sides + Rings; // tunnel walls + orbs
-	private const int MaxVertices = MaxQuads * 4;
-	private const int MaxIndices = MaxQuads * 6;
+	private const int MaxVertices = MaxQuads * 6; // 2 non-indexed triangles (6 vertices) per quad
 
 	private static readonly string[] Palettes = { "Dungeon Torch", "Cyber Neon", "Emerald Cavern" };
 
 	private readonly float[] vertices = new float[MaxVertices * FloatsPerVertex];
-	private readonly ushort[] indices = new ushort[MaxIndices];
 
 	private SKMeshSpecification? spec;
-	private SKIndexedMeshBuilder? builder;
+	private SKMeshBuilder? builder;
 	private SKMeshVertexBuffer? vertexBuffer;
-	private SKMeshIndexBuffer? indexBuffer;
 	private SKShader? wallShader;
 	private SKPaint? meshPaint;
 	private SKPaint? wirePaint;
@@ -125,7 +122,7 @@ public class MeshSample : CanvasSampleBase
 	public override IReadOnlyList<string> ApiTags =>
 	[
 		"SKMesh", "SKMeshSpecification", "SKMeshSpecificationBuilder",
-		"SKMeshBuilder", "SKIndexedMeshBuilder", "SKMeshVertexBuffer", "SKMeshIndexBuffer",
+		"SKMeshBuilder", "SKMeshVertexBuffer",
 		"SKCanvas.DrawMesh",
 	];
 
@@ -195,23 +192,9 @@ public class MeshSample : CanvasSampleBase
 			return;
 		}
 
-		// Pre-populate static quad index pattern (0,1,2, 0,2,3 for each quad)
-		for (var q = 0; q < MaxQuads; q++)
-		{
-			var vBase = (ushort)(q * 4);
-			var iBase = q * 6;
-			indices[iBase + 0] = vBase;
-			indices[iBase + 1] = (ushort)(vBase + 1);
-			indices[iBase + 2] = (ushort)(vBase + 2);
-			indices[iBase + 3] = vBase;
-			indices[iBase + 4] = (ushort)(vBase + 2);
-			indices[iBase + 5] = (ushort)(vBase + 3);
-		}
-
 		vertexBuffer = SKMeshVertexBuffer.Create(MaxVertices * FloatsPerVertex * sizeof(float));
-		indexBuffer = SKMeshIndexBuffer.Create(MemoryMarshal.AsBytes(indices.AsSpan()));
 
-		builder = spec.CreateIndexedMeshBuilder();
+		builder = spec.CreateMeshBuilder();
 		if (wallShader != null)
 			builder.Children["uWallTexture"] = wallShader;
 
@@ -291,7 +274,7 @@ public class MeshSample : CanvasSampleBase
 		canvas.Clear(new SKColor(10, 13, 23));
 		EnsureResources();
 
-		if (builder == null || vertexBuffer == null || indexBuffer == null || meshPaint == null)
+		if (builder == null || vertexBuffer == null || meshPaint == null)
 			return;
 
 		var now = DateTime.UtcNow;
@@ -401,8 +384,7 @@ public class MeshSample : CanvasSampleBase
 		if (quadCount == 0)
 			return;
 
-		var activeVerts = quadCount * 4;
-		var activeIndices = quadCount * 6;
+		var activeVerts = quadCount * 6;
 		var byteSlice = MemoryMarshal.AsBytes(vertices.AsSpan(0, activeVerts * FloatsPerVertex));
 		vertexBuffer.Update(byteSlice, 0);
 
@@ -412,7 +394,6 @@ public class MeshSample : CanvasSampleBase
 		builder.Uniforms["uOrbColor"] = orbColor;
 		builder.Bounds = new SKRect(0, 0, width, height);
 		builder.SetVertexBuffer(vertexBuffer, activeVerts);
-		builder.SetIndexBuffer(indexBuffer, activeIndices);
 
 		using var mesh = builder.Build(out var errors);
 		if (mesh != null)
@@ -495,11 +476,14 @@ public class MeshSample : CanvasSampleBase
 		if (quadCount >= MaxQuads)
 			return;
 
-		var baseIdx = quadCount * 4 * FloatsPerVertex;
+		// Emit 2 triangles (v0, v1, v2) and (v0, v2, v3) directly for non-indexed SKMeshBuilder
+		var baseIdx = quadCount * 6 * FloatsPerVertex;
 		WriteVertex(baseIdx + 0 * FloatsPerVertex, x0, y0, u0, v0, z0, nx0, ny0, kind0, extra0);
 		WriteVertex(baseIdx + 1 * FloatsPerVertex, x1, y1, u1, v1, z1, nx1, ny1, kind1, extra1);
 		WriteVertex(baseIdx + 2 * FloatsPerVertex, x2, y2, u2, v2, z2, nx2, ny2, kind2, extra2);
-		WriteVertex(baseIdx + 3 * FloatsPerVertex, x3, y3, u3, v3, z3, nx3, ny3, kind3, extra3);
+		WriteVertex(baseIdx + 3 * FloatsPerVertex, x0, y0, u0, v0, z0, nx0, ny0, kind0, extra0);
+		WriteVertex(baseIdx + 4 * FloatsPerVertex, x2, y2, u2, v2, z2, nx2, ny2, kind2, extra2);
+		WriteVertex(baseIdx + 5 * FloatsPerVertex, x3, y3, u3, v3, z3, nx3, ny3, kind3, extra3);
 		quadCount++;
 	}
 
@@ -521,22 +505,20 @@ public class MeshSample : CanvasSampleBase
 	private void DrawWireframe(SKCanvas canvas, int quadCount, SKPaint paint)
 	{
 		using var pathBuilder = new SKPathBuilder();
-		for (var q = 0; q < quadCount; q++)
+		var triCount = quadCount * 2;
+		for (var t = 0; t < triCount; t++)
 		{
-			var b = q * 4 * FloatsPerVertex;
+			var b = t * 3 * FloatsPerVertex;
 			var x0 = vertices[b + 0];
 			var y0 = vertices[b + 1];
 			var x1 = vertices[b + FloatsPerVertex + 0];
 			var y1 = vertices[b + FloatsPerVertex + 1];
 			var x2 = vertices[b + 2 * FloatsPerVertex + 0];
 			var y2 = vertices[b + 2 * FloatsPerVertex + 1];
-			var x3 = vertices[b + 3 * FloatsPerVertex + 0];
-			var y3 = vertices[b + 3 * FloatsPerVertex + 1];
 
 			pathBuilder.MoveTo(x0, y0);
 			pathBuilder.LineTo(x1, y1);
 			pathBuilder.LineTo(x2, y2);
-			pathBuilder.LineTo(x3, y3);
 			pathBuilder.Close();
 		}
 		using var path = pathBuilder.Detach();
@@ -550,7 +532,6 @@ public class MeshSample : CanvasSampleBase
 		wirePaint?.Dispose(); wirePaint = null;
 		meshPaint?.Dispose(); meshPaint = null;
 		builder?.Dispose(); builder = null;
-		indexBuffer?.Dispose(); indexBuffer = null;
 		vertexBuffer?.Dispose(); vertexBuffer = null;
 		spec?.Dispose(); spec = null;
 		wallShader?.Dispose(); wallShader = null;
