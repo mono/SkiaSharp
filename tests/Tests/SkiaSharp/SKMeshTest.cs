@@ -249,6 +249,9 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKMeshVertexBuffer.Create((IntPtr)1, -4));
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKMeshVertexBuffer.Create(0));
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKMeshVertexBuffer.Create(-1));
+			Assert.Throws<ArgumentNullException>(() => SKMeshVertexBuffer.Create(null, new byte[] { 1, 2, 3, 4 }));
+			Assert.Throws<ArgumentNullException>(() => SKMeshVertexBuffer.Create(null, (IntPtr)1, 4));
+			Assert.Throws<ArgumentNullException>(() => SKMeshVertexBuffer.Create(null, 4));
 
 			Assert.Throws<ArgumentException>(() => SKMeshIndexBuffer.Create(ReadOnlySpan<byte>.Empty));
 			Assert.Throws<ArgumentNullException>(() => SKMeshIndexBuffer.Create(IntPtr.Zero, 8));
@@ -256,6 +259,19 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKMeshIndexBuffer.Create((IntPtr)1, -4));
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKMeshIndexBuffer.Create(0));
 			Assert.Throws<ArgumentOutOfRangeException>(() => SKMeshIndexBuffer.Create(-1));
+			Assert.Throws<ArgumentNullException>(() => SKMeshIndexBuffer.Create(null, new byte[] { 1, 2, 3, 4 }));
+			Assert.Throws<ArgumentNullException>(() => SKMeshIndexBuffer.Create(null, (IntPtr)1, 4));
+			Assert.Throws<ArgumentNullException>(() => SKMeshIndexBuffer.Create(null, 4));
+
+			using var vb = SKMeshVertexBuffer.Create(4);
+			Assert.Throws<ArgumentNullException>(() => vb.Copy(null));
+			Assert.Throws<ArgumentNullException>(() => vb.Update(null, new byte[] { 1, 2, 3, 4 }, 0));
+			Assert.Throws<ArgumentNullException>(() => vb.Update(null, (IntPtr)1, 0, 4));
+
+			using var ib = SKMeshIndexBuffer.Create(4);
+			Assert.Throws<ArgumentNullException>(() => ib.Copy(null));
+			Assert.Throws<ArgumentNullException>(() => ib.Update(null, new byte[] { 1, 2, 3, 4 }, 0));
+			Assert.Throws<ArgumentNullException>(() => ib.Update(null, (IntPtr)1, 0, 4));
 		}
 
 		[Fact]
