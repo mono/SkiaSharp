@@ -1,15 +1,25 @@
 {
-  "theme": "Filtered glyph correctness",
-  "highlights_headline": "Upcoming servicing fixes make mask-filtered glyph rendering safer when consecutive font-scaler loads disagree.",
-  "highlights_body": null,
+  "theme": "Image and glyph correctness",
+  "highlights_headline": "The upcoming 4.156.2 update corrects filtered image sampling and mask-filtered glyph rendering.",
+  "highlights_body": "These same-milestone native fixes also align image-filter cache lookups with hashing, without changing managed APIs.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Reloaded glyphs use their own rendering state",
-          "detail": "Mask filtering uses the reloaded glyph's path and copies overlap only between matching byte-per-pixel masks. Full plane strides are preserved for clipped embossed glyphs, avoiding stale outlines, sub-byte buffer overwrites and corrupted or uncleared mask planes. Managed bindings are unchanged.",
+          "lead": "Keep antialiased image sampling within bounds",
+          "detail": "Ganesh image draws and filters constrain sampling to the intended texture subset under minification, strong skew, AA clipping and MSAA, preventing unrelated backing-texture pixels from contaminating the output.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Make image-filter cache keys consistent",
+          "detail": "Cache equality now matches bytewise hashing for signed zero, matrix type metadata and subnormal values, keeping lookups and eviction consistent.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Handle changing glyph loads safely",
+          "detail": "Mask-filtered text uses the reloaded glyph's path and validates mask compatibility when successive font-scaler loads differ. This prevents stale outlines and sub-byte buffer overwrites, and corrects clipped embossed-mask planes.",
           "prs": [5742]
         }
       ]

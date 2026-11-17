@@ -1,15 +1,25 @@
 {
-  "theme": "Glyph image correctness",
-  "highlights_headline": "Upcoming servicing fixes harden mask-filtered glyph images against changes between font-scaler loads.",
-  "highlights_body": "The native corrections retain Skia m158, existing package versions and the managed API.",
+  "theme": "Image and text reliability",
+  "highlights_headline": "The upcoming 4.158.0 update improves filtered image and glyph correctness without changing managed APIs.",
+  "highlights_body": "Skia m158 fixes keep antialiased sampling inside image subsets and make image-filter cache equality consistent with hashing.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Filtered glyphs respect regenerated formats and buffer layout",
-          "detail": "Rendering follows the reloaded glyph's path rather than stale properties. Incompatible and sub-byte masks are cleared instead of copied, and clipped embossed masks use full plane strides, preventing buffer overwrites, format assertions and corrupted or uncleared mask planes.",
+          "lead": "Constrain antialiased texture sampling",
+          "detail": "Image filters and Ganesh draws retain subset clamping when padding cannot contain AA or MSAA extrapolation. Minified, strongly skewed and transparent-border draws avoid sampling unrelated pixels outside logical texture bounds.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Keep image-filter cache keys consistent",
+          "detail": "Cache-key equality now follows the same bytewise representation as hashing, accounting for signed zero, matrix type metadata and subnormal values so lookups and LRU eviction agree.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Respect regenerated glyph formats and layout",
+          "detail": "Mask-filtered text handles font-scaler reloads whose paths, formats or bounds change. It avoids stale-path rasterization, sub-byte buffer overwrites and format assertions, clears incompatible masks, and correctly copies clipped embossed-mask planes.",
           "prs": [5739]
         }
       ]
