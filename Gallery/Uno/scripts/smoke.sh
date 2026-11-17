@@ -7,8 +7,9 @@
 #   bash samples/Gallery/Uno/scripts/smoke.sh <publish-wwwroot-dir> [--port N] [--screenshot PATH]
 #
 # Checks, in order:
-#   1. Inputs present (index.html, _framework/, package_*/uno-config.js)
-#   2. Static server (python3 http.server) serves 200 on /
+#   1. Inputs present (index.html, _framework/, uno-config.js, package_*/)
+#   2. Static server (python3 http.server) serves the app under a sub-path
+#      (/smoke-prefix/), so any root-absolute asset reference fails the check
 #   3. Headless Chromium (bundled via Playwright in this script's node_modules)
 #      boots the page without unignored console errors
 #   4. DOM contains the "SkiaSharp Gallery" marker
@@ -46,14 +47,17 @@ if [[ ! -d "$WWWROOT" ]]; then
 fi
 
 # Check 1 — inputs present
+# Uno.Wasm.Bootstrap 10 (Uno.Sdk 7) writes uno-config.js at the wwwroot root,
+# next to index.html; package_<hash>/ holds the bootstrapper scripts and assets.
 for path in \
     "$WWWROOT/index.html" \
     "$WWWROOT/_framework" \
+    "$WWWROOT/uno-config.js" \
 ; do
     [[ -e "$path" ]] || { echo "smoke.sh: expected path missing: $path" >&2; exit 1; }
 done
-if ! compgen -G "$WWWROOT/package_*/uno-config.js" >/dev/null; then
-    echo "smoke.sh: expected path missing: $WWWROOT/package_*/uno-config.js" >&2
+if ! compgen -G "$WWWROOT/package_*/" >/dev/null; then
+    echo "smoke.sh: expected path missing: $WWWROOT/package_*/" >&2
     exit 1
 fi
 
@@ -82,29 +86,37 @@ if [[ -z "$PORT" ]]; then
     done
 fi
 
-# Start the static server
-SERVER_LOG="$(mktemp)"
-(cd "$WWWROOT" && python3 -m http.server "$PORT" --bind 127.0.0.1) \
-    >"$SERVER_LOG" 2>&1 &
-SERVER_PID=$!
-
+# Register cleanup before creating anything it removes, so every exit path
+# (including a failure while preparing the serve root) tears it down.
 cleanup() {
     if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
         kill "$SERVER_PID" 2>/dev/null || true
         wait "$SERVER_PID" 2>/dev/null || true
     fi
     [[ -f "${SERVER_LOG:-}" ]] && rm -f "$SERVER_LOG"
+    [[ -d "${SERVE_ROOT:-}" ]] && rm -rf "$SERVE_ROOT"
 }
 trap cleanup EXIT
 
+# Start the static server. Serve the app from a sub-path, as the site does
+# (/SkiaSharp/gallery-uno/, /SkiaSharp/staging/<PR>/...), so a root-absolute
+# asset reference 404s here instead of only after deployment.
+SERVE_ROOT="$(mktemp -d)"
+SERVE_PREFIX="smoke-prefix"
+ln -s "$(cd "$WWWROOT" && pwd)" "$SERVE_ROOT/$SERVE_PREFIX"
+SERVER_LOG="$(mktemp)"
+(cd "$SERVE_ROOT" && python3 -m http.server "$PORT" --bind 127.0.0.1) \
+    >"$SERVER_LOG" 2>&1 &
+SERVER_PID=$!
+
 # Wait for server readiness (up to 10s)
 for _ in $(seq 1 40); do
-    if curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then
+    if curl -sf -o /dev/null "http://127.0.0.1:$PORT/$SERVE_PREFIX/"; then
         break
     fi
     sleep 0.25
 done
-if ! curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then
+if ! curl -sf -o /dev/null "http://127.0.0.1:$PORT/$SERVE_PREFIX/"; then
     echo "smoke.sh: static server did not come up on port $PORT" >&2
     echo "--- server log: ---" >&2
     cat "$SERVER_LOG" >&2 || true
@@ -112,7 +124,7 @@ if ! curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then
 fi
 
 # Run the browser check
-SMOKE_URL="http://127.0.0.1:$PORT/" \
+SMOKE_URL="http://127.0.0.1:$PORT/$SERVE_PREFIX/" \
 SMOKE_MARKER="${SMOKE_MARKER:-SkiaSharp Gallery}" \
 SMOKE_SCREENSHOT="${SCREENSHOT:-}" \
     node --experimental-vm-modules "$DRIVER"
