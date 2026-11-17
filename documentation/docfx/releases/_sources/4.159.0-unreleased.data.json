@@ -15,15 +15,61 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 2,
+    "product": 4,
     "mixed": 0,
-    "internal": 14
+    "internal": 16
   },
   "breaking_candidates": [],
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "kdpkke",
+      "url": "https://github.com/kdpkke",
+      "prs": [
+        5649
+      ]
+    }
+  ],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5783": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5783",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5782": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5782",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5649": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5649",
+      "title": "[iOS/tvOS] Build device frameworks from device archives",
+      "body": "[iOS/tvOS] Build device frameworks from device archives (#5649)\n\nFixes: #5648\n\nKeep device and simulator frameworks tied to their matching Apple archives,\nso device packages carry device binaries and metadata without losing simulator\nsupport.\n\n~~ Simulator slices in device frameworks ~~\n\nThe iOS and tvOS build scripts copied the x86_64 simulator archive beside the\narm64 device archive. `CreateFatFramework` then combined the binaries and\ncopied the framework metadata from the simulator archive. Consequently,\ndevice frameworks contained a simulator slice and declared\n`iPhoneSimulator` or `AppleTVSimulator`; apps embedding them as-is could fail\nApp Store validation with ITMS-90087.\n\nBuild the device frameworks from the device archive alone and omit the\nx86_64 device dSYM entries for SkiaSharp and HarfBuzzSharp. Keep the\nsimulator frameworks and symbols, including their x86_64 and arm64 slices.\nUpdate `Get-AppleArtifacts` to expect arm64 for iOS and tvOS device outputs;\nmacOS, Mac Catalyst, and simulator expectations remain unchanged.\n\nDownloaded-package inspection confirmed the device and simulator slices and\nplatform metadata for both libraries. Consumer builds passed for the six\niOS/tvOS device and simulator RIDs. An iOS simulator app used both libraries\nsuccessfully (`pixel=#ffff0000`, `skia=158.0`, `glyphs=2339`); tvOS was\nbuild-validated. The PR's CI checks passed.\n\n~~ x64-only native builds ~~\n\nWhen `--arch=x64` skips the arm64 device archive, the previous unconditional\ndevice-framework creation passes an empty archive list to `CreateFatFramework`\nand fails before simulator output is produced. Guard device-framework creation\non arm64 not being skipped, while leaving simulator-framework creation\nunconditional. Clean HarfBuzzSharp iOS and tvOS builds verified x64-only,\narm64-only, and all-architecture outputs.\n\nCo-authored-by: Matteo Muratore <matteomuratoredev@gmail.com>",
+      "author": "kdpkke",
+      "community": true,
+      "tag": "product",
+      "fixes": [
+        5648
+      ]
+    },
+    "5760": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5760",
+      "title": "Add the SKMesh API (custom vertex-mesh drawing)",
+      "body": "Add the SKMesh API (custom vertex-mesh drawing) (#5760)\n\nFixes: https://github.com/mono/SkiaSharp/issues/3777\nRequires: https://github.com/mono/skia/pull/456\nContext: https://github.com/mono/SkiaSharp/pull/4553\nContext: https://github.com/mono/SkiaSharp/pull/3779\nContext: https://github.com/mono/skia/pull/297\nChanges: https://github.com/mono/skia/compare/1c8b6db33a5c9ff2292fb58d65d7b344e91085f3...5d226f638edbb3c0dac0ac93ac1ff349298880a4\n\nExpose Skia's custom vertex-mesh pipeline in SkiaSharp through\nSKMeshSpecification, SKMeshSpecificationAttribute, SKMeshSpecificationVarying,\nSKMeshSpecificationBuilder, SKMesh, SKMeshBuilder, SKIndexedMeshBuilder,\nSKMeshVertexBuffer, SKMeshIndexBuffer, and SKCanvas.DrawMesh, while advancing\nexternals/skia and cgmanifest.json to 5d226f638edbb3c0dac0ac93ac1ff349298880a4.\n\n~~ Specification, builders, and lifetime model ~~\n\nSkMesh pairs a compiled SkSL vertex and fragment specification with vertex and\noptional 16-bit index buffers, uniform data, and child effects, and draws only\non GPU-backed surfaces (SkBitmapDevice::drawMesh is a no-op in upstream Skia).\nEarlier drafts in #3779 and #4553 coupled SKMeshBuilder.Dispose to disposing\nits SKMeshSpecification, combined indexed and non-indexed state on a single\nbuilder, and initialized uniformNames and childNames to Array.Empty<string>(),\nwhich defeated ??= lazy enumeration and caused setting declared mesh uniforms\nby name to throw ArgumentOutOfRangeException.\n\nSeparate specification compilation from mesh construction and align ownership\nwith native Skia:\n\n  * Expose SKMeshSpecification.Create and SKMeshSpecificationBuilder\n    (via new SKMeshSpecificationBuilder or SKMeshSpecification.CreateBuilder)\n    with readonly struct descriptors SKMeshSpecificationAttribute and\n    SKMeshSpecificationVarying, automatic attribute offset and VertexStride\n    calculation, and lazy Uniforms and Children reflection integrated with\n    SKRuntimeEffectUniforms and SKRuntimeEffectChildren.\n  * Provide SKMeshBuilder for non-indexed meshes (via new SKMeshBuilder,\n    SKMesh.CreateBuilder, or spec.CreateMeshBuilder) and derive\n    SKIndexedMeshBuilder : SKMeshBuilder for indexed meshes (via\n    new SKIndexedMeshBuilder, SKMesh.CreateIndexedBuilder, or\n    spec.CreateIndexedMeshBuilder) with virtual/override Build() and\n    Build(out string? errors) methods. Disposing a mesh builder releases its\n    uniform and child collections without disposing the shared\n    SKMeshSpecification.\n  * Retain native references inside SkMesh across sk_mesh_make and\n    sk_mesh_make_indexed so a built SKMesh remains drawable after the managed\n    specification, builder, buffers, and child shaders are disposed, and\n    protect P/Invoke call sites with GC.KeepAlive.\n\n~~ Zero-allocation per-frame hot path and string marshalling ~~\n\nAnimated 3D and cloth meshes rebuild SKMesh instances every frame as vertex\ncounts, uniform values, or buffers change. Allocating a temporary SKData via\nuniforms.ToData(), cloning children.ToArray(), allocating an SKString when\nout errors is unused, or boxing SKRuntimeEffectUniformFlagsNative inside\nSKRuntimeEffectUniforms.ValidateTypes adds per-frame GC pressure.\n\nOptimize both specification creation and per-frame mesh construction:\n\n  * Pass raw uniform pointer and byte count (fUniformData and fUniformSize)\n    through SKMeshMakeArgsNative and SKMeshMakeIndexedArgsNative directly to\n    native SkData::MakeWithCopy, read SKRuntimeEffectChildren.RawChildren\n    without cloning the array, and allocate the error SKString only when\n    captureErrors is true.\n  * Replace uniform.Flags.HasFlag(SKRuntimeEffectUniformFlagsNative.Array) in\n    SKRuntimeEffect.cs with a bitwise check so setting uniforms does not box\n    the flags enum on non-PGO paths.\n  * Add Utils.RentUtf8Strings (RentedUtf8Strings), a ref indexer on\n    Utils.RentedArray<T>, and a ReadOnlySpan<SKObject> overload on\n    Utils.RentHandlesArray so SKMeshSpecification.CreateCore marshals UTF-8\n    attribute and varying names using pooled buffers without heap allocations.\n    SKMeshBenchmark and RentedUtf8StringsBenchmark cover the per-frame builder\n    reuse and UTF-8 string marshalling paths.\n\n~~ CPU and Ganesh GPU mesh buffers ~~\n\nUpstream Skia provides CPU-backed buffers in SkMeshes and Ganesh GPU-backed\nbuffers in SkMeshGanesh.h, while Graphite consumes CPU-backed mesh buffers\ndirectly during draw recording.\n\nExpose parameterless CPU overloads and non-nullable GRContext Ganesh overloads\nfor Create, Copy, and Update on SKMeshVertexBuffer and SKMeshIndexBuffer.\nEnforce Skia's 4-byte size and offset alignment rules on Update in managed\ncode before calling into native Skia.\n\n~~ Gallery samples and GPU rendering tests ~~\n\nAdd three interactive GPU samples in samples/Gallery/Shared/Samples\n(MeshSample for a non-indexed 3D winding tunnel, MeshFlagSample for an indexed\nVerlet cloth flag, and MeshGlobeSample for an indexed 3D Earth globe using the\npublic-domain NASA Blue Marble texture) and default the MAUI Gallery window to\nGPU mode. Split the test suite into SKMeshSpecificationTest, SKMeshBufferTest,\nand SKMeshTest covering validation, reference retention after wrapper\ndisposal, default paint color modulation, raster no-op behavior, and pixel\nrendering across Ganesh OpenGL, Ganesh Metal, and Graphite Metal/Dawn.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@users.noreply.github.com>\nCo-authored-by: Ramez Gerges <ramez.ragaa@platform.uno>\nCo-authored-by: Ramez Gerges <ramezragaa@proton.me>\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product",
+      "fixes": [
+        3777
+      ]
+    },
     "5769": {
       "url": "https://github.com/mono/SkiaSharp/pull/5769",
       "title": "[Skia] Sync m159 image-filter cache equality fix",

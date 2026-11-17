@@ -1,30 +1,47 @@
 {
-  "theme": "Native rendering reliability",
-  "highlights_headline": "The upcoming 4.159.0 update improves glyph rendering, image-filter caching and Vulkan allocation failure handling.",
-  "highlights_body": "These Skia m159 corrections leave managed APIs and the native ABI unchanged.",
+  "theme": "Custom meshes and rendering fixes",
+  "highlights_headline": "The upcoming SkiaSharp 4.159.0 release adds custom GPU mesh drawing and improves rendering reliability.",
+  "highlights_body": "Build meshes with SkSL vertex and fragment programs, uniforms, and child effects. Other changes correct iOS and tvOS device frameworks and bring upstream fixes for glyph rendering, image-filter caching, and Vulkan allocation failures.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Custom vertex meshes",
+          "detail": "SKMeshSpecification, mesh builders, vertex and index buffers, and SKCanvas.DrawMesh expose SkSL-based custom mesh drawing. Indexed meshes use 16-bit indices; buffers can be CPU-backed or Ganesh GPU-backed. Drawing requires a GPU-backed surface: raster canvases do not draw meshes.",
+          "prs": [5760]
+        }
+      ]
+    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Match image-filter cache equality to hashing",
-          "detail": "Cache keys use bytewise equality, consistently distinguishing signed zero and matrix type metadata regardless of runtime subnormal handling. This aligns lookups, LRU eviction and purge behavior with the existing hash.",
+          "lead": "Correct iOS and tvOS device frameworks",
+          "detail": "SkiaSharp and HarfBuzzSharp device frameworks now contain only arm64 device binaries and matching platform metadata, avoiding App Store validation failures caused by embedded simulator slices. Simulator frameworks and their x86_64 and arm64 symbols remain available.",
+          "prs": [5649]
+        },
+        {
+          "lead": "Consistent image-filter cache keys",
+          "detail": "An upstream Skia m159 fix makes image-filter cache equality consistent with hashing for signed zero, matrix type-mask state, and subnormal values, correcting cache behavior without changing package or native ABI versions.",
           "prs": [5769]
         },
         {
-          "lead": "Handle divergent glyph reloads safely",
-          "detail": "Mask-filtered text rasterizes the reloaded glyph rather than stale outline state when font-scaler loads differ. Incompatible masks are cleared instead of overflowing sub-byte rows, and clipped embossed masks use full plane strides while overlapping SDF data is preserved.",
+          "lead": "Safer mask-filtered glyph rendering",
+          "detail": "Upstream fixes handle stateful font scalers whose repeated glyph loads produce different paths, mask formats, or bounds. Rendering uses the reloaded glyph, clears incompatible masks instead of overflowing sub-byte rows, and correctly copies clipped emboss masks.",
           "prs": [5741]
         },
         {
-          "lead": "Avoid an Imagination Vulkan driver failure",
-          "detail": "When descriptor-set allocation reports host or device out-of-memory on Imagination drivers, Skia abandons the affected pool rather than destroying it, avoiding a driver failure. The workaround is limited to that vendor and those allocation errors.",
+          "lead": "Imagination Vulkan allocation failure handling",
+          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, avoiding a driver failure during pool destruction. Graphite also prevents further allocation from the abandoned pool; the workaround is limited to this vendor and these errors.",
           "prs": [5741]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
+  "contributor_summaries": {
+    "kdpkke": "Corrected iOS and tvOS device-framework binaries and metadata while preserving simulator support"
+  },
   "preview_summaries": {}
 }
