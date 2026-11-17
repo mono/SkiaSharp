@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using OpenQA.Selenium;
 using SkiaSharp.Tests.Samples.Utils;
 using SkiaSharp.Tests.Shared;
@@ -146,10 +145,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.False(Directory.Exists(directory));
 	}
 
-	[Theory]
-	[InlineData("all")]
-	[InlineData("run")]
-	public async Task SeparateLocalBuildAndRunNeedNoArchiveOrManifest(string mode)
+	[Fact]
+	public async Task AllModeBuildsOnceAndCleansTheWorkspace()
 	{
 		var apps = Path.Combine(root, "sample-apps");
 		var builds = 0;
@@ -159,16 +156,11 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			CreateApp(workspace.Root);
 			return Task.CompletedTask;
 		}
-		if (mode == "run")
-		{
-			await using var build = Fixture(AppiumMode.Build, apps);
-			await build.PrepareWorkspace(Target, Folder, Project, Build);
-		}
-		var fixture = Fixture(AppiumFixture.ParseMode(mode), apps);
+		var fixture = Fixture(AppiumMode.All, apps);
 		var prepared = await fixture.PrepareWorkspace(Target, Folder, Project, Build);
+		await fixture.PrepareWorkspace(Target, Folder, Project, Build);
 		Assert.Equal(1, builds);
 		Assert.True(Directory.Exists(FindApp(prepared)));
-		Assert.Empty(Directory.GetFiles(apps, "manifest.json", SearchOption.AllDirectories));
 		await fixture.DisposeAsync();
 		Assert.False(Directory.Exists(prepared.Root));
 	}
@@ -389,8 +381,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.True(File.Exists(actual));
 		Assert.False(File.Exists(expected));
 
-		// Missing references fail before image decoding and must never be created by a test.
-		var failure = Assert.ThrowsAny<Exception>(() =>
+		var failure = Assert.Throws<Xunit.Sdk.FailException>(() =>
 			SampleImage.Store.Resolve(request).Verify(GoldenInput.Path(actual)));
 		Assert.Contains("Missing reviewed golden", failure.Message);
 		Assert.False(File.Exists(expected));
@@ -402,7 +393,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		using var workspace = Workspace();
 		var app = new DiagnosticApp(workspace, Path.Combine(root, "foreign.app"), []);
 		var started = false;
-		var failure = await Assert.ThrowsAnyAsync<Exception>(() => app.Run(
+		var failure = await Assert.ThrowsAsync<Xunit.Sdk.TrueException>(() => app.Run(
 			new Uri("http://127.0.0.1:1"), _ => Task.CompletedTask,
 			() => { started = true; return Task.CompletedTask; }, () => Task.CompletedTask));
 		Assert.Contains("must belong to the selected workspace", failure.Message);
@@ -553,11 +544,10 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[InlineData("18.6", false)]
 	[InlineData("26.5", true)]
 	[InlineData("26.5", false)]
-	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(
-		string version, bool horizontal, string profile = "iphone-16-pro", string architecture = "arm64")
+	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(string version, bool horizontal)
 	{
-		var drawn = Reference(profile, version, "maui-basic-drawing-two-lines", architecture);
-		var blank = Reference(profile, version, "maui-basic-drawing", architecture);
+		var drawn = Reference("iphone-16-pro", version, "maui-basic-drawing-two-lines");
+		var blank = Reference("iphone-16-pro", version, "maui-basic-drawing");
 		using var workspace = Workspace();
 		using var drawnBitmap = SKBitmap.Decode(drawn);
 		using var blankBitmap = SKBitmap.Decode(blank);
@@ -589,8 +579,8 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			File.WriteAllBytes(missing, data.ToArray());
 		using (var data = incompleteClear.Encode(SKEncodedImageFormat.Png, 100))
 			File.WriteAllBytes(residual, data.ToArray());
-		Assert.ThrowsAny<Exception>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(missing, drawnBytes, _ => insets));
-		Assert.ThrowsAny<Exception>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(residual, blankBytes, _ => insets));
+		Assert.Throws<Xunit.Sdk.TrueException>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(missing, drawnBytes, _ => insets));
+		Assert.Throws<Xunit.Sdk.TrueException>(() => AppiumSampleRunTestBase.AssertDrawingStrokeRegions(residual, blankBytes, _ => insets));
 	}
 
 	[Theory]

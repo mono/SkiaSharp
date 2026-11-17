@@ -48,13 +48,11 @@ await golden.VerifyAsync(
     cancellationToken: cancellationToken);
 ```
 
-Callers own the platform policy deciding when to transform. The callback
-borrows its input: return it unchanged or return a new image, but do not
-dispose it. The verifier disposes transformed images after comparison, even
-on failure. Original dimensions must still match, and `expectedSize` describes
-the original image. Transformed dimensions must also match. Actual/reference
-attachments and proposal markers retain the complete original images;
-difference images contain only the compared region.
+The caller decides when cropping applies. The callback borrows its input:
+return it unchanged or return a new image for the verifier to dispose.
+Both original and transformed dimensions must match; `expectedSize` describes
+the original. Attachments and reference proposals retain the original images;
+diffs contain only the compared region.
 
 ## References
 

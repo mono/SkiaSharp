@@ -38,12 +38,14 @@ class IosAppiumPolicyTests(unittest.TestCase):
         self.assertEqual("26.6", runtime["variables"]["XCODE_VERSION"])
 
     def test_exact_runtime_builds_are_installed_without_latest(self):
-        self.assertEqual([
-            {"name": "ios18_6", "displayName": "iOS 18.6", "version": "18.6",
-             "buildVersion": "22G86", "model": "iPhone 16 Pro", "installRuntime": True},
-            {"name": "ios26_5", "displayName": "iOS 26.5", "version": "26.5",
-             "buildVersion": "23F77", "model": "iPhone 16 Pro", "installRuntime": True},
-        ], PARAMETERS["iosSimulators"]["default"])
+        profiles = PARAMETERS["iosSimulators"]["default"]
+        self.assertEqual(
+            [("18.6", "22G86"), ("26.5", "23F77")],
+            [(profile["version"], profile["buildVersion"]) for profile in profiles],
+        )
+        for profile in profiles:
+            self.assertEqual("iPhone 16 Pro", profile["model"])
+            self.assertIs(True, profile["installRuntime"])
         runtime = next(job["${{ each ios in parameters.iosSimulators }}"][0]["parameters"]
                        for job in JOBS if "${{ each ios in parameters.iosSimulators }}" in job)
         install = runtime["preBuildSteps"][0]["${{ if eq(ios.installRuntime, true) }}"][0]

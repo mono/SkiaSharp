@@ -37,8 +37,6 @@ internal abstract class AppiumOperations
 
 	protected abstract By Locator(string id);
 
-	// Element lookup
-
 	internal IWebElement Find(string id) => Find(Locator(id));
 
 	internal IWebElement Find(By selector) =>
@@ -49,8 +47,6 @@ internal abstract class AppiumOperations
 
 	internal IWebElement? FindOptional(string id) =>
 		Driver.FindElements(Locator(id)).FirstOrDefault(element => element.Displayed);
-
-	// Interaction
 
 	internal void Click(string id) => Click(Locator(id));
 
@@ -73,8 +69,6 @@ internal abstract class AppiumOperations
 		}, description, limit, cancellationToken);
 
 	internal abstract void SubmitSearch();
-
-	// Waiting
 
 	internal void WaitText(string id, Func<string, bool> predicate) =>
 		Wait(() =>
@@ -117,8 +111,6 @@ internal abstract class AppiumOperations
 
 		throw new TimeoutException($"Appium did not expose {description} within {limit}.");
 	}
-
-	// Gestures and scrolling
 
 	internal void Drag(IWebElement element, double fromX, double fromY, double toX, double toY)
 	{
@@ -352,8 +344,6 @@ internal abstract class AppiumOperations
 			throw new TimeoutException($"Appium could not scroll {description} fully into view within {timeout}: {last}.", error);
 		}
 	}
-
-	// Captures
 
 	internal string Capture(string id, string name)
 	{

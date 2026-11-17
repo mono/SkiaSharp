@@ -1,7 +1,7 @@
 # Building and validating samples
 
 The sample suite builds generated applications against produced NuGet packages
-and runs supported Console, Web API, browser and Docker samples.
+and runs Console, Web API, browser, Docker and iOS samples.
 
 ## Prepare packages
 
@@ -81,58 +81,43 @@ against staged packages.
   them, and cleans the selected app workspaces after all scenarios.
 - `--appiumMode=all` (default) cleans, builds, runs, and cleans afterward.
 
-App workspaces use predictable paths under
-`output/sample-apps/{platform}/{architecture}/{sample-folder}/`; their normal
-`samples/.../bin/Debug/` directories contain the built apps. Both phases use
-`dotnet test` to build and execute the host-side tests; only build/all mode
-invokes sample-app builds.
-Use a matching host platform and architecture and one producing package set.
-Run mode never falls back to a sample-app build.
-
-Build and run separately on the same machine by passing `--appiumMode=build`
-and then `--appiumMode=run` to the same Cake command below. No archive or
-artifact transfer is needed locally. Apps shared by multiple scenarios remain
-available until the Appium test collection finishes. Diagnostics are retained
-separately under `output/logs/testlogs/samples/`, including after failures.
+Apps are retained under
+`output/sample-apps/{platform}/{architecture}/{sample-folder}/`.
+Use the same host architecture and package set for both phases. Run mode never
+rebuilds missing apps. Logs and captures remain under
+`output/logs/testlogs/samples/` after workspace cleanup.
 
 ### iOS simulators
 
-Select Xcode, install the selected runtime and the pinned Appium 3 XCUITest
-driver with its prebuilt WDA, then run one declared profile:
+Build with Xcode 26.3 for the pinned .NET iOS workload, then select Xcode 26.6
+for simulator execution. For iOS 18.6:
 
 ```sh
 IOS_VERSION=18.6
+IOS_BUILD=22G86
 dotnet tool restore
 sudo scripts/infra/native/apple/select-xcode.sh 26.3
+dotnet cake --target=samples --runGroup=Ios --appiumMode=build \
+  --skipExternals=all --previewLabel=pr.1234 --buildNumber=26509.10
+sudo scripts/infra/native/apple/select-xcode.sh 26.6
 pwsh scripts/infra/tests/install-appium.ps1 -Platform iOS
-pwsh scripts/infra/managed/install-ios-runtime.ps1 -Version "$IOS_VERSION"
-dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
-  --iosModel="iPhone 16 Pro" --skipExternals=all \
+pwsh scripts/infra/managed/install-ios-runtime.ps1 \
+  -Version "$IOS_VERSION" -BuildVersion "$IOS_BUILD"
+dotnet cake --target=samples --runGroup=Ios --appiumMode=run \
+  --iosVersion="$IOS_VERSION" --iosModel="iPhone 16 Pro" --skipExternals=all \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-The dedicated iOS Appium jobs use the AcesShared Tahoe image.
-CI builds the iOS apps using Xcode 26.3, as required by the pinned
-.NET iOS workload, then runs the iOS 18.6 (22G86) and 26.5 (23F77) profiles
-with Xcode 26.6.
-It installs each exact runtime and fails if its build is unavailable or
-mismatched. Cake creates its simulator in `Setup` for run/all mode and
-deletes only that simulator in `Teardown`, including after a failure.
-Build-only, sample-generation, and listing/dry-run commands do not start a
-device. CI builds apps in a separate job; local all-mode runs may keep the
-simulator booted while apps build.
+For iOS 26.5, use `IOS_VERSION=26.5` and `IOS_BUILD=23F77`. Runtime installation
+fails if the requested build is unavailable or mismatched. Cake creates and
+deletes only its own simulator, including after failure; build-only and dry-run
+commands do not start one.
 
-CI archives the app workspaces into `.tar.gz` files, preserving executable
-permissions and symlinks. Build-only `cache` and `obj` directories are excluded
-from the app archive. Runtime jobs
-download the apps from that build job, extract the folders to the same layout,
-and use `dotnet test` to build the host-side test project and run the scenarios.
-Runtime jobs need the native/package inputs for the host tests, but no mobile
-workloads or sample-app builds. CI acquires apps from the build job in the same
-pipeline run.
-Reviewed references cover 18.6.0, 26.5.0 and versionless Gallery cases. Missing
-references fail strictly; capture and review them rather than accepting an
-unmatched image.
+CI uses the AcesShared Tahoe image for the dedicated iOS jobs. One build job
+archives the apps; two runtime jobs consume that archive from the same pipeline
+run, preserving permissions and symlinks. Runtime jobs compile the host tests
+but do not build apps or install mobile workloads. Each exact runtime must pass
+all four scenarios with zero skips.
 
 ## Test groups and diagnostics
 
@@ -161,20 +146,15 @@ References live under `tests/Goldens/Samples/{profile}/`. Host profiles are
 Cases use paths such as `Console/output`, `Web/page` and
 `Blazor/drawing-drawn`.
 
-iOS profiles use optional max-version directories:
+iOS references include a runtime directory, for example
+`iphone-16-pro/18.6.0/maui-basic-cpu.png`; shared Gallery cases may omit it.
 
-- `iphone-16-pro/18.6.0/maui-basic-cpu.png`
-
-Architecture-specific files override the unsuffixed reference. Appium captures
-the selected canvas element, not necessarily the full device screen; image
-dimensions therefore follow the element screenshot returned by the driver.
-Those PNG bytes are saved unchanged. The shared Golden verifier transforms
-decoded copies of actual and reference images only during comparison.
-The iOS 39-pixel bottom inset applies only to the declared 1206 x 2622 profile;
-shorter element captures are not cropped again. Diagnostics and reference
-proposals retain the original captured images; only diff images use the
-comparison dimensions.
-Initial, drawn and cleared states use separate case names where needed.
+Architecture-specific files override the unsuffixed reference. Appium saves
+the canvas element's PNG unchanged, so captures need not have full-screen
+dimensions. Comparison excludes the 39-pixel bottom band only for the declared
+1206 x 2622 iPhone profile; shorter captures are not cropped again. Captures and
+reference proposals remain raw; only diff images use comparison dimensions.
+Missing references fail and require review, never automatic approval.
 
 Use the sample helpers to select the profile:
 
