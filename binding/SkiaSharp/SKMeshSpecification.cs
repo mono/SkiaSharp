@@ -251,9 +251,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		var rawData = uniforms?.RawData;
 		var rawChildren = children?.RawChildren;
 
-		using var childrenHandles = rawChildren != null && rawChildren.Length > 0
-			? Utils.RentHandlesArray (rawChildren, true)
-			: default;
+		using var childrenHandles = Utils.RentHandlesArray (rawChildren, true);
 		using var errorString = captureErrors ? new SKString () : null;
 
 		fixed (IntPtr* ch = childrenHandles)
@@ -349,9 +347,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		var rawData = uniforms?.RawData;
 		var rawChildren = children?.RawChildren;
 
-		using var childrenHandles = rawChildren != null && rawChildren.Length > 0
-			? Utils.RentHandlesArray (rawChildren, true)
-			: default;
+		using var childrenHandles = Utils.RentHandlesArray (rawChildren, true);
 		using var errorString = captureErrors ? new SKString () : null;
 
 		fixed (IntPtr* ch = childrenHandles)

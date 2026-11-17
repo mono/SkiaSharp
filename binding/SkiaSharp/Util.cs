@@ -80,9 +80,9 @@ namespace SkiaSharp
 				? default
 				: new RentedArray<T> (length);
 
-		public static RentedArray<IntPtr> RentHandlesArray (SKObject[] objects, bool nullIfEmpty = false)
+		public static RentedArray<IntPtr> RentHandlesArray (ReadOnlySpan<SKObject> objects, bool nullIfEmpty = false)
 		{
-			var handles = RentArray<IntPtr> (objects?.Length ?? 0, nullIfEmpty);
+			var handles = RentArray<IntPtr> (objects.Length, nullIfEmpty);
 			for (var i = 0; i < handles.Length; i++) {
 				handles[i] = objects[i]?.Handle ?? IntPtr.Zero;
 			}
@@ -103,10 +103,8 @@ namespace SkiaSharp
 
 			public int Length => Span.Length;
 
-			public T this[int index] {
-				get => Span[index];
-				set => Span[index] = value;
-			}
+			public ref T this[int index] =>
+				ref Span[index];
 
 			[EditorBrowsable (EditorBrowsableState.Never)]
 			public ref T GetPinnableReference () =>
@@ -144,9 +142,11 @@ namespace SkiaSharp
 				count = 0;
 			}
 
-			public void* Add (string value)
+			public void* Add (string value) =>
+				Add ((value ?? string.Empty).AsSpan ());
+
+			public void* Add (ReadOnlySpan<char> span)
 			{
-				var span = (value ?? string.Empty).AsSpan ();
 				var byteCount = Encoding.UTF8.GetByteCount (span);
 				var buffer = ArrayPool<byte>.Shared.Rent (byteCount + 1);
 				var written = Encoding.UTF8.GetBytes (span, buffer);
