@@ -1,20 +1,25 @@
 {
-  "theme": "Glyph and Vulkan resilience",
-  "highlights_headline": "Upcoming fixes harden mask-filtered glyph rendering and Imagination Vulkan allocation failure handling.",
-  "highlights_body": "These same-milestone native fixes leave package versions and the managed API unchanged.",
+  "theme": "Native rendering reliability",
+  "highlights_headline": "SkiaSharp 4.159.0 will improve rendering reliability through native engine fixes.",
+  "highlights_body": "The upcoming update addresses image-filter caching, mask-filtered glyph rendering, and specific Vulkan allocation failures on Imagination drivers.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyphs handle changing scaler output",
-          "detail": "Rendering uses the reloaded glyph's path, format and bounds when successive font-scaler loads differ. Incompatible masks are cleared instead of overflowing sub-byte rows, and clipped embossed masks retain the correct plane strides.",
+          "lead": "Consistent image-filter caching",
+          "detail": "Aligns image-filter cache-key equality with hashing, including signed-zero representations and matrix type metadata, so key lookup and eviction use consistent key identity.",
+          "prs": [5769]
+        },
+        {
+          "lead": "Correct mask-filtered glyph handling",
+          "detail": "Uses the reloaded glyph's outline when successive font-scaler loads disagree. Clears incompatible masks instead of overflowing sub-byte rows and preserves full plane strides when copying clipped emboss masks.",
           "prs": [5741]
         },
         {
-          "lead": "Imagination Vulkan allocation failures avoid unsafe pool destruction",
-          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, where destroying the pool can trigger a driver failure. Graphite also stops allocating through the abandoned handle; other vendors and errors are unaffected.",
+          "lead": "Imagination Vulkan allocation workaround",
+          "detail": "Avoids a driver failure when descriptor-set allocation reports host or device out-of-memory on Imagination GPUs. Ganesh and Graphite deliberately abandon the affected pool rather than destroy it; Graphite also blocks further allocation through that handle.",
           "prs": [5741]
         }
       ]

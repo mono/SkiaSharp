@@ -1,15 +1,25 @@
 {
-  "theme": "Filtered glyph correctness",
-  "highlights_headline": "Upcoming servicing fixes make mask-filtered glyph rendering safer when consecutive font-scaler loads disagree.",
-  "highlights_body": null,
+  "theme": "Rendering and cache corrections",
+  "highlights_headline": "SkiaSharp 4.156.2 will correct texture sampling and mask-filtered glyph rendering.",
+  "highlights_body": "The upcoming servicing update also aligns image-filter cache-key equality with hashing, without changing the public managed or C API.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Reloaded glyphs use their own rendering state",
-          "detail": "Mask filtering uses the reloaded glyph's path and copies overlap only between matching byte-per-pixel masks. Full plane strides are preserved for clipped embossed glyphs, avoiding stale outlines, sub-byte buffer overwrites and corrupted or uncleared mask planes. Managed bindings are unchanged.",
+          "lead": "Keep filtered images within texture subsets",
+          "detail": "Corrects sampling constraints for antialiased and multisampled Ganesh draws under minification or strong skew. Logical texture bounds and stricter subset clamping prevent unrelated backing-texture pixels from contaminating filtered images.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Consistent image-filter caching",
+          "detail": "Makes image-filter cache-key equality match its bytewise hash, distinguishing signed-zero representations and matrix type metadata for consistent lookup and eviction.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Correct mask-filtered glyph handling",
+          "detail": "Handles font-scaler reloads that change glyph paths, formats, or bounds. Uses the reloaded outline, rejects incompatible overlap copies, and preserves full plane strides for clipped emboss masks, avoiding stale rendering, sub-byte buffer overwrites, and corrupted mask planes.",
           "prs": [5742]
         }
       ]

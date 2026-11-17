@@ -1,15 +1,25 @@
 {
-  "theme": "Filtered glyph hardening",
-  "highlights_headline": "Upcoming native fixes correct mask-filtered glyphs when reloading changes their outline, format or bounds.",
-  "highlights_body": null,
+  "theme": "Rendering and cache corrections",
+  "highlights_headline": "SkiaSharp 4.157.0 will improve filtered-image and glyph rendering without changing public APIs.",
+  "highlights_body": "The upcoming update prevents sampling outside intended image subsets and corrects image-filter cache-key comparisons.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Glyph reloads no longer reuse stale outline state",
-          "detail": "Mask filtering rasterizes the reloaded glyph's own path, clears incompatible or non-overlapping masks, and preserves full plane strides for clipped embossed glyphs. This avoids stale outlines, sub-byte buffer overwrites, format assertions and uncleared mask planes without changing managed APIs.",
+          "lead": "Keep filtered images within texture subsets",
+          "detail": "Corrects subset sampling under minification, strong skew, antialiasing clips, and multisampling. Logical texture bounds and strict sampling constraints for transparent borders prevent unrelated backing-store pixels from leaking into filtered images.",
+          "prs": [5770]
+        },
+        {
+          "lead": "Consistent image-filter caching",
+          "detail": "Aligns image-filter cache-key equality with its bytewise hash, accounting for signed-zero representations, matrix type metadata, and subnormal values so lookup and LRU eviction use consistent key identity.",
+          "prs": [5770]
+        },
+        {
+          "lead": "Correct mask-filtered glyph handling",
+          "detail": "Uses the reloaded glyph's own outline when font-scaler loads disagree. Clears incompatible masks before overlap copies and preserves full plane strides for clipped emboss masks, avoiding stale outlines, format assertions, sub-byte buffer overwrites, and uncleared mask planes.",
           "prs": [5748]
         }
       ]

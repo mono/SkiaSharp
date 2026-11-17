@@ -1,15 +1,25 @@
 {
-  "theme": "Glyph image correctness",
-  "highlights_headline": "Upcoming servicing fixes harden mask-filtered glyph images against changes between font-scaler loads.",
-  "highlights_body": "The native corrections retain Skia m158, existing package versions and the managed API.",
+  "theme": "Rendering and cache corrections",
+  "highlights_headline": "SkiaSharp 4.158.0 will improve filtered-image and glyph rendering without changing public APIs.",
+  "highlights_body": "The upcoming native update tightens texture-subset sampling and makes image-filter cache-key comparisons consistent with hashing.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Filtered glyphs respect regenerated formats and buffer layout",
-          "detail": "Rendering follows the reloaded glyph's path rather than stale properties. Incompatible and sub-byte masks are cleared instead of copied, and clipped embossed masks use full plane strides, preventing buffer overwrites, format assertions and corrupted or uncleared mask planes.",
+          "lead": "Keep filtered images within texture subsets",
+          "detail": "Corrects Ganesh texture sampling when minification, strong skew, antialiasing, or multisampling extends coordinates beyond image geometry. Retains clamping where padding is insufficient and respects logical texture bounds to avoid sampling unrelated backing-texture pixels.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Consistent image-filter caching",
+          "detail": "Aligns image-filter cache-key equality with its bytewise hash, including signed-zero representations and matrix type metadata, so key lookup and LRU eviction use consistent key identity.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Correct mask-filtered glyph handling",
+          "detail": "Respects regenerated glyph paths, formats, and bounds when font-scaler loads disagree. Clears incompatible masks and uses full plane strides for clipped emboss masks, avoiding stale rendering, sub-byte buffer overwrites, format assertions, and corrupted or uncleared mask planes.",
           "prs": [5739]
         }
       ]

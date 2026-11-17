@@ -15,7 +15,7 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 0,
     "internal": 3
   },
@@ -24,6 +24,14 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5773": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5773",
+      "title": "[M156] Integrate AA subset clamping and image-filter cache fixes",
+      "body": "[M156] Integrate AA subset clamping and image-filter cache fixes (#5773)\n\nRequires: https://github.com/mono/skia/pull/460\nContext: https://github.com/mono/SkiaSharp/pull/5779\nChanges: https://github.com/mono/skia/compare/34fd542cf1ef15e3f76c90c3db96d227186af0ce...0d6629ea961e42997af39b060c099a471b6088e1\n\nBring the m156 image-filter and Ganesh correctness fixes into\nrelease/4.156.x without changing package versions, dependency policy or\nthe public C ABI. Advance externals/skia and its cgmanifest registration\nto the actual native merge, 0d6629ea961e42997af39b060c099a471b6088e1,\nand record upstream 27c31ca4152b5b5790d54ce1c8273f139f051a8d.\n\n~~ Keep AA sampling within the intended texture subset ~~\n\nCoverage AA and MSAA can extrapolate texture coordinates beyond the\noriginal quad. Under minification or strong skew, the extrapolation can\nexceed a half-texel inset or one-pixel image-filter padding and sample\nslack in approximate-fit backing textures.\n\nImport upstream scale-aware subset checks, logical proxy-bounds clamping\nfor single and batched Ganesh draws, and strict source constraints for\nnon-pixel-aligned transparent-border draws. Avoid treating the source\nrectangle as a safe sampling domain when AA clips, MSAA/DMSAA or mask\nexpansion invalidate that assumption. Preserve the DMSAA guard ordering\nneeded before querying clip AA.\n\nUpstream regressions exercise AA-clipped minified and skewed blurs,\nstrict subsets, fragment-processor fallbacks and approximate-fit texture\ndraws, checking that red scratch pixels do not contaminate the output.\nHardware backend coverage still depends on executing the relevant cases;\nseveral native GPU cases require successful surface creation.\n\n~~ Match image-filter cache equality to its representation hash ~~\n\nThe cache hashes complete key bytes, while numerical equality omitted\nmatrix type-mask differences and could equate distinct floating-point\nrepresentations. Import bytewise equality so equal keys follow the same\nrepresentation contract as the hash.\n\nUpstream tests distinguish signed-zero and matrix type-mask keys,\nexercise colliding subnormal translations, and verify LRU eviction and\npurge when probe order differs from LRU order.\n\n~~ Pin the merged native history without changing the reviewed tree ~~\n\nUse the native release-branch merge rather than leaving the submodule\non the reviewed PR head. Verify that the merge has exactly two parents,\ndirectly includes reviewed 9b4d4e066afc1e074daf621a2bd178359d901c3b,\nand retains tree af328dd38fff557f01c9f96271b3d5602e2f38fb.\n\nDependent PR #5779 changes only the gitlink and the corresponding mono/skia\ncommitHash. Both now identify the same verified merge, while the\nupstream provenance continues to identify the imported m156 source.\n\nIndependent regeneration matched all five maintained binding outputs.\nSource review retained 72 upstream-area and 106 interop-area fork patches\nunchanged, with no DEPS file change. That review did not execute native\nregression binaries or rerun the managed test solution.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5762": {
       "url": "https://github.com/mono/SkiaSharp/pull/5762",
       "title": "[4.156] Use internal Skia mirror for Azure build-job checkouts",
