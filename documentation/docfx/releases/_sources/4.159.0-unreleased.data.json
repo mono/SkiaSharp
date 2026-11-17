@@ -17,7 +17,7 @@
   "tallies": {
     "product": 4,
     "mixed": 0,
-    "internal": 16
+    "internal": 18
   },
   "breaking_candidates": [],
   "contributors": [
@@ -32,6 +32,25 @@
   "previews": [],
   "shipments": [],
   "prs": {
+    "5788": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5788",
+      "title": "Fix docs/Pages deployment for the existing Uno 7 WASM layout",
+      "body": "* Fix Pages deploy for the Uno 7 WASM publish layout (#5771)\n\nUno.Sdk 7 ships Uno.Wasm.Bootstrap 10, which writes uno-config.js at the\nwwwroot root instead of package_<hash>/, adds root-absolute references to it\nin index.html and service-worker.js, and sets WEBAPP_PATH = '/' in the\nservice worker. The smoke scripts still required package_*/uno-config.js, so\nevery Pages - Deploy run on main has failed since #5377, and the\nAssemble site rewrite no longer covered the new absolute paths.\n\nPublish the Gallery and SkiaFiddle with WasmShellWebAppBasePath=./ so every\nbootstrapper-generated path is relative, and make the Gallery manifest's\nstart_url and scope relative. The copies then work at /gallery-uno/,\n/fiddle/ and the staging prefixes without post-publish rewriting, so drop the sed rewrite from Assemble site.\nEach Uno app job instead checks that no root-absolute reference reappears;\na violation fails that app, which the site then omits like any other\nfailed app, so docs still publish.\n\nUpdate both smoke scripts to check the Uno 7 layout and to serve the app\nfrom a sub-path, so a root-absolute reference fails the smoke test instead\nof only breaking the deployed site. Exempt the bootstrapper's handled\nonly-if-cached probe (net::ERR_CACHE_MISS) in both drivers, matching the\nexisting exemption in BrowserRunningApp.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Pin Pages app validation to Playwright-supported Ubuntu 24.04\n\nThe existing smoke-test Playwright version cannot install Chromium on ubuntu-latest now that it resolves to Ubuntu 26.04. Keep the existing dependencies and run the Pages app jobs on Ubuntu 24.04 instead.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Ramez Ragaa <ramezragaa@proton.me>\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal",
+      "fixes": [
+        5771
+      ]
+    },
+    "5787": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5787",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5783": {
       "url": "https://github.com/mono/SkiaSharp/pull/5783",
       "title": "Update issue template version dropdowns",
