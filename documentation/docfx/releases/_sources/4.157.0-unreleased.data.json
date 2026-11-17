@@ -15,15 +15,39 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 0,
-    "internal": 1
+    "internal": 3
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5790": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5790",
+      "title": "Pin Linux x86 Docker base images to last working SHA-256 digests",
+      "body": "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5770": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5770",
+      "title": "[M157] Adopt upstream subset-clamping and filter-cache fixes",
+      "body": "[M157] Adopt upstream subset-clamping and filter-cache fixes (#5770)\n\nContext: https://github.com/mono/skia/pull/459\nContext: https://github.com/mono/SkiaSharp/pull/5778\n\nAdvance release/4.157.x to the landed mono/skia merge\n51cb594d773b5383a45065ea3c8cbec398ad2c36 and record upstream chrome/m157\ncommit aa9f1d23fa91f2557922e6d527d2378f0838adc1 in cgmanifest.json.\nKeep the native gitlink and component registration aligned with the actual\nmerge commit, not the pre-merge review head. The landed native commit has\ntwo parents, directly contains reviewed head\n74062f5aac6764114a2eaefd5078f40bc1fb4a07, and has the identical tree.\n\n~~ Preserve image subsets under AA and MSAA ~~\n\nAdopt the upstream correction for texture-coordinate extrapolation beyond\nimage subsets under minification, strong skew, AA clipping and MSAA.\nOne-pixel filter padding alone cannot contain that expansion. The native\nchange retains logical proxy bounds for approximate-fit textures and\nrequires strict sampling constraints where transparent borders are\nconsumed, preventing unrelated backing-store texels from leaking into\nfiltered images.\n\n~~ Match image-filter cache equality to hashing ~~\n\nAdopt bytewise image-filter cache-key equality to match the existing hash\nover the key representation. Numerical matrix equality did not distinguish\nsigned-zero representations or cached type masks, and subnormal comparisons\ncan depend on floating-point mode. The upstream correction keeps equality\nand hashing consistent, including colliding keys and LRU eviction.\n\nThis same-milestone sync changes only the native gitlink and provenance\nmanifest. Package versions, public managed APIs and the C API remain\nunchanged. Independent regeneration matched the five maintained binding\ngroups before the tree-identical native landing was repinned.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5761": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5761",
+      "title": "[4.157] Use the internal Skia mirror for Azure build-job checkouts",
+      "body": "Backport the three-file net change from #5735 at e5a241ae0917da3094aae910463740d4c500543d. Keep public checkout transport and pinned native revisions unchanged.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
     "5748": {
       "url": "https://github.com/mono/SkiaSharp/pull/5748",
       "title": "[M157] Integrate mask-filtered glyph hardening",

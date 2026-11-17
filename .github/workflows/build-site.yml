@@ -193,7 +193,8 @@ jobs:
   app:
     name: Build ${{ matrix.name }}
     needs: [setup, wasm-natives]
-    runs-on: ubuntu-latest
+    # The smoke scripts' pinned Playwright supports Ubuntu 24.04, not 26.04.
+    runs-on: ubuntu-24.04
     continue-on-error: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: read

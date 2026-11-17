@@ -1,6 +1,6 @@
 {
-  "theme": "Mask filtered glyph fixes",
-  "highlights_headline": "The unreleased 4.158.0 changes correct mask-filtered glyph rendering when successive font-scaler loads return different glyph data.",
+  "theme": "Image and glyph correctness",
+  "highlights_headline": "SkiaSharp 4.158.0 improves image-subset sampling, filter-cache consistency, and mask-filtered glyph rendering on the existing Skia m158 engine.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,8 +8,18 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyph rendering corrected",
-          "detail": "When consecutive font-scaler loads disagree about a glyph's path, format, or bounds, rendering now uses the reloaded glyph and clears incompatible masks instead of copying them. This avoids stale outlines, format assertions, and sub-byte buffer overwrites; clipped embossed glyphs also retain correct data across all three mask planes.",
+          "lead": "Prevent out-of-subset image sampling",
+          "detail": "Filtered images and Ganesh draws retain clamping and logical texture bounds when AA or MSAA expands sampling beyond image geometry. Minified, skewed, and non-pixel-aligned transparent-border draws no longer rely on insufficient padding that can expose unrelated backing-texture pixels.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Make image-filter cache comparisons consistent",
+          "detail": "Cache-key equality now compares the same byte representation used by hashing, accounting for signed zero, subnormal values, and cached matrix type bits instead of relying on numerical matrix equality.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Respect regenerated glyph formats and bounds",
+          "detail": "Mask filtering uses the reloaded glyph's path and requires matching byte-per-pixel masks before copying overlap. Incompatible masks produce cleared output, while clipped embossed glyphs use full plane strides, preventing stale-path rendering, sub-byte buffer overwrites, and corrupted or uncleared mask planes.",
           "prs": [5739]
         }
       ]

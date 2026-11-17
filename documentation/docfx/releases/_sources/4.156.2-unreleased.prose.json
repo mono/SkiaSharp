@@ -1,6 +1,6 @@
 {
-  "theme": "Mask filtered glyph fixes",
-  "highlights_headline": "The unreleased 4.156.2 changes correct mask-filtered glyph rendering when successive font-scaler loads return different glyph data.",
+  "theme": "Rendering correctness fixes",
+  "highlights_headline": "SkiaSharp 4.156.2 improves filtered-image and glyph rendering with native fixes on the existing Skia m156 engine.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,8 +8,18 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyph rendering corrected",
-          "detail": "When consecutive font-scaler loads disagree about a glyph's path, format, or bounds, rendering now uses the reloaded path and avoids incompatible mask copies. Clipped embossed glyphs preserve full plane strides, preventing stale outlines, sub-byte buffer overwrites, and corrupted or uncleared mask planes.",
+          "lead": "Keep antialiased image sampling in bounds",
+          "detail": "Filtered images and Ganesh draws keep sampling within their intended image subsets and logical texture bounds under minification, strong skew, AA clipping, and MSAA. This prevents unrelated backing-texture pixels from contaminating the output when filter padding is insufficient.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Consistent image-filter cache keys",
+          "detail": "Image-filter cache equality now matches its bytewise hash, distinguishing signed-zero representations and matrix type metadata consistently and avoiding floating-point-mode-dependent subnormal comparisons.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Handle changing mask-filtered glyphs safely",
+          "detail": "Glyph rendering uses the reloaded glyph's path when consecutive font-scaler loads disagree. Matching mask formats are required before copying, and clipped embossed glyphs preserve full plane strides, avoiding stale outlines, sub-byte buffer overwrites, and corrupted or uncleared mask planes.",
           "prs": [5742]
         }
       ]
