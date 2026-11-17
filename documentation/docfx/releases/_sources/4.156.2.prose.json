@@ -1,0 +1,25 @@
+{
+  "theme": "Filtered image and glyph correctness",
+  "highlights_headline": "SkiaSharp 4.156.2 improves filtered-image sampling and mask-filtered glyph rendering.",
+  "highlights_body": "These pending servicing fixes retain the existing managed API and native ABI.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Keep filtered images within their texture subsets",
+          "detail": "Corrects antialiased and multisampled sampling under minification or strong skew so unrelated backing-texture pixels do not bleed into filtered images. Image-filter cache equality now matches its bytewise hash, including signed-zero and matrix-metadata differences.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Handle changing mask-filtered glyphs safely",
+          "detail": "Uses the reloaded glyph's path and validates mask formats before copying. Correct full-plane strides and clearing for clipped embossed glyphs prevent stale outlines, sub-byte buffer overwrites, and corrupted mask planes.",
+          "prs": [5742]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
