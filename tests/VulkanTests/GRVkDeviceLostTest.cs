@@ -7,9 +7,8 @@ namespace SkiaSharp.Vulkan.Tests
 	// Plumbing tests for GRVkBackendContext.DeviceLost / SKGraphiteVkBackendContext.DeviceLost
 	// (mono/SkiaSharp#4601). Actually triggering VK_ERROR_DEVICE_LOST from managed code is not
 	// realistic in CI — the callback is driver-owned and fires at Skia's discretion. These
-	// tests instead verify the wiring: property round-trips, native bridge is allocated /
-	// freed correctly, Context construction with a handler set does not crash, and Dispose
-	// tears down without use-after-free.
+	// tests instead verify the wiring: the init-only property round-trips, Context construction
+	// with a handler set does not crash, and Dispose tears down without use-after-free.
 	[Collection(VulkanGpuRenderingCollection.Name)]
 	public class GRVkDeviceLostTest : VKTest
 	{
@@ -23,15 +22,12 @@ namespace SkiaSharp.Vulkan.Tests
 			// hosts that do not build the Vulkan backend skip instead of failing on a
 			// null handle. See mono/SkiaSharp#4601.
 			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkan);
-			using var backend = new GRVkBackendContext();
-			Assert.Null(backend.DeviceLost);
+			using var empty = new GRVkBackendContext();
+			Assert.Null(empty.DeviceLost);
 
 			GRVkDeviceLostDelegate handler = info => { };
-			backend.DeviceLost = handler;
+			using var backend = new GRVkBackendContext { DeviceLost = handler };
 			Assert.Same(handler, backend.DeviceLost);
-
-			backend.DeviceLost = null;
-			Assert.Null(backend.DeviceLost);
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
@@ -44,15 +40,12 @@ namespace SkiaSharp.Vulkan.Tests
 			// hosts that do not build the Vulkan backend skip instead of failing on a
 			// null handle. See mono/SkiaSharp#4601.
 			GpuPolicy.RequireOrSkip(GpuBackends.GraphiteVulkan);
-			using var backend = new SKGraphiteVkBackendContext();
-			Assert.Null(backend.DeviceLost);
+			using var empty = new SKGraphiteVkBackendContext();
+			Assert.Null(empty.DeviceLost);
 
 			GRVkDeviceLostDelegate handler = info => { };
-			backend.DeviceLost = handler;
+			using var backend = new SKGraphiteVkBackendContext { DeviceLost = handler };
 			Assert.Same(handler, backend.DeviceLost);
-
-			backend.DeviceLost = null;
-			Assert.Null(backend.DeviceLost);
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
@@ -124,31 +117,6 @@ namespace SkiaSharp.Vulkan.Tests
 			Assert.True(graphiteContext.Submit(new SKGraphiteSubmitInfo { Sync = true }));
 
 			Assert.False(fired, "Device-lost handler fired without a lost device.");
-		}
-
-		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[Fact]
-		public void ReplacingDeviceLostReleasesPreviousBridge()
-		{
-			// GRVkBackendContext.DeviceLost installs a native bridge via
-			// gr_vk_device_lost_handler_new, which only exists in a libSkiaSharp built
-			// with SK_VULKAN. Route through the policy like every other test here so
-			// hosts that do not build the Vulkan backend skip instead of failing on a
-			// null handle. See mono/SkiaSharp#4601.
-			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkan);
-			using var backend = new GRVkBackendContext();
-
-			// Assign, replace, replace, null — no leak assertion possible from managed code,
-			// but if either the native bridge delete or the GCHandle.Free were skipped we'd
-			// crash on the second replacement (double-free of the old bridge would corrupt
-			// libc's heap; a leaked GCHandle would prevent the delegate from being collected
-			// but not fail the test). This just proves the setter tolerates being written
-			// several times.
-			for (var i = 0; i < 4; i++) {
-				backend.DeviceLost = info => { };
-			}
-			backend.DeviceLost = null;
-			Assert.Null(backend.DeviceLost);
 		}
 	}
 }
