@@ -17,15 +17,15 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 
-### GPU (OpenGL)
+### Graphite
 
-A real-time animated shader running at full frame rate on the GPU via OpenGL ES, with touch interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU via Skia's Graphite engine over Apple's Metal framework, with touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKGLView`** — Hardware-accelerated canvas backed by GLKit's `GLKView`, using OpenGL ES for rendering.
+- **`SKGraphiteView`** — Hardware-accelerated Graphite GPU canvas backed by Metal.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation driven by `CADisplayLink` with an FPS counter overlay.
+- **Render loop** — Continuous animation with `HasRenderLoop` and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
 
 ### Ganesh
@@ -71,7 +71,7 @@ To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
 public static SamplePage DefaultPage { get; set; } = SamplePage.Ganesh;
 ```
 
-Available pages: `Cpu` (default), `GpuGL`, `Ganesh`, `Drawing`
+Available pages: `Cpu` (default), `Graphite`, `Ganesh`, `Drawing`
 
 ## Screenshots
 
