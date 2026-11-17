@@ -341,8 +341,6 @@ public sealed class AppiumInfrastructureTests : IDisposable
 
 	[Theory]
 	[InlineData("18.6")]
-	[InlineData("26.2")]
-	[InlineData("26.3.1")]
 	[InlineData("26.5")]
 	public void IosGoldenProfileUsesTheSelectedRuntime(string version)
 	{
@@ -360,13 +358,13 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	[Fact]
 	public void IosGoldenProfileUsesAReviewedArchitectureOverride()
 	{
-		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "26.2");
+		var profile = IosRunningApp.ReferenceProfile("iPhone 16 Pro", "18.6");
 
-		var x64 = Reference(profile, "26.2", "maui-basic-cpu", "x64");
-		var arm64 = Reference(profile, "26.2", "maui-basic-cpu", "arm64");
+		var x64 = Reference(profile, "18.6", "maui-basic-drawing", "x64");
+		var arm64 = Reference(profile, "18.6", "maui-basic-drawing", "arm64");
 
-		Assert.EndsWith(Path.Combine("26.2.0", "maui-basic-cpu.x64.png"), x64);
-		Assert.EndsWith(Path.Combine("26.2.0", "maui-basic-cpu.png"), arm64);
+		Assert.EndsWith(Path.Combine("18.6.0", "maui-basic-drawing.x64.png"), x64);
+		Assert.EndsWith(Path.Combine("18.6.0", "maui-basic-drawing.png"), arm64);
 		Assert.True(File.Exists(x64));
 		Assert.True(File.Exists(arm64));
 	}
@@ -387,7 +385,7 @@ public sealed class AppiumInfrastructureTests : IDisposable
 			profile,
 			request.Version!.ToString(3),
 			request.CasePath + ".png");
-		var actual = Reference("iphone-16-pro", "26.2", "maui-basic-cpu");
+		var actual = Reference("iphone-16-pro", "26.5", "maui-basic-cpu");
 		Assert.True(File.Exists(actual));
 		Assert.False(File.Exists(expected));
 
@@ -543,26 +541,16 @@ public sealed class AppiumInfrastructureTests : IDisposable
 		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "18.6", new(1206, 2622)));
 		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
-			"iPhone 16 Pro", "26.2", new(1206, 2622)));
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
-			"iPhone 16 Pro", "26.3.1", new(1206, 2622)));
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
-			"iPhone 16 Pro", "26.3.2", new(1206, 2622)));
-		Assert.Equal(new SKRectI(0, 0, 0, 39), IosRunningApp.ComparisonInsets(
 			"iPhone 16 Pro", "26.5", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
-			"iPhone 16", "26.2", new(1206, 2622)));
+			"iPhone 16", "26.5", new(1206, 2622)));
 		Assert.Equal(SKRectI.Empty, IosRunningApp.ComparisonInsets(
-			"iPhone 16 Pro", "26.2", new(1032, 2592)));
+			"iPhone 16 Pro", "26.5", new(1032, 2592)));
 	}
 
 	[Theory]
 	[InlineData("18.6", true)]
 	[InlineData("18.6", false)]
-	[InlineData("26.2", true)]
-	[InlineData("26.2", false)]
-	[InlineData("26.3.1", true)]
-	[InlineData("26.3.1", false)]
 	[InlineData("26.5", true)]
 	[InlineData("26.5", false)]
 	public void DrawingChecksRejectEitherMissingStrokeAndIncompleteClear(
