@@ -1,0 +1,34 @@
+<Project>
+  <PropertyGroup>
+    <_RequestedNativeLibrary>$(NativeLibrary)</_RequestedNativeLibrary>
+  </PropertyGroup>
+  <Import Project="NativeAssets.Inventory.props" />
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$(MSBuildThisFileDirectory)..\output\nugets</PackageOutputPath>
+  </PropertyGroup>
+  <!-- dotnet build's implicit restore visits the driver; each isolated runtime pack is restored below. -->
+  <Target Name="Restore" />
+  <Target Name="PackRuntimeAssets">
+    <PropertyGroup>
+      <_RuntimePackOutputPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..', '$(PackageOutputPath)'))</_RuntimePackOutputPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_RuntimeToPack Include="@(NativeRuntime)"
+                      Condition="('$(NativeRuntimeFamily)' == '' or '%(Family)' == '$(NativeRuntimeFamily)') and ('$(NativeRuntimeRid)' == '' or '%(Identity)' == '$(NativeRuntimeRid)')" />
+      <_RuntimePack Include="$(MSBuildThisFileDirectory)SkiaSharp.NativeAssets.RuntimePack\SkiaSharp.NativeAssets.RuntimePack.csproj"
+                    AdditionalProperties="NativeLibrary=SkiaSharp;NativeRuntimeRid=%(_RuntimeToPack.Identity);NativeRuntimeFlavor=Default"
+                    Condition="('$(_RequestedNativeLibrary)' == '' or '$(_RequestedNativeLibrary)' == 'SkiaSharp') and ('$(NativeRuntimeFlavor)' == '' or '$(NativeRuntimeFlavor)' == 'Default')" />
+      <_RuntimePack Include="$(MSBuildThisFileDirectory)SkiaSharp.NativeAssets.RuntimePack\SkiaSharp.NativeAssets.RuntimePack.csproj"
+                    AdditionalProperties="NativeLibrary=HarfBuzzSharp;NativeRuntimeRid=%(_RuntimeToPack.Identity);NativeRuntimeFlavor=Default"
+                    Condition="('$(_RequestedNativeLibrary)' == '' or '$(_RequestedNativeLibrary)' == 'HarfBuzzSharp') and ('$(NativeRuntimeFlavor)' == '' or '$(NativeRuntimeFlavor)' == 'Default')" />
+      <_RuntimePack Include="$(MSBuildThisFileDirectory)SkiaSharp.NativeAssets.RuntimePack\SkiaSharp.NativeAssets.RuntimePack.csproj"
+                    AdditionalProperties="NativeLibrary=SkiaSharp;NativeRuntimeRid=%(_RuntimeToPack.Identity);NativeRuntimeFlavor=NoDependencies"
+                    Condition="('$(_RequestedNativeLibrary)' == '' or '$(_RequestedNativeLibrary)' == 'SkiaSharp') and '%(_RuntimeToPack.NoDependenciesSource)' != '' and ('$(NativeRuntimeFlavor)' == '' or '$(NativeRuntimeFlavor)' == 'NoDependencies')" />
+    </ItemGroup>
+    <Error Condition="'@(_RuntimePack)' == ''" Text="No runtime packs match NativeLibrary/NativeRuntimeFamily/NativeRuntimeRid/NativeRuntimeFlavor. See binding\NativeAssets.Inventory.props." />
+    <MSBuild Projects="@(_RuntimePack)" Targets="Restore;Pack" BuildInParallel="false"
+             RemoveProperties="NativeRuntimeFamily;TargetFramework;TargetFrameworks"
+             Properties="Configuration=$(Configuration);PackageOutputPath=$(_RuntimePackOutputPath);VersionSuffix=$(VersionSuffix);BuildProjectReferences=false" />
+  </Target>
+</Project>

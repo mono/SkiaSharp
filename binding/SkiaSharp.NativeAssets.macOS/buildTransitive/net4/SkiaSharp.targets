@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+    <Import Project="$(MSBuildThisFileDirectory)..\SkiaSharp.NativeAssets.macOS.targets" />
+
     <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
     <PropertyGroup>
         <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>

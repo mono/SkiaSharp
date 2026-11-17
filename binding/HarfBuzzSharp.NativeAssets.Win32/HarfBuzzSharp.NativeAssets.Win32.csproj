@@ -2,17 +2,13 @@
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <NativeRuntimeFamily>Windows</NativeRuntimeFamily>
     <Title>$(PackagingGroup) - Native Assets for Win32</Title>
-    <IsNativeAssetsProject>true</IsNativeAssetsProject>
+    <PackageNotes>Compatibility package with exact-version dependencies on all three Windows runtime packs.</PackageNotes>
   </PropertyGroup>
-  <ItemGroup>
-    <NativeAssetPackageFile Include="..\..\output\native\windows\x64\libHarfBuzzSharp*" RuntimeIdentifier="win-x64" />
-    <NativeAssetPackageFile Include="..\..\output\native\windows\x86\libHarfBuzzSharp*" RuntimeIdentifier="win-x86" />
-    <NativeAssetPackageFile Include="..\..\output\native\windows\arm64\libHarfBuzzSharp*" RuntimeIdentifier="win-arm64" />
-  </ItemGroup>
-  <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
-    <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
-      <TfmSpecificPackageFile Include="buildTransitive\net4\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+  <Target Name="IncludeAdditionalTfmSpecificPackageFiles" Condition="$(TargetFramework.StartsWith('net4'))">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="buildTransitive\net4\HarfBuzzSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets;build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>

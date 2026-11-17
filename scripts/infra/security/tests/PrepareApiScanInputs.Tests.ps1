@@ -69,15 +69,15 @@ function Add-NativePair {
 }
 
 try {
-    $win32Files = [Collections.Generic.List[string]]::new()
     foreach ($runtime in @('win-x86', 'win-x64', 'win-arm64')) {
+        $win32Files = [Collections.Generic.List[string]]::new()
         Add-NativePair $win32Files $runtime 'libSkiaSharp'
+        New-TestPackage "SkiaSharp.NativeAssets.Win32.$runtime" $win32Files
     }
-    New-TestPackage 'SkiaSharp.NativeAssets.Win32' $win32Files
 
     $harfBuzzFiles = [Collections.Generic.List[string]]::new()
     Add-NativePair $harfBuzzFiles 'win-arm64' 'libHarfBuzzSharp'
-    New-TestPackage 'HarfBuzzSharp.NativeAssets.Win32' $harfBuzzFiles
+    New-TestPackage 'HarfBuzzSharp.NativeAssets.Win32.win-arm64' $harfBuzzFiles
 
     $nanoServerFiles = [Collections.Generic.List[string]]::new()
     Add-NativePair $nanoServerFiles 'win-x64' 'libSkiaSharp'

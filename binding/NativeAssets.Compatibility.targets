@@ -1,0 +1,39 @@
+<Project>
+  <Import Project="NativeAssets.Inventory.props" />
+  <Import Project="NativeAssets.Tasks.targets" />
+  <ItemGroup>
+    <_CompatibilityRuntime Include="@(NativeRuntime->WithMetadataValue('Family', '$(NativeRuntimeFamily)'))" />
+    <PackageFile Include="$(MSBuildThisFileDirectory)NativeAssets.Runtime.targets" PackagePath="buildTransitive\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' != 'NoDependencies'" />
+    <PackageFile Include="$(MSBuildThisFileDirectory)SkiaSharp\buildTransitive\SkiaSharp.NoDependencies.targets" PackagePath="buildTransitive\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'" />
+    <PackageFile Include="$(MSBuildThisFileDirectory)NativeAssets.Runtime.targets" PackagePath="build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' != 'NoDependencies'" />
+    <PackageFile Include="$(MSBuildThisFileDirectory)SkiaSharp\buildTransitive\SkiaSharp.NoDependencies.targets" PackagePath="build\$(PackageId).targets" Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'" />
+  </ItemGroup>
+  <Target Name="_GenerateCompatibilityNuspec" BeforeTargets="GenerateNuspec"
+          DependsOnTargets="CollectAssemblyVersionInfo;_GetTargetFrameworksOutput;_WalkEachTargetPerFramework;_GetPackageFiles">
+    <PropertyGroup>
+      <NuspecFile>$(IntermediateOutputPath)$(PackageId).compatibility.nuspec</NuspecFile>
+      <_CompatibilityNoDependencies>false</_CompatibilityNoDependencies>
+      <_CompatibilityNoDependencies Condition="'$(NativeRuntimeFlavor)' == 'NoDependencies'">true</_CompatibilityNoDependencies>
+    </PropertyGroup>
+    <ItemGroup>
+      <_CompatibilityMetadata Include="id" Value="$(PackageId)" />
+      <_CompatibilityMetadata Include="version" Value="$(PackageVersion)" />
+      <_CompatibilityMetadata Include="title" Value="$(Title)" />
+      <_CompatibilityMetadata Include="authors" Value="$(Authors)" />
+      <_CompatibilityMetadata Include="description" Value="$(PackageDescription)" />
+      <_CompatibilityMetadata Include="copyright" Value="$(Copyright)" />
+      <_CompatibilityMetadata Include="requireLicenseAcceptance" Value="$(PackageRequireLicenseAcceptance)" />
+      <_CompatibilityMetadata Include="projectUrl" Value="$(PackageProjectUrl)" />
+      <_CompatibilityMetadata Include="releaseNotes" Value="$(PackageReleaseNotes)" />
+      <_CompatibilityMetadata Include="tags" Value="$(PackageTags)" />
+      <_CompatibilityMetadata Include="icon" Value="$(PackageIcon)" />
+      <_CompatibilityMetadata Include="readme" Value="$(PackageReadmeFile)" />
+    </ItemGroup>
+    <GenerateNativeCompatibilityNuspec Runtimes="@(_CompatibilityRuntime)" Frameworks="@(_TargetFrameworks)"
+        Files="@(_PackageFiles)" Metadata="@(_CompatibilityMetadata)" NoDependencies="$(_CompatibilityNoDependencies)" OutputPath="$(NuspecFile)"
+        RepositoryUrl="$(RepositoryUrl)" RepositoryBranch="$(RepositoryBranch)" RepositoryCommit="$(RepositoryCommit)" />
+    <ItemGroup>
+      <FileWrites Include="$(NuspecFile)" />
+    </ItemGroup>
+  </Target>
+</Project>

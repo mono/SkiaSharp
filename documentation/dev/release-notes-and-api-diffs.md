@@ -1593,7 +1593,8 @@ build, so it can never show inherited members the historical type never had.
 **It must be read from the nuspec** rather than reused from the package's own version
 because the self-dependency family is **not a single version line** — `SkiaSharp.HarfBuzz
 2.88.7` was built against `HarfBuzzSharp 7.3.0.1`, not `2.88.7` — so only the nuspec records
-the correct version for every self-dependency uniformly. `NativeAssets.*` dependencies are
+the correct version for every self-dependency uniformly. `NativeAssets.*`
+dependencies, including the per-RID native packages, are
 excluded (they ship only native binaries, contribute no managed types, and are the largest
 packages to fetch), and a self-dependency version that cannot be fetched is logged and
 skipped rather than aborting the run. The nuspec is frozen, so this is deterministic and

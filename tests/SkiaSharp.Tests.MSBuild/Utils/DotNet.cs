@@ -45,12 +45,25 @@ public sealed class DotNet : IDisposable
         var directory = Path.Combine(root, name);
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, "Consumer.csproj"), xml);
-        File.WriteAllText(Path.Combine(directory, "Program.cs"), "System.Console.WriteLine(\"Package consumer\");");
+        File.WriteAllText(Path.Combine(directory, "Program.cs"),
+            "internal static class Program { private static void Main() { System.Console.WriteLine(\"Package consumer\"); } }");
         return directory;
     }
 
-    public Task Build(string directory, string? framework = null, string? outputDirectory = "output") =>
-        Run(directory, "build", framework: framework, outputDirectory: outputDirectory);
+    public Task Build(string directory, string? framework = null, string? outputDirectory = "output", string? rid = null) =>
+        Run(directory, "build", rid: rid, framework: framework, outputDirectory: outputDirectory);
+
+    public Task<string> Execute(string directory, string assembly) =>
+        RunCommand(directory, [Path.GetFullPath(Path.Combine(directory, assembly))],
+            TimeSpan.FromMinutes(1), "execute");
+
+    public Task<string> Restore(string directory, string rid) =>
+        RunCommand(directory, ["restore", "Consumer.csproj", "-r", rid, "--nologo", "-v:minimal",
+            $"-p:RestoreConfigFile={Path.Combine(root, "NuGet.Config")}"], TimeSpan.FromMinutes(5));
+
+    public Task<string> CopyLegacyNativeAssets(string directory) =>
+        RunCommand(directory, ["msbuild", "Consumer.csproj", "-t:CopyNativeFiles", "--nologo", "-v:minimal"],
+            TimeSpan.FromMinutes(1));
 
     public Task Publish(string directory, string? rid = null, string? framework = null,
         string? outputDirectory = "output", string? diagnosticLabel = null) =>
@@ -119,6 +132,8 @@ public sealed class DotNet : IDisposable
         start.Environment["NUGET_HTTP_CACHE_PATH"] = Path.Combine(cache, "http");
         start.Environment["NUGET_SCRATCH"] = Path.Combine(cache, "scratch");
         start.Environment["DOTNET_CLI_HOME"] = Path.Combine(cache, "home");
+        start.Environment["DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK"] = "true";
+        start.Environment["DOTNET_GENERATE_ASPNET_CERTIFICATE"] = "false";
         start.Environment["DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE"] = "true";
         File.WriteAllText(Path.Combine(diagnostics, "command.txt"),
             host + " " + string.Join(" ", start.ArgumentList.Select(a => $"\"{a}\"")));

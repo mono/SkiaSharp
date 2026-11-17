@@ -1,0 +1,52 @@
+<Project>
+  <!-- The single inventory for desktop runtime packs, compatibility dependencies and runtime.json. -->
+  <PropertyGroup>
+    <NativeLibrary Condition="'$(NativeLibrary)' == '' and '$(PackagingGroup)' != ''">$(PackagingGroup)</NativeLibrary>
+    <NativeLibrary Condition="'$(NativeLibrary)' == ''">SkiaSharp</NativeLibrary>
+    <_NativeWindowsPackagePrefix>$(NativeLibrary).NativeAssets.Win32</_NativeWindowsPackagePrefix>
+    <_NativeMacOSPackagePrefix>$(NativeLibrary).NativeAssets.macOS</_NativeMacOSPackagePrefix>
+    <_NativeLinuxPackagePrefix>$(NativeLibrary).NativeAssets.Linux</_NativeLinuxPackagePrefix>
+    <_NativeRuntimePackagePrefix>$(_NativeLinuxPackagePrefix)</_NativeRuntimePackagePrefix>
+    <_NativeRuntimePackagePrefix Condition="$(NativeRuntimeRid.StartsWith('win-'))">$(_NativeWindowsPackagePrefix)</_NativeRuntimePackagePrefix>
+    <_NativeRuntimePackagePrefix Condition="$(NativeRuntimeRid.StartsWith('osx-'))">$(_NativeMacOSPackagePrefix)</_NativeRuntimePackagePrefix>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <NativeRuntime>
+      <NativeFile>lib$(NativeLibrary).so</NativeFile>
+    </NativeRuntime>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <!-- Android falls back through linux-bionic to linux; Tizen may use a workload-supplied Linux graph. -->
+    <NativeRuntimeBoundary Include="android;android-arm;android-arm64;android-x86;android-x64;tizen;tizen-armel;tizen-x86" />
+    <!-- No x86 musl artifact is built; do not substitute the glibc x86 library. -->
+    <NativeRuntimeBoundary Include="linux-musl-x86" />
+    <NativeRuntime Include="win-x86" Family="Windows" Source="windows\x86" NativeFile="lib$(NativeLibrary).dll" FrameworkDirectory="x86" />
+    <NativeRuntime Include="win-x64" Family="Windows" Source="windows\x64" NativeFile="lib$(NativeLibrary).dll" FrameworkDirectory="x64" />
+    <NativeRuntime Include="win-arm64" Family="Windows" Source="windows\arm64" NativeFile="lib$(NativeLibrary).dll" FrameworkDirectory="arm64" />
+    <NativeRuntime Include="osx-x64" Family="macOS" Source="osx" NativeFile="lib$(NativeLibrary).dylib" FrameworkDirectory="x64" SymbolArchitecture="x86_64" />
+    <NativeRuntime Include="osx-arm64" Family="macOS" Source="osx" NativeFile="lib$(NativeLibrary).dylib" FrameworkDirectory="arm64" SymbolArchitecture="arm64" />
+    <NativeRuntime Include="linux-x86" Family="Linux" Source="linux\x86" NoDependenciesSource="linuxnodeps\x86" FrameworkDirectory="x86" />
+    <NativeRuntime Include="linux-x64" Family="Linux" Source="linux\x64" NoDependenciesSource="linuxnodeps\x64" FrameworkDirectory="x64" />
+    <NativeRuntime Include="linux-arm" Family="Linux" Source="linux\arm" NoDependenciesSource="linuxnodeps\arm" FrameworkDirectory="arm" />
+    <NativeRuntime Include="linux-arm64" Family="Linux" Source="linux\arm64" NoDependenciesSource="linuxnodeps\arm64" FrameworkDirectory="arm64" />
+    <NativeRuntime Include="linux-riscv64" Family="Linux" Source="linux\riscv64" NoDependenciesSource="linuxnodeps\riscv64" FrameworkDirectory="riscv64" />
+    <NativeRuntime Include="linux-loongarch64" Family="Linux" Source="linux\loongarch64" NoDependenciesSource="linuxnodeps\loongarch64" FrameworkDirectory="loongarch64" />
+    <NativeRuntime Include="linux-musl-x64" Family="Linux" Source="alpine\x64" NoDependenciesSource="alpinenodeps\x64" FrameworkDirectory="musl-x64" />
+    <NativeRuntime Include="linux-musl-arm" Family="Linux" Source="alpine\arm" NoDependenciesSource="alpinenodeps\arm" FrameworkDirectory="musl-arm" />
+    <NativeRuntime Include="linux-musl-arm64" Family="Linux" Source="alpine\arm64" NoDependenciesSource="alpinenodeps\arm64" FrameworkDirectory="musl-arm64" />
+    <NativeRuntime Include="linux-musl-riscv64" Family="Linux" Source="alpine\riscv64" NoDependenciesSource="alpinenodeps\riscv64" FrameworkDirectory="musl-riscv64" />
+    <NativeRuntime Include="linux-musl-loongarch64" Family="Linux" Source="alpine\loongarch64" NoDependenciesSource="alpinenodeps\loongarch64" FrameworkDirectory="musl-loongarch64" />
+    <NativeRuntime Include="linux-bionic-x64" Family="Linux" Source="bionic\x64" NoDependenciesSource="bionic\x64" FrameworkDirectory="bionic-x64" />
+    <NativeRuntime Include="linux-bionic-arm64" Family="Linux" Source="bionic\arm64" NoDependenciesSource="bionic\arm64" FrameworkDirectory="bionic-arm64" />
+  </ItemGroup>
+  <ItemGroup>
+    <NativeRuntime Update="@(NativeRuntime)">
+      <NoDependenciesSource Condition="'$(NativeLibrary)' != 'SkiaSharp'"></NoDependenciesSource>
+      <PackagePrefix>$(_NativeLinuxPackagePrefix)</PackagePrefix>
+      <PackagePrefix Condition="'%(Family)' == 'Windows'">$(_NativeWindowsPackagePrefix)</PackagePrefix>
+      <PackagePrefix Condition="'%(Family)' == 'macOS'">$(_NativeMacOSPackagePrefix)</PackagePrefix>
+      <PackageId>%(PackagePrefix).%(Identity)</PackageId>
+      <NoDependenciesPackageId Condition="'%(NoDependenciesSource)' != ''">%(PackagePrefix).NoDependencies.%(Identity)</NoDependenciesPackageId>
+    </NativeRuntime>
+  </ItemGroup>
+</Project>
