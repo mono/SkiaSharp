@@ -1,0 +1,87 @@
+# Scans the Microsoft-owned sources for banned APIs with DevSkim. It reads sources only,
+# so it needs no product build and runs in parallel with every other stage.
+# See documentation/dev/devskim.md.
+#
+# This is for the public CI/PR pipeline: it checks out the Skia submodule straight from
+# GitHub, while the internal pipelines use the skiaMirror repository instead.
+parameters:
+  - name: buildAgent
+    type: object
+
+stages:
+  - stage: devskim
+    displayName: DevSkim
+    dependsOn: []
+    jobs:
+      - job: devskim
+        displayName: Scan for banned APIs
+        timeoutInMinutes: 30
+        pool: ${{ parameters.buildAgent.pool }}
+        workspace:
+          clean: all
+        variables:
+          DOTNET_NOLOGO: true
+          DEVSKIM_VERSION: 1.0.100
+          DEVSKIM_TOOL: $(Agent.TempDirectory)/devskim-tool
+          DEVSKIM_REPORTS: $(Build.ArtifactStagingDirectory)/devskim
+        templateContext:
+          # The reports are published whatever the result, so that a failure can be diagnosed.
+          # A failing attempt uses its own artifact name, so a rerun never reuses a name.
+          outputs:
+            - output: pipelineArtifact
+              displayName: Publish the DevSkim reports
+              artifactName: devskim
+              targetPath: $(DEVSKIM_REPORTS)
+              isProduction: false
+            - output: pipelineArtifact
+              displayName: Publish the failed DevSkim reports
+              condition: failed()
+              artifactName: devskim_failed_$(System.JobAttempt)
+              targetPath: $(DEVSKIM_REPORTS)
+              isProduction: false
+        steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+
+          - bash: mkdir -p "$(DEVSKIM_REPORTS)"
+            displayName: Create the report directory
+
+          - task: UseDotNet@2
+            displayName: Install .NET $(DOTNET_VERSION)
+            retryCountOnTaskFailure: 3
+            inputs:
+              packageType: sdk
+              version: $(DOTNET_VERSION)
+
+          # The C API in externals/skia is scanned, and only the pinned commit is needed.
+          - bash: git submodule update --init --depth 1 externals/skia
+            displayName: Checkout the Skia submodule
+            retryCountOnTaskFailure: 3
+            workingDirectory: $(Build.SourcesDirectory)
+
+          - bash: python3 -m unittest discover -s scripts/infra/devskim -p "test_*.py" -v
+            displayName: Test the DevSkim gate
+            workingDirectory: $(Build.SourcesDirectory)
+
+          # Installed from the repository's own NuGet configuration, because nuget.org may be
+          # unreachable. Outside the repository, so that global.json does not select the SDK.
+          - bash: |
+              set -euo pipefail
+              dotnet tool install Microsoft.CST.DevSkim.CLI \
+                --version "$(DEVSKIM_VERSION)" \
+                --tool-path "$(DEVSKIM_TOOL)" \
+                --configfile "$(Build.SourcesDirectory)/nuget.config" \
+                2>&1 | tee -a "$(DEVSKIM_REPORTS)/install.log"
+            displayName: Install DevSkim $(DEVSKIM_VERSION)
+            retryCountOnTaskFailure: 3
+            workingDirectory: $(Agent.TempDirectory)
+
+          - bash: |
+              python3 scripts/infra/devskim/run_devskim.py \
+                --devskim "$(DEVSKIM_TOOL)/devskim" \
+                --reports "$(DEVSKIM_REPORTS)"
+            displayName: Scan for banned APIs
+            workingDirectory: $(Build.SourcesDirectory)

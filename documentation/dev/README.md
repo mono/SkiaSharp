@@ -61,6 +61,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | [gpu-test-policy.md](gpu-test-policy.md) | When a GPU backend is required vs skipped, and the `SKIASHARP_TEST_SKIP_GPU` opt-out |
 | [containerized-testing.md](containerized-testing.md) | Run the console test suite inside a Docker container (Linux glibc/Alpine + Nano Server) via the bootstrapper `docker:` feature + the `tests-container` cake target |
 | [fuzzing.md](fuzzing.md) | Run coverage-guided fuzzing locally (native or Docker), replay crash inputs, add `IFuzzer` targets, and inspect OneFuzz cloud jobs |
+| [devskim.md](devskim.md) | The DevSkim banned-API scan in CI: what is scanned, how a finding fails the build, false positives, and how to run it locally |
 
 ### Releasing
 | Document | Description |
