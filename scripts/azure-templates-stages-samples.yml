@@ -14,8 +14,6 @@ parameters:
         name: Azure Pipelines
         vmImage: macos-26
         os: macos
-      variables:
-        XCODE_VERSION: '26.6'
   - name: iosSimulators
     type: object
     default:
@@ -73,6 +71,8 @@ stages:
               platform: ios
               dependsOn: [samples_appium_build_ios]
               buildAgent: ${{ parameters.buildAgentIosAppium }}
+              variables:
+                XCODE_VERSION: '26.6'
               additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
               preBuildSteps:
                 - ${{ if eq(ios.installRuntime, true) }}:

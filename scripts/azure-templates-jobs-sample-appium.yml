@@ -2,6 +2,7 @@ parameters:
   name: ''
   displayName: ''
   buildAgent: {}
+  variables: {}
   additionalArgs: ''
   env: {}
   preBuildSteps: []
@@ -15,6 +16,7 @@ jobs:
       name: ${{ parameters.name }}
       displayName: ${{ parameters.displayName }}
       buildAgent: ${{ parameters.buildAgent }}
+      variables: ${{ parameters.variables }}
       dependsOn: ${{ parameters.dependsOn }}
       target: samples
       additionalArgs: --appiumMode=${{ parameters.phase }} ${{ parameters.additionalArgs }}
