@@ -43,7 +43,7 @@
 
 ARG ROOTFS_DIR=/crossrootfs/x86
 
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-builder-amd64 AS builder
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-builder-amd64@sha256:b875f195e0560a0001a663ca4dc47ece0edd0af861d9625a0d7598093395a84b AS builder
 ARG ROOTFS_DIR
 
 RUN PYTHON_EXECUTABLE="$ROOTFS_PIP_HOME/bin/python" /scripts/eng/common/cross/build-rootfs.sh x86 bionic --skipunmount --skipemulation
@@ -90,7 +90,7 @@ RUN TARGET_TRIPLE="i686-linux-gnu" && \
 # This section mirrors ../glibc/Dockerfile exactly (hardcoded for x86).
 # ===========================================================================
 
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-llvm-amd64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-crossdeps-llvm-amd64@sha256:e32d03fed9d719629a0e57bce0584a924fc1dbe124a8ad825063af6138d5c013
 ARG ROOTFS_DIR
 
 COPY --from=builder /usr/local/lib/clang /usr/local/lib/clang/
