@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot '../test-shared.cake') -Raw
+$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot '../tests-shared.cake') -Raw
 $start = $source.IndexOf('void RunDotNetTest(')
 $end = $source.IndexOf('void RunCodeCoverage(', $start)
 if ($start -lt 0 -or $end -lt 0) { throw 'The shared runner method was not found.' }
