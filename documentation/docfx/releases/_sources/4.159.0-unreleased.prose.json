@@ -1,20 +1,25 @@
 {
-  "theme": "Glyph and Vulkan resilience",
-  "highlights_headline": "Upcoming fixes harden mask-filtered glyph rendering and Imagination Vulkan allocation failure handling.",
-  "highlights_body": "These same-milestone native fixes leave package versions and the managed API unchanged.",
+  "theme": "Native rendering reliability",
+  "highlights_headline": "The upcoming 4.159.0 update improves glyph rendering, image-filter caching and Vulkan allocation failure handling.",
+  "highlights_body": "These Skia m159 corrections leave managed APIs and the native ABI unchanged.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyphs handle changing scaler output",
-          "detail": "Rendering uses the reloaded glyph's path, format and bounds when successive font-scaler loads differ. Incompatible masks are cleared instead of overflowing sub-byte rows, and clipped embossed masks retain the correct plane strides.",
+          "lead": "Match image-filter cache equality to hashing",
+          "detail": "Cache keys use bytewise equality, consistently distinguishing signed zero and matrix type metadata regardless of runtime subnormal handling. This aligns lookups, LRU eviction and purge behavior with the existing hash.",
+          "prs": [5769]
+        },
+        {
+          "lead": "Handle divergent glyph reloads safely",
+          "detail": "Mask-filtered text rasterizes the reloaded glyph rather than stale outline state when font-scaler loads differ. Incompatible masks are cleared instead of overflowing sub-byte rows, and clipped embossed masks use full plane strides while overlapping SDF data is preserved.",
           "prs": [5741]
         },
         {
-          "lead": "Imagination Vulkan allocation failures avoid unsafe pool destruction",
-          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, where destroying the pool can trigger a driver failure. Graphite also stops allocating through the abandoned handle; other vendors and errors are unaffected.",
+          "lead": "Avoid an Imagination Vulkan driver failure",
+          "detail": "When descriptor-set allocation reports host or device out-of-memory on Imagination drivers, Skia abandons the affected pool rather than destroying it, avoiding a driver failure. The workaround is limited to that vendor and those allocation errors.",
           "prs": [5741]
         }
       ]

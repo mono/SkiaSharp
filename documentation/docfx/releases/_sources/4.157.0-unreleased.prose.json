@@ -1,15 +1,25 @@
 {
-  "theme": "Filtered glyph hardening",
-  "highlights_headline": "Upcoming native fixes correct mask-filtered glyphs when reloading changes their outline, format or bounds.",
-  "highlights_body": null,
+  "theme": "Filtered rendering corrections",
+  "highlights_headline": "The upcoming 4.157.0 update corrects image-subset sampling and mask-filtered glyph rendering.",
+  "highlights_body": "The native Skia m157 corrections also make image-filter cache keys consistent with hashing. The managed and C API surfaces remain unchanged.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Glyph reloads no longer reuse stale outline state",
-          "detail": "Mask filtering rasterizes the reloaded glyph's own path, clears incompatible or non-overlapping masks, and preserves full plane strides for clipped embossed glyphs. This avoids stale outlines, sub-byte buffer overwrites, format assertions and uncleared mask planes without changing managed APIs.",
+          "lead": "Preserve image subsets under antialiasing",
+          "detail": "Image filtering and texture sampling respect logical bounds under minification, strong skew, AA clipping and MSAA. Strict sampling constraints prevent unrelated backing-store texels from leaking into filtered images when padding is insufficient.",
+          "prs": [5770]
+        },
+        {
+          "lead": "Align image-filter cache equality with hashing",
+          "detail": "Bytewise key comparison distinguishes signed-zero representations and matrix type metadata, avoiding floating-point-mode-dependent equality and keeping cache lookups and LRU eviction consistent.",
+          "prs": [5770]
+        },
+        {
+          "lead": "Correct mask-filtered glyph reloads",
+          "detail": "Text rasterization uses the reloaded glyph's own outline when font-scaler loads change. Incompatible masks produce cleared output instead of unsafe copies or format assertions, while clipped embossed glyphs preserve full plane strides and SDF overlap remains intact.",
           "prs": [5748]
         }
       ]

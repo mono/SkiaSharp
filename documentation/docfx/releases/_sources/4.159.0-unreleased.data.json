@@ -15,15 +15,31 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 0,
-    "internal": 13
+    "internal": 14
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5769": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5769",
+      "title": "[Skia] Sync m159 image-filter cache equality fix",
+      "body": "[Skia] Sync m159 image-filter cache equality fix (#5769)\n\nContext: https://github.com/mono/skia/pull/458\nContext: https://github.com/mono/SkiaSharp/pull/5776\nChanges: https://github.com/mono/skia/compare/96ee011489be9ba83512abb766d0712a27eb1f18...1c8b6db33a5c9ff2292fb58d65d7b344e91085f3\n\nAdvance externals/skia and its Component Governance registration to native\nmerge 1c8b6db33a5c9ff2292fb58d65d7b344e91085f3, incorporating the\nchrome/m159 cache-key fix at upstream\n8a65fa27c104d1bb5a58df5ec3e0c1655053fcf6. Keep milestone 159 and package\nand native ABI versions unchanged for this servicing update.\n\nThe image-filter cache hashes complete key bytes, while its former\nfieldwise equality used numerical matrix comparison and ignored the\nmatrix's cached type mask. Signed zero, differing type-mask state and\nruntime denormal handling could make equality inconsistent with hashing.\nThe native fix compares the complete key representation with memcmp,\nusing the constructor's existing type-mask initialization and explicit\npadding. Its upstream regression checks signed zero, type masks,\ncolliding subnormal translations, LRU eviction and purge behavior.\n\nRecord the landed native history rather than the pre-merge PR head.\nThe native merge has two parents, directly contains reviewed commit\nb57c805eedc66db3716e75ef6f5c8520be1be17b, and has the identical tree\n7dbf928a42d7006783c6aaf4ae567b34f0d37824. The dependent repin updates\nthe gitlink and matching manifest fork hash together; the manifest's\nupstream_merge_commit remains the upstream commit, not the fork merge.\n\nThe parent diff changes those two provenance files, not managed wrappers,\ngenerated declarations or tests. Independent regeneration matched the\nfive maintained generator configurations, and the fork DEPS blob is\nunchanged. Native tree equality preserves the reviewed content; it is\nnot a new native build or runtime/device test run.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5774": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5774",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5772": {
       "url": "https://github.com/mono/SkiaSharp/pull/5772",
       "title": "Build the docs site in parallel and validate it on every PR",
