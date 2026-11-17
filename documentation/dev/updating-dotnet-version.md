@@ -113,7 +113,7 @@ The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/pac
   - `tests/Dockerfile.linux`
 - [ ] Update every native `DOTNET_SDK_VERSION` argument to the exact repository SDK patch:
   - `scripts/infra/native/android/docker/Dockerfile`
-  - `scripts/infra/native/linux/docker/{alpine,bionic,glibc,glibc-x86}/Dockerfile`
+  - `scripts/infra/native/linux/docker/{alpine,bionic,glibc}/Dockerfile`
   - `scripts/infra/native/tizen/docker/Dockerfile`
   - `scripts/infra/native/wasm/docker/Dockerfile`
 - [ ] In the WASM Dockerfile, use `dotnet-install.sh --version ${DOTNET_SDK_VERSION}`. Do not use `--channel` with an exact SDK version.
