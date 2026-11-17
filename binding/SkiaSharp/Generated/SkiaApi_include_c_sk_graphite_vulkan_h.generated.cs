@@ -37,6 +37,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial sk_graphite_backend_semaphore_t sk_graphite_vk_backend_semaphore_new (UInt64 vkSemaphore);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -76,6 +77,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial sk_graphite_backend_texture_t sk_graphite_vk_backend_texture_new_uint64 (Int32 width, Int32 height, SKGraphiteVkTextureInfo* info, Int32 imageLayout, UInt32 queueFamilyIndex, UInt64 vkImage);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -95,6 +97,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial sk_graphite_mutable_texture_state_t sk_graphite_vk_mutable_texture_state_new (Int32 imageLayout, UInt32 queueFamilyIndex);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

@@ -40,6 +40,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void sk_graphite_backend_semaphore_delete (sk_graphite_backend_semaphore_t semaphore);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -119,6 +120,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial sk_graphite_texture_info_t sk_graphite_backend_texture_get_texture_info (sk_graphite_backend_texture_t tex);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -361,6 +363,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial SKGraphiteInsertStatus sk_graphite_context_insert_recording_full (sk_graphite_context_t context, sk_graphite_recording_t recording, sk_surface_t targetSurface, Int32 targetTranslationX, Int32 targetTranslationY, SKRectI* targetClip, sk_graphite_mutable_texture_state_t targetTextureState, void** waitSemaphores, Int32 waitSemaphoreCount, void** signalSemaphores, Int32 signalSemaphoreCount, void* finishedProc, void* finishedContext);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -609,6 +612,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial void sk_graphite_mutable_texture_state_delete (sk_graphite_mutable_texture_state_t state);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -728,6 +732,7 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial sk_canvas_t sk_graphite_recorder_make_deferred_canvas (sk_graphite_recorder_t recorder, SKImageInfoNative* info, sk_graphite_texture_info_t textureInfo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
