@@ -1,25 +1,25 @@
 {
-  "theme": "Image and glyph correctness",
-  "highlights_headline": "The upcoming 4.156.2 update corrects filtered image sampling and mask-filtered glyph rendering.",
-  "highlights_body": "These same-milestone native fixes also align image-filter cache lookups with hashing, without changing managed APIs.",
+  "theme": "Rendering correctness fixes",
+  "highlights_headline": "SkiaSharp 4.156.2 improves filtered-image and glyph rendering with native fixes on the existing Skia m156 engine.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Keep antialiased image sampling within bounds",
-          "detail": "Ganesh image draws and filters constrain sampling to the intended texture subset under minification, strong skew, AA clipping and MSAA, preventing unrelated backing-texture pixels from contaminating the output.",
+          "lead": "Keep antialiased image sampling in bounds",
+          "detail": "Filtered images and Ganesh draws keep sampling within their intended image subsets and logical texture bounds under minification, strong skew, AA clipping, and MSAA. This prevents unrelated backing-texture pixels from contaminating the output when filter padding is insufficient.",
           "prs": [5773]
         },
         {
-          "lead": "Make image-filter cache keys consistent",
-          "detail": "Cache equality now matches bytewise hashing for signed zero, matrix type metadata and subnormal values, keeping lookups and eviction consistent.",
+          "lead": "Consistent image-filter cache keys",
+          "detail": "Image-filter cache equality now matches its bytewise hash, distinguishing signed-zero representations and matrix type metadata consistently and avoiding floating-point-mode-dependent subnormal comparisons.",
           "prs": [5773]
         },
         {
-          "lead": "Handle changing glyph loads safely",
-          "detail": "Mask-filtered text uses the reloaded glyph's path and validates mask compatibility when successive font-scaler loads differ. This prevents stale outlines and sub-byte buffer overwrites, and corrects clipped embossed-mask planes.",
+          "lead": "Handle changing mask-filtered glyphs safely",
+          "detail": "Glyph rendering uses the reloaded glyph's path when consecutive font-scaler loads disagree. Matching mask formats are required before copying, and clipped embossed glyphs preserve full plane strides, avoiding stale outlines, sub-byte buffer overwrites, and corrupted or uncleared mask planes.",
           "prs": [5742]
         }
       ]

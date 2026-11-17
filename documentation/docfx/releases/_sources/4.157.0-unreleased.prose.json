@@ -1,7 +1,7 @@
 {
   "theme": "Filtered rendering corrections",
-  "highlights_headline": "The upcoming 4.157.0 update corrects image-subset sampling and mask-filtered glyph rendering.",
-  "highlights_body": "The native Skia m157 corrections also make image-filter cache keys consistent with hashing. The managed and C API surfaces remain unchanged.",
+  "highlights_headline": "SkiaSharp 4.157.0 incorporates image-sampling, filter-cache, and glyph-rendering fixes on the existing Skia m157 engine.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
@@ -9,17 +9,17 @@
       "bullets": [
         {
           "lead": "Preserve image subsets under antialiasing",
-          "detail": "Image filtering and texture sampling respect logical bounds under minification, strong skew, AA clipping and MSAA. Strict sampling constraints prevent unrelated backing-store texels from leaking into filtered images when padding is insufficient.",
+          "detail": "Image sampling respects subsets and logical texture bounds under minification, strong skew, AA clipping, and MSAA. Stricter sampling constraints prevent unrelated backing-store texels from leaking into filtered images when one-pixel padding cannot contain expanded texture coordinates.",
           "prs": [5770]
         },
         {
-          "lead": "Align image-filter cache equality with hashing",
-          "detail": "Bytewise key comparison distinguishes signed-zero representations and matrix type metadata, avoiding floating-point-mode-dependent equality and keeping cache lookups and LRU eviction consistent.",
+          "lead": "Align filter-cache equality and hashing",
+          "detail": "Image-filter cache keys use bytewise equality consistent with their hash, including signed-zero representations, cached matrix type metadata, and subnormal values whose numeric comparison can depend on floating-point mode.",
           "prs": [5770]
         },
         {
-          "lead": "Correct mask-filtered glyph reloads",
-          "detail": "Text rasterization uses the reloaded glyph's own outline when font-scaler loads change. Incompatible masks produce cleared output instead of unsafe copies or format assertions, while clipped embossed glyphs preserve full plane strides and SDF overlap remains intact.",
+          "lead": "Correct reloaded glyph masks and outlines",
+          "detail": "Mask filtering rasterizes the reloaded glyph's own outline and clears incompatible mask formats rather than copying them. Clipped embossed masks retain full plane strides and clear all destination planes, preventing stale outlines, sub-byte buffer overwrites, and corrupted mask output.",
           "prs": [5748]
         }
       ]
