@@ -111,7 +111,8 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-CI builds the iOS apps on macOS 26 using Xcode 26.3, as required by the pinned
+The dedicated iOS Appium jobs use the AcesShared Tahoe image.
+CI builds the iOS apps using Xcode 26.3, as required by the pinned
 .NET iOS workload, then runs the iOS 18.6 (22G86) and 26.5 (23F77) profiles
 with Xcode 26.6.
 It installs each exact runtime and fails if its build is unavailable or
