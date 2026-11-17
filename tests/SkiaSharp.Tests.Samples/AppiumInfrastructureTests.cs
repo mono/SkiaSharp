@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using OpenQA.Selenium;
 using SkiaSharp.Tests.Samples.Utils;
 using SkiaSharp.Tests.Shared;
