@@ -1,15 +1,25 @@
 {
-  "theme": "Mask filtered glyph fixes",
-  "highlights_headline": "The unreleased 4.158.0 changes correct mask-filtered glyph rendering when successive font-scaler loads return different glyph data.",
-  "highlights_body": null,
+  "theme": "Image and text reliability",
+  "highlights_headline": "The upcoming 4.158.0 update improves filtered image and glyph correctness without changing managed APIs.",
+  "highlights_body": "Skia m158 fixes keep antialiased sampling inside image subsets and make image-filter cache equality consistent with hashing.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Mask-filtered glyph rendering corrected",
-          "detail": "When consecutive font-scaler loads disagree about a glyph's path, format, or bounds, rendering now uses the reloaded glyph and clears incompatible masks instead of copying them. This avoids stale outlines, format assertions, and sub-byte buffer overwrites; clipped embossed glyphs also retain correct data across all three mask planes.",
+          "lead": "Constrain antialiased texture sampling",
+          "detail": "Image filters and Ganesh draws retain subset clamping when padding cannot contain AA or MSAA extrapolation. Minified, strongly skewed and transparent-border draws avoid sampling unrelated pixels outside logical texture bounds.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Keep image-filter cache keys consistent",
+          "detail": "Cache-key equality now follows the same bytewise representation as hashing, accounting for signed zero, matrix type metadata and subnormal values so lookups and LRU eviction agree.",
+          "prs": [5768]
+        },
+        {
+          "lead": "Respect regenerated glyph formats and layout",
+          "detail": "Mask-filtered text handles font-scaler reloads whose paths, formats or bounds change. It avoids stale-path rasterization, sub-byte buffer overwrites and format assertions, clears incompatible masks, and correctly copies clipped embossed-mask planes.",
           "prs": [5739]
         }
       ]

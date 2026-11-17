@@ -15,15 +15,31 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 0,
-    "internal": 1
+    "internal": 2
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5768": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5768",
+      "title": "[M158] Adopt AA subset-clamping and image-filter cache fixes",
+      "body": "[M158] Adopt AA subset-clamping and image-filter cache fixes (#5768)\n\nRequires: https://github.com/mono/skia/pull/457\nContext: https://github.com/mono/SkiaSharp/pull/5777\nChanges: https://github.com/mono/skia/compare/8574d140652232fd643c67f04efcd18118643518...6ff3072bb76eabbfe07038592d739349dc583979\n\nAdvance the release/4.158.x native engine to the landed M158 rendering\nand cache corrections while retaining package versions, managed APIs and\nnative dependency pins.\n\n~~ Keep AA draws inside their intended texture subsets ~~\n\nCoverage AA and MSAA can extrapolate texture coordinates beyond the\noriginal image geometry. Under minification or strong skew, the existing\none-pixel padding can be insufficient, exposing unrelated texels in\napproximate-fit backing textures.\n\nAdopt the upstream FilterResult and Ganesh fixes that retain shader\nclamping where padding is insufficient, account for AA extrapolation when\neliding subsets, and constrain non-exact proxies to their logical bounds.\nNon-pixel-aligned transparent-border draws use strict source constraints;\nAA clips and MSAA also prevent treating the source rectangle as an\nunconditionally safe sampling domain. Native regression tests exercise\nminified AA clips, skewed blurs, fallback draws and dynamic MSAA.\n\n~~ Align image-filter cache equality with its bytewise hash ~~\n\nSkImageFilterCache hashes complete key bytes, but its previous equality\ncomparison used numeric matrix equality and omitted matrix type metadata.\nSigned-zero representations, subnormal handling and cached matrix type\nbits could therefore disagree with the hash's definition of key identity.\n\nAdopt bytewise key comparison with memcmp, retaining the existing\ntight-packing assertion, initialized matrix type and zeroed padding.\nThe native regression covers signed zero, matrix metadata, colliding\nsubnormal keys, exact LRU eviction and purge.\n\n~~ Record landed native history without changing reviewed source ~~\n\nUpdate externals/skia and the mono/skia Component Governance commitHash\ntogether to native merge 6ff3072bb76eabbfe07038592d739349dc583979.\nRecord exact upstream chrome/m158 commit\n9f8fb9da7e434d74187003c2431f13d0f11641f7 without changing milestone 158.\n\nThe landed native merge has exactly two parents and directly contains\nreviewed head e2a971ae5c3fa202470993e93f08489bd5491451. Both commits\nhave tree f042fc40ffc340a0ed2d2f25d28e9d2206541be0. Dependent PR #5777\nchanges only the gitlink and matching commitHash to that verified merge;\nthe exact-head guarded merge preserves the reviewed native source.\n\nIndependent generation matched all five maintained binding groups.\nSource comparison retained identical patch content in 72 non-interop and\n106 interop fork-delta files, with byte-identical DEPS. These checks do not\nconstitute a new native build, managed test-suite run or hardware-device\nrendering validation. No managed wrapper or generated binding edits are\nneeded for this same-milestone native correction.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5763": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5763",
+      "title": "[4.158] Use the internal Skia mirror for Azure build-job checkouts",
+      "body": "Backport the net change from #5735 at e5a241ae0917da3094aae910463740d4c500543d. Keep public checkouts on GitHub and scope internal mirror authentication to explicit checkout steps, without changing native pins.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
     "5739": {
       "url": "https://github.com/mono/SkiaSharp/pull/5739",
       "title": "[M158] Sync mask-filtered glyph image hardening",
