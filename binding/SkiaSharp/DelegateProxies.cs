@@ -67,7 +67,7 @@ namespace SkiaSharp
 
 	/// <summary>Represents the method called when a Graphite recording finishes or cannot be executed.</summary>
 	/// <param name="success">Whether the recording completed successfully on the GPU.</param>
-	/// <remarks>The callback runs when the owning context processes completion or releases the pending work.</remarks>
+	/// <remarks>The callback runs when the owning context processes completion or releases the pending work. It must not throw exceptions across the native callback boundary.</remarks>
 	public delegate void SKGraphiteFinishedDelegate (bool success);
 
 	/// <summary>Represents a callback method that receives the path and transformation matrix for each glyph when enumerating glyph paths.</summary>

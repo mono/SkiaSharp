@@ -23,7 +23,34 @@ namespace SkiaSharp.Tests
 		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
 			Task.FromResult(CreateHarness());
 
-		private GraphiteReleaseHarness CreateHarness()
+		[Fact]
+		public void DeferredCanvasAllowsTargetsWhenMsaaIsDisabled()
+		{
+			GpuPolicy.RequireOrSkip(Backend);
+			using var harness = CreateHarness(new SKGraphiteContextOptions
+			{
+				InternalMultisampleCount = 1,
+				GpuBudgetInBytes = -1,
+			});
+			var (texture, owner) = harness.CreateBackendTexture(Width, Height);
+			using (owner)
+			using (var textureInfo = texture.TextureInfo)
+			{
+				Assert.NotNull(textureInfo);
+				var info = new SKImageInfo(Width, Height, ColorType, SKAlphaType.Premul);
+				var canvas = harness.Recorder.CreateDeferredCanvas(info, textureInfo);
+				Assert.NotNull(canvas);
+				canvas.Clear(SKColors.Blue);
+				using var recording = harness.Recorder.Snap();
+				Assert.NotNull(recording);
+				Assert.Equal(IntPtr.Zero, canvas.Handle);
+			}
+		}
+
+		private GraphiteReleaseHarness CreateHarness() =>
+			CreateHarness(new SKGraphiteContextOptions { GpuBudgetInBytes = -1 });
+
+		private GraphiteReleaseHarness CreateHarness(SKGraphiteContextOptions options)
 		{
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
@@ -45,7 +72,7 @@ namespace SkiaSharp.Tests
 			}
 
 			var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
-			var context = SKGraphiteContext.CreateMetal(backendContext)
+			var context = SKGraphiteContext.CreateMetal(backendContext, options)
 				?? throw new InvalidOperationException("SKGraphiteContext.CreateMetal returned null.");
 			var recorder = context.CreateRecorder()
 				?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");

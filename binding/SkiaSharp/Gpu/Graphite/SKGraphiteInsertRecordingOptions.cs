@@ -40,7 +40,7 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets the callback notified when execution completes or fails.</summary>
 		/// <value>The completion callback, or <see langword="null" /> for no notification.</value>
-		/// <remarks>The owning context must process completion to deliver asynchronous notifications.</remarks>
+		/// <remarks>The owning context must process completion to deliver asynchronous notifications. The callback must not throw exceptions.</remarks>
 		public SKGraphiteFinishedDelegate? Finished { get; set; }
 	}
 }
