@@ -189,15 +189,16 @@ namespace SkiaSharp.Tests
 		private void SnapAndSubmit(GraphiteBackendHarness harness)
 		{
 			using var recording = harness.Recorder.Snap();
+			Assert.NotNull(recording);
 			Assert.Equal(SKGraphiteInsertStatus.Success, harness.Context.InsertRecording(recording));
-			harness.Context.Submit(new SKGraphiteSubmitInfo { Sync = CanSubmitSync });
+			Assert.True(harness.Context.Submit(new SKGraphiteSubmitInfo { Sync = CanSubmitSync }));
 		}
 
 		// Drains any deferred GPU work/resource release so a release callback tied
 		// to resource cleanup is guaranteed to have fired before we assert.
 		private void PumpToCompletion(SKGraphiteContext context)
 		{
-			context.Submit(new SKGraphiteSubmitInfo { Sync = CanSubmitSync });
+			Assert.True(context.Submit(new SKGraphiteSubmitInfo { Sync = CanSubmitSync }));
 			for (var i = 0; i < 100; i++)
 				context.CheckAsyncWorkCompletion();
 			context.FreeGpuResources();

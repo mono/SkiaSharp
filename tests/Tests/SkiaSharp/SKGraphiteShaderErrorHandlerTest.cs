@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests
 {
 	// Proxy-level unit tests for SKGraphiteShaderErrorHandlerDelegate. Invokes
 	// DelegateProxies.SKGraphiteShaderErrorHandlerProxy directly with synthetic
-	// ANSI strings + a real GCHandle userData — the same call shape Skia's
+	// UTF-8 strings + a real GCHandle userData — the same call shape Skia's
 	// FfiShaderErrorHandler bridge produces. Verifies argument forwarding and
 	// null-pointer normalization without needing a driver-level shader failure
 	// (those are hard to synthesize deterministically on Lavapipe).
@@ -17,8 +17,10 @@ namespace SkiaSharp.Tests
 	// the iOS-simulator integration run described in the #4555 PR body.
 	public unsafe class SKGraphiteShaderErrorHandlerTest : SKTest
 	{
-		[Fact]
-		public void ProxyForwardsShaderAndErrorsToManagedDelegate()
+		[Theory]
+		[InlineData("void main() { }", "Compile error: line 1", true)]
+		[InlineData("// caf\u00e9 \u6f22\u5b57 \U0001f600", "Erreur: \u00e9chec \u03bb \u6f22\u5b57", false)]
+		public void ProxyForwardsShaderAndErrorsToManagedDelegate(string shader, string errors, bool cached)
 		{
 			string capturedShader = null;
 			string capturedErrors = null;
@@ -34,11 +36,11 @@ namespace SkiaSharp.Tests
 			DelegateProxies.Create(handler, out var gch, out var userData);
 			try
 			{
-				InvokeProxy(userData, "void main() { }", "Compile error: line 1", shaderWasCached: true);
+				InvokeProxy(userData, shader, errors, cached);
 
-				Assert.Equal("void main() { }", capturedShader);
-				Assert.Equal("Compile error: line 1", capturedErrors);
-				Assert.True(capturedCached);
+				Assert.Equal(shader, capturedShader);
+				Assert.Equal(errors, capturedErrors);
+				Assert.Equal(cached, capturedCached);
 			}
 			finally
 			{
@@ -148,8 +150,8 @@ namespace SkiaSharp.Tests
 		private static void InvokeProxy(IntPtr userData, string shader, string errors, bool shaderWasCached)
 		{
 			var proxy = DelegateProxies.SKGraphiteShaderErrorHandlerProxy;
-			var shaderBytes = Encoding.ASCII.GetBytes(shader + "\0");
-			var errorsBytes = Encoding.ASCII.GetBytes(errors + "\0");
+			var shaderBytes = Encoding.UTF8.GetBytes(shader + "\0");
+			var errorsBytes = Encoding.UTF8.GetBytes(errors + "\0");
 			fixed (byte* shaderPtr = shaderBytes)
 			fixed (byte* errorsPtr = errorsBytes)
 			{
