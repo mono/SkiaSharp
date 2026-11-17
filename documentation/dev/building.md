@@ -228,8 +228,8 @@ validation to work around an incompatible workload. Existing .NET 9 targets
 still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
 workload. The CI Apple toolchain and workload pins in
 `scripts/azure-templates-variables.yml` retain that coverage; use a compatible
-local pairing to validate Xcode 27 without changing the CI pins. The current
-macOS 15/Sequoia CI images cannot run Xcode 27.
+local pairing to validate Xcode 27 without changing the CI pins. CI runs on
+macOS 26/Tahoe images with the pinned Xcode 26.3.
 
 ## GTK4 Tests
 
