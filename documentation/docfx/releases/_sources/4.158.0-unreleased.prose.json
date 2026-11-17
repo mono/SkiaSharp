@@ -1,9 +1,20 @@
 {
-  "theme": "Release line maintenance",
-  "highlights_headline": "The unreleased 4.158.0 changes currently cover build maintenance only, with no collected consumer-facing changes beyond the documented previews.",
-  "highlights_body": null,
+  "theme": "Glyph image correctness",
+  "highlights_headline": "Upcoming servicing fixes harden mask-filtered glyph images against changes between font-scaler loads.",
+  "highlights_body": "The native corrections retain Skia m158, existing package versions and the managed API.",
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Filtered glyphs respect regenerated formats and buffer layout",
+          "detail": "Rendering follows the reloaded glyph's path rather than stale properties. Incompatible and sub-byte masks are cleared instead of copied, and clipped embossed masks use full plane strides, preventing buffer overwrites, format assertions and corrupted or uncleared mask planes.",
+          "prs": [5739]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

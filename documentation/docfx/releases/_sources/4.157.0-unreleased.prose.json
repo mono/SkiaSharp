@@ -1,9 +1,20 @@
 {
-  "theme": "Release line maintenance",
-  "highlights_headline": "The unreleased 4.157.0 changes currently cover build maintenance only, with no collected consumer-facing changes beyond the documented previews.",
+  "theme": "Filtered glyph hardening",
+  "highlights_headline": "Upcoming native fixes correct mask-filtered glyphs when reloading changes their outline, format or bounds.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Glyph reloads no longer reuse stale outline state",
+          "detail": "Mask filtering rasterizes the reloaded glyph's own path, clears incompatible or non-overlapping masks, and preserves full plane strides for clipped embossed glyphs. This avoids stale outlines, sub-byte buffer overwrites, format assertions and uncleared mask planes without changing managed APIs.",
+          "prs": [5748]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

@@ -1,9 +1,20 @@
 {
-  "theme": "Next servicing development",
-  "highlights_headline": "The unreleased 4.156.2 line currently contains release preparation and build maintenance, with no collected consumer-facing changes.",
+  "theme": "Filtered glyph correctness",
+  "highlights_headline": "Upcoming servicing fixes make mask-filtered glyph rendering safer when consecutive font-scaler loads disagree.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Reloaded glyphs use their own rendering state",
+          "detail": "Mask filtering uses the reloaded glyph's path and copies overlap only between matching byte-per-pixel masks. Full plane strides are preserved for clipped embossed glyphs, avoiding stale outlines, sub-byte buffer overwrites and corrupted or uncleared mask planes. Managed bindings are unchanged.",
+          "prs": [5742]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

@@ -15,15 +15,31 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
-    "internal": 2
+    "internal": 3
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5762": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5762",
+      "title": "[4.156] Use internal Skia mirror for Azure build-job checkouts",
+      "body": "Backport the net change from #5735 at e5a241ae0917da3094aae910463740d4c500543d. Preserve release configuration and native pins while scoping mirror authentication to internal submodule checkout steps.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5742": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5742",
+      "title": "[M156] Integrate mask-filtered glyph hardening",
+      "body": "[M156] Integrate mask-filtered glyph hardening (#5742)\n\nRequires: https://github.com/mono/skia/pull/454\nChanges: https://github.com/mono/skia/compare/712ea097151d4951652dee046a8944376fd8df1b...34fd542cf1ef15e3f76c90c3db96d227186af0ce\n\nAdvance externals/skia and its cgmanifest registration to the merged\nrelease/4.156.x native commit\n34fd542cf1ef15e3f76c90c3db96d227186af0ce, integrating chrome/m156 through\n4c5f57e4fa037da858ef66420903d5734fd6b363.\n\nAdopt SkScalerContext::getImage hardening for consecutive glyph loads\nthat disagree about paths, mask formats, or bounds. The native change\nuses the reloaded glyph's path, restricts overlap copies to matching\nbyte-per-pixel masks, and preserves full plane strides when clipping\nembossed glyphs. This avoids stale-path rendering, sub-byte buffer\noverwrites, and corrupted or uncleared 3D mask planes.\n\nRecord the upstream revision in cgmanifest alongside the actual fork\nmerge SHA. The native merge directly contains the reviewed head and has\nthe identical tree, so the final repin preserves the reviewed code.\nThis servicing update changes neither managed bindings nor release-line\nversion declarations.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5724": {
       "url": "https://github.com/mono/SkiaSharp/pull/5724",
       "title": "Fix OpenJDK validation with JVM diagnostics and task retries",

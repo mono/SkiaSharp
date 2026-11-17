@@ -15,15 +15,79 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
-    "internal": 6
+    "internal": 13
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5772": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5772",
+      "title": "Build the docs site in parallel and validate it on every PR",
+      "body": "* Build the docs site in parallel and validate it on every PR\n\nThe Pages workflow built the docs and all three WASM apps serially in one\njob, and only built PRs with the automation/staging label. When the Uno 7\nmigration broke the Uno Gallery smoke test (#5771), nothing caught it on the\nPR and every main run since has failed, so the docs stopped publishing.\n\nSplit the build into setup, docs, wasm-natives, an app matrix and a quick\nassemble job. Each app uploads its output only after it builds and passes\nits smoke test; assemble copies whichever apps exist and warns about any\nthat are missing. Every PR, including forks, now builds and smoke-tests the\nsite and fails on any error. Publishing still requires a same-repo PR with\nautomation/staging, or a push/dispatch. On main, app jobs are\ncontinue-on-error so a broken app is omitted rather than blocking the docs.\n\nRelates to #5771\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Separate site validation from production and preview deployment\n\nBuild every PR event, including forks and label changes. Only publish production from main or staging for explicitly labeled same-repository PRs, and require successful app builds before publishing a PR preview.\\n\\nGate Go Live on the upstream publishing job rather than workflow success so validation-only and dry-run builds do not redeploy Pages.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5735": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5735",
+      "title": "Use the internal Skia mirror for Azure build-job checkouts",
+      "body": "* Use the internal Skia mirror for Azure build-job checkouts\n\nRoute internal package and test job submodule fetches through the existing mono-skia mirror with process-scoped URL rewriting and repository-scoped OAuth authentication. Explicitly reference the repository for protected job access, retain pinned sources and public GitHub checkout, and document the separate 1ES SDL checkout limitation.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep mirror routing in the existing checkout steps\n\nSelect internal routing from System.TeamProject and use Git command-scoped configuration with a step-local authorization environment variable. Remove the separate checkout template and configuration setup script while preserving inherited Git configuration and cache-miss timing.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Configure the Skia mirror once for every internal build job\n\nApply the non-secret global URL rewrite before checkout, independent of native job type or cache status. Reference the mirror in every internal bootstrapper job and retain step-local, mirror-scoped OAuth headers without persisting tokens.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Use explicit submodule checkout in public and internal jobs\n\nAlways check out self without submodules and share the existing cache-aware Git step. Remove project and cache-configuration branching from full submodule initialization while respecting checkoutSubmodules and skipSteps.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Drop internal CI details from the developer build guide\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Expand optional mirror authentication in shared checkout commands\n\nSet SKIA_GIT_OPTIONS to the header config option only for internal jobs and to empty for public jobs, avoiding duplicated Git commands. Keep global routing and checkout-step token scope unchanged.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5759": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5759",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5741": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5741",
+      "title": "[M159] Sync upstream glyph and Vulkan OOM fixes",
+      "body": "[M159] Sync upstream glyph and Vulkan OOM fixes (#5741)\n\nContext: https://github.com/mono/skia/pull/453\nContext: https://github.com/mono/SkiaSharp/pull/5757\nChanges: https://github.com/mono/skia/compare/1b7b8c4340f57877940b47d24ada18eb6ec66e68...96ee011489be9ba83512abb766d0712a27eb1f18\n\nAdvance the Skia gitlink and Component Governance registration to the landed\nnative merge, 96ee011489be9ba83512abb766d0712a27eb1f18, and record upstream\nchrome/m159 revision 7a06b6cf9fc9fe32f8906c63da21a4e35f7e9f15.\nThis is a same-milestone servicing sync; package and ABI versions remain\nunchanged.\n\nThe dependent repin records the actual two-parent native merge rather than\nthe reviewed branch head. Its tree was verified identical to reviewed commit\n9f50c1175e1de5b949820c9528594ccc3fde3979, preserving the reviewed native\ncontents while retaining the landed merge ancestry.\n\n~~ Mask-filtered glyph reload divergence ~~\n\nBring in the SkScalerContext::getImage hardening for stateful font scalers\nwhose successive glyph loads disagree about paths, mask formats or bounds.\nThe native fix rasterizes the reloaded glyph rather than stale initial\nstate, clears incompatible masks instead of overflowing sub-byte rows, and\nuses full plane strides when copying clipped emboss masks. Regression cases\nalso preserve overlapping SDF data and exercise changing path geometry.\n\n~~ Imagination Vulkan descriptor allocation failures ~~\n\nBring in the Ganesh and Graphite workaround for descriptor-set allocation\nreturning host or device OOM on Imagination drivers. The affected pool is\ndeliberately abandoned because destroying it can trigger a driver failure;\nGraphite also refuses further allocation through the abandoned handle.\nThe workaround is restricted to that vendor and those allocation errors.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5752": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5752",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5745": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5745",
+      "title": "Update 4.159 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5749": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5749",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5744": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5744",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5734": {
       "url": "https://github.com/mono/SkiaSharp/pull/5734",
       "title": "docs: regenerate API diffs and release notes",
