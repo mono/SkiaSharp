@@ -1,20 +1,20 @@
 {
-  "theme": "Custom GPU mesh drawing",
-  "highlights_headline": "SkiaSharp 4.159.0 adds custom GPU mesh drawing with SkSL vertex and fragment programs.",
-  "highlights_body": "The unreleased line also corrects iOS and tvOS device frameworks, hardens mask-filtered glyph rendering, and incorporates image-filter cache and Imagination Vulkan fixes.",
+  "theme": "Programmable GPU mesh drawing",
+  "highlights_headline": "SkiaSharp 4.159.0 introduces custom vertex meshes with SkSL programs for GPU-backed drawing.",
+  "highlights_body": "This unreleased line also fixes Apple device framework packaging and brings Skia m159 fixes for glyph rendering, image-filter caching, and Imagination Vulkan allocation failures.",
   "breaking": [],
   "categories": [
     {
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Custom vertex meshes",
-          "detail": "SKMeshSpecification and its builder define SkSL programs, vertex attributes, varyings, uniforms, and child effects. SKMeshBuilder and SKIndexedMeshBuilder construct meshes for SKCanvas.DrawMesh, with optional 16-bit indices. Drawing requires a GPU-backed surface; raster canvases do not draw meshes.",
+          "lead": "Programmable vertex meshes",
+          "detail": "Define SkSL vertex and fragment programs with SKMeshSpecification and its builder, then construct meshes with SKMeshBuilder or SKIndexedMeshBuilder and draw with SKCanvas.DrawMesh. Specifications support attributes, varyings, uniforms, and child effects; indexed meshes use 16-bit indices. Mesh drawing requires a GPU-backed surface and is a no-op on raster canvases.",
           "prs": [5760]
         },
         {
-          "lead": "Reusable mesh resources",
-          "detail": "SKMeshVertexBuffer and SKMeshIndexBuffer support CPU-backed buffers and GRContext-based Ganesh GPU buffers, with Create, Copy, and Update operations. Updates enforce 4-byte size and offset alignment. Built meshes retain native resources after their specification, builder, buffers, and child-shader wrappers are disposed.",
+          "lead": "Mesh buffers and resource lifetimes",
+          "detail": "SKMeshVertexBuffer and SKMeshIndexBuffer provide Create, Copy, and Update operations for CPU-backed buffers and GRContext-based Ganesh GPU buffers. Updates require 4-byte size and offset alignment. Built meshes retain native resources after specification, builder, buffer, and child-shader wrappers are disposed; disposing a builder leaves its shared specification intact.",
           "prs": [5760]
         }
       ]
@@ -23,30 +23,25 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Correct Apple device frameworks",
-          "detail": "iOS and tvOS device frameworks for SkiaSharp and HarfBuzzSharp now contain arm64 device binaries and matching platform metadata, avoiding App Store validation failures caused by embedded simulator slices. Simulator frameworks retain both x86_64 and arm64 support.",
+          "lead": "Device-only Apple frameworks",
+          "detail": "SkiaSharp and HarfBuzzSharp iOS and tvOS device frameworks now use arm64 device binaries and device platform metadata, correcting simulator slices and metadata that could cause App Store rejection ITMS-90087. Separate simulator frameworks continue to include x86_64 and arm64 slices.",
           "prs": [5649]
         },
         {
-          "lead": "More robust mask-filtered glyph rendering",
-          "detail": "Glyph rendering handles changing paths, formats, and bounds across font-scaler loads, using the reloaded glyph rather than stale outline state. Incompatible masks are cleared, and clipped emboss masks preserve full plane strides, avoiding sub-byte row overflows and corrupted mask output.",
-          "prs": [5741]
+          "lead": "Glyph rendering and image-filter caching",
+          "detail": "Mask-filtered glyph rendering uses reloaded glyph state when a scaler changes paths, mask formats, or bounds, clears incompatible masks, and correctly copies clipped emboss masks. Image-filter cache key equality now matches bytewise hashing, including signed zero, cached matrix type masks, and subnormal translations.",
+          "prs": [5741, 5769]
         },
         {
-          "lead": "Consistent image-filter cache keys",
-          "detail": "Image-filter cache equality now agrees with its bytewise hash for signed-zero representations, cached matrix type metadata, and subnormal values whose numeric comparison can depend on floating-point mode.",
-          "prs": [5769]
-        },
-        {
-          "lead": "Imagination Vulkan allocation workaround",
-          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, avoiding a driver failure during pool destruction. Graphite also prevents further allocation through an abandoned pool. The workaround is limited to that vendor and those errors.",
+          "lead": "Imagination Vulkan out-of-memory handling",
+          "detail": "Ganesh and Graphite abandon descriptor pools when allocation reports host or device out-of-memory on Imagination drivers, avoiding a driver failure when destroying the affected pool. Graphite also blocks further allocation through the abandoned handle. Other vendors and allocation errors are unaffected by this workaround.",
           "prs": [5741]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "kdpkke": "Corrected iOS and tvOS device framework binaries and metadata while preserving simulator support."
+    "kdpkke": "Fixed iOS and tvOS device framework packaging for SkiaSharp and HarfBuzzSharp while retaining both simulator architectures."
   },
   "preview_summaries": {}
 }
