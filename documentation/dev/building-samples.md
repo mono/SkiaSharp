@@ -111,8 +111,9 @@ dotnet cake --target=samples --runGroup=Ios --iosVersion="$IOS_VERSION" \
   --previewLabel=pr.1234 --buildNumber=26509.10
 ```
 
-CI runs the iOS 18.6 and 26.5 profiles, installing each exact runtime and failing
-if it is unavailable. Cake creates its simulator in `Setup` for run/all mode and
+CI runs the iOS 18.6 (22G86) and 26.5 (23F77) profiles on macOS 26 with
+Xcode 26.6, installing each exact runtime and failing if its build is unavailable
+or mismatched. Cake creates its simulator in `Setup` for run/all mode and
 deletes only that simulator in `Teardown`, including after a failure.
 Build-only, sample-generation, and listing/dry-run commands do not start a
 device. CI builds apps in a separate job; local all-mode runs may keep the

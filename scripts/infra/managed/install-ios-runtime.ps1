@@ -1,7 +1,10 @@
 Param(
     [Parameter(Mandatory)]
     [ValidatePattern('^[0-9]+\.[0-9]+(?:\.[0-9]+)?$')]
-    [string] $Version
+    [string] $Version,
+
+    [ValidatePattern('^[0-9]+[A-Z][0-9]+[a-z]?$')]
+    [string] $BuildVersion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -35,6 +38,10 @@ try {
             if ($runtime.name.StartsWith('iOS ', [StringComparison]::Ordinal) -and
                 $runtime.version -ceq $Version -and
                 $runtime.isAvailable -eq $true) {
+                if ($BuildVersion -and $runtime.buildversion -cne $BuildVersion) {
+                    throw "Selected iOS $Version runtime has build '$($runtime.buildversion)', expected '$BuildVersion'."
+                }
+                Write-Host "Selected iOS $Version runtime build $($runtime.buildversion)."
                 return $true
             }
         }
