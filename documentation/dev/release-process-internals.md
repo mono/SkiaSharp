@@ -128,52 +128,22 @@ or visual goldens can diagnose failures but cannot substitute for this evidence.
 ## Protected publication
 
 The dedicated `skiasharp-nuget-release` definition 1715 in `dnceng/internal`
-is the publication entry point, queued only on explicit request, not
-automatically after Tests. Its source is `dotnet-release-workflows`,
-`/eng/pipeline/entry/skiasharp-release-pipeline.yml`. The former MAUI publisher
-is retired for SkiaSharp.
+replaces MAUI publication for SkiaSharp. It consumes producer 1642's
+`arcade_shipping_signed` artifact through an explicitly selected pipeline
+resource. Publisher code, release tooling and package source are separate
+resources; changing the publisher ref does not select the shipment.
 
-Three resources have distinct roles:
+The current entry delegates to isolated publisher 1697 through
+`dotnet-release`/ESRP. Approval settings belong to that live configuration;
+protected ESRP approval is not replaced by a successful parent run.
+The [Release Guide](releasing.md#4-publish-the-packages) owns configuration
+discovery, request examples, producer read-back and publication checks.
 
-- publisher `self` ref/SHA selects the entry implementation;
-- the `dotnet-release` repository resource ref/SHA selects production tooling;
-- `resources.pipelines.skiaSharpBuild.version` selects the exact producer 1642
-  **Build number**, not a numeric build ID, source SHA, or latest build.
-
-Discover the live default/ref, inspect its exact entry YAML and tooling
-resource, and verify current SkiaSharp production support before queueing.
-Do not assume `main`, permanently pin a temporary production branch, or
-return to MAUI when configuration is unavailable. Use the Runs API with the
-verified refs/SHAs and explicit producer version; the sole entry parameter
-`validateOnly` is boolean (`false` publishes, `true` validates only). There
-are no MAUI repository, `commitHash`, push, or NuGet-filter inputs.
-
-The pipeline consumes only the producer's `arcade_shipping_signed` artifact.
-The classic `Container` `PackageArtifacts` can include unsigned/nonshipping
-transport assets; neither it nor unsigned `nuget`/`arcade_shipping` is a
-publication source. Derive expected shipping IDs and both product versions
-from the shipment source and pack filter, not a hardcoded package count.
-
-GET the admitted run to verify resolved publisher/tooling refs/SHAs,
-`validateOnly`, and the selected producer's numeric ID, Build number, branch
-and SHA against the release record. The immediate POST response may lack
-resolved resources. Before dispatch, also inspect existing parents' resolved
-producer resources; a success for another source is not equivalent.
-
-The production entry invokes isolated publisher 1697 through
-`dotnet-release`/ESRP. The current parent uses `requireApproval: false`, so
-there is no parent `ManualValidation`; protected ESRP scan/release approval
-remains. This is not permission to change access or bypass approval.
-
-Monitor an existing publication rather than duplicating it. All exact
-shipping IDs/versions and source provenance must be independently public
-before a separately authorized Finish. The parent's "Require the first
-attempt" guard prevents retrying failed parent jobs that may have queued
-another publication. On failure or partial publication, preserve source,
-producer/BAR, parent/isolated run, and ESRP IDs, audit every expected public
-package, and report; never auto-requeue or switch publication paths.
-Monitoring-only requests do not authorize CI repairs.
-See [publication inputs](releasing.md#4-publish-the-packages).
+Publication is not safely replayable: a failed parent job may already have
+queued an upload. Preserve source, producer/BAR, parent/isolated run and ESRP
+IDs before reporting a failure. Missing public packages can be propagation
+delay rather than upload failure; monitor without automatically requeueing.
+Finish still requires the complete public set and separate authorization.
 
 ## Finalization and concurrency
 

@@ -402,9 +402,8 @@ GitHub workflow, which runs `scripts/infra/publishing/prepare-release.ps1`. The
 `release-publish` skill queues the dedicated `skiasharp-nuget-release` pipeline
 (1715) on an explicit "push the packages" request, selecting the exact producing
 Build number through its `skiaSharpBuild` resource, not a numeric build ID.
-Discover its live production publisher/tooling refs; do not assume `main` or
-use the retired MAUI publisher. Protected ESRP approval remains required.
-The skill then uses the **Release - Finish**
+Use the skill's live configuration checks and protected ESRP approval, not the
+retired MAUI publisher. The skill uses the **Release - Finish**
 workflow after public-package verification and separate confirmation. Local
 scripts are fallback tools. Other release skills cover milestone maintenance
 and optional pre-publication BAR/CI package testing. See

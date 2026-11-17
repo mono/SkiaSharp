@@ -168,11 +168,9 @@ az pipelines show \
   --output json
 ```
 
-Do not assume `main` or hardcode a temporary production branch: the publisher
-and tooling owners may migrate their production configuration. If current
-support cannot be verified, stop and report rather than changing refs blindly.
-Check executable configuration and current owner-supported production
-evidence; rollout comments in external YAML can lag the live configuration.
+Verify the executable configuration and production support, not stale rollout
+comments. Do not assume `main` or hardcode a temporary production branch.
+If support cannot be verified, stop and report.
 
 On an explicit publication request, prepare a JSON Runs API body
 (`publication.json` below), replacing every placeholder with verified values.
@@ -230,30 +228,46 @@ az devops invoke \
   --api-version 7.1 --output json
 ```
 
-Verify resolved publisher self and tooling refs/SHAs, the producer numeric
-ID/build number/branch/SHA, and `validateOnly`. Dispatch alone is not success.
-The selected producer must be `skiasharp-package` (1642), consuming only its
-`arcade_shipping_signed` artifact. Do not publish unsigned `nuget` or
-`arcade_shipping`, or classic `Container` `PackageArtifacts`: the latter can
-also contain nonshipping `_DocsMedia`, `_NativeAssets*`, and `_NuGets*`
-transport packages. Derive the complete expected SkiaSharp/HarfBuzzSharp
-ID/version set from the shipment's source and shipping filter; package totals
-are not a permanent invariant.
+Match resolved publisher/tooling refs/SHAs and the selected producer Build
+number. Read `resources.pipelines.skiaSharpBuild.pipeline.id` as the **producer
+run ID**, not definition 1642 or the publisher run ID. Fetch that build:
 
-The production entry invokes isolated publisher 1697 through
-`dotnet-release`/ESRP. The current parent has `requireApproval: false`, not a
-parent `ManualValidation` job; protected ESRP scan/release approval still
-applies. Do not change permissions or bypass approvals.
+```bash
+az pipelines build show \
+  --organization https://dev.azure.com/dnceng --project internal \
+  --id <producer-run-id> --output json
+```
 
-Monitor **that publication** and independently verify every expected shipping
-ID/version and source provenance on NuGet.org. The parent enforces "Require
-the first attempt": do not retry failed parent jobs that may have queued
-another publication. On a failure or partial publish, preserve source,
-producer/BAR, parent/isolated run, and ESRP IDs, audit every expected public
-package, and report. Never auto-requeue or blindly switch publish paths.
-A monitoring-only request does not authorize repairs. Only a complete public
-package set permits a separately authorized Finish plan.
-`finish-release.ps1` checks completeness before creating tags or Releases.
+Verify its definition is `skiasharp-package` (1642) and its Build number,
+release branch, source SHA and BAR match the release record. Runs read-back
+does not supply the producer branch/SHA. Also check `validateOnly`
+semantically: the request is a JSON boolean, but read-back can be the string
+`"false"`. Stop on mismatched resources or parameters.
+
+Publish only `arcade_shipping_signed`. Unsigned `nuget`/`arcade_shipping`
+and classic `Container` `PackageArtifacts` are not release inputs; the latter
+also includes nonshipping transport packages. Derive expected
+SkiaSharp/HarfBuzzSharp IDs and versions from the shipment source and shipping
+filter, not a hardcoded package count.
+
+Verify approval settings in the live entry and tooling. The current
+configuration invokes isolated publisher 1697 through `dotnet-release`/ESRP
+with parent `requireApproval: false`: no parent `ManualValidation`, but
+protected ESRP scan/release approval still applies. These settings can change;
+do not bypass approvals or change permissions.
+
+Check parent, isolated publisher and ESRP task results, not aggregate status
+alone. Independently verify every expected public ID/version and source
+provenance. NuGet propagation can leave an incomplete public set after a
+successful upload; continue monitoring the missing IDs without requeueing.
+On failed or stalled publication, preserve source, producer/BAR,
+parent/isolated run and ESRP IDs and report the missing packages. Do not retry
+failed parent jobs that may already have queued an upload or switch publish
+paths. A monitoring-only request does not authorize repairs.
+
+Finish requires the complete public set and separate explicit authorization.
+That authorization may be given beforehand for a conditional follow-up; it
+does not remove the Finish plan and confirmation gates below.
 
 ## 5. Finish the public release
 

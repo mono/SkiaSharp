@@ -2321,9 +2321,16 @@ Assert-True ($greenReport.Contains("resources.pipelines.skiaSharpBuild.version=$
     'The report lost exact publication inputs or confused upstream work with existing publication.'
 Assert-True ($greenReport -match 'skiasharp-nuget-release \(1715\)' -and
     $greenReport -match 'templateParameters.validateOnly=false' -and
+    $greenReport -match 'Missing packages may still be propagating' -and
     $greenReport -match 'never auto-requeue or retry failed parent jobs' -and
     $greenReport -notmatch 'dotnet-maui-release|commitHash=|pushPackages=|nugetIncludeFilters=') `
     'The report must use the dedicated publisher contract without retired MAUI dispatch inputs.'
+$greenReleaseBuild.BuildNumber = ''
+$uncheckedProducerReport = @(Write-ReleaseAuditReport $greenReleaseBuildState) -join "`n"
+Assert-True ($uncheckedProducerReport -match 'Producer Build number not checked' -and
+    $uncheckedProducerReport -notmatch 'resources\.pipelines\.skiaSharpBuild\.version=') `
+    'The report must not emit a publication resource version without a verified Build number.'
+$greenReleaseBuild.BuildNumber = '4.153.0-rc.1.26453.1+20261030.1'
 Assert-True ($greenReport.IndexOf('resources.pipelines.skiaSharpBuild.version=') -lt $greenReport.IndexOf('3. Upstream / sync')) `
     'Publication instructions were buried under future upstream work.'
 Assert-True ($greenReport -match 'Verify\s+CI/BAR,\s+then\s+Publish' -and

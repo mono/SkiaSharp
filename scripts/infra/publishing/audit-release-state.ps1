@@ -1382,7 +1382,7 @@ function Write-ReleaseAuditCurrentReport([pscustomobject] $State) {
     }
     if ($releaseActions.Kind -contains 'publish') {
         Write-Output '   Publish: verify producing Build/Tests and BAR; check existing 1715 parents and resolved producer resources before queueing.'
-        Write-Output '   Monitor an existing publication; on failure/partial publication preserve run/ESRP IDs and report, never auto-requeue or retry failed parent jobs.'
+        Write-Output '   Missing packages may still be propagating. Monitor the existing publication; report failures with run/ESRP IDs, never auto-requeue or retry failed parent jobs.'
     }
 
     if ($public.Count) {

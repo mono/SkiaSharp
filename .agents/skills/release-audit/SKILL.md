@@ -182,17 +182,11 @@ The audit and this skill remain read-only until the user asks to act:
 - **Start:** invoke `release-branch`; show the Prepare dry run and planned refs
   before `push=true`.
 - **Publish packages:** when explicitly requested, invoke `release-publish` to
-  verify the exact producing Build/Tests runs and BAR, then queue dedicated
-  `skiasharp-nuget-release (1715)` with the exact producing Build **number**
-  as `resources.pipelines.skiaSharpBuild.version`, not its numeric build ID.
-  The audit does not track already-queued publication parents: inspect their
-  resolved producer resources before dispatch and monitor an existing match.
-  Verify live publisher/tooling production refs rather than assuming `main`
-  or using the retired MAUI path. Protected ESRP approval remains mandatory;
-  an audit never queues publication automatically. On failed/partial
-  publication, preserve source/run/ESRP IDs and report every missing package;
-  do not retry failed parent jobs, auto-requeue, or switch publication paths.
-  A monitoring-only request does not authorize CI repairs.
+  verify the exact producing Build/Tests runs and BAR and use dedicated
+  `skiasharp-nuget-release (1715)`. The audit does not track publisher runs:
+  the skill must check for an existing publication before queueing.
+  An incomplete public set can reflect propagation, not a failed upload.
+  Report missing packages and monitor the existing run; do not auto-requeue.
 - **Finish:** invoke `release-publish` after exact packages are public; show the
   Finish workflow's read-only plan and obtain confirmation before `push=true`.
 - **Sync Skia:** follow `update-skia` and obtain confirmation before dispatch.
