@@ -147,8 +147,8 @@ help diagnose failures but do not replace the producing Build/Tests evidence.
 ## 4. Publish the packages
 
 Verify the Build/Tests/BAR evidence and check for existing publication parents
-and their resolved `skiaSharpBuild` resources. Match the exact producer numeric
-ID, build number, branch, and SHA, not just another release's successful run.
+and their resolved `skiaSharpBuild` resources. Match the exact producer run ID,
+Build number, branch, and SHA, not just another release's successful run.
 Monitor an existing publication; do not queue a duplicate. The
 `release-publish` skill can perform these checks and queue the pipeline.
 
@@ -158,9 +158,10 @@ in `dnceng/internal`. Its repository is `dotnet-release-workflows`, with entry
 YAML `/eng/pipeline/entry/skiasharp-release-pipeline.yml`. The former MAUI
 publisher is retired for SkiaSharp; do not use it as a fallback.
 
-Before dispatch, discover the live publisher default/ref and current production
-`dotnet-release` tooling resource. Inspect the exact YAML and verify both
-refs/SHAs support SkiaSharp publication. For example, read the live definition:
+Before dispatch, read the live definition and its entry YAML to find the
+production publisher ref/SHA and `dotnet-release` tooling ref/SHA. Trust the
+executable configuration over rollout comments, do not assume `main`, and stop
+if SkiaSharp support cannot be verified.
 
 ```bash
 az pipelines show \
@@ -168,15 +169,10 @@ az pipelines show \
   --output json
 ```
 
-Verify the executable configuration and production support, not stale rollout
-comments. Do not assume `main` or hardcode a temporary production branch.
-If support cannot be verified, stop and report.
-
-On an explicit publication request, prepare a JSON Runs API body
-(`publication.json` below), replacing every placeholder with verified values.
-The resource version is the exact producing SkiaSharp **Build number**
-(the full run name, including any `+...` suffix), **not the numeric build ID**.
-Never omit this resource selection and accept latest.
+On an explicit publication request, write `publication.json` with verified
+values. `skiaSharpBuild.version` is the producer's full **Build number**
+(including any `+...` suffix), **not the numeric build ID**. Always select
+the exact producer; do not rely on a default.
 
 ```json
 {
@@ -266,8 +262,8 @@ failed parent jobs that may already have queued an upload or switch publish
 paths. A monitoring-only request does not authorize repairs.
 
 Finish requires the complete public set and separate explicit authorization.
-That authorization may be given beforehand for a conditional follow-up; it
-does not remove the Finish plan and confirmation gates below.
+Even if a conditional Finish is authorized beforehand, review and confirm the
+Finish plan before dispatch.
 
 ## 5. Finish the public release
 

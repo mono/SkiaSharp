@@ -12,8 +12,8 @@ description: >
 # Release Publish
 
 Publication and Finish need separate explicit authorization. A maintainer can
-authorize a conditional Finish beforehand, but publication alone does not
-authorize it. Neither follows automatically from Prepare or Build/Tests.
+authorize a conditional Finish beforehand, but must still confirm the reviewed
+Finish plan. Neither follows automatically from Prepare or Build/Tests.
 
 ## Push the packages
 
