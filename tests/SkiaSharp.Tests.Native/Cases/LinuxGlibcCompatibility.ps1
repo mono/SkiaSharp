@@ -16,7 +16,6 @@ Assert-Tool llvm-readobj
 
 # Compatibility policy belongs with the test, independently of the producing toolchain.
 $limits = @{
-    x86 = '2.27'
     x64 = '2.27'
     arm = '2.35'
     arm64 = '2.27'
