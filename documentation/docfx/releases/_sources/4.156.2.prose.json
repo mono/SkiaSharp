@@ -1,25 +1,32 @@
 {
-  "theme": "Filtered image and glyph correctness",
-  "highlights_headline": "SkiaSharp 4.156.2 improves filtered-image sampling and mask-filtered glyph rendering.",
-  "highlights_body": "These pending servicing fixes retain the existing managed API and native ABI.",
+  "theme": "Filtered image and glyph fixes",
+  "highlights_headline": "SkiaSharp 4.156.2 corrects filtered image sampling and mask-filtered glyph rendering.",
+  "highlights_body": "This servicing release brings native rendering fixes without changing the managed API surface.",
   "breaking": [],
   "categories": [
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Keep filtered images within their texture subsets",
-          "detail": "Corrects antialiased and multisampled sampling under minification or strong skew so unrelated backing-texture pixels do not bleed into filtered images. Image-filter cache equality now matches its bytewise hash, including signed-zero and matrix-metadata differences.",
+          "lead": "Keep filtered images within their source subset",
+          "detail": "Ganesh sampling respects image subsets under minification, strong skew, AA clipping and MSAA, preventing unrelated backing-texture pixels from leaking into filtered images. Image-filter cache-key equality now matches hashing, including distinct floating-point representations.",
           "prs": [5773]
         },
         {
-          "lead": "Handle changing mask-filtered glyphs safely",
-          "detail": "Uses the reloaded glyph's path and validates mask formats before copying. Correct full-plane strides and clearing for clipped embossed glyphs prevent stale outlines, sub-byte buffer overwrites, and corrupted mask planes.",
+          "lead": "Render regenerated glyph masks safely",
+          "detail": "Mask-filtered text uses the reloaded glyph's own outline, rejects incompatible mask formats before copying, and preserves full plane strides when clipping embossed glyphs. This avoids stale outlines, sub-byte buffer overwrites and corrupted or uncleared mask planes.",
           "prs": [5742]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null,
+  "release_summaries": {
+    "v4.156.2": {
+      "headline": "SkiaSharp 4.156.2 corrects filtered image sampling and mask-filtered glyph rendering.",
+      "body": "It prevents unrelated backing-texture pixels from leaking into filtered images, aligns image-filter cache equality with hashing, and handles regenerated glyph masks and clipped embossed planes correctly. The managed API surface is unchanged."
+    }
+  }
 }
