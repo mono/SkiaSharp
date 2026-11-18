@@ -6,6 +6,9 @@ namespace SkiaSharpSample;
 
 public abstract class SampleBase
 {
+	// Animation state changes share this gate with drawing, controls, and teardown.
+	protected object SyncRoot { get; } = new();
+
 	public abstract string Title { get; }
 
 	public virtual string Description { get; } = string.Empty;
@@ -40,19 +43,30 @@ public abstract class SampleBase
 	{
 		if (!IsInitialized)
 		{
-			await OnInit();
-
-			IsInitialized = true;
+			try
+			{
+				await OnInit();
+				IsInitialized = true;
+			}
+			catch
+			{
+				lock (SyncRoot)
+					OnDestroy();
+				throw;
+			}
 		}
 	}
 
 	public void Destroy()
 	{
-		if (IsInitialized)
+		lock (SyncRoot)
 		{
-			OnDestroy();
+			if (IsInitialized)
+			{
+				OnDestroy();
 
-			IsInitialized = false;
+				IsInitialized = false;
+			}
 		}
 	}
 

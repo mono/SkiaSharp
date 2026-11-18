@@ -40,6 +40,11 @@ public class SampleService
 	public SampleBase? GetSample(string title) =>
 		samples.FirstOrDefault(s => s.Title == title);
 
+	public SampleBase? CreateSample(string title) =>
+		GetSample(title) is { } sample
+			? (SampleBase)Activator.CreateInstance(sample.GetType())!
+			: null;
+
 	private static string GetAssemblyVersion<T>()
 	{
 		var apiAssembly = typeof(T).Assembly;

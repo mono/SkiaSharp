@@ -38,7 +38,7 @@
         }
     </div>
 
-    @* Tag strip — rarest first, max 4 visible *@
+    @* Tag strip — displayed-name order, max 4 visible *@
     <div class="card-tags">
         @{ var rankedTags = GetDisplayTags(); var shownCount = Math.Min(4, rankedTags.Count); var overflow = rankedTags.Count - shownCount; }
         @for (var i = 0; i < shownCount; i++)
@@ -84,18 +84,9 @@
     [Parameter] public bool Supported { get; set; } = true;
     [Parameter] public bool IsNew { get; set; }
     [Parameter] public IReadOnlySet<string> ActiveTags { get; set; } = new HashSet<string>();
-    [Parameter] public Dictionary<string, int> CorpusCounts { get; set; } = new();
     [Parameter] public EventCallback<string> OnTagClicked { get; set; }
 
-    private IReadOnlyList<string> GetDisplayTags()
-    {
-        var active = Sample.ApiTags.Where(t => ActiveTags.Contains(t)).ToList();
-        var rest = Sample.ApiTags
-            .Where(t => !ActiveTags.Contains(t))
-            .OrderBy(t => CorpusCounts.GetValueOrDefault(t, 0))
-            .ToList();
-        return active.Concat(rest).ToList();
-    }
+    private IReadOnlyList<string> GetDisplayTags() => SampleManager.OrderTags(Sample.ApiTags);
 
     private async Task HandleTagKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e, string tag)
     {

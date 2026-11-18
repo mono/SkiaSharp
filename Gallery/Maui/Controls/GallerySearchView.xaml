@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+        xmlns:local="clr-namespace:SkiaSharpSample.Controls"
+        x:Class="SkiaSharpSample.Controls.GallerySearchView"
+        x:DataType="local:GallerySearchView"
+        StrokeShape="RoundRectangle 10"
+        StrokeThickness="1"
+        Stroke="{AppThemeBinding Light={StaticResource CardBorderLight}, Dark={StaticResource CardBorderDark}}"
+        BackgroundColor="{AppThemeBinding Light={StaticResource CardBackgroundLight}, Dark={StaticResource CardBackgroundDark}}"
+        Padding="10,1"
+        MinimumHeightRequest="40">
+    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+        <Label Text="&#xf52a;" FontFamily="BootstrapIcons" FontSize="14"
+               Style="{StaticResource AccentLabel}" VerticalOptions="Center"
+               InputTransparent="True" />
+        <local:GallerySearchEntry x:Name="SearchInput" Grid.Column="1"
+               AutomationId="{Binding SearchAutomationId}"
+               Placeholder="{Binding SearchPlaceholder}"
+               FontSize="13" HeightRequest="34" BackgroundColor="Transparent"
+               TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}"
+               PlaceholderColor="{AppThemeBinding Light={StaticResource SecondaryTextLight}, Dark={StaticResource SecondaryTextDark}}" />
+    </Grid>
+</Border>

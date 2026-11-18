@@ -8,18 +8,9 @@ public class AppDelegate : UIApplicationDelegate
 	/// </summary>
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
-	public override UIWindow? Window { get; set; }
-
-	public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
+	[Export("application:configurationForConnectingSceneSession:options:")]
+	public override UISceneConfiguration GetConfiguration(UIApplication application, UISceneSession connectingSceneSession, UISceneConnectionOptions options)
 	{
-		if (DefaultPage != SamplePage.Cpu)
-		{
-			NSRunLoop.Main.BeginInvokeOnMainThread(() =>
-			{
-				if (Window?.RootViewController is UITabBarController tabs)
-					tabs.SelectedIndex = (nint)(int)DefaultPage;
-			});
-		}
-		return true;
+		return new UISceneConfiguration("Default Configuration", connectingSceneSession.Role);
 	}
 }
