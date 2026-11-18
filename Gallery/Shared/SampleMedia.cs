@@ -28,6 +28,7 @@ public static class SampleMedia
 		public static Stream OpacitySvg => Embedded.Load("opacity.svg");
 		public static Stream LottieLogo => Embedded.Load("LottieLogo1.json");
 		public static Stream SkiaSharpLogoSvg => Embedded.Load("skiasharp-logo.svg");
+		public static Stream Earth => Embedded.Load("earth.jpg");
 	}
 
 	public static class Fonts
