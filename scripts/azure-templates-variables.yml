@@ -16,6 +16,9 @@ variables:
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build libgtk-4-1
   XCODE_VERSION: '27.0'
   XCODE_VERSION_NATIVE: '27.0'
+  # Xcode 27's command-line catalog cannot download the iOS 18.6 runtime.
+  # Use 26.6 only for runtime provisioning; builds still use Xcode 27.
+  XCODE_VERSION_IOS_RUNTIME_DOWNLOAD: '26.6'
   DOTNET_VERSION: '10.0.404'
   WINDOWS_SDK_VERSION: '10.0.28000.0'
   # Preview .NET SDK version + its workload set, used by jobs that run tests against a preview
