@@ -130,6 +130,170 @@ namespace SkiaSharp.Tests
 			});
 		}
 
+		[Fact]
+		public Task InsertRecordingOptionsNotifiesCompletionExactlyOnce()
+		{
+			SkipIfUnsupported();
+			return RunGuardedAsync(async () =>
+			{
+				using var harness = await CreateHarnessAsync();
+				var (backendTexture, textureOwner) = harness.CreateBackendTexture(Width, Height);
+				try
+				{
+					using var surface = SKSurface.Create(harness.Recorder, backendTexture, ColorType);
+					Assert.NotNull(surface);
+					using (var paint = new SKPaint { Color = SKColors.Red })
+						surface.Canvas.DrawRect(SKRect.Create(Width, Height), paint);
+					using var recording = harness.Recorder.Snap();
+					Assert.NotNull(recording);
+
+					var finished = 0;
+					var succeeded = false;
+					Assert.Equal(SKGraphiteInsertStatus.Success, harness.Context.InsertRecording(
+						recording,
+						new SKGraphiteInsertRecordingOptions
+						{
+							Finished = success =>
+							{
+								finished++;
+								succeeded = success;
+							},
+						}));
+					await CompleteGpuWorkAsync(harness.Context, () => finished != 0);
+					Assert.Equal(1, finished);
+					Assert.True(succeeded);
+
+					byte[] pixels = null;
+					var readFinished = false;
+					harness.Context.RequestReadPixels(
+						surface,
+						new SKImageInfo(Width, Height, SKColorType.Rgba8888, SKAlphaType.Unpremul),
+						SKRectI.Create(Width, Height),
+						result =>
+						{
+							pixels = result?.ToArray();
+							readFinished = true;
+						});
+					await CompleteGpuWorkAsync(harness.Context, () => readFinished);
+					Assert.NotNull(pixels);
+					Assert.Equal(255, pixels[0]);
+					Assert.Equal(0, pixels[1]);
+					Assert.Equal(0, pixels[2]);
+					Assert.Equal(255, pixels[3]);
+					Assert.Equal(1, finished);
+				}
+				finally
+				{
+					PumpToCompletion(harness.Context);
+					textureOwner.Dispose();
+				}
+			});
+		}
+
+		[Fact]
+		public Task RejectedRecordingNotifiesFailureExactlyOnce()
+		{
+			SkipIfUnsupported();
+			return RunGuardedAsync(async () =>
+			{
+				using var harness = await CreateHarnessAsync();
+				var info = new SKImageInfo(Width, Height, ColorType, SKAlphaType.Premul);
+				using var surface = SKSurface.Create(harness.Recorder, info);
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Blue);
+				using var recording = harness.Recorder.Snap();
+				Assert.NotNull(recording);
+				Assert.Throws<ArgumentNullException>(() => harness.Context.InsertRecording(
+					null, default));
+				Assert.Throws<ArgumentException>(() => harness.Context.InsertRecording(
+					recording, new SKGraphiteInsertRecordingOptions
+					{
+						WaitSemaphores = new SKGraphiteBackendSemaphore[] { null },
+					}));
+				Assert.Throws<ArgumentException>(() => harness.Context.InsertRecording(
+					recording, new SKGraphiteInsertRecordingOptions
+					{
+						SignalSemaphores = new SKGraphiteBackendSemaphore[] { null },
+					}));
+				using var rasterTarget = SKSurface.Create(info);
+				Assert.NotNull(rasterTarget);
+				var completed = 0;
+				var succeeded = true;
+				Assert.Equal(SKGraphiteInsertStatus.InvalidRecording, harness.Context.InsertRecording(
+					recording,
+					new SKGraphiteInsertRecordingOptions
+					{
+						TargetSurface = rasterTarget,
+						Finished = success =>
+						{
+							completed++;
+							succeeded = success;
+						},
+					}));
+				Assert.Equal(1, completed);
+				Assert.False(succeeded);
+				harness.Context.CheckAsyncWorkCompletion();
+				Assert.Equal(1, completed);
+			});
+		}
+
+		[Fact]
+		public void GraphiteVulkanPresentationWrappersValidateHandles()
+		{
+			SkipIfUnsupported();
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => SKGraphiteBackendSemaphore.CreateVulkan(0));
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => SKGraphiteBackendTexture.CreateVulkan(new SKSizeI(32, 32), default, 0, 0, 0));
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => SKGraphiteBackendTexture.CreateVulkan(new SKSizeI(0, 32), default, 0, 0, 1));
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => SKGraphiteBackendTexture.CreateVulkan(new SKSizeI(32, 0), default, 0, 0, 1));
+
+			var vkInfo = new SKGraphiteVkTextureInfo
+			{
+				SampleCount = 1,
+				Format = 37,
+				ImageTiling = 0,
+				ImageUsageFlags = 0x1 | 0x2 | 0x4 | 0x10 | 0x80,
+				SharingMode = 0,
+				AspectMask = 0x1,
+			};
+
+			if (SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Vulkan))
+			{
+				using var semaphore = SKGraphiteBackendSemaphore.CreateVulkan(1);
+				Assert.NotNull(semaphore);
+				using var state = SKGraphiteMutableTextureState.CreateVulkan(1000001002, 0);
+				Assert.NotNull(state);
+				using var texture = SKGraphiteBackendTexture.CreateVulkan(
+					new SKSizeI(32, 32), vkInfo, 0, 0, 1);
+				Assert.NotNull(texture);
+				Assert.Equal(new SKSizeI(32, 32), texture.Dimensions);
+				Assert.Equal(SKGraphiteBackend.Vulkan, texture.Backend);
+			}
+			else
+			{
+				Assert.Null(SKGraphiteBackendSemaphore.CreateVulkan(1));
+				Assert.Null(SKGraphiteMutableTextureState.CreateVulkan(1000001002, 0));
+				Assert.Null(SKGraphiteBackendTexture.CreateVulkan(
+					new SKSizeI(32, 32), vkInfo, 0, 0, 1));
+			}
+		}
+
+		private async Task CompleteGpuWorkAsync(SKGraphiteContext context, Func<bool> completed)
+		{
+			Assert.True(context.Submit(new SKGraphiteSubmitInfo { Sync = CanSubmitSync }));
+			for (var i = 0; i < 1000 && !completed(); i++)
+			{
+				context.CheckAsyncWorkCompletion();
+				if (!CanSubmitSync && !completed())
+					await Task.Delay(1);
+			}
+			Assert.True(completed(), "Graphite GPU completion was not delivered.");
+		}
+
 		/// <summary>
 		/// Runs the GPU scenario. GPU work is serialized across the whole assembly
 		/// by the GPU rendering test collection each derived class joins (xUnit

@@ -46,6 +46,37 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
+		/// <summary>Wraps an existing Vulkan image without truncating its non-dispatchable handle on 32-bit platforms.</summary>
+		/// <param name="size">The width and height of the image, in pixels.</param>
+		/// <param name="info">The Vulkan texture descriptor.</param>
+		/// <param name="imageLayout">The current Vulkan image layout.</param>
+		/// <param name="queueFamilyIndex">The queue family that owns the image.</param>
+		/// <param name="vkImage">The complete 64-bit Vulkan image handle.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteBackendTexture" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks>The caller retains ownership of the underlying Vulkan image.</remarks>
+#nullable enable
+		public static SKGraphiteBackendTexture? CreateVulkan (
+			SKSizeI size,
+			SKGraphiteVkTextureInfo info,
+			int imageLayout,
+			uint queueFamilyIndex,
+			ulong vkImage)
+#nullable disable
+		{
+			if (vkImage == 0)
+				throw new ArgumentOutOfRangeException (
+					nameof (vkImage),
+					vkImage,
+					"Must be non-zero.");
+			if (size.Width <= 0)
+				throw new ArgumentOutOfRangeException (nameof (size), size.Width, "Width must be positive.");
+			if (size.Height <= 0)
+				throw new ArgumentOutOfRangeException (nameof (size), size.Height, "Height must be positive.");
+			IntPtr handle = SkiaApi.sk_graphite_vk_backend_texture_new_uint64 (
+				&size, &info, imageLayout, queueFamilyIndex, vkImage);
+			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
+		}
+
 		/// <summary>Wraps an existing Metal texture as a Graphite backend texture.</summary>
 		/// <param name="width">The width of the texture, in pixels.</param>
 		/// <param name="height">The height of the texture, in pixels.</param>
