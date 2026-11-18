@@ -229,7 +229,7 @@ still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
 workload. The CI Apple toolchain and workload pins in
 `scripts/azure-templates-variables.yml` retain that coverage; use a compatible
 local pairing to validate Xcode 27 without changing the CI pins. CI runs on
-macOS 26/Tahoe images with the pinned Xcode 26.3.
+macOS 26/Tahoe images with the Xcode version pinned in the pipeline variables.
 
 ## GTK4 Tests
 
