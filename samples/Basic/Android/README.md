@@ -29,15 +29,15 @@ A real-time animated shader running at full frame rate on the GPU, with touch in
 - **Render loop** — Continuous animation with `HasRenderLoop` and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform, adding a white-hot blob to the metaball field.
 
-### GPU (Texture)
+### Graphite
 
-A real-time animated shader running at full frame rate on the GPU, rendered into a `TextureView` that supports transparency, transforms, and compositing within the view hierarchy.
+A real-time animated shader running at full frame rate on the GPU via Skia's Graphite engine over Vulkan, with touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKGLTextureView`** — Hardware-accelerated OpenGL ES canvas backed by Android's `TextureView`, which supports transparency, transforms, and compositing within the view hierarchy.
+- **`SKGraphiteView`** — Hardware-accelerated Graphite GPU canvas backed by Vulkan.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with an FPS counter overlay.
+- **Render loop** — Continuous animation with `HasRenderLoop` and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform, adding a white-hot blob to the metaball field.
 
 ### Drawing
@@ -77,7 +77,7 @@ To start on a different page, change `DefaultPage` in `MainActivity.cs`:
 public static SamplePage DefaultPage { get; set; } = SamplePage.Ganesh;
 ```
 
-Available pages: `Cpu` (default), `Ganesh`, `GpuTexture`, `Drawing`
+Available pages: `Cpu` (default), `Ganesh`, `Graphite`, `Drawing`
 
 ## Screenshots
 

@@ -7,6 +7,6 @@ public enum SamplePage
 {
 	Cpu,
 	Ganesh,
-	GpuTexture,
+	Graphite,
 	Drawing,
 }

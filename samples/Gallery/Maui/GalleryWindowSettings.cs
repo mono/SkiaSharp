@@ -19,7 +19,9 @@ internal sealed class GalleryWindowSettings
     public bool UseGpu => renderer != GalleryRenderer.Cpu;
 
     public static bool GraphiteAvailable =>
-#if IOS
+#if ANDROID
+        OperatingSystem.IsAndroidVersionAtLeast(24);
+#elif IOS
         OperatingSystem.IsIOSVersionAtLeast(13);
 #elif MACCATALYST
         true;

@@ -10,7 +10,9 @@ public partial class AppShell : Shell
 		InitializeComponent();
 
 		graphiteItem.IsVisible =
-#if IOS
+#if ANDROID
+			OperatingSystem.IsAndroidVersionAtLeast(24);
+#elif IOS
 			OperatingSystem.IsIOSVersionAtLeast(13);
 #elif MACCATALYST
 			true;
@@ -19,7 +21,7 @@ public partial class AppShell : Shell
 #endif
 
 		if (App.DefaultPage == SamplePage.Graphite && !graphiteItem.IsVisible)
-			throw new PlatformNotSupportedException("Graphite presentation requires a supported Apple host.");
+			throw new PlatformNotSupportedException("Graphite presentation requires a supported Apple or Android host.");
 
 		if (App.DefaultPage != SamplePage.Cpu)
 			CurrentItem = Items[(int)App.DefaultPage];

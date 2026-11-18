@@ -69,11 +69,15 @@ public class MemoryLeakTests : SKUITests
 	}
 #endif
 
-#if IOS || MACCATALYST
+#if ANDROID || IOS || MACCATALYST
 	[UIFact]
 	public Task SKGraphiteViewHandlerDoesNotLeak()
 	{
+#if ANDROID
+		GpuPolicy.RequireOrSkip(GpuBackends.GraphiteVulkan);
+#elif IOS || MACCATALYST
 		GpuPolicy.RequireOrSkip(GpuBackends.GraphiteMetal);
+#endif
 		return AssertHandlerDoesNotLeak(() =>
 		{
 			var view = new SKGraphiteView();
