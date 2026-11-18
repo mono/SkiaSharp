@@ -46,6 +46,36 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
+		/// <summary>Wraps an existing Vulkan image without truncating its non-dispatchable handle on 32-bit platforms.</summary>
+		/// <param name="width">The width of the image, in pixels.</param>
+		/// <param name="height">The height of the image, in pixels.</param>
+		/// <param name="info">The Vulkan texture descriptor.</param>
+		/// <param name="imageLayout">The current Vulkan image layout.</param>
+		/// <param name="queueFamilyIndex">The queue family that owns the image.</param>
+		/// <param name="vkImage">The complete 64-bit Vulkan image handle.</param>
+		/// <returns>A new <see cref="T:SkiaSharp.SKGraphiteBackendTexture" />, or <see langword="null" /> if it could not be created.</returns>
+		/// <remarks>The caller retains ownership of the underlying Vulkan image.</remarks>
+		public static SKGraphiteBackendTexture CreateVulkan (
+			int width, int height,
+			SKGraphiteVkTextureInfo info,
+			int imageLayout,
+			uint queueFamilyIndex,
+			ulong vkImage)
+		{
+			if (vkImage == 0)
+				throw new ArgumentOutOfRangeException (
+					nameof (vkImage),
+					vkImage,
+					"Must be non-zero.");
+			if (width <= 0)
+				throw new ArgumentOutOfRangeException (nameof (width), width, "Must be positive.");
+			if (height <= 0)
+				throw new ArgumentOutOfRangeException (nameof (height), height, "Must be positive.");
+			IntPtr handle = SkiaApi.sk_graphite_vk_backend_texture_new_uint64 (
+				width, height, &info, imageLayout, queueFamilyIndex, vkImage);
+			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
+		}
+
 		/// <summary>Wraps an existing Metal texture as a Graphite backend texture.</summary>
 		/// <param name="width">The width of the texture, in pixels.</param>
 		/// <param name="height">The height of the texture, in pixels.</param>
@@ -92,6 +122,16 @@ namespace SkiaSharp
 		/// <value>One of the enumeration values that indicates the backend.</value>
 		/// <remarks />
 		public SKGraphiteBackend Backend => SkiaApi.sk_graphite_backend_texture_get_backend (Handle);
+
+		/// <summary>Gets a copy of the backend texture descriptor.</summary>
+		/// <value>A texture descriptor, or <see langword="null" /> if the texture is invalid.</value>
+		/// <remarks>The caller owns the returned descriptor and must dispose it.</remarks>
+		public SKGraphiteTextureInfo TextureInfo {
+			get {
+				IntPtr handle = SkiaApi.sk_graphite_backend_texture_get_texture_info (Handle);
+				return handle == IntPtr.Zero ? null : new SKGraphiteTextureInfo (handle, true);
+			}
+		}
 
 		/// <summary>Gets the dimensions of the texture, in pixels.</summary>
 		/// <value>The width and height of the texture.</value>
