@@ -1,0 +1,119 @@
+{
+  "format": 6,
+  "version": "4.155.1",
+  "family": "skiasharp",
+  "status": "stable",
+  "banner": {
+    "kind": "stable",
+    "date": "November 13, 2026",
+    "nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.155.1",
+    "preview_nuget_url": null,
+    "github_release_url": "https://github.com/mono/SkiaSharp/releases/tag/v4.155.1"
+  },
+  "harfbuzz": {
+    "version": "14.4.0.1",
+    "api_diff_link": "harfbuzzsharp/14.4.0.1/index.md",
+    "prs": []
+  },
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [
+    {
+      "label": "SkiaSharp API diff",
+      "href": "4.155.1/index.md"
+    },
+    {
+      "label": "HarfBuzzSharp API diff",
+      "href": "harfbuzzsharp/14.4.0.1/index.md"
+    }
+  ],
+  "tallies": {
+    "product": 1,
+    "mixed": 1,
+    "internal": 3
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [
+    {
+      "tag": "v4.155.1",
+      "core_version": "4.155.1",
+      "public_version": "4.155.1",
+      "channel": "stable",
+      "label": "Stable",
+      "previous_tag": "v4.155.0",
+      "target_sha": "a6feb67ea798f0ec4597b29002b32e6895748011",
+      "date": "2026-11-13",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.155.0...v4.155.1",
+      "prs": [
+        5499,
+        5587,
+        5663,
+        5701,
+        5728
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "SkiaSharp Release Bot",
+          "kind": "human"
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        },
+        {
+          "display": "@github-actions[bot]",
+          "kind": "automation"
+        }
+      ]
+    }
+  ],
+  "prs": {
+    "5728": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5728",
+      "title": "Allow OpenJDK ZIP extraction retries on m155 (#5726)",
+      "body": "Backport the retry-safe extraction portion of dd9cc6cb217 to release/4.155.x. Overwrite existing archive entries after partial extraction, preserving this line's JDK 17 installer and parameter contract.\n\n\n(cherry picked from commit c71ee9228f65a11629d95b50864800223792423c)\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5701": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5701",
+      "title": "[skia-sync] Merge upstream chrome/m155 bug fixes",
+      "body": "* Update Skia m155 bug fixes\n\nAdvance the release branch to the latest chrome/m155 upstream commit and accept the emoji font family provisioned by the Linux sync validation host.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n* Sync Skia submodule and cgmanifest (#5703)\n\nLatest: Merge pull request #447 from mono/skia-sync/release-4.155.x\nCommit: d0e887217ea33273ecadfe837b4912f3541ac418\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\n\n---------\n\nCo-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5663": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5663",
+      "title": "Fix Alpine apk bootstrap artifact pin",
+      "body": "Use the available Alpine 3.21 apk-tools-static 2.14.13-r0 archive and its verified SHA-256. The previous 2.14.6-r3 archive now returns HTTP 404, preventing musl build images from bootstrapping.\n\n\n(cherry picked from commit 55c03c000afa46e4d3b659fb80b2ae70e3af26d5)\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5587": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5587",
+      "title": "[Build] Backport Windows SDK ANGLE resource compiler to 4.155",
+      "body": "Backport mono/SkiaSharp#5537 (f515dd58d9782a208a569532512db736838c7a22) to release/4.155.x.\n\nReplace the Chromium GCS rc.exe download with the reviewed rc.py patch, preserving preprocessing and dependency tracking. Retain the servicing branch file IO helpers because its Cake version does not expose FileReadText/FileWriteText. Validate patch shape and avoid rewriting unchanged files.\n\nValidated: dotnet cake native/winui-angle/build.cake --dryrun; exact production patch against Chromium build a18493935f13d1b0992c78f5615a5d10336d60c0 rc.py, Python compilation, repeated application without writes, and malformed-input rejection. Windows native compilation unavailable on macOS; original Win ANGLE x86/x64/arm64 success in AzDO 1657048 is historical evidence only.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
+    "5499": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5499",
+      "title": "Bump to the next version (4.155.1) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}
