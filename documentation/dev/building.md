@@ -224,15 +224,16 @@ their output directories contain the newly built libraries:
 ```
 
 Do not use `externals-download` for native changes or disable Xcode-version
-validation to work around an incompatible workload. Managed and native Apple
-builds use Xcode 27.0 on the AcesShared GoldenGate image in public and internal
-package CI, while preserving the existing target frameworks. Internal tests
-remain on Azure Pipelines hosted `macos-26`, whose installed Xcode 26.6 does not
-satisfy the Xcode 27.0 pin; full internal Apple validation is blocked until a
-supported hosted toolchain is available. The `xcode-27` GitHub-hosted image is
-not an Azure Pipelines hosted `vmImage`. Internal package builds also require
-the pipeline to be authorized for the existing AcesShared pool; changing YAML
-does not grant that permission.
+validation to work around an incompatible workload. Public managed and native
+Apple builds use Xcode 27.0 on the AcesShared GoldenGate image, as do internal
+native Apple builds. The internal package pipeline builds managed packages on
+Windows; its macOS managed and sample validation runs in the separate internal
+test pipeline. All internal tests remain on Azure Pipelines hosted `macos-26`,
+which currently supplies Xcode 26.6 rather than the required 27.0. Full internal
+Apple validation therefore requires a supported hosted Xcode 27 toolchain.
+The `xcode-27` GitHub-hosted image is not an Azure Pipelines hosted `vmImage`.
+Internal package builds also require the pipeline to be authorized for the
+existing AcesShared pool; changing YAML does not grant that permission.
 The authoritative toolchain pins are in
 `scripts/azure-templates-variables.yml`.
 
