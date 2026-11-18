@@ -224,12 +224,11 @@ their output directories contain the newly built libraries:
 ```
 
 Do not use `externals-download` for native changes or disable Xcode-version
-validation to work around an incompatible workload. Existing .NET 9 targets
-still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
-workload. The CI Apple toolchain and workload pins in
-`scripts/azure-templates-variables.yml` retain that coverage; use a compatible
-local pairing to validate Xcode 27 without changing the CI pins. CI runs on
-macOS 26/Tahoe images with the Xcode version pinned in the pipeline variables.
+validation to work around an incompatible workload. Use the newest toolchain
+available on the selected CI image while retaining the existing target frameworks
+and deployment minimums. A lower target framework does not itself require an
+older compiler. CI's Xcode and workload pins are defined together in
+`scripts/azure-templates-variables.yml`.
 
 ## GTK4 Tests
 
