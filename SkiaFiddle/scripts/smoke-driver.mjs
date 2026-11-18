@@ -35,7 +35,7 @@ try {
     page.on('pageerror', err => errors.push(`pageerror: ${err.message}`));
     page.on('requestfailed', req => {
         const f = req.failure();
-        if (f && f.errorText && !/ERR_ABORTED|ERR_FAILED|ERR_CACHE_MISS/.test(f.errorText)) {
+        if (f && f.errorText && !/ERR_ABORTED|ERR_FAILED/.test(f.errorText)) {
             errors.push(`requestfailed: ${req.url()} — ${f.errorText}`);
         }
     });
@@ -61,7 +61,7 @@ try {
         await page.screenshot({ path: screenshot, fullPage: true });
     }
 
-    // Uno renders the XAML tree as pixels inside #uno-canvas,
+    // With SkiaRenderer, Uno renders the XAML tree as pixels inside #uno-canvas,
     // so text-based DOM matches don't work. Boot is complete iff the Uno loader
     // has been dismissed AND a sized canvas is present.
     const ready = await page.evaluate(() => {
@@ -83,15 +83,11 @@ try {
         /deprecated/i,
         /Download the React DevTools/i,
         /Service worker/i,
-        // Uno on WASM emits these routinely during startup
+        // SkiaRenderer-on-WASM emits these routinely during startup
         /WEBGL_debug_renderer_info not enabled/i,
         /GPU stall due to ReadPixels/i,
         /Automatic fallback to software WebGL/i,
         /focusSemanticElement/i,
-        // Uno.Wasm.Bootstrap probes the HTTP cache with only-if-cached fetches;
-        // Chromium logs each handled miss as this exact console error (also
-        // exempted by tests/SkiaSharp.Tests.Samples BrowserRunningApp).
-        /^Failed to load resource: net::ERR_CACHE_MISS$/,
     ];
     const real = errors.filter(e => !ignore.some(rx => rx.test(e)));
     if (real.length) {
