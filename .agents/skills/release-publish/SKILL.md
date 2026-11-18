@@ -4,17 +4,16 @@ description: >
   Publish SkiaSharp release packages to NuGet.org from chat and finish public
   releases. Use when a maintainer says "push the packages", "publish the BAR",
   "resume publication", "finalize X", "tag X", or "finish release X". Queue the
-  protected MAUI pipeline only on explicit request; after exact packages are
-  public, use the SkiaSharp Release - Finish workflow with a separate
+  dedicated SkiaSharp publisher only on explicit request; after exact packages
+  are public, use the SkiaSharp Release - Finish workflow with a separate
   confirmation.
 ---
 
 # Release Publish
 
-Use this skill for **two separate chat requests**: "push the packages" queues
-the MAUI publication pipeline; "finish the release" dispatches the SkiaSharp
-Finish workflow after the packages are public. Neither runs automatically
-after Prepare, Build/Tests, or the other operation.
+Publication and Finish need separate explicit authorization. A maintainer can
+authorize a conditional Finish beforehand, but must still confirm the reviewed
+Finish plan. Neither follows automatically from Prepare or Build/Tests.
 
 ## Push the packages
 
@@ -26,52 +25,34 @@ Before triggering:
    `skiasharp-tests (1630)` run to have succeeded for the same branch, commit
    and build number with a matching `triggerInfo.pipelineId`. The producing
    Build/Tests runs and BAR are the release-validation evidence; do not require
-   a separate local approval report. Use that **SkiaSharp** commit, not the
-   maintenance tip or mono/skia SHA.
-2. Check the complete public package set and existing
-   `dotnet-maui-release (1445)` runs for that commit
-   (`templateParameters.commitHash`). Monitor an existing run instead of
-   queueing another; if fully public, verify provenance and use the Finish
-   path only on a separate request. Stop on mismatched evidence.
-3. Require the `dotnet-maui-release (1445)` pipeline to default to
-   `refs/heads/main` and the internal MAUI mirror to contain the merged
-   SkiaSharp release support.
-   Wait if the mirror is behind; never use the old feature branch.
-
-Queue `dotnet-maui-release (1445)` on its verified default MAUI `main` tip
-only on explicit request:
-
-```bash
-az pipelines run \
-  --organization https://dev.azure.com/dnceng --project internal --id 1445 \
-  --parameters \
-    ghOwner=mono \
-    ghRepo=SkiaSharp \
-    commitHash=<exact-SkiaSharp-release-commit> \
-    pushWorkloadSet=false \
-    pushNugetOrg=true \
-    pushPackages=true \
-    nugetIncludeFilters=skip \
-    nugetExcludeFilters=skip \
-  --output json
-```
-
-The pipeline's default branch selects the **current MAUI main tip**;
-`commitHash` remains the **exact SkiaSharp BAR commit**. The real run prepares
-packages and pauses at `ManualValidation`, so no separate dry run is required.
+   a separate local approval report. Never borrow `.x`, `main`, or PR evidence.
+2. Derive the shipping SkiaSharp/HarfBuzzSharp ID/version set from the shipment's
+   source `scripts/VERSIONS.txt` and pack filter. Check public availability,
+   provenance, and existing publisher runs' resolved `skiaSharpBuild` resources.
+   Monitor an existing publication of the same producer; do not duplicate it.
+   If the complete set is already public, do not republish.
+3. Follow
+   [Release Guide, step 4](../../../documentation/dev/releasing.md#4-publish-the-packages)
+   for discovery and the Runs API request. Use dedicated publisher
+   `skiasharp-nuget-release (1715)`, the exact producer **Build number** in
+   `resources.pipelines.skiaSharpBuild.version`, and only
+   `arcade_shipping_signed`. Request boolean `validateOnly: false` for production.
+   Do not use the retired MAUI publisher or omit the producer selection.
 
 After triggering:
 
-1. Read back the run's MAUI ref/SHA and parameters. Require `refs/heads/main`,
-   the requested SkiaSharp commit and flags, and a MAUI SHA containing release
-   support; stop on a mismatch without retrying.
-2. Match `NuGetReleaseAudit` BAR, repository, commit and selected/staged package
-   identities to the release record. Present it for human `ManualValidation`;
-   the approver confirms package ownership and quota. Preparation alone is
-   not approval.
-3. Monitor that run after approval and independently verify **every** staged
-   shipping ID/version on NuGet.org. On failure or partial publication,
-   preserve evidence; do not automatically requeue or run Finish.
+1. GET the admitted run; match publisher/tooling revisions and selected producer
+   run ID/build number. Read that producer to verify definition 1642, release
+   branch, source SHA and BAR. Normalize `validateOnly` when checking read-back:
+   Azure can return the requested boolean as the string `"false"`. Stop on
+   mismatched resources or parameters.
+2. Check parent, isolated publisher and ESRP results, not aggregate status alone.
+   Verify the live approval configuration; protected ESRP approval remains
+   required. Preserve run/ESRP IDs and do not bypass approvals.
+3. Verify every expected public ID/version and source provenance. Missing
+   packages can be propagation delay: keep monitoring without requeueing.
+   Report failed or stalled publication with its evidence; do not retry failed
+   parent jobs or switch paths. Monitoring-only requests do not authorize repairs.
 
 ## Finish after the packages are public
 
@@ -108,5 +89,5 @@ requested, use the repository-owned Finish script:
 ./scripts/infra/publishing/finish-release.ps1 -Version 4.153.0-preview.1 -Mode Push
 ```
 
-Local Finish does **not** replace the protected MAUI package pipeline or its
-human NuGet approval. Do not use it to bypass a failed workflow.
+Local Finish does **not** replace the dedicated publisher or protected ESRP
+approval. Do not use it to bypass a failed workflow.
