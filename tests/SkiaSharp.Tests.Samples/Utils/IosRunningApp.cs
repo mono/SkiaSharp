@@ -76,7 +76,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			? parsed
 			: throw new InvalidOperationException($"Invalid iOS reference version: {version}.");
 
-	protected override Task Start(Uri address)
+	protected override async Task Start(Uri address)
 	{
 		Assert.True(OperatingSystem.IsMacOS(),
 			"iOS tests require macOS, Xcode and the declared preinstalled simulator runtime.");
@@ -115,6 +115,17 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("showXcodeLog", true);
 		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
 
+		var statusBarArguments = new[]
+		{
+			"override", "--time", "10:10",
+			"--dataNetwork", "wifi", "--wifiMode", "active", "--wifiBars", "3",
+			"--cellularMode", "active", "--cellularBars", "4",
+			"--batteryState", "charged", "--batteryLevel", "100"
+		};
+		// Normalize the booted simulator before Appium launches the app.
+		if (!string.IsNullOrWhiteSpace(simulator))
+			await Command("xcrun", ["simctl", "status_bar", simulator, .. statusBarArguments]);
+
 		SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
 
 		actualVersion = Driver.Capabilities.GetCapability("platformVersion") as string;
@@ -133,27 +144,22 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		Driver.ExecuteScript("mobile: setIncreaseContrast",
 			new Dictionary<string, object> { ["increaseContrast"] = "disabled" });
 
-		// Normalize only the session's simulator status bar. Full-screen iOS comparisons
-		// separately exclude the system-owned home-indicator band.
-		var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
-			Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
-			{
-				["command"] = "status_bar",
-				["args"] = new[]
+		// Direct runs without a UUID let Appium select the simulator.
+		if (string.IsNullOrWhiteSpace(simulator))
+		{
+			var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
+				Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
 				{
-					"override", "--time", "10:10",
-					"--dataNetwork", "wifi", "--wifiMode", "active", "--wifiBars", "3",
-					"--cellularMode", "active", "--cellularBars", "4",
-					"--batteryState", "charged", "--batteryLevel", "100"
-				}
-			}));
-		Assert.NotNull(status["code"]);
-		Assert.Equal(0, Convert.ToInt32(status["code"]));
+					["command"] = "status_bar",
+					["args"] = statusBarArguments
+				}));
+			Assert.NotNull(status["code"]);
+			Assert.Equal(0, Convert.ToInt32(status["code"]));
+		}
 
 		Operations.Wait(() => Convert.ToInt32(Driver.ExecuteScript("mobile: queryAppState",
 			new Dictionary<string, object> { ["bundleId"] = ApplicationId })) == 4
 			? ApplicationId : null, $"{ApplicationId} running in the foreground");
-		return Task.CompletedTask;
 	}
 
 	protected override async Task CapturePlatformDiagnostics()
