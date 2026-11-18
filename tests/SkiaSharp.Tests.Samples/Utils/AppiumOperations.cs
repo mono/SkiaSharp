@@ -26,6 +26,8 @@ internal abstract class AppiumOperations
 
 	internal SKImage TransformComparison(SKImage image) => App.TransformComparison(image);
 
+	protected string ApplicationId => App.ApplicationId;
+
 	internal void Attach(AppiumRunningApp owner)
 	{
 		ArgumentNullException.ThrowIfNull(owner);
