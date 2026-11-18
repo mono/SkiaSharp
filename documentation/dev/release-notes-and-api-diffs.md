@@ -628,7 +628,7 @@ documentation/docfx/releases/
     3.119.0.notes.md         ← optional manual additions sidecar          [Maintainer] §3.7
     co-release-map.json      ← Cake→release-notes-data.py HarfBuzz co-ship input     [Cake]   §3.6
     index.json               ← network-sourced index data                 [release-notes-index.py] §3.5
-    pr-authors.json          ← PR-number → GitHub-login cache (offline author resolution) [release-notes-data.py] §4
+    pr-authors.json          ← PR-number → GitHub-login cache + curated `_email_logins` map [release-notes-data.py] §4
   3.119.0/                   ← API diffs for the SkiaSharp package bucket [Cake]   §3.3
     index.md                (per-line diff landing — the SkiaSharp API-diff link target, §3.3)
     SkiaSharp/SkiaSharp.md  (+ SkiaSharp.breaking.md)
@@ -1464,7 +1464,7 @@ The implementation lives under `scripts/infra/docs/release_notes/`:
 
   👥 Contributors: @human1, @human2.
   🎉 First-time contributors: @human2.
-  🤖 Automation and AI assistance: @automation[bot], GitHub Copilot.
+  🤖 Automation and AI assistance: GitHub Actions, GitHub Copilot.
   ```
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
@@ -1493,7 +1493,13 @@ release-notes PR merges; there is no release-critical deadline for it.
 **Attribution facts.** Format 5 records an ordered, deduplicated `attributions`
 roster on each exact shipment, derived from its resolved primary PR authors and
 validated `Co-authored-by` trailers. Each identity is classified as `human`,
-`automation`, or `ai`. Primary human authors carry their cached earliest-merged-PR
+`automation`, or `ai`. Known automation identities render with a friendly label (for example
+`github-actions` and `github-actions[bot]` both become `GitHub Actions`).
+Co-author trailers that use a personal commit email resolve to a GitHub handle
+only through the curated `_email_logins` map at the top of
+`_sources/pr-authors.json` (email → login, maintained by hand; no automated
+lookup). Add an entry there when a contributor appears as a plain name or as two
+names. Primary human authors carry their cached earliest-merged-PR
 first-time fact. The login-to-earliest-merged-PR mapping is committed in
 `_sources/pr-first-time-contributors.json`; bots and AI are never first-time humans.
 These attribution-only facts affect the GitHub Release body, not website prose.
