@@ -76,6 +76,22 @@ internal sealed class IosRunningApp : AppiumRunningApp
 			? parsed
 			: throw new InvalidOperationException($"Invalid iOS reference version: {version}.");
 
+	internal static readonly string[] StatusBarOverride =
+	[
+		"override", "--time", "10:10",
+		"--dataNetwork", "wifi", "--wifiMode", "active", "--wifiBars", "3",
+		"--cellularMode", "active", "--cellularBars", "4",
+		"--batteryState", "charged", "--batteryLevel", "100"
+	];
+
+	// Normalize Cake's booted simulator before Appium creates the session and launches the app.
+	internal static async Task<T> StartSession<T>(string? simulator, Func<string[], Task> run, Func<T> createSession)
+	{
+		if (!string.IsNullOrWhiteSpace(simulator))
+			await run(["simctl", "status_bar", simulator, .. StatusBarOverride]);
+		return createSession();
+	}
+
 	protected override async Task Start(Uri address)
 	{
 		Assert.True(OperatingSystem.IsMacOS(),
@@ -115,18 +131,10 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		options.AddAdditionalAppiumOption("showXcodeLog", true);
 		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
 
-		var statusBarArguments = new[]
-		{
-			"override", "--time", "10:10",
-			"--dataNetwork", "wifi", "--wifiMode", "active", "--wifiBars", "3",
-			"--cellularMode", "active", "--cellularBars", "4",
-			"--batteryState", "charged", "--batteryLevel", "100"
-		};
-		// Normalize the booted simulator before Appium launches the app.
-		if (!string.IsNullOrWhiteSpace(simulator))
-			await Command("xcrun", ["simctl", "status_bar", simulator, .. statusBarArguments]);
-
-		SetDriver(new IOSDriver(address, options, TimeSpan.FromMinutes(6)));
+		SetDriver(await StartSession(
+			simulator,
+			async arguments => await Command("xcrun", arguments),
+			() => new IOSDriver(address, options, TimeSpan.FromMinutes(6))));
 
 		actualVersion = Driver.Capabilities.GetCapability("platformVersion") as string;
 		Assert.True(Version.TryParse(actualVersion, out var actual), "The device must report an actual iOS version.");
@@ -151,7 +159,7 @@ internal sealed class IosRunningApp : AppiumRunningApp
 				Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
 				{
 					["command"] = "status_bar",
-					["args"] = statusBarArguments
+					["args"] = StatusBarOverride
 				}));
 			Assert.NotNull(status["code"]);
 			Assert.Equal(0, Convert.ToInt32(status["code"]));

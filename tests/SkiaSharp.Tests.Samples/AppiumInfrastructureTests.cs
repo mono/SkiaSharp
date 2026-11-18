@@ -422,6 +422,60 @@ public sealed class AppiumInfrastructureTests : IDisposable
 	}
 
 	[Fact]
+	public async Task IosStatusBarIsNormalizedBeforeTheSessionStarts()
+	{
+		List<string> events = [];
+		var session = await IosRunningApp.StartSession(
+			"SIM-UDID",
+			arguments =>
+			{
+				events.Add(string.Join(' ', arguments));
+				return Task.CompletedTask;
+			},
+			() =>
+			{
+				events.Add("session");
+				return "driver";
+			});
+
+		Assert.Equal("driver", session);
+		Assert.Equal(
+			[$"simctl status_bar SIM-UDID {string.Join(' ', IosRunningApp.StatusBarOverride)}", "session"],
+			events);
+		Assert.Contains("--time 10:10", events[0]);
+	}
+
+	[Fact]
+	public async Task IosStatusBarFailurePreventsSessionStartup()
+	{
+		var started = false;
+		var failure = await Assert.ThrowsAsync<InvalidOperationException>(() => IosRunningApp.StartSession(
+			"SIM-UDID",
+			_ => Task.FromException(new InvalidOperationException("status_bar failed")),
+			() => started = true));
+
+		Assert.Equal("status_bar failed", failure.Message);
+		Assert.False(started);
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	public async Task IosDirectRunsLeaveStatusBarToTheAppiumSession(string? simulator)
+	{
+		var ran = false;
+		Assert.True(await IosRunningApp.StartSession(
+			simulator,
+			_ =>
+			{
+				ran = true;
+				return Task.CompletedTask;
+			},
+			() => true));
+		Assert.False(ran);
+	}
+
+	[Fact]
 	public void IosOperationsReuseTheAppsOwnedSessionWithoutStartingOne()
 	{
 		using var workspace = Workspace();
