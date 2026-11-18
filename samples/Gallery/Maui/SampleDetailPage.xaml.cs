@@ -17,11 +17,12 @@ public sealed partial class SampleDetailPage : ContentPage
     private readonly Dictionary<string, ControlItem> controlUpdaters = new(StringComparer.Ordinal);
     private IReadOnlyList<ControlItem> controlItemsData = [];
     private SKCanvasView? cpuView;
-    private SKGLView? gpuView;
+    private SKGpuView? gpuView;
     private Task? initTask;
     private Window? subscribedWindow;
     private bool active;
     private bool useGpu;
+    private bool useGraphite;
     private bool controlsExpanded = true;
     private bool userToggledControls;
     private bool hasControlPanel;
@@ -43,6 +44,7 @@ public sealed partial class SampleDetailPage : ContentPage
         this.navigateBack = navigateBack;
         this.windowSettings = windowSettings;
         useGpu = windowSettings.UseGpu;
+        useGraphite = windowSettings.Renderer == GalleryRenderer.Graphite;
         SampleTags = SampleManager.OrderTags(sample.ApiTags).Select(tag => new SampleTagItem(tag)).ToArray();
         InitializeComponent();
         BindingContext = this;
@@ -107,6 +109,7 @@ public sealed partial class SampleDetailPage : ContentPage
     {
         base.OnAppearing();
         useGpu = windowSettings.UseGpu;
+        useGraphite = windowSettings.Renderer == GalleryRenderer.Graphite;
         windowSettings.BackendChanged += OnBackendChanged;
         if (Window is { } window && subscribedWindow != window)
         {
@@ -233,8 +236,12 @@ public sealed partial class SampleDetailPage : ContentPage
         if (!active || sample is DocumentSampleBase) return;
         if (useGpu)
         {
-            gpuView = new SKGLView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
-            gpuView.PaintSurface += PaintGpu;
+            gpuView = useGraphite ? new SKGraphiteView() : new SKGaneshView();
+            gpuView.IgnorePixelScaling = true;
+            gpuView.AutomationId = "sample-canvas-gpu";
+            if (gpuView is SKGaneshView ganesh) ganesh.PaintSurface += PaintGpu;
+            if (gpuView is SKGraphiteView graphite) graphite.PaintSurface += PaintGpu;
+            gpuView.RenderFailed += RenderFailed;
             gpuView.HandlerChanged += RendererReady;
             gpuView.SizeChanged += RendererReady;
             surfaceHost.Insert(0, gpuView);
@@ -253,7 +260,7 @@ public sealed partial class SampleDetailPage : ContentPage
     {
         if (!active || sender is not VisualElement view || view.Width <= 0 || view.Height <= 0) return;
         if (sender is SKCanvasView canvas && ReferenceEquals(canvas, cpuView)) canvas.InvalidateSurface();
-        if (sender is SKGLView gl && ReferenceEquals(gl, gpuView)) gl.InvalidateSurface();
+        if (sender is SKGpuView gpu && ReferenceEquals(gpu, gpuView)) gpu.InvalidateSurface();
     }
 
     private void RemoveRenderer()
@@ -262,7 +269,9 @@ public sealed partial class SampleDetailPage : ContentPage
         {
             gpuView = null;
             oldGpu.HasRenderLoop = false;
-            oldGpu.PaintSurface -= PaintGpu;
+            if (oldGpu is SKGaneshView ganesh) ganesh.PaintSurface -= PaintGpu;
+            if (oldGpu is SKGraphiteView graphite) graphite.PaintSurface -= PaintGpu;
+            oldGpu.RenderFailed -= RenderFailed;
             oldGpu.HandlerChanged -= RendererReady;
             oldGpu.SizeChanged -= RendererReady;
             surfaceHost.Children.Remove(oldGpu);
@@ -281,8 +290,12 @@ public sealed partial class SampleDetailPage : ContentPage
 
     private void ChangeBackend(bool gpuRequested)
     {
-        if (useGpu == gpuRequested) return;
+        var graphiteRequested = windowSettings.Renderer == GalleryRenderer.Graphite;
+        if (useGpu == gpuRequested && useGraphite == graphiteRequested) return;
+        // Documents are renderer-independent; do not stop their generation.
+        if (sample is not DocumentSampleBase) Stop();
         useGpu = gpuRequested;
+        useGraphite = graphiteRequested;
         lastWidth = lastHeight = -1;
         if (sample is DocumentSampleBase)
         {
@@ -291,8 +304,8 @@ public sealed partial class SampleDetailPage : ContentPage
                 : "Document generation unavailable";
             return;
         }
-        status.Text = useGpu ? "GPU · preparing surface…" : "CPU · preparing surface…";
-        InstallRenderer();
+        status.Text = useGpu ? $"{(useGraphite ? "Graphite" : "Ganesh")} · preparing surface…" : "CPU · preparing surface…";
+        _ = StartAsync();
     }
 
     private void OnBackendChanged(object? sender, EventArgs e) => ChangeBackend(windowSettings.UseGpu);
@@ -323,10 +336,16 @@ public sealed partial class SampleDetailPage : ContentPage
         });
     }
 
-    private void PaintCpu(object? sender, SKPaintSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, false);
-    private void PaintGpu(object? sender, SKPaintGLSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, true);
+    private void PaintCpu(object? sender, SKPaintSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, false, "CPU · raster");
+    private void PaintGpu(object? sender, SKPaintSurfaceEventArgs e)
+    {
+        var backend = e is SKPaintGaneshSurfaceEventArgs ganesh ? $"Ganesh · {ganesh.Context.Backend}" :
+            e is SKPaintGraphiteSurfaceEventArgs graphite ? $"Graphite · {graphite.Context.Backend}" : "GPU";
+        Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, true, backend);
+    }
+    private void RenderFailed(object? sender, SKGpuRenderFailedEventArgs e) => OnAnimationFailed(sender, e.Exception);
 
-    private void Paint(object? renderer, SKCanvas canvas, SKImageInfo info, SKImageInfo raw, bool gpuFrame)
+    private void Paint(object? renderer, SKCanvas canvas, SKImageInfo info, SKImageInfo raw, bool gpuFrame, string backend)
     {
         if (!active || gpuFrame != useGpu || !ReferenceEquals(renderer, gpuFrame ? gpuView : cpuView)) return;
         try
@@ -339,14 +358,6 @@ public sealed partial class SampleDetailPage : ContentPage
             if (info.Width == lastWidth && info.Height == lastHeight) return;
             lastWidth = info.Width;
             lastHeight = info.Height;
-            var backend = !gpuFrame ? "CPU · raster" :
-#if MACCATALYST
-                "GPU · Metal";
-#elif WINDOWS
-                "GPU · ANGLE / DirectX";
-#else
-                "GPU · OpenGL ES";
-#endif
             Dispatcher.Dispatch(() =>
             {
                 if (active && useGpu == gpuFrame && ReferenceEquals(renderer, gpuFrame ? gpuView : cpuView))

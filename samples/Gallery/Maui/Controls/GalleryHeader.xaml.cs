@@ -46,9 +46,14 @@ public partial class GalleryHeader : ContentView
     public bool HasBack => goBack is not null;
     public bool IsHome => goBack is null;
     public bool CpuSelected => !settings.UseGpu;
-    public bool GpuSelected => settings.UseGpu;
+    public bool GpuSelected => settings.Renderer == GalleryRenderer.Ganesh;
+    public bool GraphiteSelected => settings.Renderer == GalleryRenderer.Graphite;
+    public bool GraphiteAvailable => GalleryWindowSettings.GraphiteAvailable;
     public string CpuDescription => $"CPU renderer, {(CpuSelected ? "selected" : "not selected")}";
-    public string GpuDescription => $"GPU renderer, {(GpuSelected ? "selected" : "not selected")}";
+    public string GpuDescription => $"Ganesh renderer, {(GpuSelected ? "selected" : "not selected")}";
+    public string GraphiteDescription => GraphiteAvailable
+        ? $"Graphite renderer (requires a compatible device), {(GraphiteSelected ? "selected" : "not selected")}"
+        : "Graphite presentation is deferred on Windows";
     public string BrandText
     {
         get => brandText;
@@ -72,6 +77,8 @@ public partial class GalleryHeader : ContentView
         OnPropertyChanged(nameof(GpuSelected));
         OnPropertyChanged(nameof(CpuDescription));
         OnPropertyChanged(nameof(GpuDescription));
+        OnPropertyChanged(nameof(GraphiteSelected));
+        OnPropertyChanged(nameof(GraphiteDescription));
     }
 
     private async void BackClicked(object? sender, EventArgs e)
@@ -80,4 +87,5 @@ public partial class GalleryHeader : ContentView
     }
     private void CpuClicked(object? sender, EventArgs e) => settings.SetGpu(false);
     private void GpuClicked(object? sender, EventArgs e) => settings.SetGpu(true);
+    private void GraphiteClicked(object? sender, EventArgs e) => settings.SetRenderer(GalleryRenderer.Graphite);
 }

@@ -14,6 +14,9 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: captureWindowsGpuNativeDumps
+    type: boolean
+    default: false
 
 stages:
 
@@ -40,6 +43,7 @@ stages:
       buildAgentMac: ${{ parameters.buildAgentMac }}
       buildAgentLinux: ${{ parameters.buildAgentLinux }}
       buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+      captureWindowsGpuNativeDumps: ${{ parameters.captureWindowsGpuNativeDumps }}
 
   - stage: native_tests
     displayName: Native Tests

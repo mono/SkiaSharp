@@ -10,6 +10,8 @@
 
 - `SKCanvasView` for CPU-rendered, on-demand drawing.
 - GPU-backed views using OpenGL, Metal, or the platform's accelerated rendering surface.
+- `SKGaneshView` engine-neutral native containers on iOS, Mac Catalyst and Android. Windows uses the WinUI integration package.
+- Graphite native containers are provided separately by `SkiaSharp.Views.Graphite`, keeping existing signed assembly identities and isolating Android's Vulkan dependency.
 - Touch and input helpers, density-aware sizing, and explicit invalidation.
 - Platform-native view types that fit directly into each UI framework.
 

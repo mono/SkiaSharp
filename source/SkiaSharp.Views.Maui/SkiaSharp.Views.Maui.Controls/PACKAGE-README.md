@@ -9,7 +9,9 @@
 ## What you get
 
 - `SKCanvasView` for CPU-rendered, on-demand drawing.
-- `SKGLView` for hardware-accelerated drawing and continuous render loops.
+- `SKGaneshView` for engine-named GPU drawing on Android, iOS, Mac Catalyst and Windows.
+- `SKGraphiteView` for explicit Graphite drawing on iOS, Mac Catalyst and compatible Android devices; Windows presentation is unsupported.
+- The unchanged `SKGLView` for existing applications.
 - `SKImageImageSource`, `SKBitmapImageSource`, `SKPixmapImageSource`, and `SKPictureImageSource` for MAUI images.
 - XAML support, data binding, touch input, invalidation, and density-aware canvas sizing.
 - Native handlers for Android, iOS, Mac Catalyst, and Windows.
@@ -69,7 +71,7 @@ private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 }
 ```
 
-Call `InvalidateSurface()` whenever state changes and the view should redraw. Use `SKGLView` when the scene benefits from GPU rendering or a continuous animation loop.
+Call `InvalidateSurface()` whenever state changes and the view should redraw. Use `SKGaneshView` for a GPU renderer with a replaceable private backend. Its typed paint metadata and Graphite's derive from `SKPaintSurfaceEventArgs`, so the drawing handler above works with either engine. Subscribe to context lifecycle and `RenderFailed` events; GPU resources are borrowed and tied to a context generation. See the repository's [engine-view ownership and threading guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/gpu-engine-views.md).
 
 ## Documentation and resources
 

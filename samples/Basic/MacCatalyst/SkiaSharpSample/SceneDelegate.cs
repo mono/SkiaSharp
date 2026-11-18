@@ -9,6 +9,8 @@ public class SceneDelegate : UIResponder, IUIWindowSceneDelegate
 	[Export("scene:willConnectToSession:options:")]
 	public void WillConnect(UIScene scene, UISceneSession session, UISceneConnectionOptions options)
 	{
+		if (Window?.RootViewController is UITabBarController rootTabs)
+			rootTabs.ViewControllers = [..rootTabs.ViewControllers ?? [], new GraphiteViewController()];
 		if (AppDelegate.DefaultPage != SamplePage.Cpu &&
 			Window?.RootViewController is UITabBarController tabs)
 		{

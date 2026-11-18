@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests.WinUI
 	{
 		public App()
 		{
+			GpuCrashDiagnostics.Attach(this);
 			InitializeComponent();
 		}
 

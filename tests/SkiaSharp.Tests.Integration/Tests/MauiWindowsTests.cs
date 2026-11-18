@@ -9,6 +9,9 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public class MauiWindowsTests(ITestOutputHelper output) : MauiTestBase(output)
 {
+    [Fact]
+    public Task NativeGaneshView() => RunNativeGpuSampleTest("WinUI", "Ganesh");
+
     protected override string PlatformName => "Windows";
     protected override string TargetFramework => "net10.0-windows10.0.19041.0";
 

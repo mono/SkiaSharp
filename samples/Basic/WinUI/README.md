@@ -18,13 +18,13 @@ A static scene rendered entirely on the CPU — a radial gradient background ove
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom font loaded from an embedded resource via `SKTypeface.FromStream`.
 
-### GPU
+### Ganesh
 
 A real-time animated shader running at full frame rate on the GPU via ANGLE (OpenGL ES over DirectX), with pointer interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKSwapChainPanel`** — Hardware-accelerated canvas backed by ANGLE, translating OpenGL ES calls to DirectX for efficient GPU rendering.
+- **`SKGaneshView`** — Engine-neutral WinUI container using a private GLES-through-ANGLE presenter. Graphite presentation on Windows is deferred.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation driven by `EnableRenderLoop` with an FPS counter overlay.
 - **Pointer interaction** — Pointer position is passed as a shader uniform, adding a white-hot blob to the metaball field.

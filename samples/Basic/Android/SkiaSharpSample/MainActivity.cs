@@ -28,6 +28,11 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 
 		var bottomNav = FindViewById<BottomNavigationView>(Resource.Id.bottom_nav);
 		bottomNav.SetOnItemSelectedListener(this);
+		if (Build.VERSION.SdkInt < BuildVersionCodes.N)
+		{
+			bottomNav.Menu.FindItem(Resource.Id.nav_gpu_texture)?.SetEnabled(false);
+			bottomNav.Menu.FindItem(Resource.Id.nav_gpu_texture)?.SetTitle("Graphite (Android 7+)");
+		}
 
 		// Apply top status bar inset to the AppBarLayout
 		var appBar = FindViewById<View>(Resource.Id.appbar);
@@ -37,8 +42,8 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		{
 			bottomNav.SelectedItemId = DefaultPage switch
 			{
-				SamplePage.GpuSurface => Resource.Id.nav_gpu_surface,
-				SamplePage.GpuTexture => Resource.Id.nav_gpu_texture,
+				SamplePage.Ganesh => Resource.Id.nav_gpu_surface,
+				SamplePage.Graphite => Resource.Id.nav_gpu_texture,
 				SamplePage.Drawing => Resource.Id.nav_drawing,
 				_ => Resource.Id.nav_cpu,
 			};
@@ -57,8 +62,8 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 		{
 			Resource.Id.nav_cpu => new CpuFragment(),
-			Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
-			Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
+			Resource.Id.nav_gpu_surface => new GaneshFragment(),
+			Resource.Id.nav_gpu_texture => new GraphiteFragment(),
 			Resource.Id.nav_drawing => new DrawingFragment(),
 			_ => new CpuFragment()
 		};
