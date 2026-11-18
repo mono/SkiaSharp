@@ -15,6 +15,25 @@ namespace SkiaSharp.Tests
 			Assert.True(SKCodec.MinBufferedBytesNeeded > 0);
 		}
 
+		// Each header makes the decoder fail through libjpeg's/libpng's
+		// setjmp/longjmp error recovery, which used to kill the process on win-x64.
+		[Theory]
+		// JPEG SOF0 with a zero height.
+		[InlineData(SKCodecResult.InvalidInput, new byte[] {
+			0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x00, 0x00, 0x10, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xD9 })]
+		// PNG IHDR with a zero width (valid CRC).
+		[InlineData(SKCodecResult.IncompleteInput, new byte[] {
+			0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x7F, 0xB5, 0x38, 0xE0 })]
+		public void Issue_5645_MalformedHeaderReturnsNull(SKCodecResult expectedResult, byte[] bytes)
+		{
+			using var stream = new SKMemoryStream(bytes);
+			using var codec = SKCodec.Create(stream, out var result);
+
+			Assert.Null(codec);
+			Assert.Equal(expectedResult, result);
+		}
+
 		[Fact]
 		public void DngIsNotDecoded()
 		{
