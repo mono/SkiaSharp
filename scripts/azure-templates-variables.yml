@@ -14,8 +14,7 @@ variables:
   BUILD_NUMBER: ''
   BUILD_COUNTER: $[counter('global_counter', 1)]
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build libgtk-4-1
-  # Managed builds retain .NET 9 Apple targets, which have no Xcode 27 workload.
-  XCODE_VERSION: '26.6'
+  XCODE_VERSION: '27.0'
   XCODE_VERSION_NATIVE: '27.0'
   DOTNET_VERSION: '10.0.404'
   WINDOWS_SDK_VERSION: '10.0.28000.0'
@@ -25,9 +24,8 @@ variables:
   DOTNET_WORKLOAD_VERSION_PREVIEW: '11.0.100-rc.1.26460.1'
   DOTNET_TIZEN_MANIFEST_BAND: '10.0.100'
   DOTNET_TIZEN_MANIFEST_VERSION: '10.0.123'
-  # Keep the Xcode 26.6 workload set with SDK 10.0.404 to preserve .NET 9 Apple
-  # targets. Set 10.0.401.1 requires Xcode 27 and newer sets require 27.1/27.2.
-  DOTNET_WORKLOAD_VERSION: '10.0.401'
+  # GoldenGate provides Xcode 27.0; newer workload sets require 27.1/27.2.
+  DOTNET_WORKLOAD_VERSION: '10.0.401.1'
   CONFIGURATION: 'Release'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   NUGET_DIFF_PRERELEASE: false
