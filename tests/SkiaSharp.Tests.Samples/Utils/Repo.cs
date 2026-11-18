@@ -13,6 +13,7 @@ internal static class Repo
     public static string PackagesDir => Path.Combine(RootDir, "output", "nugets");
     public static string ArtifactsDir => Path.Combine(RootDir, "output", "logs", "testlogs", "samples");
     public static string WorkspacesDir => Path.Combine(RootDir, "output", "samples-test-workspaces");
+    public static string SampleAppsDir => Path.Combine(RootDir, "output", "sample-apps");
     public static string SamplesDir => Path.Combine(RootDir, "output", GetVersion().Contains('-') ? "samples-preview" : "samples");
 
     private static string GetVersion()

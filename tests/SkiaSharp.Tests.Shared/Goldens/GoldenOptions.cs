@@ -10,7 +10,8 @@ public sealed record GoldenOptions
 		SKSizeI? expectedSize = null,
 		int channelTolerance = 0,
 		double maxErrorPixelFraction = DefaultMaxErrorPixelFraction,
-		double? maxAverageColorErrorFraction = null)
+		double? maxAverageColorErrorFraction = null,
+		Func<SKImage, SKImage>? comparisonTransform = null)
 	{
 		if (channelTolerance < 0 || channelTolerance > byte.MaxValue)
 			throw new ArgumentOutOfRangeException(nameof(channelTolerance));
@@ -25,12 +26,20 @@ public sealed record GoldenOptions
 		ChannelTolerance = channelTolerance;
 		MaxErrorPixelFraction = maxErrorPixelFraction;
 		MaxAverageColorErrorFraction = maxAverageColorErrorFraction;
+		ComparisonTransform = comparisonTransform;
 	}
 
 	public SKSizeI? ExpectedSize { get; }
+
 	public int ChannelTolerance { get; }
+
 	public double MaxErrorPixelFraction { get; }
+
 	public double? MaxAverageColorErrorFraction { get; }
+
+	/// <summary>Transforms both images for comparison, leaving captures and diagnostics unchanged.</summary>
+	/// <remarks>The input is borrowed. Return it unchanged or return a new image for the verifier to dispose.</remarks>
+	public Func<SKImage, SKImage>? ComparisonTransform { get; }
 
 	internal static GoldenOptions OrDefault(GoldenOptions? options) => options ?? Default;
 }
