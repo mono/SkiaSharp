@@ -117,7 +117,7 @@ emits both SkiaSharp-versioned and HarfBuzzSharp-versioned diff folders (§3.3/�
                       "4.148.0": { "compare_to": "3.119.4" } },
   "harfbuzzsharp":  { "14.2.1.500": { "status": "superseded", "superseded_by": "14.4.0" } },
   "support":        { "stable": ["4.155", "4.156"], "preview": ["4.157", "4.158"] },
-  "history_floor":  { "skiasharp": "4.156.0", "harfbuzzsharp": "14.4.0.100" }
+  "history_floor":  { "skiasharp": "4.155.0", "harfbuzzsharp": "14.4.0" }
 }
 ```
 
@@ -228,18 +228,18 @@ page.
 
 **History floor (a performance skip, not a rule change).** The top-level
 `history_floor` block in `versions.json` optionally sets a per-bucket minimum line core.
-The current floors are `{"skiasharp": "4.156.0", "harfbuzzsharp": "14.4.0.100"}`:
-HarfBuzzSharp 14.4.0.100 co-ships with the SkiaSharp 4.156.0 previews. A line **below** its family's
+The current floors are `{"skiasharp": "4.155.0", "harfbuzzsharp": "14.4.0"}`:
+HarfBuzzSharp 14.4.0 co-ships with SkiaSharp 4.155.0. A line **below** its family's
 floor has no release facts or API diffs regenerated, so a full preparation skips the
 older back-catalogue it would otherwise rebuild from the NuGet feed. The offline
 Markdown renderer may still render its cached historical inputs. It is **not** a
 deletion: pages and API-diff folders already committed below the floor are left exactly
 as they are — the Cake engine skips *clearing* them symmetrically with skipping their
 *emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
-are unaffected: an older line can still be downloaded as a baseline (e.g. `4.156.0`
-still diffs against `4.155.0`) — both via an explicit `compare_to` override **and** as the
+are unaffected: an older line can still be downloaded as a baseline (e.g. `4.155.0`
+still diffs against its below-floor predecessor) — both via an explicit `compare_to` override **and** as the
 *implicit predecessor* of the lowest emitted line. That lowest line (the floor line
-itself, e.g. `4.156.0`) has no emitted predecessor — its natural baseline sits below the
+itself, e.g. `4.155.0`) has no emitted predecessor — its natural baseline sits below the
 floor — so the API-diff engine resolves it from the pre-floor emittable set and downloads
 it **for comparison only** (never emitting the below-floor line's own page). Without this,
 the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its entire API
@@ -831,8 +831,8 @@ even when more than two stable lines remain; maintainers explicitly remove lines
 support ends. Finishing an older shipment cannot displace another supported line. SkiaSharp does not
 ship every Chrome milestone and may lag behind Chrome, so membership comes from NuGet.org,
 never Chromium Dash. The `history_floor` values control regeneration work, not support:
-the current floors remain SkiaSharp `4.156.0` and HarfBuzzSharp `14.4.0.100`, even while
-SkiaSharp `4.155` remains supported.
+the current floors are SkiaSharp `4.155.0` and HarfBuzzSharp `14.4.0`, matching the
+oldest supported stable line.
 
 **Chrome drift is advisory, not support policy.** The security audit's milestone heads-up
 (`.agents/skills/security-audit/scripts/query-milestone-schedule.py`, Step 3) already

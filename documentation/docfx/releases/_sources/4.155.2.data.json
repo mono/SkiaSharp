@@ -1,0 +1,142 @@
+{
+  "format": 6,
+  "version": "4.155.2",
+  "family": "skiasharp",
+  "status": "stable",
+  "banner": {
+    "kind": "stable",
+    "date": "November 17, 2026",
+    "nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.155.2",
+    "preview_nuget_url": null,
+    "github_release_url": "https://github.com/mono/SkiaSharp/releases/tag/v4.155.2"
+  },
+  "harfbuzz": {
+    "version": "14.4.0.2",
+    "api_diff_link": "harfbuzzsharp/14.4.0.2/index.md",
+    "prs": []
+  },
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [
+    {
+      "label": "SkiaSharp API diff",
+      "href": "4.155.2/index.md"
+    },
+    {
+      "label": "HarfBuzzSharp API diff",
+      "href": "harfbuzzsharp/14.4.0.2/index.md"
+    }
+  ],
+  "tallies": {
+    "product": 2,
+    "mixed": 0,
+    "internal": 4
+  },
+  "breaking_candidates": [],
+  "contributors": [
+    {
+      "login": "ramezgerges",
+      "url": "https://github.com/ramezgerges",
+      "prs": [
+        5793,
+        5797
+      ]
+    }
+  ],
+  "previews": [],
+  "shipments": [
+    {
+      "tag": "v4.155.2",
+      "core_version": "4.155.2",
+      "public_version": "4.155.2",
+      "channel": "stable",
+      "label": "Stable",
+      "previous_tag": "v4.155.1",
+      "target_sha": "bae2bd1738735d78625e81cc51c9e60240b6cbd5",
+      "date": "2026-11-17",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.155.1...v4.155.2",
+      "prs": [
+        5718,
+        5726,
+        5764,
+        5792,
+        5793,
+        5797
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "SkiaSharp Release Bot",
+          "kind": "human"
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        },
+        {
+          "display": "@ramezgerges",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "Claude",
+          "kind": "ai"
+        }
+      ]
+    }
+  ],
+  "prs": {
+    "5797": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5797",
+      "title": "[4.155] Backport four Skia CVE fixes and the emdawnwebgpu link fix (#5316)",
+      "body": "* [4.155] Backport four Skia CVE fixes and the emdawnwebgpu link fix (#5316)\n\nPin externals/skia to an m155 backport carrying four more upstream Skia\nsecurity fixes, and backport #5316 (and its Skia half, mono/skia#396) so\nWASM apps that link C sources build again.\n\n~~ Skia security fixes (all Chrome-assigned, Chromium severity High) ~~\n\n- CVE-2026-118340, integer overflow leaking cross-origin data. Chromium\n  bug 568936530, upstream 8700229923 \"[skif] Update SkImageFilter_Base\n  uniqueID to 64-bit\" (M156: c68d7fd343).\n- CVE-2026-119261, SkSL buffer overflow. Chromium bug 574213633, upstream\n  0a8b2fc486 \"[SkSL] Reject invalid types when parsing\" (M156: 961c7e83d9).\n- CVE-2026-121086, heap OOB write in SkRgnBuilder for conic paths.\n  Chromium bug 569674218, upstream 50a301ac1c (M156: c433a0fce9).\n- CVE-2026-126912, heap-buffer-overflow in RunBasedAdditiveBlitter and the\n  AAA convex walker. Chromium bug 569286603, upstream reland 866b61ca92\n  (M156: 0ac7dc6087).\n\nGoogle backported these to m156 and later but not m155. All four\nM156 cherry-picks applied to m155 without conflicts.\n\n~~ Ship emdawnwebgpu's webgpu.cpp inside libSkiaSharp.a (#5316) ~~\n\n4.155 includes #3968, so its WASM targets compile Dawn's webgpu.cpp on the\napp's emcc link line with -std=c++20, which clang rejects for any C source\nthe app links (for example Uno Platform 7's uno_gl_shim.c). Build the port\ninto libSkiaSharp.a through mono/skia#396's skiasharp_emdawnwebgpu_dir GN\nargument instead, and stop putting the source, -std=c++20 and\nDEFAULT_TO_CXX on the link line. The targets and build.cake changes are\nidentical to #5316; only the submodule and cgmanifest pins differ.\n\nC API declarations, DEPS, managed APIs and package versions are unchanged,\nand upstream_merge_commit still names the last incorporated chrome/m155\ncommit.\n\n(cherry picked from commit 9745920251930a92b1b4a2a946f402d3eed8bef4)\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* [m155] Repin Skia to the ancestry-preserving CVE repair\n\nContext: https://github.com/mono/skia/pull/465\n\nPoint externals/skia and the matching component manifest entry at\ne6cfc7a5d6dea7e8c21a59782c672a00b1fff28c. The repaired native history\ncontains all seven original reviewed commits from mono/skia#461 and\nmono/skia#462 while retaining both squash landings.\n\nThe native tree is identical to reviewed head 221ae11c5318. This\nchanges only the two pins, not the security or WASM implementation.\nFor this combined repair, verify original-commit ancestry and tree\nequality explicitly rather than requiring a direct-parent relationship.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "product"
+    },
+    "5793": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5793",
+      "title": "[4.155] Backport CVE-2026-126871 and CVE-2026-126882 fixes",
+      "body": "[4.155] Backport CVE-2026-126871 and CVE-2026-126882 fixes (#5793)\n\nContext: #5687 (4.156.1 already carries both fixes)\nRequires: mono/skia#461\n\nPin the two m155 Skia security fixes into the 4.155 servicing line for\n4.155.2. The submodule and Component Governance hash point to\n`168d7202034d`, the squash merge of mono/skia#461. Its tree matches the\nreviewed backport head `74a1a34d40`, so repinning did not change the\nreviewed code. Keep `upstream_merge_commit` at the last chrome/m155 sync:\nthese are m156 cherry-picks, not a new m155 upstream merge. No C API,\nmanaged API, or package versions change.\n\n~~ Graphite clip render-step overflow ~~\n\nCVE-2026-126871 (Chromium bug 574218401; M156 fix `160aff2851`):\nDrawListLayer recorded clip draws without accounting for pending clip\nelements in the draw-pass render-step limit, allowing pipeline data\nstructures to overflow. Count undrawn clip elements when checking the\nlimit, retain deferred-clip budgeting when DrawListLayer is disabled,\nand skip with a warning when a draw and its full clip stack cannot fit\neven in a fresh pass. `DeviceTestClipRenderStepLimits` exercises batches\nthat require flushing, a pathological clip stack, and a normal draw\nafter the skipped draw.\n\n~~ Ganesh skewed elliptical rounded-rectangle geometry ~~\n\nCVE-2026-126882 (Chromium bug 578685706; M156 fix `24e65cdd9b`):\nElliptical rounded-rectangle ops used incorrect skew-matrix terms when\nmapping radii and stroke widths, producing incorrect geometry under\nskew or anisotropic transforms. Use the correct matrix terms and clamp\ntransformed corner radii to half the mapped bounds to prevent\nself-intersections. The m155 cherry-pick applied without conflicts.\n\nCo-authored-by: Ramez Ragaa <ramezragaa@proton.me>\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "product"
+    },
+    "5792": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5792",
+      "title": "Pin Linux x86 Docker base images to last working SHA-256 digests",
+      "body": "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5764": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5764",
+      "title": "Use internal Skia mirror for m155 build-job checkouts",
+      "body": "Backport the net change from #5735 at e5a241ae0917da3094aae910463740d4c500543d to release/4.155.x. Preserve release-specific provisioning and cache behavior while using scoped mirror authentication only for internal explicit submodule checkouts.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5726": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5726",
+      "title": "Allow OpenJDK ZIP extraction retries on m155",
+      "body": "Backport the retry-safe extraction portion of dd9cc6cb217 to release/4.155.x. Overwrite existing archive entries after partial extraction, preserving this line's JDK 17 installer and parameter contract.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5718": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5718",
+      "title": "Bump to the next version (4.155.2) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}
