@@ -330,6 +330,10 @@ public class SampleImageTests : IDisposable
                         Thread.Sleep(150);
                         return Task.FromResult(actual);
                     }
+
+                    using (var firstCapture = SKBitmap.Decode(actual))
+                        Assert.Equal(new SKSizeI(2, 2), firstCapture.Info.Size);
+                    File.Copy(expected, actual, overwrite: true);
                     return pending.Task;
                 }),
                 GoldenInput.Path(expected),
@@ -337,15 +341,12 @@ public class SampleImageTests : IDisposable
                 timeout,
                 cancellationToken: TestContext.Current.CancellationToken);
 
-            Assert.True(clock.Elapsed >= timeout);
-            Assert.Equal(2, attempts);
-            Assert.False(verification.IsCompleted);
-            using (var firstCapture = SKBitmap.Decode(actual))
-                Assert.Equal(new SKSizeI(2, 2), firstCapture.Info.Size);
-
-            File.Copy(expected, actual, overwrite: true);
+            var completedBeforeConfirmation = verification.IsCompleted;
             pending.SetResult(actual);
 
+            Assert.True(clock.Elapsed >= timeout);
+            Assert.Equal(2, attempts);
+            Assert.False(completedBeforeConfirmation);
             Assert.Equal(actual, await verification);
             Assert.Equal(2, attempts);
             using var confirmedCapture = SKBitmap.Decode(actual);
