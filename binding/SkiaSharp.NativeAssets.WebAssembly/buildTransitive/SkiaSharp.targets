@@ -16,7 +16,10 @@
     <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
     <!-- Enable GLCtx when threading is available -->
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
-    <WasmShellExtraEmccFlags Include="-s USE_WEBGPU=1"/>
+    <!-- Only net8.0 (emsdk 3.1.34) uses emsdk's built-in WebGPU port. net9.0+
+         links Dawn's emdawnwebgpu port, whose library_webgpu.js refuses to link
+         alongside -sUSE_WEBGPU. -->
+    <WasmShellExtraEmccFlags Condition="$(TargetFramework.StartsWith('net8.'))" Include="-s USE_WEBGPU=1"/>
   </ItemGroup>
 
   <!-- If this is a .NET web assembly app -->
