@@ -15,15 +15,31 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
+    "product": 2,
     "mixed": 0,
-    "internal": 11
+    "internal": 12
   },
   "breaking_candidates": [],
   "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5293": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5293",
+      "title": "[Testing] Add experimental image comparison APIs",
+      "body": "[Testing] Add experimental image comparison APIs (#5293)\n\nAdd a separately packaged SkiaSharp.Testing library for comparing rendered\nimages, applying explicit acceptance policies and producing failure\ndiagnostics. Replace the copied test comparer and SkiaSharp.Extended dependency\nwhile preserving existing golden-image acceptance behavior.\n\nThe implementation is managed-only and does not change native APIs, generated\nbindings or rendering backends.\n\n~~ Define image comparison and acceptance semantics ~~\n\nAdd SKImageComparison entry points for SKImage, SKBitmap and SKPixmap. Normalize\ninputs to tightly packed BGRA8888 pixels, using exact unpremultiplied RGBA by\ndefault and allowing callers to select premultiplied comparison where required.\n\nConfigure comparisons through SKComparisonOptions:\n\n  * Per-channel absolute or percentage tolerances classify mismatched pixels;\n    null disables a channel.\n  * Tolerance masks widen enabled-channel allowances without changing raw error\n    measurements.\n  * Ignore masks remove complete pixels from errors, bounds and denominators;\n    reject masks that leave no pixels to compare.\n  * SKPixelMismatchBudget accepts inclusive pixel, percentage or combined\n    limits. Percentage limits use exact decimal-rational arithmetic before\n    flooring to whole pixels, avoiding floating-point boundary errors and long\n    overflow.\n  * Raw and thresholded metrics expose MAE, RMS and PSNR. Thresholded metrics\n    exclude tolerated channels but retain the full magnitude of errors that\n    exceed tolerance.\n  * Mismatch, normalized MAE and normalized RMS gates combine with AND.\n    Magnitude-only gates do not imply a zero-mismatch requirement.\n\nResults are immutable managed objects and retain no native handles. Inputs and\nmasks are borrowed during each synchronous call; returned difference images are\nindependent caller-owned SKImage instances.\n\n~~ Package and adopt the shared implementation ~~\n\nShip SkiaSharp.Testing as a signed package using the SkiaSharp family version,\ncurrently 4.159.0. Register it with repository versioning, supported-package,\nsigning and solution infrastructure.\n\nMark the assembly experimental with SKIA4001 and record that diagnostic in the\nexperimental API registry. Consumers opt in through NoWarn or a pragma. An\ninternal ExperimentalAttribute compatibility type preserves metadata on targets\nbefore .NET 8.\n\nRemove the copied SKPixelComparer and SKPixelComparisonResult from\nSkiaSharp.Tests.Shared. Route the shared Golden comparison boundary and SKTest\nbitmap assertions through SKImageComparison while retaining their existing\ngolden lookup, retry, attachment, reference and tolerance policies.\n\nReplace the SkiaSharp.Extended dependency in exact-package integration tests\nwith the matching SkiaSharp.Testing package. Remove the obsolete\nPixelComparison.projitems import from the Samples project now that sample tests\nuse the shared golden harness.\n\n~~ Add reusable difference diagnostics ~~\n\nAdd five opaque SKDifferenceStyle outputs using the same normalization,\ntolerance and masking rules as comparison:\n\n  * BinaryMask emits white mismatches on black.\n  * ChannelDifference emits raw RGB differences.\n  * ThresholdMap emits red mismatches, amber tolerated differences and gray\n    ignored regions.\n  * ThresholdOverlay, the default, blends classifications over the actual image\n    after flattening transparency onto white.\n  * Heatmap maps the largest raw enabled-channel difference onto a fixed\n    blue-to-cyan-to-yellow-to-red scale.\n\nAdd an illustrated guide covering exact and tolerant comparison, mismatch and\nmagnitude gates, masks, alpha differences and diagnostics. Keep reusable inputs,\nmasks and outputs at 800x600, with separately named 850x650 checkerboard preview\nimages for documentation presentation.\n\n~~ Cover compatibility and performance ~~\n\nAdd a dedicated SkiaSharp.Testing.Tests host covering acceptance, metrics,\nnormalization, masks, diagnostics, validation, ownership and each supported\ninput family. Register it with the .NET and Windows .NET Framework Cake test\nrunners, including x86 and x64 Framework jobs, and use Framework-compatible\nenum enumeration.\n\nAdd BenchmarkDotNet coverage for image, bitmap and pixmap comparisons,\nidentical images, masks, diagnostics and mismatch-budget arithmetic across\nrepresentative image sizes. Include these workloads in source benchmark\ntracking and preserve Release configuration through project references on clean\nCI runners.\n\nCache normalized width during mismatch-bound calculation and skip channel\narithmetic for identical normalized pixels. On an Apple M3 Pro with .NET 10,\nthe measured 1920x1080 comparison improved from about 27.8 ms to 10.9 ms for\nmostly identical pixels and from 54.7 ms to 28.8 ms for dense differences,\nwithout materially changing managed allocations.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Alex Soto <alex@soto.dev>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5830": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5830",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5829": {
       "url": "https://github.com/mono/SkiaSharp/pull/5829",
       "title": "Fix release-note credit identities",
