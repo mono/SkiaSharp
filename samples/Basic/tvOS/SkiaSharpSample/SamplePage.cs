@@ -6,6 +6,14 @@ namespace SkiaSharpSample;
 public enum SamplePage
 {
 	Cpu,
-	GpuGL,
-	GpuMetal,
+	Gpu,
+}
+
+/// <summary>
+/// The GPU backends available in this sample.
+/// </summary>
+public enum GpuBackend
+{
+	Metal,
+	GL,
 }

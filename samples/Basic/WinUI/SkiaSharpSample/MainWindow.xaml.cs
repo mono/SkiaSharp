@@ -8,6 +8,8 @@ public sealed partial class MainWindow : Window
 {
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.SwapChain;
+
 	public MainWindow()
 	{
 		InitializeComponent();

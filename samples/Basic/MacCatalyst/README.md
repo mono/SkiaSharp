@@ -17,13 +17,14 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 
-### GPU (Metal)
+### GPU
 
-A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework, with touch/trackpad interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework, hosted in a GPU sub-tab container (`GpuViewController`) with touch/trackpad interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
 - **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
+- **GPU sub-tabs (`UISegmentedControl`)** — Top segmented bar that swaps child `UIViewController` Storyboard scenes for each GPU backend.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle and an FPS counter overlay.
 - **Touch interaction** — Touch/trackpad position is passed as a shader uniform via `UITouch` events.
@@ -54,13 +55,16 @@ Build and run:
 dotnet build -t:Run
 ```
 
-To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
+To start on a different page or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `AppDelegate.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
 ```
 
-Available pages: `Cpu` (default), `GpuMetal`, `Drawing`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+Available GPU backends: `Metal` (default)
 
 ## Screenshots
 

@@ -162,4 +162,20 @@ half4 main(float2 fragCoord) {
 		base.TouchesCancelled(touches, evt);
 		touchActive = false;
 	}
+
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			if (skiaView != null)
+			{
+				skiaView.Paused = true;
+				skiaView.PaintSurface -= OnPaintSurface;
+			}
+			if (shaderBuilder?.IsValueCreated == true)
+				shaderBuilder.Value.Dispose();
+			shaderBuilder = null;
+		}
+		base.Dispose(disposing);
+	}
 }

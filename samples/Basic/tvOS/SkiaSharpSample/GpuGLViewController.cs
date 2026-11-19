@@ -125,6 +125,8 @@ half4 main(float2 fragCoord) {
 		{
 			displayLink?.Invalidate();
 			displayLink = null;
+			if (skiaView != null)
+				skiaView.PaintSurface -= OnPaintSurface;
 			if (shaderBuilder?.IsValueCreated == true)
 				shaderBuilder.Value.Dispose();
 			shaderBuilder = null;

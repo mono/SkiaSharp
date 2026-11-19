@@ -8,6 +8,11 @@ public class AppDelegate : UIApplicationDelegate
 	/// </summary>
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	/// <summary>
+	/// Change this to start the GPU page on a different backend.
+	/// </summary>
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
+
 	[Export("application:configurationForConnectingSceneSession:options:")]
 	public override UISceneConfiguration GetConfiguration(UIApplication application, UISceneSession connectingSceneSession, UISceneConnectionOptions options)
 	{
