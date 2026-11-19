@@ -69,6 +69,17 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - [Xcode](https://developer.apple.com/xcode/) matching the installed Apple workloads; see [Xcode 27](#xcode-27)
 - Command Line Tools: `xcode-select --install`
 
+To install a missing Apple platform or a specific simulator runtime for the
+selected Xcode, use the same installer as CI:
+
+```powershell
+./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
+./scripts/infra/managed/install-apple-platform.ps1 -Platform iOS -Version 18.6
+```
+
+Omitting `-Version` installs Xcode's default platform; specifying it installs
+and verifies that exact simulator runtime.
+
 ### Preparation
 
 The latest master build bits can be downloaded by running the `externals-download` target:

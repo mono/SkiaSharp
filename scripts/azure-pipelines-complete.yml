@@ -44,7 +44,7 @@ parameters:
         demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
         os: macos
       preBuildSteps:
-        - bash: xcodebuild -downloadPlatform tvOS
+        - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
           displayName: Install the tvOS simulator platform
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['System.PhaseName'], 'samples_macos_build'))
@@ -58,7 +58,7 @@ parameters:
         os: macos
       # Tahoe lacks the tvOS platform needed to resolve archive destinations.
       preBuildSteps:
-        - bash: xcodebuild -downloadPlatform tvOS
+        - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
           displayName: Install the tvOS simulator platform
           retryCountOnTaskFailure: 3
           condition: and(succeeded(), eq(variables['System.PhaseName'], 'native_tvos_macos'), ne(variables['CACHE_SKIP'], 'true'))
