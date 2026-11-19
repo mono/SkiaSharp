@@ -1,15 +1,33 @@
 {
-  "theme": "Linux native asset support",
-  "highlights_headline": "SkiaSharp 4.159 will no longer include Linux x86 native assets.",
-  "highlights_body": null,
+  "theme": "Image comparison tools",
+  "highlights_headline": "SkiaSharp 4.159 will introduce an experimental package for comparing rendered images and diagnosing differences.",
+  "highlights_body": "SkiaSharp.Testing will provide configurable image comparisons and visual diagnostics. This release will also stop including Linux x86 native assets; affected deployments must move to a supported architecture.",
   "breaking": [
     {
-      "title": "Move Linux x86 deployments to a supported architecture",
-      "body": "Linux x86 native assets will no longer be included in NuGet packages, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
+      "title": "Migrate Linux x86 deployments before upgrading",
+      "body": "NuGet packages will no longer include Linux x86 native assets, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
       "prs": [5784]
     }
   ],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Configurable image comparisons",
+          "detail": "The new SkiaSharp.Testing package adds SKImageComparison for SKImage, SKBitmap and SKPixmap, with channel tolerances, masks, mismatch budgets and MAE, RMS and PSNR metrics. Its APIs are experimental: opt in by suppressing diagnostic SKIA4001 through NoWarn or a pragma.",
+          "prs": [5293]
+        },
+        {
+          "lead": "Visual difference diagnostics",
+          "detail": "Generate binary masks, channel differences, threshold maps, overlays and heatmaps using the same tolerance and masking rules as comparison. Returned difference images are independent, caller-owned SKImage instances that callers must dispose; comparison results retain no native handles.",
+          "prs": [5293]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Restored the Uno Gallery and its view projects to the Windows samples solution."
+  },
   "preview_summaries": {}
 }
