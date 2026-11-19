@@ -43,11 +43,6 @@ parameters:
         name: AcesShared
         demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
         os: macos
-      preBuildSteps:
-        - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
-          displayName: Install the tvOS simulator platform
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['System.PhaseName'], 'samples_macos_build'))
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
     type: object
@@ -56,12 +51,6 @@ parameters:
         name: AcesShared
         demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
         os: macos
-      # Tahoe lacks the tvOS platform needed to resolve archive destinations.
-      preBuildSteps:
-        - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
-          displayName: Install the tvOS simulator platform
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['System.PhaseName'], 'native_tvos_macos'), ne(variables['CACHE_SKIP'], 'true'))
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
     type: object
