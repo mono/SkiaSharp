@@ -20,7 +20,11 @@
       Skia;
     </UnoFeatures>
   </PropertyGroup>
-  <PropertyGroup></PropertyGroup>
+  <PropertyGroup>
+    <!-- Emit relative asset paths so the published WASM app runs under any URL prefix
+         (/gallery-uno/, /staging/<PR>/gallery-uno/) without post-publish rewriting. -->
+    <WasmShellWebAppBasePath>./</WasmShellWebAppBasePath>
+  </PropertyGroup>
   <PropertyGroup>
     <!-- Stamped by CI; surfaced by SkiaSharpSample.Shared via AssemblyMetadata. -->
     <BuildFooter></BuildFooter>
