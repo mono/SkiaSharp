@@ -46,12 +46,13 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		ComparisonInsets(model, version, size);
 
 	internal static SKRectI ComparisonInsets(string model, string version, SKSizeI size) =>
-		model == "iPhone 16 Pro" &&
-		Version.TryParse(version, out var runtime) &&
-		(runtime.Major == 26 || runtime.Major == 18 && runtime.Minor == 6) &&
-		size == new SKSizeI(1206, 2622)
-			? new SKRectI(0, 0, 0, 39)
-			: SKRectI.Empty;
+		(model, Version.TryParse(version, out var runtime) ? runtime : null, size) switch
+		{
+			// Exclude host-dependent status and bottom navigation chrome from full-screen comparisons.
+			("iPhone 16 Pro", { Major: 26 } or { Major: 18, Minor: 6 }, { Width: 1206, Height: 2622 }) =>
+				new SKRectI(0, 200, 0, 322),
+			_ => SKRectI.Empty
+		};
 
 	internal override async Task<string> ReadApplicationId()
 	{
@@ -64,12 +65,12 @@ internal sealed class IosRunningApp : AppiumRunningApp
 		return id;
 	}
 
-	internal static string ReferenceProfile(string model, string version)
-	{
-		if (model != "iPhone 16 Pro" || !Version.TryParse(version, out _))
-			throw new InvalidOperationException($"No approved iOS capture profile for '{model}' at '{version}'.");
-		return "iphone-16-pro";
-	}
+	internal static string ReferenceProfile(string model, string version) =>
+		(model, Version.TryParse(version, out var runtime) ? runtime : null) switch
+		{
+			("iPhone 16 Pro", not null) => "iphone-16-pro",
+			_ => throw new InvalidOperationException($"No approved iOS capture profile for '{model}' at '{version}'.")
+		};
 
 	internal static Version ParseReferenceVersion(string version) =>
 		Version.TryParse(version, out var parsed)

@@ -127,8 +127,9 @@ iOS references include a runtime directory, for example
 
 Review the raw capture and diff in the test results before changing a reference.
 iOS captures show the canvas, not necessarily the whole screen. Comparison
-ignores the bottom 39 pixels of full-height iPhone captures; saved images are
-not cropped. Missing references fail and require manual review.
+temporarily excludes the top 200 and bottom 322 pixels of full-height iPhone
+16 Pro captures to avoid host-dependent system chrome. Canvas-only captures and
+saved images are not cropped. Missing references fail and require manual review.
 
 Samples use zero channel tolerance and allow 0.075% differing pixels by
 default. Animated GPU pages may use a 6% mean RGBA error limit.
