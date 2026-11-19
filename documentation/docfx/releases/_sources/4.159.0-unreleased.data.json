@@ -15,15 +15,58 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
-    "mixed": 0,
-    "internal": 11
+    "product": 2,
+    "mixed": 1,
+    "internal": 13
   },
   "breaking_candidates": [],
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "ramezgerges",
+      "url": "https://github.com/ramezgerges",
+      "prs": [
+        5145
+      ]
+    }
+  ],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5679": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5679",
+      "title": "Enable inset texture sampling and align Tizen blur configuration",
+      "body": "Enable inset texture sampling and align Tizen blur configuration (#5679)\n\nContext: https://skia-review.googlesource.com/c/skia/+/751778\n\nEnable existing Skia rendering options at the native compilation boundary:\nopt into inward texture-subset clamping and apply Tizen's CPU blur-path\nselection to Skia itself rather than its wrapper.\n\n~~ Keep filtered texture samples inside subset boundaries ~~\n\nBilinear filtering at the last pixel center of a texture subset can sample\nthe adjacent exterior row or column with a nominal weight of zero. Skia's\nupstream \"Add epsilon to texture effect clamping at pixel centers\" change\nadds an inward offset so filtering uses interior texels instead of\nincluding undefined exterior data in the weighted sum.\n\nDefine SK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING in the Android, iOS, Linux,\nmacOS, Tizen, tvOS, WASM and Windows Skia GN recipes. At the pinned revision,\nthis changes Ganesh's linear inset from 0.5 to 0.5001 texels. It also rejects\nthe direct linear-copy path for identity-scale copies touching the logical\nedge of an approximately sized texture, where backing storage extends\nbeyond that edge.\n\nThis enables existing Ganesh behavior, not a CPU or Graphite rendering\nchange. Texture-edge pixels may differ. Keep the definitions inline in the\nplatform recipes without changing shared build tooling or native APIs.\n\n~~ Apply Tizen's blur selection when compiling Skia ~~\n\nTizen defined SK_AVOID_SLOW_RASTER_PIPELINE_BLURS in project_def.prop, which\ncompiles the wrapper and links the previously built Skia libraries. The\ndefine therefore did not reach SkBlurEngine.cpp, where it selects the\nCPU blur implementation.\n\nPass the define through Tizen's GN extra_cflags and remove the ineffective\nwrapper definition. This bypasses the shader-based Gaussian candidate in\nfavor of the existing ThreeBoxApprox/Tent selection, matching the setting\nin the other seven recipes. Blur pixels and performance may differ;\nTizen rendering and performance were not measured locally.\n\nThe macOS ARM64 native source build and complete net10.0 console test\nsolution passed at the final head: 6,613 passed, 48 existing skips and zero\nfailures. These checks do not establish pixel-identical rendering.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
+    "5145": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5145",
+      "title": "[samples] Restore the Uno Gallery to the Windows solution (#3945)",
+      "body": "PR #3835 removed SkiaSharpSample.Uno and the two SkiaSharp.Views.Uno\nprojects from SkiaSharpSample.Windows.slnx, because Uno.Resizetizer\ncrashed during the Windows Samples build:\n\n  System.TypeInitializationException: ... SkiaSharp.SKColorSpace ...\n  The version of the native libSkiaSharp library (116.0) is incompatible\n  with this version of SkiaSharp. Supported versions of the native\n  libSkiaSharp library are in the range [88.1, 89.0).\n\nThat no longer reproduces. Building the Uno sample directly on Windows,\nfrom a clean obj/bin so UnoResizetizeImages actually runs rather than\nbeing skipped as up to date:\n\n  net10.0-desktop              build succeeded (52 PNGs + icon.ico generated)\n  net10.0-windows10.0.26100    build succeeded\n  net10.0-android              build succeeded\n\nNo TypeInitializationException and no native version error on any of\nthem. net10.0-browserwasm could not be completed locally, but for an\nunrelated reason - the local Emscripten in the wasm-tools workload is\nmissing $(EmscriptenUpstreamBinPath) - and the Resizetizer had already\nrun successfully on that TFM before the link step failed. CI has a\nworking Emscripten, which is the remaining gap this change closes.\n\nNote the underlying incompatibility has NOT been fixed upstream: every\npublished Uno.Resizetizer, including the latest 2.0.0-dev.2, still\nbundles managed SkiaSharp 2.88.6.0, whose version gate only accepts a\nnative in [88.1, 89.0). Feeding that assembly a SkiaSharp 3.x native\nstill throws (verified in isolation with both 116.0 and 119.0). What\nchanged is that the Resizetizer task now resolves the matching 88.1\nnative it ships alongside itself, instead of a foreign one from the\nbuild. So this is safe today but could regress if native resolution\naround the Resizetizer changes again.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "internal",
+      "fixes": [
+        3945
+      ]
+    },
+    "5293": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5293",
+      "title": "[Testing] Add experimental image comparison APIs",
+      "body": "[Testing] Add experimental image comparison APIs (#5293)\n\nAdd a separately packaged SkiaSharp.Testing library for comparing rendered\nimages, applying explicit acceptance policies and producing failure\ndiagnostics. Replace the copied test comparer and SkiaSharp.Extended dependency\nwhile preserving existing golden-image acceptance behavior.\n\nThe implementation is managed-only and does not change native APIs, generated\nbindings or rendering backends.\n\n~~ Define image comparison and acceptance semantics ~~\n\nAdd SKImageComparison entry points for SKImage, SKBitmap and SKPixmap. Normalize\ninputs to tightly packed BGRA8888 pixels, using exact unpremultiplied RGBA by\ndefault and allowing callers to select premultiplied comparison where required.\n\nConfigure comparisons through SKComparisonOptions:\n\n  * Per-channel absolute or percentage tolerances classify mismatched pixels;\n    null disables a channel.\n  * Tolerance masks widen enabled-channel allowances without changing raw error\n    measurements.\n  * Ignore masks remove complete pixels from errors, bounds and denominators;\n    reject masks that leave no pixels to compare.\n  * SKPixelMismatchBudget accepts inclusive pixel, percentage or combined\n    limits. Percentage limits use exact decimal-rational arithmetic before\n    flooring to whole pixels, avoiding floating-point boundary errors and long\n    overflow.\n  * Raw and thresholded metrics expose MAE, RMS and PSNR. Thresholded metrics\n    exclude tolerated channels but retain the full magnitude of errors that\n    exceed tolerance.\n  * Mismatch, normalized MAE and normalized RMS gates combine with AND.\n    Magnitude-only gates do not imply a zero-mismatch requirement.\n\nResults are immutable managed objects and retain no native handles. Inputs and\nmasks are borrowed during each synchronous call; returned difference images are\nindependent caller-owned SKImage instances.\n\n~~ Package and adopt the shared implementation ~~\n\nShip SkiaSharp.Testing as a signed package using the SkiaSharp family version,\ncurrently 4.159.0. Register it with repository versioning, supported-package,\nsigning and solution infrastructure.\n\nMark the assembly experimental with SKIA4001 and record that diagnostic in the\nexperimental API registry. Consumers opt in through NoWarn or a pragma. An\ninternal ExperimentalAttribute compatibility type preserves metadata on targets\nbefore .NET 8.\n\nRemove the copied SKPixelComparer and SKPixelComparisonResult from\nSkiaSharp.Tests.Shared. Route the shared Golden comparison boundary and SKTest\nbitmap assertions through SKImageComparison while retaining their existing\ngolden lookup, retry, attachment, reference and tolerance policies.\n\nReplace the SkiaSharp.Extended dependency in exact-package integration tests\nwith the matching SkiaSharp.Testing package. Remove the obsolete\nPixelComparison.projitems import from the Samples project now that sample tests\nuse the shared golden harness.\n\n~~ Add reusable difference diagnostics ~~\n\nAdd five opaque SKDifferenceStyle outputs using the same normalization,\ntolerance and masking rules as comparison:\n\n  * BinaryMask emits white mismatches on black.\n  * ChannelDifference emits raw RGB differences.\n  * ThresholdMap emits red mismatches, amber tolerated differences and gray\n    ignored regions.\n  * ThresholdOverlay, the default, blends classifications over the actual image\n    after flattening transparency onto white.\n  * Heatmap maps the largest raw enabled-channel difference onto a fixed\n    blue-to-cyan-to-yellow-to-red scale.\n\nAdd an illustrated guide covering exact and tolerant comparison, mismatch and\nmagnitude gates, masks, alpha differences and diagnostics. Keep reusable inputs,\nmasks and outputs at 800x600, with separately named 850x650 checkerboard preview\nimages for documentation presentation.\n\n~~ Cover compatibility and performance ~~\n\nAdd a dedicated SkiaSharp.Testing.Tests host covering acceptance, metrics,\nnormalization, masks, diagnostics, validation, ownership and each supported\ninput family. Register it with the .NET and Windows .NET Framework Cake test\nrunners, including x86 and x64 Framework jobs, and use Framework-compatible\nenum enumeration.\n\nAdd BenchmarkDotNet coverage for image, bitmap and pixmap comparisons,\nidentical images, masks, diagnostics and mismatch-budget arithmetic across\nrepresentative image sizes. Include these workloads in source benchmark\ntracking and preserve Release configuration through project references on clean\nCI runners.\n\nCache normalized width during mismatch-bound calculation and skip channel\narithmetic for identical normalized pixels. On an Apple M3 Pro with .NET 10,\nthe measured 1920x1080 comparison improved from about 27.8 ms to 10.9 ms for\nmostly identical pixels and from 54.7 ms to 28.8 ms for dense differences,\nwithout materially changing managed allocations.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Alex Soto <alex@soto.dev>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5830": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5830",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5829": {
       "url": "https://github.com/mono/SkiaSharp/pull/5829",
       "title": "Fix release-note credit identities",
