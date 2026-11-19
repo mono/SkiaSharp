@@ -13,13 +13,13 @@ namespace SkiaSharp
 	{
 	/// Proxy for gr_vk_device_lost_proc native function.
 #if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <void*, GRVkDeviceLostInfoNative*, void> GRVkDeviceLostProxy = &GRVkDeviceLostProxyImplementation;
+	public static readonly delegate* unmanaged[Cdecl] <void*, gr_vk_device_lost_info_t, void> GRVkDeviceLostProxy = &GRVkDeviceLostProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
 #else
 	public static readonly GRVkDeviceLostProxyDelegate GRVkDeviceLostProxy = GRVkDeviceLostProxyImplementation;
 	[MonoPInvokeCallback (typeof (GRVkDeviceLostProxyDelegate))]
 #endif
-	private static partial void GRVkDeviceLostProxyImplementation(void* userData,GRVkDeviceLostInfoNative* info);
+	private static partial void GRVkDeviceLostProxyImplementation(void* userData,gr_vk_device_lost_info_t info);
 
 	}
 }

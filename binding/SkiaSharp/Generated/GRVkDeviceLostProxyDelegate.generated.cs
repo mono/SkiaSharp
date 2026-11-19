@@ -12,7 +12,7 @@ namespace SkiaSharp
 {
 	// typedef void (*)(void* userData, const gr_vk_device_lost_info_t* info)* gr_vk_device_lost_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void GRVkDeviceLostProxyDelegate(void* userData, GRVkDeviceLostInfoNative* info);
+	internal unsafe delegate void GRVkDeviceLostProxyDelegate(void* userData, gr_vk_device_lost_info_t info);
 
 }
 #endif // !USE_LIBRARY_IMPORT

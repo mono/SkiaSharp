@@ -39,6 +39,7 @@ namespace SkiaSharp
 		// the backend context immediately afterwards. Freed in DisposeNative AFTER the native context
 		// is deleted (which tears down the lambda).
 		private GCHandle pinnedBackendDelegate;
+		private GCHandle pinnedDeviceLostDelegate;
 
 		// Set in CreateDawn when the backend context detected a non-yielding (WASM/browser)
 		// environment. Submit(Sync=true) is rejected up-front for these contexts because Dawn
@@ -55,6 +56,11 @@ namespace SkiaSharp
 		{
 			// Only ever set once, immediately after construction by a backend factory.
 			pinnedBackendDelegate = gch;
+		}
+
+		internal void AttachPinnedDeviceLostDelegate (GCHandle gch)
+		{
+			pinnedDeviceLostDelegate = gch;
 		}
 
 		/// <summary>Determines whether the specified Graphite backend is available in this build of SkiaSharp.</summary>
@@ -146,8 +152,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var init = backendContext.ToNativeV2 ();
-			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan_v2 (init, &options);
+			var init = backendContext.ToNative ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &options);
 			if (handle == IntPtr.Zero)
 				return null;
 
@@ -157,6 +163,7 @@ namespace SkiaSharp
 			// pointer + userData by value, so SKGraphiteContext takes over keeping
 			// the underlying managed delegate alive.
 			ctx.AttachPinnedBackendDelegate (backendContext.TransferGetProcHandle ());
+			ctx.AttachPinnedDeviceLostDelegate (backendContext.TransferDeviceLostHandle ());
 
 			return ctx;
 		}
@@ -185,6 +192,10 @@ namespace SkiaSharp
 			if (pinnedBackendDelegate.IsAllocated) {
 				pinnedBackendDelegate.Free ();
 				pinnedBackendDelegate = default;
+			}
+			if (pinnedDeviceLostDelegate.IsAllocated) {
+				pinnedDeviceLostDelegate.Free ();
+				pinnedDeviceLostDelegate = default;
 			}
 		}
 

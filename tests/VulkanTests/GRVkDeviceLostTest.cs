@@ -1,51 +1,94 @@
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Silk.NET.Vulkan;
 using Xunit;
 using SkiaSharp.Tests;
 
 namespace SkiaSharp.Vulkan.Tests
 {
-	// Plumbing tests for GRVkBackendContext.DeviceLost / SKGraphiteVkBackendContext.DeviceLost
-	// (mono/SkiaSharp#4601). Actually triggering VK_ERROR_DEVICE_LOST from managed code is not
-	// realistic in CI — the callback is driver-owned and fires at Skia's discretion. These
-	// tests instead verify the wiring: the init-only property round-trips, Context construction
-	// with a handler set does not crash, and Dispose tears down without use-after-free.
 	[Collection(VulkanGpuRenderingCollection.Name)]
-	public class GRVkDeviceLostTest : VKTest
+	public unsafe class GRVkDeviceLostTest : VKTest
 	{
-		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		private static IntPtr realQueueSubmit;
+		private static bool failQueueSubmit;
+
+		#if NET5_0_OR_GREATER
+		[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+		private static int QueueSubmitShimStdcall(IntPtr queue, uint submitCount, void* pSubmits, ulong fence)
+		{
+			if (failQueueSubmit)
+				return (int)Result.ErrorDeviceLost;
+
+			return ((delegate* unmanaged[Stdcall]<IntPtr, uint, void*, ulong, int>)realQueueSubmit)(queue, submitCount, pSubmits, fence);
+		}
+
+		[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+		private static int QueueSubmitShimCdecl(IntPtr queue, uint submitCount, void* pSubmits, ulong fence)
+		{
+			if (failQueueSubmit)
+				return (int)Result.ErrorDeviceLost;
+
+			return ((delegate* unmanaged[Cdecl]<IntPtr, uint, void*, ulong, int>)realQueueSubmit)(queue, submitCount, pSubmits, fence);
+		}
+
+		private static IntPtr GetQueueSubmitShimPointer() =>
+			RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+				? (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, uint, void*, ulong, int>)&QueueSubmitShimStdcall
+				: (IntPtr)(delegate* unmanaged[Cdecl]<IntPtr, uint, void*, ulong, int>)&QueueSubmitShimCdecl;
+		#else
+		[UnmanagedFunctionPointer(CallingConvention.Winapi)]
+		private delegate int QueueSubmitDelegate(IntPtr queue, uint submitCount, void* pSubmits, ulong fence);
+
+		private static readonly QueueSubmitDelegate QueueSubmitShimInstance = (queue, submitCount, pSubmits, fence) =>
+		{
+			if (failQueueSubmit)
+				return (int)Result.ErrorDeviceLost;
+
+			var del = Marshal.GetDelegateForFunctionPointer<QueueSubmitDelegate>(realQueueSubmit);
+			return del(queue, submitCount, pSubmits, fence);
+		};
+
+		private static IntPtr GetQueueSubmitShimPointer() =>
+			Marshal.GetFunctionPointerForDelegate(QueueSubmitShimInstance);
+		#endif
+
 		[Fact]
 		public void DeviceLostPropertyRoundTripsOnGRVkBackendContext()
 		{
-			// GRVkBackendContext.DeviceLost installs a native bridge via
-			// gr_vk_device_lost_handler_new, which only exists in a libSkiaSharp built
-			// with SK_VULKAN. Route through the policy like every other test here so
-			// hosts that do not build the Vulkan backend skip instead of failing on a
-			// null handle. See mono/SkiaSharp#4601.
-			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkan);
-			using var empty = new GRVkBackendContext();
-			Assert.Null(empty.DeviceLost);
+			using var backend = new GRVkBackendContext();
+			Assert.Null(backend.DeviceLost);
 
-			GRVkDeviceLostDelegate handler = info => { };
-			using var backend = new GRVkBackendContext { DeviceLost = handler };
-			Assert.Same(handler, backend.DeviceLost);
+			GRVkDeviceLostDelegate first = _ => { };
+			GRVkDeviceLostDelegate second = _ => { };
+
+			backend.DeviceLost = first;
+			Assert.Same(first, backend.DeviceLost);
+
+			backend.DeviceLost = second;
+			Assert.Same(second, backend.DeviceLost);
+
+			backend.DeviceLost = null;
+			Assert.Null(backend.DeviceLost);
 		}
 
-		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[Fact]
 		public void DeviceLostPropertyRoundTripsOnSKGraphiteVkBackendContext()
 		{
-			// GRVkBackendContext.DeviceLost installs a native bridge via
-			// gr_vk_device_lost_handler_new, which only exists in a libSkiaSharp built
-			// with SK_VULKAN. Route through the policy like every other test here so
-			// hosts that do not build the Vulkan backend skip instead of failing on a
-			// null handle. See mono/SkiaSharp#4601.
-			GpuPolicy.RequireOrSkip(GpuBackends.GraphiteVulkan);
-			using var empty = new SKGraphiteVkBackendContext();
-			Assert.Null(empty.DeviceLost);
+			using var backend = new SKGraphiteVkBackendContext();
+			Assert.Null(backend.DeviceLost);
 
-			GRVkDeviceLostDelegate handler = info => { };
-			using var backend = new SKGraphiteVkBackendContext { DeviceLost = handler };
-			Assert.Same(handler, backend.DeviceLost);
+			GRVkDeviceLostDelegate first = _ => { };
+			GRVkDeviceLostDelegate second = _ => { };
+
+			backend.DeviceLost = first;
+			Assert.Same(first, backend.DeviceLost);
+
+			backend.DeviceLost = second;
+			Assert.Same(second, backend.DeviceLost);
+
+			backend.DeviceLost = null;
+			Assert.Null(backend.DeviceLost);
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
@@ -68,21 +111,18 @@ namespace SkiaSharp.Vulkan.Tests
 				MaxAPIVersion = SilkVkContext.ApiVersion,
 				Extensions = extensions,
 				GetProcedureAddress = (name, instance, device) => ctx.BaseGetProc(name, instance, device),
-				DeviceLost = info => { fired = true; },
+				DeviceLost = _ => fired = true,
 			};
 
 			using var grContext = GRContext.CreateVulkan(backend);
 			Assert.NotNull(grContext);
 
-			// Exercise a normal draw path — must not spuriously fire the device-lost callback,
-			// and Dispose (via `using`) must tear the Context down before the BackendContext,
-			// so the pinned delegate is still alive if Skia calls back during Context deletion.
 			using var surface = SKSurface.Create(grContext, budgeted: true, new SKImageInfo(64, 64));
 			Assert.NotNull(surface);
 			surface.Canvas.Clear(SKColors.Purple);
 			grContext.Flush(submit: true, synchronous: true);
 
-			Assert.False(fired, "Device-lost handler fired without a lost device.");
+			Assert.False(fired);
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
@@ -101,7 +141,7 @@ namespace SkiaSharp.Vulkan.Tests
 				GraphicsQueueIndex = ctx.GraphicsFamily,
 				MaxApiVersion = SilkVkContext.ApiVersion,
 				GetProcedureAddress = (name, instance, device) => ctx.BaseGetProc(name, instance, device),
-				DeviceLost = info => { fired = true; },
+				DeviceLost = _ => fired = true,
 			};
 
 			using var graphiteContext = SKGraphiteContext.CreateVulkan(backend);
@@ -116,7 +156,137 @@ namespace SkiaSharp.Vulkan.Tests
 			Assert.Equal(SKGraphiteInsertStatus.Success, graphiteContext.InsertRecording(recording));
 			Assert.True(graphiteContext.Submit(new SKGraphiteSubmitInfo { Sync = true }));
 
-			Assert.False(fired, "Device-lost handler fired without a lost device.");
+			Assert.False(fired);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void GRContextInvokesDeviceLostCallbackWhenQueueSubmitReturnsDeviceLost()
+		{
+			using var ctx = CreateSilkVkContext();
+			using var extensions = new GRVkExtensions();
+			extensions.Initialize((name, instance, device) => ctx.BaseGetProc(name, instance, device),
+				ctx.Instance.Handle, ctx.PhysicalDevice.Handle);
+
+			string description = null;
+			GRVkDeviceFaultAddressInfo[] addressInfos = null;
+			GRVkDeviceFaultVendorInfo[] vendorInfos = null;
+			byte[] vendorBinaryData = null;
+			var callCount = 0;
+
+			failQueueSubmit = false;
+			try
+			{
+				using var backend = new GRVkBackendContext
+				{
+					VkInstance = ctx.Instance.Handle,
+					VkPhysicalDevice = ctx.PhysicalDevice.Handle,
+					VkDevice = ctx.Device.Handle,
+					VkQueue = ctx.GraphicsQueue.Handle,
+					GraphicsQueueIndex = ctx.GraphicsFamily,
+					MaxAPIVersion = SilkVkContext.ApiVersion,
+					Extensions = extensions,
+					GetProcedureAddress = (name, instance, device) =>
+					{
+						var addr = ctx.BaseGetProc(name, instance, device);
+						if (name == "vkQueueSubmit")
+						{
+							realQueueSubmit = addr;
+							return GetQueueSubmitShimPointer();
+						}
+						return addr;
+					},
+					DeviceLost = info =>
+					{
+						callCount++;
+						description = info.Description;
+						addressInfos = info.AddressInfos;
+						vendorInfos = info.VendorInfos;
+						vendorBinaryData = info.VendorBinaryData;
+					},
+				};
+
+				using var grContext = GRContext.CreateVulkan(backend);
+				Assert.NotNull(grContext);
+
+				using var surface = SKSurface.Create(grContext, budgeted: true, new SKImageInfo(64, 64));
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Red);
+
+				failQueueSubmit = true;
+				grContext.Flush(submit: true, synchronous: false);
+			}
+			finally
+			{
+				failQueueSubmit = false;
+			}
+
+			Assert.Equal(1, callCount);
+			Assert.False(string.IsNullOrEmpty(description));
+			Assert.NotNull(addressInfos);
+			Assert.NotNull(vendorInfos);
+			Assert.NotNull(vendorBinaryData);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void SKGraphiteContextInvokesDeviceLostCallbackWhenQueueSubmitReturnsDeviceLost()
+		{
+			using var ctx = CreateSilkVkContext();
+
+			string description = null;
+			var callCount = 0;
+
+			failQueueSubmit = false;
+			try
+			{
+				using var backend = new SKGraphiteVkBackendContext
+				{
+					VkInstance = ctx.Instance.Handle,
+					VkPhysicalDevice = ctx.PhysicalDevice.Handle,
+					VkDevice = ctx.Device.Handle,
+					VkQueue = ctx.GraphicsQueue.Handle,
+					GraphicsQueueIndex = ctx.GraphicsFamily,
+					MaxApiVersion = SilkVkContext.ApiVersion,
+					GetProcedureAddress = (name, instance, device) =>
+					{
+						var addr = ctx.BaseGetProc(name, instance, device);
+						if (name == "vkQueueSubmit")
+						{
+							realQueueSubmit = addr;
+							return GetQueueSubmitShimPointer();
+						}
+						return addr;
+					},
+					DeviceLost = info =>
+					{
+						callCount++;
+						description = info.Description;
+					},
+				};
+
+				using var graphiteContext = SKGraphiteContext.CreateVulkan(backend);
+				Assert.NotNull(graphiteContext);
+
+				using var recorder = graphiteContext.CreateRecorder();
+				using var surface = SKSurface.Create(recorder, new SKImageInfo(64, 64), false, null);
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Blue);
+				using var recording = recorder.Snap();
+				Assert.NotNull(recording);
+				graphiteContext.InsertRecording(recording);
+
+				failQueueSubmit = true;
+				Assert.False(graphiteContext.Submit(new SKGraphiteSubmitInfo { Sync = false }));
+
+				Assert.Equal(1, callCount);
+				Assert.False(string.IsNullOrEmpty(description));
+				Assert.True(graphiteContext.IsDeviceLost);
+			}
+			finally
+			{
+				failQueueSubmit = false;
+			}
 		}
 	}
 }

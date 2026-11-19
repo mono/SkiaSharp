@@ -369,12 +369,6 @@ namespace SkiaSharpGenerator
 			"long int", "signed long int", "unsigned long int",
 		};
 
-		// C# fixed-size buffers accept only these element types. A C array field such as
-		// `char fDescription[256]` must become `fixed byte fDescription[256]`: GetCppType()
-		// flattens "T[N]" to "T*", which would make the managed struct one pointer wide where
-		// the native one is N*sizeof(T), silently shifting every following field's offset
-		// (mono/SkiaSharp#4601 review). Element types outside this table fall back to the
-		// previous pointer behaviour rather than emitting something that will not compile.
 		private static readonly Dictionary<string, string> FixedBufferElementTypes = new()
 		{
 			{ "char",             nameof(Byte) },
@@ -397,8 +391,6 @@ namespace SkiaSharpGenerator
 			{ "bool",             nameof(Byte) },
 		};
 
-		// Returns the C# primitive to use for a fixed buffer of `elementType`, or null when
-		// the element type cannot legally back one.
 		protected static string? GetFixedBufferElementType(CppType elementType)
 		{
 			var name = GetCppType(elementType).Trim();

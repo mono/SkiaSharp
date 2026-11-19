@@ -1,13 +1,10 @@
 #nullable disable
 
 using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	// Managed shape of Skia's VulkanDeviceLostProc payload. See #4601. All arrays are
-	// snapshots taken during the callback — the wrapper owns its data, so a delegate
-	// may store the received GRVkDeviceLostInfo past the return of the callback.
-
 	/// <summary>
 	/// Kind of fault reported for a specific memory address. Mirrors
 	/// <c>VkDeviceFaultAddressTypeEXT</c> from the <c>VK_EXT_device_fault</c> extension.
@@ -79,6 +76,22 @@ namespace SkiaSharp
 		public override bool Equals (object obj) =>
 			obj is GRVkDeviceFaultAddressInfo o && Equals (o);
 
+		/// <summary>Determines whether two specified instances are equal.</summary>
+		/// <param name="left">The first instance to compare.</param>
+		/// <param name="right">The second instance to compare.</param>
+		/// <returns><see langword="true" /> if the instances are equal; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
+		public static bool operator == (GRVkDeviceFaultAddressInfo left, GRVkDeviceFaultAddressInfo right) =>
+			left.Equals (right);
+
+		/// <summary>Determines whether two specified instances are not equal.</summary>
+		/// <param name="left">The first instance to compare.</param>
+		/// <param name="right">The second instance to compare.</param>
+		/// <returns><see langword="true" /> if the instances are not equal; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
+		public static bool operator != (GRVkDeviceFaultAddressInfo left, GRVkDeviceFaultAddressInfo right) =>
+			!left.Equals (right);
+
 		/// <summary>Returns the hash code for this instance.</summary>
 		/// <returns>A hash code for the current instance.</returns>
 		/// <remarks />
@@ -94,9 +107,7 @@ namespace SkiaSharp
 
 	/// <summary>
 	/// Single vendor-specific fault record from <c>VK_EXT_device_fault</c>. Mirrors
-	/// <c>VkDeviceFaultVendorInfoEXT</c>. The <see cref="Description"/> is the
-	/// driver-supplied string (up to 256 characters); <see cref="VendorFaultCode"/>
-	/// and <see cref="VendorFaultData"/> are opaque vendor values.
+	/// <c>VkDeviceFaultVendorInfoEXT</c>.
 	/// </summary>
 	public readonly struct GRVkDeviceFaultVendorInfo : IEquatable<GRVkDeviceFaultVendorInfo>
 	{
@@ -107,7 +118,7 @@ namespace SkiaSharp
 		/// <remarks />
 		public GRVkDeviceFaultVendorInfo (string description, ulong vendorFaultCode, ulong vendorFaultData)
 		{
-			Description     = description;
+			Description     = description ?? string.Empty;
 			VendorFaultCode = vendorFaultCode;
 			VendorFaultData = vendorFaultData;
 		}
@@ -143,6 +154,22 @@ namespace SkiaSharp
 		public override bool Equals (object obj) =>
 			obj is GRVkDeviceFaultVendorInfo o && Equals (o);
 
+		/// <summary>Determines whether two specified instances are equal.</summary>
+		/// <param name="left">The first instance to compare.</param>
+		/// <param name="right">The second instance to compare.</param>
+		/// <returns><see langword="true" /> if the instances are equal; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
+		public static bool operator == (GRVkDeviceFaultVendorInfo left, GRVkDeviceFaultVendorInfo right) =>
+			left.Equals (right);
+
+		/// <summary>Determines whether two specified instances are not equal.</summary>
+		/// <param name="left">The first instance to compare.</param>
+		/// <param name="right">The second instance to compare.</param>
+		/// <returns><see langword="true" /> if the instances are not equal; otherwise, <see langword="false" />.</returns>
+		/// <remarks />
+		public static bool operator != (GRVkDeviceFaultVendorInfo left, GRVkDeviceFaultVendorInfo right) =>
+			!left.Equals (right);
+
 		/// <summary>Returns the hash code for this instance.</summary>
 		/// <returns>A hash code for the current instance.</returns>
 		/// <remarks />
@@ -157,41 +184,120 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Everything Skia's <c>VulkanDeviceLostProc</c> hands the caller when it detects
-	/// <c>VK_ERROR_DEVICE_LOST</c>. The instance owns all its data — the arrays are
-	/// snapshots taken during the callback — so a delegate may safely store this
-	/// object past the return of the callback (e.g. to write it to a log later).
+	/// Diagnostic information reported by Skia when it detects <c>VK_ERROR_DEVICE_LOST</c>.
 	/// </summary>
-	public sealed class GRVkDeviceLostInfo
+	public sealed unsafe class GRVkDeviceLostInfo : SKObject, ISKSkipObjectRegistration
 	{
-		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRVkDeviceLostInfo" /> class.</summary>
-		/// <param name="description">Skia's description of the device loss.</param>
-		/// <param name="addressInfos">The fault-address records, or <see langword="null" /> for none.</param>
-		/// <param name="vendorInfos">The vendor-specific fault records, or <see langword="null" /> for none.</param>
-		/// <param name="vendorBinaryData">The raw vendor binary blob, or <see langword="null" /> for none.</param>
-		/// <remarks />
-		public GRVkDeviceLostInfo (
-			string description,
-			GRVkDeviceFaultAddressInfo[] addressInfos,
-			GRVkDeviceFaultVendorInfo[] vendorInfos,
-			byte[] vendorBinaryData)
+		private const int VkMaxDescriptionSize = 256;
+
+		private string description;
+		private GRVkDeviceFaultAddressInfo[] addressInfos;
+		private GRVkDeviceFaultVendorInfo[] vendorInfos;
+		private byte[] vendorBinaryData;
+
+		internal GRVkDeviceLostInfo (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
-			Description      = description ?? string.Empty;
-			AddressInfos     = addressInfos ?? Array.Empty<GRVkDeviceFaultAddressInfo> ();
-			VendorInfos      = vendorInfos ?? Array.Empty<GRVkDeviceFaultVendorInfo> ();
-			VendorBinaryData = vendorBinaryData ?? Array.Empty<byte> ();
 		}
 
-		/// <summary>Human-readable description from Skia. Empty string is possible but never null.</summary>
-		public string Description { get; }
+		internal static GRVkDeviceLostInfo GetObject (IntPtr handle, bool owns = false) =>
+			handle == IntPtr.Zero ? null : new GRVkDeviceLostInfo (handle, owns);
 
-		/// <summary>Fault address records (empty when <c>VK_EXT_device_fault</c> is not enabled).</summary>
-		public GRVkDeviceFaultAddressInfo[] AddressInfos { get; }
+		/// <summary>Gets the human-readable description from Skia.</summary>
+		/// <value>The description string, or <see cref="F:System.String.Empty" /> if none was reported.</value>
+		/// <remarks />
+		public string Description =>
+			description ??= GetDescription ();
 
-		/// <summary>Vendor-specific fault records (empty when <c>VK_EXT_device_fault</c> is not enabled).</summary>
-		public GRVkDeviceFaultVendorInfo[] VendorInfos { get; }
+		/// <summary>Gets the fault address records.</summary>
+		/// <value>The fault address records, or an empty array when <c>VK_EXT_device_fault</c> is not enabled.</value>
+		/// <remarks />
+		public GRVkDeviceFaultAddressInfo[] AddressInfos =>
+			addressInfos ??= GetAddressInfos ();
 
-		/// <summary>Raw vendor binary blob for offline decoding (empty when unavailable).</summary>
-		public byte[] VendorBinaryData { get; }
+		/// <summary>Gets the vendor-specific fault records.</summary>
+		/// <value>The vendor fault records, or an empty array when <c>VK_EXT_device_fault</c> is not enabled.</value>
+		/// <remarks />
+		public GRVkDeviceFaultVendorInfo[] VendorInfos =>
+			vendorInfos ??= GetVendorInfos ();
+
+		/// <summary>Gets the raw vendor binary blob for offline decoding.</summary>
+		/// <value>The vendor binary data, or an empty array when unavailable.</value>
+		/// <remarks />
+		public byte[] VendorBinaryData =>
+			vendorBinaryData ??= GetVendorBinaryData ();
+
+		private string GetDescription ()
+		{
+			if (Handle == IntPtr.Zero)
+				return string.Empty;
+
+			using var str = SKString.GetObject (SkiaApi.gr_vk_device_lost_info_get_description (Handle));
+			return (string)str ?? string.Empty;
+		}
+
+		private GRVkDeviceFaultAddressInfo[] GetAddressInfos ()
+		{
+			if (Handle == IntPtr.Zero)
+				return Array.Empty<GRVkDeviceFaultAddressInfo> ();
+
+			var count = SkiaApi.gr_vk_device_lost_info_get_address_info_count (Handle);
+			if (count <= 0)
+				return Array.Empty<GRVkDeviceFaultAddressInfo> ();
+
+			var result = new GRVkDeviceFaultAddressInfo[count];
+			for (var i = 0; i < count; i++) {
+				GRVkDeviceFaultAddressInfoNative addr;
+				SkiaApi.gr_vk_device_lost_info_get_address_info (Handle, i, &addr);
+				result[i] = new GRVkDeviceFaultAddressInfo (
+					(GRVkDeviceFaultAddressType)addr.fAddressType,
+					addr.fReportedAddress,
+					addr.fAddressPrecision);
+			}
+			return result;
+		}
+
+		private GRVkDeviceFaultVendorInfo[] GetVendorInfos ()
+		{
+			if (Handle == IntPtr.Zero)
+				return Array.Empty<GRVkDeviceFaultVendorInfo> ();
+
+			var count = SkiaApi.gr_vk_device_lost_info_get_vendor_info_count (Handle);
+			if (count <= 0)
+				return Array.Empty<GRVkDeviceFaultVendorInfo> ();
+
+			var result = new GRVkDeviceFaultVendorInfo[count];
+			for (var i = 0; i < count; i++) {
+				GRVkDeviceFaultVendorInfoNative vendor;
+				SkiaApi.gr_vk_device_lost_info_get_vendor_info (Handle, i, &vendor);
+				var span = new ReadOnlySpan<byte> (vendor.fDescription, VkMaxDescriptionSize);
+				var nul = span.IndexOf ((byte)0);
+				if (nul >= 0)
+					span = span.Slice (0, nul);
+				var vendorDesc = span.Length > 0
+					? StringUtilities.GetString (span, SKTextEncoding.Utf8)
+					: string.Empty;
+				result[i] = new GRVkDeviceFaultVendorInfo (
+					vendorDesc,
+					vendor.fVendorFaultCode,
+					vendor.fVendorFaultData);
+			}
+			return result;
+		}
+
+		private byte[] GetVendorBinaryData ()
+		{
+			if (Handle == IntPtr.Zero)
+				return Array.Empty<byte> ();
+
+			IntPtr size = IntPtr.Zero;
+			var ptr = SkiaApi.gr_vk_device_lost_info_get_vendor_binary_data (Handle, &size);
+			if (ptr == null || (int)size <= 0)
+				return Array.Empty<byte> ();
+
+			var result = new byte[(int)size];
+			Marshal.Copy ((IntPtr)ptr, result, 0, result.Length);
+			return result;
+		}
 	}
 }

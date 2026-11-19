@@ -264,8 +264,6 @@ namespace SkiaSharpGenerator
 			var allFields = new List<string>();
 			foreach (var field in klass.Fields)
 			{
-				// Fixed-size C arrays become C# fixed buffers so the managed struct keeps the
-				// native size and field offsets. See GetFixedBufferElementType for why.
 				if (field.Type is CppArrayType { Size: > 0 } arrayType &&
 					GetFixedBufferElementType(arrayType.ElementType) is { } fixedElement)
 				{
@@ -273,10 +271,7 @@ namespace SkiaSharpGenerator
 
 					var bufferVis = map?.IsInternal == true ? "public" : "private";
 					writer.WriteLine($"\t\t{bufferVis} fixed {fixedElement} {field.Name}[{arrayType.Size}];");
-
-					// Deliberately not added to allFields: a fixed buffer cannot be used with
-					// == or HashCode.Add, so it is excluded from the generated equality and hash
-					// members rather than breaking compilation.
+					writer.WriteLine();
 					continue;
 				}
 

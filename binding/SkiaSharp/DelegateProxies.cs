@@ -66,7 +66,7 @@ namespace SkiaSharp
 	public delegate void SKGraphiteReleaseDelegate ();
 
 	/// <summary>Represents the method that is called when Skia detects that the Vulkan device has been lost.</summary>
-	/// <param name="info">A snapshot of what Skia reported about the loss. The instance owns its data, so it may be stored beyond the lifetime of the call.</param>
+	/// <param name="info">Diagnostic information reported by Skia about the loss, valid for the duration of the callback.</param>
 	/// <remarks>Invoked on whichever thread the driver reports the loss on, which is not necessarily the thread that created the context.</remarks>
 	public delegate void GRVkDeviceLostDelegate (GRVkDeviceLostInfo info);
 
@@ -156,55 +156,15 @@ namespace SkiaSharp
 		}
 
 
-		private static partial void GRVkDeviceLostProxyImplementation (void* userData, GRVkDeviceLostInfoNative* info)
+		private static partial void GRVkDeviceLostProxyImplementation (void* userData, IntPtr info)
 		{
-			var infoPtr = info;
-			// userData is a GCHandle pinned by the caller (GRVkBackendContext or
-			// SKGraphiteVkBackendContext); the pin lives for the Context's lifetime.
-			// This proxy can fire from a driver-owned thread whenever Skia detects
-			// VK_ERROR_DEVICE_LOST, so we do NOT free the handle here. Never throw
-			// across the FFI boundary — Skia's device-lost path is running on a native
-			// stack; an unhandled managed exception would tear down the process.
-			//
-			// infoPtr is a gr_vk_device_lost_info_t* whose storage is only valid during
-			// this call (Skia's std::string / std::vector backing memory). We snapshot
-			// everything into a managed GRVkDeviceLostInfo so the caller may keep the
-			// object past the callback's return.
 			try {
-				if (infoPtr == null) return;
-
-				var native = *infoPtr;
-				var description = Marshal.PtrToStringAnsi ((IntPtr)native.fDescription) ?? string.Empty;
-
-				var addressInfos = new GRVkDeviceFaultAddressInfo[native.fAddressInfoCount];
-				for (int i = 0; i < native.fAddressInfoCount; i++) {
-					var a = native.fAddressInfos + i;
-					addressInfos[i] = new GRVkDeviceFaultAddressInfo (
-						(GRVkDeviceFaultAddressType)a->fAddressType,
-						a->fReportedAddress,
-						a->fAddressPrecision);
-				}
-
-				// GRVkDeviceFaultVendorInfoNative now mirrors the native layout exactly (the
-				// generator emits the char[256] as a fixed buffer), so index the array normally
-				// rather than hand-rolling the stride. GRVkDeviceLostLayoutTest pins the size and
-				// field offsets so a regression here fails a test instead of mis-reading a fault.
-				var vendorInfos = new GRVkDeviceFaultVendorInfo[native.fVendorInfoCount];
-				for (int i = 0; i < native.fVendorInfoCount; i++) {
-					var record = native.fVendorInfos + i;
-					var desc = Marshal.PtrToStringAnsi ((IntPtr)record->fDescription) ?? string.Empty;
-					vendorInfos[i] = new GRVkDeviceFaultVendorInfo (desc, record->fVendorFaultCode, record->fVendorFaultData);
-				}
-
-				var binarySize = (int)native.fVendorBinaryDataSize;
-				var binary = binarySize > 0 ? new byte[binarySize] : Array.Empty<byte> ();
-				if (binarySize > 0)
-					Marshal.Copy ((IntPtr)native.fVendorBinaryData, binary, 0, binarySize);
-
-				var managed = new GRVkDeviceLostInfo (description, addressInfos, vendorInfos, binary);
+				using var managed = GRVkDeviceLostInfo.GetObject (info, false);
+				if (managed == null)
+					return;
 
 				var del = Get<GRVkDeviceLostDelegate> ((IntPtr)userData, out _);
-				del.Invoke (managed);
+				del?.Invoke (managed);
 			} catch {
 			}
 		}

@@ -24,13 +24,9 @@ namespace SkiaSharp
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
-		// Device-lost state — see GRVkBackendContext for the pattern. Pinned managed
-		// delegate + caller-owned native bridge (allocated via gr_vk_device_lost_handler_new).
-		// Skia holds the bridge pointer non-owning; this backend context must outlive
-		// the SKGraphiteContext it was used to create.
 		private GRVkDeviceLostDelegate deviceLost;
 		private GCHandle deviceLostHandle;
-		private IntPtr nativeDeviceLostHandler;
+		private void* deviceLostContext;
 
 		/// <summary>Initializes a new instance of the <see cref="SKGraphiteVkBackendContext" /> class.</summary>
 		/// <remarks />
@@ -107,36 +103,37 @@ namespace SkiaSharp
 			return h;
 		}
 
-		/// <summary>Gets the callback invoked when Skia detects that the Vulkan device has been lost.</summary>
+		internal GCHandle TransferDeviceLostHandle ()
+		{
+			var h = deviceLostHandle;
+			deviceLostHandle = default;
+			deviceLostContext = null;
+			return h;
+		}
+
+		/// <summary>Gets or sets the callback invoked when Skia detects that the Vulkan device has been lost.</summary>
 		/// <value>The handler to invoke, or <see langword="null" /> to receive no notification.</value>
-		/// <remarks>Set during initialization only. Skia stores the callback without taking ownership, so the bridge behind it is never freed - see the field comments for why replacement and disposal are unsafe.</remarks>
+		/// <remarks>Do not dispose the <see cref="T:SkiaSharp.SKGraphiteContext" /> inside the callback; schedule teardown after the current GPU operation completes.</remarks>
 		public GRVkDeviceLostDelegate DeviceLost {
 			get => deviceLost;
-			init {
-				// init-only: see GRVkBackendContext.DeviceLost. Replacement would free a bridge that
-				// a live SKGraphiteContext still points at, and the new handler would never reach it.
+			set {
 				deviceLost = value;
-				if (value is null)
-					return;
 
-				DelegateProxies.Create (value, out var gch, out var ctx);
-				deviceLostHandle = gch;
-				nativeDeviceLostHandler = SkiaApi.gr_vk_device_lost_handler_new (
-					DelegateProxies.GRVkDeviceLostProxy,
-					(void*)ctx);
-				if (nativeDeviceLostHandler == IntPtr.Zero) {
-					// Nothing was handed to Skia, so releasing the pin here is safe.
-					gch.Free ();
-					deviceLostHandle = default;
-					deviceLost = null;
-					throw new InvalidOperationException (
-						"gr_vk_device_lost_handler_new failed (Vulkan not built into libSkiaSharp?)");
+				if (deviceLostHandle.IsAllocated)
+					deviceLostHandle.Free ();
+
+				deviceLostHandle = default;
+				deviceLostContext = null;
+
+				if (value != null) {
+					DelegateProxies.Create (value, out var gch, out var ctx);
+					deviceLostHandle = gch;
+					deviceLostContext = (void*)ctx;
 				}
 			}
 		}
-		// Revision 2 of the native init struct. The original sk_graphite_context_make_vulkan
-		// and its struct are frozen for ABI; managed always uses the v2 pair.
-		internal SKGraphiteVkBackendContextV2Native ToNativeV2 ()
+
+		internal SKGraphiteVkBackendContextNative ToNative ()
 		{
 			if (VkInstance == IntPtr.Zero)
 				throw new InvalidOperationException ($"{nameof (VkInstance)} must be set before materializing the backend context.");
@@ -147,8 +144,7 @@ namespace SkiaSharp
 			if (VkQueue == IntPtr.Zero)
 				throw new InvalidOperationException ($"{nameof (VkQueue)} must be set before materializing the backend context.");
 
-			return new SKGraphiteVkBackendContextV2Native {
-				fStructSize         = (IntPtr)Marshal.SizeOf<SKGraphiteVkBackendContextV2Native> (),
+			return new SKGraphiteVkBackendContextNative {
 				fInstance           = VkInstance,
 				fPhysicalDevice     = VkPhysicalDevice,
 				fDevice             = VkDevice,
@@ -158,7 +154,8 @@ namespace SkiaSharp
 				fGetProcUserData    = getProcContext,
 				fGetProc            = getProcContext is not null ? DelegateProxies.SKGraphiteVkGetProxy : null,
 				fProtectedContext   = ProtectedContext ? (byte)1 : (byte)0,
-				fDeviceLostHandler  = nativeDeviceLostHandler,
+				fDeviceLostUserData = deviceLostContext,
+				fDeviceLostProc     = deviceLostContext is not null ? DelegateProxies.GRVkDeviceLostProxy : null,
 			};
 		}
 
@@ -182,10 +179,8 @@ namespace SkiaSharp
 
 			if (getProcHandle.IsAllocated)
 				getProcHandle.Free ();
-			// The device-lost bridge and its GCHandle are intentionally NOT released. This type has
-			// a finalizer, and the established pattern is to discard the backend context once the
-			// SKGraphiteContext exists - so freeing here would let the GC pull the bridge out from
-			// under a live VulkanSharedContext with no user error involved at all.
+			if (deviceLostHandle.IsAllocated)
+				deviceLostHandle.Free ();
 		}
 
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKGraphiteVkBackendContext" /> before it is reclaimed by garbage collection.</summary>

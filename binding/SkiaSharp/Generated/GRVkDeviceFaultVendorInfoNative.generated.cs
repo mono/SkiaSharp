@@ -15,6 +15,7 @@ namespace SkiaSharp
 	internal unsafe partial struct GRVkDeviceFaultVendorInfoNative : IEquatable<GRVkDeviceFaultVendorInfoNative> {
 		// public char[256] fDescription
 		public fixed Byte fDescription[256];
+
 		// public uint64_t fVendorFaultCode
 		public UInt64 fVendorFaultCode;
 
