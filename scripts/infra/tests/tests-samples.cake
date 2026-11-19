@@ -5,20 +5,51 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
 #load "tests-shared.cake"
+#load "tests-shared-apple.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SAMPLES TASKS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var RUN_GROUP = Argument("runGroup", "");
-var RUN_ID = Argument("sampleRunId", "");
 var RUN_GROUPS = new[] { "Build", "Host", "Docker", "Android", "Ios", "Mac", "Windows" };
+var APPIUM_RUN_GROUPS = new[] { "Ios" };
 if (!string.IsNullOrEmpty(RUN_GROUP) && !RUN_GROUPS.Contains(RUN_GROUP))
     throw new ArgumentException($"Unknown sample run group '{RUN_GROUP}'. Expected {string.Join(", ", RUN_GROUPS)}.");
-if (!string.IsNullOrEmpty(RUN_ID) && RUN_ID.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_'))
-    throw new ArgumentException("sampleRunId must contain only ASCII letters, digits, '-' or '_'.");
+
+var APPIUM_MODE = Argument("appiumMode", EnvironmentVariable("TEST_APPIUM_MODE") ?? "all");
+if (!new[] { "all", "build", "run" }.Contains(APPIUM_MODE))
+    throw new ArgumentException($"Unknown Appium mode '{APPIUM_MODE}'. Expected all, build or run.");
+if (APPIUM_MODE != "all" && !APPIUM_RUN_GROUPS.Contains(RUN_GROUP))
+    throw new ArgumentException($"Select an Appium run group ({string.Join(", ", APPIUM_RUN_GROUPS)}) with an explicit phase.");
+
+string OWNED_IOS_SIMULATOR = null;
+
+Setup(context =>
+{
+    if ((!TARGET.Equals("Default", StringComparison.OrdinalIgnoreCase) && !TARGET.Equals("samples", StringComparison.OrdinalIgnoreCase)) ||
+        APPIUM_MODE == "build" ||
+        IsCakeListingCommand())
+        return;
+
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        SetupIosSimulator(ref OWNED_IOS_SIMULATOR);
+
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION", TEST_IOS_SIMULATOR_VERSION);
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL", TEST_IOS_SIMULATOR_MODEL);
+        Environment.SetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID", OWNED_IOS_SIMULATOR);
+    }
+});
+
+Teardown(context =>
+{
+    if (string.IsNullOrEmpty(RUN_GROUP) || RUN_GROUP == "Ios") {
+        TeardownIosSimulator(ref OWNED_IOS_SIMULATOR, context.ThrownException);
+    }
+});
 
 Task ("samples-generate")
+    .WithCriteria(() => APPIUM_MODE != "run" || TARGET.Equals("samples-generate", StringComparison.OrdinalIgnoreCase))
     .Description ("Generate and zip the samples directory structure.")
     .Does (() =>
 {
@@ -35,14 +66,20 @@ Task ("samples-generate")
 
 Task ("samples")
     .IsDependentOn ("samples-generate")
-    .Description ("Build generated samples and test their Docker applications.")
+    .Description ("Build and validate generated sample applications.")
     .Does (() =>
 {
-    var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{(string.IsNullOrEmpty(RUN_ID) ? DATE_TIME_STR : RUN_ID + "/" + DATE_TIME_STR)}");
-    // Consumer commands own their timeouts; MTP's activity monitor misdetects these process trees.
-    RunDotNetTest(ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj"),
-        results, noBuild: SKIP_BUILD, hangTimeout: null,
-        properties: new Dictionary<string, string> { ["SampleRunGroup"] = RUN_GROUP },
+    var results = ROOT_PATH.Combine($"output/logs/testlogs/samples/{DATE_TIME_STR}");
+    Environment.SetEnvironmentVariable("TEST_APPIUM_MODE", APPIUM_MODE);
+    var project = ROOT_PATH.CombineWithFilePath("tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj");
+
+    // Long-running sample builds have their own process timeouts; disable the test host's hang timer.
+    RunDotNetTest(project, results, noBuild: SKIP_BUILD, hangTimeout: null,
+        properties: new Dictionary<string, string> {
+            ["SampleRunGroup"] = RUN_GROUP,
+            ["TargetFramework"] = "net10.0",
+            ["TargetFrameworks"] = "net10.0",
+        },
         runnerArguments: string.IsNullOrEmpty(RUN_GROUP) ? null : new[] { "--filter-trait", $"RunGroup={RUN_GROUP}" });
 });
 

@@ -7,6 +7,28 @@ parameters:
     type: object
   - name: buildAgentLinux
     type: object
+  - name: buildAgentIosAppium
+    type: object
+    default:
+      pool:
+        name: AcesShared
+        demands: ImageOverride -equals ACES_VM_SharedPool_Tahoe
+        os: macos
+  - name: iosSimulators
+    type: object
+    default:
+      - name: ios18_6
+        displayName: iOS 18.6
+        version: '18.6'
+        buildVersion: '22G86'
+        model: iPhone 16 Pro
+        installRuntime: true
+      - name: ios26_5
+        displayName: iOS 26.5
+        version: '26.5'
+        buildVersion: '23F77'
+        model: iPhone 16 Pro
+        installRuntime: true
 
 stages:
 
@@ -31,3 +53,30 @@ stages:
           parameters:
             platform: linux
             buildAgent: ${{ parameters.buildAgentLinux }}
+
+        - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+          parameters:
+            name: samples_appium_build_ios
+            displayName: Build Appium apps (iOS)
+            phase: build
+            platform: ios
+            buildAgent: ${{ parameters.buildAgentIosAppium }}
+            additionalArgs: --runGroup=Ios --skipExternals="all"
+
+        - ${{ each ios in parameters.iosSimulators }}:
+          - template: /scripts/azure-templates-jobs-sample-appium.yml@self
+            parameters:
+              name: samples_appium_${{ ios.name }}
+              displayName: Appium (${{ ios.displayName }})
+              platform: ios
+              dependsOn: [samples_appium_build_ios]
+              buildAgent: ${{ parameters.buildAgentIosAppium }}
+              variables:
+                XCODE_VERSION: '26.6'
+              additionalArgs: --runGroup=Ios --iosVersion=${{ ios.version }} --iosModel="${{ ios.model }}" --skipExternals="all"
+              preBuildSteps:
+                - ${{ if eq(ios.installRuntime, true) }}:
+                  - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}' -BuildVersion '${{ ios.buildVersion }}'
+                    displayName: Install the selected iOS simulator runtime
+                - pwsh: ./scripts/infra/tests/install-appium.ps1 -Platform iOS
+                  displayName: Install Appium 3 and XCUITest

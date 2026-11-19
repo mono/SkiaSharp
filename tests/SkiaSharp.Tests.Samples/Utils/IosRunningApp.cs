@@ -1,0 +1,186 @@
+﻿using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Appium.iOS;
+using SkiaSharp.Tests.Shared;
+using System.Runtime.InteropServices;
+using Xunit;
+using static SkiaSharp.Tests.Samples.Utils.FailureHandling;
+
+namespace SkiaSharp.Tests.Samples.Utils;
+
+internal sealed class IosRunningApp : AppiumRunningApp
+{
+	private readonly string version =
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_VERSION") ?? "26.5";
+
+	private readonly string model =
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_MODEL") ?? "iPhone 16 Pro";
+
+	private readonly string? simulator =
+		Environment.GetEnvironmentVariable("TEST_IOS_SIMULATOR_UDID");
+
+	private string? actualVersion;
+
+	internal IosRunningApp(SampleWorkspace workspace, string artifact)
+		: base(workspace, artifact, new IosAppiumOperations())
+	{
+	}
+
+	internal static string FindApp(string output)
+	{
+		var apps = Directory.Exists(output) ? Directory.GetDirectories(output, "*.app") : [];
+		if (apps.Length != 1 || !File.Exists(Path.Combine(apps[0], "Info.plist")))
+			throw new FileNotFoundException($"Expected one built iOS app in {output}. Run build mode first.");
+		return apps[0];
+	}
+
+	internal override string DeviceProfile => ReferenceProfile(model, version);
+
+	internal override GoldenCase Reference(string caseName) =>
+		new(
+			DeviceProfile,
+			caseName,
+			ParseReferenceVersion(actualVersion ?? version),
+			RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+
+	internal override SKRectI ComparisonInsets(SKSizeI size) =>
+		ComparisonInsets(model, version, size);
+
+	internal static SKRectI ComparisonInsets(string model, string version, SKSizeI size) =>
+		(model, Version.TryParse(version, out var runtime) ? runtime : null, size) switch
+		{
+			// Exclude host-dependent status and bottom navigation chrome from full-screen comparisons.
+			("iPhone 16 Pro", { Major: 26 } or { Major: 18, Minor: 6 }, { Width: 1206, Height: 2622 }) =>
+				new SKRectI(0, 200, 0, 322),
+			_ => SKRectI.Empty
+		};
+
+	internal override async Task<string> ReadApplicationId()
+	{
+		var plist = Path.Combine(Artifact, "Info.plist");
+		var id = (await Command("plutil", ["-extract", "CFBundleIdentifier", "raw", "-o", "-", plist])).Trim();
+
+		if (string.IsNullOrWhiteSpace(id) || id.Any(char.IsWhiteSpace))
+			throw new InvalidOperationException($"Built app bundle has an invalid CFBundleIdentifier: {plist}");
+
+		return id;
+	}
+
+	internal static string ReferenceProfile(string model, string version) =>
+		(model, Version.TryParse(version, out var runtime) ? runtime : null) switch
+		{
+			("iPhone 16 Pro", not null) => "iphone-16-pro",
+			_ => throw new InvalidOperationException($"No approved iOS capture profile for '{model}' at '{version}'.")
+		};
+
+	internal static Version ParseReferenceVersion(string version) =>
+		Version.TryParse(version, out var parsed)
+			? parsed
+			: throw new InvalidOperationException($"Invalid iOS reference version: {version}.");
+
+	internal static readonly string[] StatusBarOverride =
+	[
+		"override", "--time", "10:10",
+		"--dataNetwork", "wifi", "--wifiMode", "active", "--wifiBars", "3",
+		"--cellularMode", "active", "--cellularBars", "4",
+		"--batteryState", "charged", "--batteryLevel", "100"
+	];
+
+	// Normalize Cake's booted simulator before Appium creates the session and launches the app.
+	internal static async Task<T> StartSession<T>(string? simulator, Func<string[], Task> run, Func<T> createSession)
+	{
+		if (!string.IsNullOrWhiteSpace(simulator))
+			await run(["simctl", "status_bar", simulator, .. StatusBarOverride]);
+		return createSession();
+	}
+
+	protected override async Task Start(Uri address)
+	{
+		Assert.True(OperatingSystem.IsMacOS(),
+			"iOS tests require macOS, Xcode and the declared preinstalled simulator runtime.");
+		Assert.True(Directory.Exists(Artifact) && Artifact.EndsWith(".app", StringComparison.OrdinalIgnoreCase),
+			"Provide the actual built simulator .app bundle.");
+
+		var options = new AppiumOptions
+		{
+			PlatformName = "iOS",
+			AutomationName = "XCUITest",
+			App = Artifact,
+			DeviceName = model
+		};
+		options.AddAdditionalAppiumOption("newCommandTimeout", 120);
+
+		options.PlatformVersion = version;
+
+		if (!string.IsNullOrWhiteSpace(simulator))
+			options.AddAdditionalAppiumOption("udid", simulator);
+
+		options.AddAdditionalAppiumOption("bundleId", ApplicationId);
+
+		// Reset/reinstall the app, not Cake's simulator; direct runs leave selection to Appium.
+		options.AddAdditionalAppiumOption("fullReset", false);
+		options.AddAdditionalAppiumOption("noReset", false);
+		options.AddAdditionalAppiumOption("resetOnSessionStartOnly", true);
+		options.AddAdditionalAppiumOption("shutdownOtherSimulators", false);
+
+		var wdaLocalPort = AppiumFixture.GetFreePort();
+		var wda = Path.Combine(
+			Repo.RootDir, "output", "appium", "wda", "WebDriverAgentRunner-Runner.app");
+		Assert.True(Directory.Exists(wda), $"Install the prebuilt simulator WDA app before running iOS samples: {wda}");
+		options.AddAdditionalAppiumOption("usePreinstalledWDA", true);
+		options.AddAdditionalAppiumOption("prebuiltWDAPath", wda);
+		options.AddAdditionalAppiumOption("wdaLocalPort", wdaLocalPort);
+		options.AddAdditionalAppiumOption("showXcodeLog", true);
+		options.AddAdditionalAppiumOption("waitForIdleTimeout", 1);
+
+		SetDriver(await StartSession(
+			simulator,
+			async arguments => await Command("xcrun", arguments),
+			() => new IOSDriver(address, options, TimeSpan.FromMinutes(6))));
+
+		actualVersion = Driver.Capabilities.GetCapability("platformVersion") as string;
+		Assert.True(Version.TryParse(actualVersion, out var actual), "The device must report an actual iOS version.");
+		var requested = Version.Parse(version);
+		Assert.True(actual!.Major == requested.Major && actual.Minor == requested.Minor,
+			$"The simulator reported {actualVersion}, requested {version}.");
+
+		TestContext.Current.TestOutputHelper?.WriteLine(
+			$"iOS runtime: {Driver.Capabilities.GetCapability("platformVersion")}; golden profile: {DeviceProfile}.");
+
+		// Simulator defaults can inherit accessibility and appearance settings from
+		// the host. Normalize both before capturing system chrome with the canvas.
+		Driver.ExecuteScript("mobile: setAppearance",
+			new Dictionary<string, object> { ["style"] = "light" });
+		Driver.ExecuteScript("mobile: setIncreaseContrast",
+			new Dictionary<string, object> { ["increaseContrast"] = "disabled" });
+
+		// Direct runs without a UUID let Appium select the simulator.
+		if (string.IsNullOrWhiteSpace(simulator))
+		{
+			var status = Assert.IsAssignableFrom<IDictionary<string, object>>(
+				Driver.ExecuteScript("mobile: simctl", new Dictionary<string, object>
+				{
+					["command"] = "status_bar",
+					["args"] = StatusBarOverride
+				}));
+			Assert.NotNull(status["code"]);
+			Assert.Equal(0, Convert.ToInt32(status["code"]));
+		}
+
+		Operations.Wait(() => Convert.ToInt32(Driver.ExecuteScript("mobile: queryAppState",
+			new Dictionary<string, object> { ["bundleId"] = ApplicationId })) == 4
+			? ApplicationId : null, $"{ApplicationId} running in the foreground");
+	}
+
+	protected override async Task CapturePlatformDiagnostics()
+	{
+		List<Exception> failures = [];
+		if (HasDriver)
+		{
+			await Attempt(failures, async () => await CaptureCommand(Apple.ListSimulators()));
+			await Attempt(failures, () => SaveText("device.log",
+				string.Join(Environment.NewLine, Driver.Manage().Logs.GetLog("syslog"))));
+		}
+
+		ThrowFailures(failures);
+	}
+}
