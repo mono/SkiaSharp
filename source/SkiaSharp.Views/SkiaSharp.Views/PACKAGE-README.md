@@ -60,6 +60,7 @@ Choose the package that matches the application framework:
 | Windows Forms | [`SkiaSharp.Views.WindowsForms`](https://www.nuget.org/packages/SkiaSharp.Views.WindowsForms) |
 | WPF | [`SkiaSharp.Views.WPF`](https://www.nuget.org/packages/SkiaSharp.Views.WPF) |
 | WinUI 3 | [`SkiaSharp.Views.WinUI`](https://www.nuget.org/packages/SkiaSharp.Views.WinUI) |
+| UWP (.NET) | [`SkiaSharp.Views.UWP`](https://www.nuget.org/packages/SkiaSharp.Views.UWP) |
 | GTK 3 or GTK 4 | [`SkiaSharp.Views.Gtk3`](https://www.nuget.org/packages/SkiaSharp.Views.Gtk3) or [`SkiaSharp.Views.Gtk4`](https://www.nuget.org/packages/SkiaSharp.Views.Gtk4) |
 | Uno Platform | [`SkiaSharp.Views.Uno.WinUI`](https://www.nuget.org/packages/SkiaSharp.Views.Uno.WinUI) |
 
