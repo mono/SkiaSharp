@@ -317,7 +317,7 @@ public class SampleImageTests : IDisposable
         var actual = SavePng(small, "deadline.actual.png");
         var attempts = 0;
         var timeout = TimeSpan.FromMilliseconds(100);
-        var pending = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pending = new TaskCompletionSource<string>();
         var clock = Stopwatch.StartNew();
 
         try
