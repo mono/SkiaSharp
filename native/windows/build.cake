@@ -66,6 +66,7 @@ Task("libSkiaSharp")
         // return address. Windows then rejects every longjmp (libjpeg/libpng
         // error recovery) and the process dies. Keep CFG, drop the long-jump
         // table. https://github.com/mono/SkiaSharp/issues/5645
+        // Remove once LLVM is fixed: https://github.com/llvm/llvm-project/issues/244137
         var guardLdflag = !string.IsNullOrEmpty(LLVM_PATH.FullPath) && skiaArch == "x64" ? "/guard:cf,nolongjmp" : "/guard:cf";
 
         GenerateGnBuild(nativeOutDir,
