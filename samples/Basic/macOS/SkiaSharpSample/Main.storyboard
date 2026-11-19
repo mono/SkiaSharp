@@ -197,8 +197,7 @@
                 <tabViewController customClass="MainTabViewController" selectedTabViewItemIndex="0" tabStyle="toolbar" id="tvc-main" sceneMemberID="viewController">
                     <tabViewItems>
                         <tabViewItem label="CPU" image="cpu" catalog="system" id="tvi-cpu"/>
-                        <tabViewItem label="GPU (GL)" image="display" catalog="system" id="tvi-gl"/>
-                        <tabViewItem label="GPU (Metal)" image="bolt.fill" catalog="system" id="tvi-metal"/>
+                        <tabViewItem label="GPU" image="bolt.fill" catalog="system" id="tvi-gpu"/>
                         <tabViewItem label="Drawing" image="pencil.tip" catalog="system" id="tvi-draw"/>
                     </tabViewItems>
                     <tabView key="tabView" type="noTabsNoBorder" id="tv-inner">
@@ -207,8 +206,7 @@
                     <connections>
                         <outlet property="tabView" destination="tv-inner" id="out-tv"/>
                         <segue destination="vc-cpu" kind="relationship" relationship="tabItems" id="seg-cpu"/>
-                        <segue destination="vc-gl" kind="relationship" relationship="tabItems" id="seg-gl"/>
-                        <segue destination="vc-metal" kind="relationship" relationship="tabItems" id="seg-metal"/>
+                        <segue destination="vc-gpu" kind="relationship" relationship="tabItems" id="seg-gpu"/>
                         <segue destination="vc-draw" kind="relationship" relationship="tabItems" id="seg-draw"/>
                     </connections>
                 </tabViewController>
@@ -242,6 +240,27 @@
                 <customObject id="fr-cpu" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="450" y="655"/>
+        </scene>
+        <!--GPU Tab View Controller-->
+        <scene sceneID="scene-gpu">
+            <objects>
+                <tabViewController customClass="GpuViewController" selectedTabViewItemIndex="0" tabStyle="segmentedControlOnTop" id="vc-gpu" sceneMemberID="viewController">
+                    <tabViewItems>
+                        <tabViewItem label="Metal" id="tvi-metal"/>
+                        <tabViewItem label="GL" id="tvi-gl"/>
+                    </tabViewItems>
+                    <tabView key="tabView" type="noTabsNoBorder" id="tv-gpu-inner">
+                        <font key="font" metaFont="system"/>
+                    </tabView>
+                    <connections>
+                        <outlet property="tabView" destination="tv-gpu-inner" id="out-gpu-tv"/>
+                        <segue destination="vc-metal" kind="relationship" relationship="tabItems" id="seg-metal"/>
+                        <segue destination="vc-gl" kind="relationship" relationship="tabItems" id="seg-gl"/>
+                    </connections>
+                </tabViewController>
+                <customObject id="fr-gpu" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="825" y="250"/>
         </scene>
         <!--GPU GL View Controller-->
         <scene sceneID="scene-gl">

@@ -20,13 +20,14 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 
 ### GPU
 
-A real-time animated shader running at full frame rate on the GPU, with touch interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU, organized under a Shell `<Tab>` container so each GPU backend page (`GpuPage.xaml` / `SKGLView`) is its own `<ShellContent>` sub-tab with touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
 - **`SKGLView`** — Hardware-accelerated canvas that maps per-platform: `SKGLTextureView` on Android, `SKGLView` on iOS, `SKMetalView` on Mac Catalyst, `SKSwapChainPanel` on Windows.
+- **Shell GPU sub-tabs** — `<Tab>` inside the `GPU` `<FlyoutItem>` in `AppShell.xaml` hosting each GPU backend XAML page as its own `<ShellContent>`.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **`EnableRenderLoop`** — Continuous animation driven by the platform's render loop.
+- **`HasRenderLoop`** — Continuous animation driven by the platform's render loop.
 - **Touch interaction** — Touch position is passed as a shader uniform via MAUI's `Touch` event.
 
 ### Drawing
@@ -56,13 +57,16 @@ dotnet build -f net8.0-android
 dotnet build -f net8.0-ios
 ```
 
-To start on a different page, change `DefaultPage` in `App.xaml.cs`:
+To start on a different page or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `App.xaml.cs`:
 
 ```csharp
 public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.GL;
 ```
 
 Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+Available GPU backends: `GL` (default)
 
 ## Screenshots
 

@@ -5,6 +5,8 @@ public class AppDelegate : UIApplicationDelegate
 {
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
+
 	[Export("application:configurationForConnectingSceneSession:options:")]
 	public override UISceneConfiguration GetConfiguration(UIApplication application, UISceneSession connectingSceneSession, UISceneConnectionOptions options)
 	{

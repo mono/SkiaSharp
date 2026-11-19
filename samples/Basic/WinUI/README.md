@@ -20,11 +20,12 @@ A static scene rendered entirely on the CPU — a radial gradient background ove
 
 ### GPU
 
-A real-time animated shader running at full frame rate on the GPU via ANGLE (OpenGL ES over DirectX), with pointer interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU via ANGLE (OpenGL ES over DirectX), hosted in a top sub-tab `NavigationView` (`GpuPage.xaml`) that navigates to each GPU backend XAML page (`GpuSwapChainPage.xaml` / `SKSwapChainPanel`) and clears the frame back stack so outgoing GPU pages unload cleanly.
 
 **Features:**
 
 - **`SKSwapChainPanel`** — Hardware-accelerated canvas backed by ANGLE, translating OpenGL ES calls to DirectX for efficient GPU rendering.
+- **GPU sub-tabs (`NavigationView` + `Frame`)** — Top sub-tab bar inside `GpuPage` that navigates between standalone GPU backend XAML pages and unloads the previous page on switch.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation driven by `EnableRenderLoop` with an FPS counter overlay.
 - **Pointer interaction** — Pointer position is passed as a shader uniform, adding a white-hot blob to the metaball field.
@@ -60,13 +61,16 @@ Build and run with MSBuild (Windows only):
 msbuild SkiaSharpSample/SkiaSharpSample.csproj /p:Platform=x64 /restore
 ```
 
-To start on a different page, change `DefaultPage` in `MainWindow.xaml.cs`:
+To start on a different page or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `MainWindow.xaml.cs`:
 
 ```csharp
 public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.SwapChain;
 ```
 
 Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+Available GPU backends: `SwapChain` (default)
 
 ## Screenshots
 

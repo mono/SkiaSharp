@@ -17,25 +17,17 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 
-### GPU (OpenGL)
+### GPU
 
-A real-time animated shader running at full frame rate on the GPU via OpenGL ES.
+A real-time animated shader running at full frame rate on the GPU, with a focusable `UISegmentedControl` sub-tab bar (`GpuViewController`) that switches between the Metal (`GpuMetalViewController` / `SKMetalView`) and OpenGL ES (`GpuGLViewController` / `SKGLView`) Storyboard scenes.
 
 **Features:**
 
+- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API (default).
 - **`SKGLView`** — Hardware-accelerated canvas backed by GLKit's `GLKView`, using OpenGL ES for rendering.
+- **GPU sub-tabs (`UISegmentedControl`)** — Top segmented bar that swaps full child `UIViewController` Storyboard scenes with the Apple TV remote.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation driven by `CADisplayLink` at 60 FPS.
-
-### GPU (Metal)
-
-A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework.
-
-**Features:**
-
-- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle at 60 FPS.
+- **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle (Metal) or `CADisplayLink` (OpenGL ES) at 60 FPS.
 
 ## Requirements
 
@@ -51,13 +43,16 @@ Build and deploy to a simulator or device:
 dotnet build -f net8.0-tvos
 ```
 
-To start on a different tab, change `DefaultPage` in `AppDelegate.cs`:
+To start on a different tab or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `AppDelegate.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
 ```
 
-Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`
+Available pages: `Cpu` (default), `Gpu`
+
+Available GPU backends: `Metal` (default), `GL`
 
 ## Screenshots
 

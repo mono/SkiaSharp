@@ -18,24 +18,15 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom font loaded from the app bundle via `SKTypeface.FromStream`.
 
-### GPU (OpenGL)
+### GPU
 
-A real-time animated shader running at full frame rate on the GPU via OpenGL, with mouse interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU, hosted in a nested `NSTabViewController` (`tabStyle="segmentedControlOnTop"`) that switches between the Metal (`GpuMetalViewController` / `SKMetalView`) and OpenGL (`GpuGLViewController` / `SKGLView`) Storyboard scenes, with mouse interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
+- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API (default).
 - **`SKGLView`** — Hardware-accelerated canvas backed by `NSOpenGLView`, using OpenGL for rendering.
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with an FPS counter pill overlay.
-- **Mouse interaction** — Mouse position is passed as a shader uniform via `NSEvent` mouse tracking.
-
-### GPU (Metal)
-
-A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework, with mouse interaction.
-
-**Features:**
-
-- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
+- **GPU sub-tabs (`NSTabViewController`)** — Native segmented sub-tab controller in `Main.storyboard` that swaps full `NSViewController` scenes when switching backends.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with an FPS counter pill overlay.
 - **Mouse interaction** — Mouse position is passed as a shader uniform via `NSEvent` mouse tracking.
@@ -69,13 +60,16 @@ dotnet build -f net8.0-macos
 dotnet run -f net8.0-macos
 ```
 
-To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
+To start on a different page or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `AppDelegate.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
 ```
 
-Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`, `Drawing`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+Available GPU backends: `Metal` (default), `GL`
 
 ## Screenshots
 

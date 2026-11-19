@@ -15,6 +15,11 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 	/// </summary>
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	/// <summary>
+	/// Change this to start the GPU page on a different backend.
+	/// </summary>
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Texture;
+
 	protected override void OnCreate(Bundle savedInstanceState)
 	{
 		base.OnCreate(savedInstanceState);
@@ -37,8 +42,7 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		{
 			bottomNav.SelectedItemId = DefaultPage switch
 			{
-				SamplePage.GpuSurface => Resource.Id.nav_gpu_surface,
-				SamplePage.GpuTexture => Resource.Id.nav_gpu_texture,
+				SamplePage.Gpu => Resource.Id.nav_gpu,
 				SamplePage.Drawing => Resource.Id.nav_drawing,
 				_ => Resource.Id.nav_cpu,
 			};
@@ -57,8 +61,7 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 		{
 			Resource.Id.nav_cpu => new CpuFragment(),
-			Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
-			Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
+			Resource.Id.nav_gpu => new GpuFragment(),
 			Resource.Id.nav_drawing => new DrawingFragment(),
 			_ => new CpuFragment()
 		};

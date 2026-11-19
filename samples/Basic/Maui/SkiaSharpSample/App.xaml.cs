@@ -7,6 +7,8 @@ public partial class App : Application
 {
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.GL;
+
 	public App()
 	{
 		InitializeComponent();
