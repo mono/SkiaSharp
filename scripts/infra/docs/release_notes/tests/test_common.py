@@ -915,7 +915,7 @@ class FirstTimeContributorFactsTests(unittest.TestCase):
             self.module._coauthor_attributions(body),
             [
                 {"display": "@person", "kind": "human"},
-                {"display": "@github-actions[bot]", "kind": "automation"},
+                {"display": "GitHub Actions", "kind": "automation"},
                 {"display": "GitHub Copilot", "kind": "ai"},
                 {"display": "Claude", "kind": "ai"},
                 {"display": "Unknown", "kind": "human"},
@@ -967,7 +967,7 @@ class FirstTimeContributorFactsTests(unittest.TestCase):
                 {"display": "@alice", "kind": "human", "first_time": True},
                 {"display": "Bob Builder", "kind": "human"},
                 {"display": "GitHub Copilot", "kind": "ai"},
-                {"display": "@github-actions[bot]", "kind": "automation"},
+                {"display": "GitHub Actions", "kind": "automation"},
             ],
         )
         self.assertEqual(
@@ -1019,6 +1019,50 @@ class FirstTimeContributorFactsTests(unittest.TestCase):
         )
 
         self.assertEqual(prs[0]["attributions"][0]["display"], "@mattleibow")
+
+    def test_automation_identities_use_friendly_labels_and_collapse(self):
+        body = "\n".join(
+            [
+                "Co-authored-by: Actions <41898282+github-actions[bot]@users.noreply.github.com>",
+                "Co-authored-by: github-actions <github-actions@users.noreply.github.com>",
+                "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
+            ]
+        )
+        self.assertEqual(
+            self.module._coauthor_attributions(body),
+            [
+                {"display": "GitHub Actions", "kind": "automation"},
+                {"display": "SkiaSharp Release Bot", "kind": "automation"},
+            ],
+        )
+
+    def test_resolver_maps_curated_commit_emails_to_logins(self):
+        prs = [
+            {
+                "number": 12,
+                "author": {"login": "kdpkke"},
+                "body": "\n".join(
+                    [
+                        "Co-authored-by: Ramez Gerges <ramez.ragaa@platform.uno>",
+                        "Co-authored-by: Ramez Ragaa <RamezRagaa@proton.me>",
+                    ]
+                ),
+            },
+        ]
+        original = self.module.load_email_logins
+        self.module.load_email_logins = lambda: {
+            "ramez.ragaa@platform.uno": "ramezgerges",
+            "ramezragaa@proton.me": "ramezgerges",
+        }
+        try:
+            self.module.resolve_release_attributions(prs)
+        finally:
+            self.module.load_email_logins = original
+
+        self.assertEqual(
+            [a["display"] for a in prs[0]["attributions"]],
+            ["@kdpkke", "@ramezgerges"],
+        )
 
 if __name__ == "__main__":
     unittest.main()
