@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Xunit;
 using SkiaSharp.Tests;
@@ -9,6 +10,12 @@ namespace SkiaSharp.Vulkan.Tests
 	[Collection(VulkanGpuRenderingCollection.Name)]
 	public class GRVkMemoryAllocatorTest : VKTest
 	{
+		// SkiaSharp's GetReferenceCount() is internal, and this unsigned test
+		// assembly cannot be granted InternalsVisibleTo by the strong-named
+		// SkiaSharp, so read the native SkRefCnt count directly.
+		[DllImport("libSkiaSharp", CallingConvention = CallingConvention.Cdecl)]
+		private static extern int sk_refcnt_get_ref_count(IntPtr refcnt);
+
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[Fact]
 		public void CreateDefaultRejectsNullHandlesQueueAndGetProc()
@@ -88,8 +95,15 @@ namespace SkiaSharp.Vulkan.Tests
 				MemoryAllocator    = allocator,
 			};
 
+			// Without a forwarded allocator Skia silently creates its own default
+			// one and the draw below still succeeds, so prove the Context took a
+			// ref on this specific allocator.
+			var refsBeforeCreate = sk_refcnt_get_ref_count(allocator.Handle);
+
 			using var grContext = GRContext.CreateVulkan(backend);
 			Assert.NotNull(grContext);
+			Assert.True(sk_refcnt_get_ref_count(allocator.Handle) > refsBeforeCreate,
+				"The Ganesh context did not retain the supplied allocator.");
 
 			// Drop the managed wrapper's ref. The Context's own ref must keep the allocator alive.
 			allocator.Dispose();
@@ -128,8 +142,14 @@ namespace SkiaSharp.Vulkan.Tests
 				MemoryAllocator    = allocator,
 			};
 
+			// See GaneshContextRetainsAllocatorAfterWrapperDispose: rendering alone
+			// cannot tell the supplied allocator from Skia's default fallback.
+			var refsBeforeCreate = sk_refcnt_get_ref_count(allocator.Handle);
+
 			using var graphiteContext = SKGraphiteContext.CreateVulkan(backend);
 			Assert.NotNull(graphiteContext);
+			Assert.True(sk_refcnt_get_ref_count(allocator.Handle) > refsBeforeCreate,
+				"The Graphite context did not retain the supplied allocator.");
 
 			// The Context has retained the allocator; managed wrapper can go.
 			allocator.Dispose();
