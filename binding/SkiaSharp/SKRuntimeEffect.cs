@@ -355,6 +355,7 @@ namespace SkiaSharp
 			data = effect.UniformSize is int size && size > 0
 				? SKData.Create (effect.UniformSize)
 				: SKData.Empty;
+			data.Span.Clear ();
 
 			for (var i = 0; i < names.Length; i++) {
 				var name = names[i];
@@ -377,6 +378,7 @@ namespace SkiaSharp
 			data = specification.UniformSize is int size && size > 0
 				? SKData.Create (specification.UniformSize)
 				: SKData.Empty;
+			data.Span.Clear ();
 
 			for (var i = 0; i < names.Length; i++) {
 				var name = names[i];
@@ -412,12 +414,7 @@ namespace SkiaSharp
 		/// <remarks />
 		public void Reset ()
 		{
-			if (data.Size == 0)
-				return;
-
-			var old = data;
-			data = SKData.Create (old.Size);
-			old.Dispose ();
+			data.Span.Clear ();
 		}
 
 		/// <summary>Determines whether a uniform with the specified name exists in this collection.</summary>
