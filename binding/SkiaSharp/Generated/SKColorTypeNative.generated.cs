@@ -70,5 +70,7 @@ namespace SkiaSharp
 		Srgba8888 = 27,
 		// R8_UNORM_SK_COLORTYPE = 28
 		R8Unorm = 28,
+		// BGR_888X_SK_COLORTYPE = 29
+		Bgr888x = 29,
 	}
 }
