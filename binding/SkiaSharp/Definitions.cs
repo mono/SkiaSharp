@@ -119,6 +119,8 @@ namespace SkiaSharp
 		R16Unorm = 27,
 		/// <summary>A 2-bytes-per-pixel format storing a single red channel as a 16-bit floating-point value.</summary>
 		RF16 = 28,
+		/// <summary>Represents an opaque 32-bit color with the format BGR, with 8 bits per color component.</summary>
+		Bgr888x = 29,
 	}
 
 	/// <summary>Convenience methods for <see cref="T:SkiaSharp.SKPixelGeometry" />.</summary>
@@ -176,6 +178,7 @@ namespace SkiaSharp
 				SKColorType.RF16 => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
+				SKColorType.Bgr888x => 4,
 				SKColorType.Bgra1010102 => 4,
 				SKColorType.Bgr101010x => 4,
 				SKColorType.Bgr101010xXR => 4,
@@ -222,6 +225,7 @@ namespace SkiaSharp
 				SKColorType.RF16 => 1,
 				// 2
 				SKColorType.Bgra8888 => 2,
+				SKColorType.Bgr888x => 2,
 				SKColorType.Bgra1010102 => 2,
 				SKColorType.Bgr101010x => 2,
 				SKColorType.Bgr101010xXR => 2,
@@ -289,6 +293,7 @@ namespace SkiaSharp
 				case SKColorType.RgF16:
 				case SKColorType.Rgb565:
 				case SKColorType.Rgb888x:
+				case SKColorType.Bgr888x:
 				case SKColorType.Rgb101010x:
 				case SKColorType.Bgr101010x:
 				case SKColorType.Bgr101010xXR:
