@@ -107,6 +107,10 @@ namespace SkiaSharp.Tests
 		[InlineData(Backend.Vulkan)]
 		public void FailedCreateDoesNotRootShaderErrorHandler(Backend backend)
 		{
+			// Mono scans the stack conservatively, so a stale slot can keep the
+			// handler reachable and a WeakReference check proves nothing there.
+			SkipOnMono();
+
 			var weak = CreateWithIncompleteBackend(backend);
 
 			for (var i = 0; i < 3 && weak.IsAlive; i++)

@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SkiaSharp
 {
@@ -180,11 +181,27 @@ namespace SkiaSharp
 			try {
 				var del = Get<SKGraphiteShaderErrorHandlerDelegate> ((IntPtr)userData, out _);
 				del.Invoke (
-					Marshal.PtrToStringAnsi ((IntPtr)shader) ?? string.Empty,
-					Marshal.PtrToStringAnsi ((IntPtr)errors) ?? string.Empty,
+					PtrToStringUtf8 (shader),
+					PtrToStringUtf8 (errors),
 					shaderWasCached != 0);
 			} catch {
 			}
+		}
+
+		// Skia's shader source and compiler errors are UTF-8. PtrToStringAnsi decodes
+		// with the system code page on Windows, and Marshal.PtrToStringUTF8 is not
+		// available on netstandard2.0 or .NET Framework.
+		private static string PtrToStringUtf8 (void* ptr)
+		{
+			if (ptr == null)
+				return string.Empty;
+
+			var bytes = (byte*)ptr;
+			var length = 0;
+			while (bytes[length] != 0)
+				length++;
+
+			return length == 0 ? string.Empty : Encoding.UTF8.GetString (bytes, length);
 		}
 
 		private static partial IntPtr SKGraphiteImageProviderProxyImplementation (void* userData, IntPtr recorder, IntPtr image, byte mipmapped)
