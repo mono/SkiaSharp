@@ -15,202 +15,105 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 4,
+    "product": 1,
     "mixed": 0,
-    "internal": 18
+    "internal": 11
   },
   "breaking_candidates": [],
-  "contributors": [
-    {
-      "login": "kdpkke",
-      "url": "https://github.com/kdpkke",
-      "prs": [
-        5649
-      ]
-    }
-  ],
+  "contributors": [],
   "previews": [],
   "shipments": [],
   "prs": {
-    "5788": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5788",
-      "title": "Fix docs/Pages deployment for the existing Uno 7 WASM layout",
-      "body": "* Fix Pages deploy for the Uno 7 WASM publish layout (#5771)\n\nUno.Sdk 7 ships Uno.Wasm.Bootstrap 10, which writes uno-config.js at the\nwwwroot root instead of package_<hash>/, adds root-absolute references to it\nin index.html and service-worker.js, and sets WEBAPP_PATH = '/' in the\nservice worker. The smoke scripts still required package_*/uno-config.js, so\nevery Pages - Deploy run on main has failed since #5377, and the\nAssemble site rewrite no longer covered the new absolute paths.\n\nPublish the Gallery and SkiaFiddle with WasmShellWebAppBasePath=./ so every\nbootstrapper-generated path is relative, and make the Gallery manifest's\nstart_url and scope relative. The copies then work at /gallery-uno/,\n/fiddle/ and the staging prefixes without post-publish rewriting, so drop the sed rewrite from Assemble site.\nEach Uno app job instead checks that no root-absolute reference reappears;\na violation fails that app, which the site then omits like any other\nfailed app, so docs still publish.\n\nUpdate both smoke scripts to check the Uno 7 layout and to serve the app\nfrom a sub-path, so a root-absolute reference fails the smoke test instead\nof only breaking the deployed site. Exempt the bootstrapper's handled\nonly-if-cached probe (net::ERR_CACHE_MISS) in both drivers, matching the\nexisting exemption in BrowserRunningApp.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n\n* Pin Pages app validation to Playwright-supported Ubuntu 24.04\n\nThe existing smoke-test Playwright version cannot install Chromium on ubuntu-latest now that it resolves to Ubuntu 26.04. Keep the existing dependencies and run the Pages app jobs on Ubuntu 24.04 instead.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Ramez Ragaa <ramezragaa@proton.me>\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+    "5829": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5829",
+      "title": "Fix release-note credit identities",
+      "body": "Co-author trailers with personal emails were not resolved to GitHub\nlogins, so one person (Ramez) appeared twice as unlinked names. Add a\ncurated _email_logins map in pr-authors.json used during attribution,\nand give GitHub Actions a friendly automation label instead of\n@github-actions[bot]. Regenerate 4.155-4.159 release data.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
-      "community": false,
-      "tag": "internal",
-      "fixes": [
-        5771
-      ]
-    },
-    "5787": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5787",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
     },
-    "5783": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5783",
+    "5825": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5825",
+      "title": "Restore 4.155 release-notes and API-diff history floor",
+      "body": "* Restore 4.155 release-notes and API-diff history floor\n\n4.155 is still a supported stable line, so regenerate its release\nnotes and API diffs instead of starting history at 4.156.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* docs: regenerate API diffs and release notes\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5823": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5823",
       "title": "Update issue template version dropdowns",
       "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
     },
-    "5782": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5782",
+    "5821": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5821",
       "title": "docs: regenerate API diffs and release notes",
       "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",
       "community": false,
       "tag": "internal"
     },
-    "5649": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5649",
-      "title": "[iOS/tvOS] Build device frameworks from device archives",
-      "body": "[iOS/tvOS] Build device frameworks from device archives (#5649)\n\nFixes: #5648\n\nKeep device and simulator frameworks tied to their matching Apple archives,\nso device packages carry device binaries and metadata without losing simulator\nsupport.\n\n~~ Simulator slices in device frameworks ~~\n\nThe iOS and tvOS build scripts copied the x86_64 simulator archive beside the\narm64 device archive. `CreateFatFramework` then combined the binaries and\ncopied the framework metadata from the simulator archive. Consequently,\ndevice frameworks contained a simulator slice and declared\n`iPhoneSimulator` or `AppleTVSimulator`; apps embedding them as-is could fail\nApp Store validation with ITMS-90087.\n\nBuild the device frameworks from the device archive alone and omit the\nx86_64 device dSYM entries for SkiaSharp and HarfBuzzSharp. Keep the\nsimulator frameworks and symbols, including their x86_64 and arm64 slices.\nUpdate `Get-AppleArtifacts` to expect arm64 for iOS and tvOS device outputs;\nmacOS, Mac Catalyst, and simulator expectations remain unchanged.\n\nDownloaded-package inspection confirmed the device and simulator slices and\nplatform metadata for both libraries. Consumer builds passed for the six\niOS/tvOS device and simulator RIDs. An iOS simulator app used both libraries\nsuccessfully (`pixel=#ffff0000`, `skia=158.0`, `glyphs=2339`); tvOS was\nbuild-validated. The PR's CI checks passed.\n\n~~ x64-only native builds ~~\n\nWhen `--arch=x64` skips the arm64 device archive, the previous unconditional\ndevice-framework creation passes an empty archive list to `CreateFatFramework`\nand fails before simulator output is produced. Guard device-framework creation\non arm64 not being skipped, while leaving simulator-framework creation\nunconditional. Clean HarfBuzzSharp iOS and tvOS builds verified x64-only,\narm64-only, and all-architecture outputs.\n\nCo-authored-by: Matteo Muratore <matteomuratoredev@gmail.com>",
-      "author": "kdpkke",
-      "community": true,
-      "tag": "product",
-      "fixes": [
-        5648
-      ]
+    "5822": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5822",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
     },
-    "5760": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5760",
-      "title": "Add the SKMesh API (custom vertex-mesh drawing)",
-      "body": "Add the SKMesh API (custom vertex-mesh drawing) (#5760)\n\nFixes: https://github.com/mono/SkiaSharp/issues/3777\nRequires: https://github.com/mono/skia/pull/456\nContext: https://github.com/mono/SkiaSharp/pull/4553\nContext: https://github.com/mono/SkiaSharp/pull/3779\nContext: https://github.com/mono/skia/pull/297\nChanges: https://github.com/mono/skia/compare/1c8b6db33a5c9ff2292fb58d65d7b344e91085f3...5d226f638edbb3c0dac0ac93ac1ff349298880a4\n\nExpose Skia's custom vertex-mesh pipeline in SkiaSharp through\nSKMeshSpecification, SKMeshSpecificationAttribute, SKMeshSpecificationVarying,\nSKMeshSpecificationBuilder, SKMesh, SKMeshBuilder, SKIndexedMeshBuilder,\nSKMeshVertexBuffer, SKMeshIndexBuffer, and SKCanvas.DrawMesh, while advancing\nexternals/skia and cgmanifest.json to 5d226f638edbb3c0dac0ac93ac1ff349298880a4.\n\n~~ Specification, builders, and lifetime model ~~\n\nSkMesh pairs a compiled SkSL vertex and fragment specification with vertex and\noptional 16-bit index buffers, uniform data, and child effects, and draws only\non GPU-backed surfaces (SkBitmapDevice::drawMesh is a no-op in upstream Skia).\nEarlier drafts in #3779 and #4553 coupled SKMeshBuilder.Dispose to disposing\nits SKMeshSpecification, combined indexed and non-indexed state on a single\nbuilder, and initialized uniformNames and childNames to Array.Empty<string>(),\nwhich defeated ??= lazy enumeration and caused setting declared mesh uniforms\nby name to throw ArgumentOutOfRangeException.\n\nSeparate specification compilation from mesh construction and align ownership\nwith native Skia:\n\n  * Expose SKMeshSpecification.Create and SKMeshSpecificationBuilder\n    (via new SKMeshSpecificationBuilder or SKMeshSpecification.CreateBuilder)\n    with readonly struct descriptors SKMeshSpecificationAttribute and\n    SKMeshSpecificationVarying, automatic attribute offset and VertexStride\n    calculation, and lazy Uniforms and Children reflection integrated with\n    SKRuntimeEffectUniforms and SKRuntimeEffectChildren.\n  * Provide SKMeshBuilder for non-indexed meshes (via new SKMeshBuilder,\n    SKMesh.CreateBuilder, or spec.CreateMeshBuilder) and derive\n    SKIndexedMeshBuilder : SKMeshBuilder for indexed meshes (via\n    new SKIndexedMeshBuilder, SKMesh.CreateIndexedBuilder, or\n    spec.CreateIndexedMeshBuilder) with virtual/override Build() and\n    Build(out string? errors) methods. Disposing a mesh builder releases its\n    uniform and child collections without disposing the shared\n    SKMeshSpecification.\n  * Retain native references inside SkMesh across sk_mesh_make and\n    sk_mesh_make_indexed so a built SKMesh remains drawable after the managed\n    specification, builder, buffers, and child shaders are disposed, and\n    protect P/Invoke call sites with GC.KeepAlive.\n\n~~ Zero-allocation per-frame hot path and string marshalling ~~\n\nAnimated 3D and cloth meshes rebuild SKMesh instances every frame as vertex\ncounts, uniform values, or buffers change. Allocating a temporary SKData via\nuniforms.ToData(), cloning children.ToArray(), allocating an SKString when\nout errors is unused, or boxing SKRuntimeEffectUniformFlagsNative inside\nSKRuntimeEffectUniforms.ValidateTypes adds per-frame GC pressure.\n\nOptimize both specification creation and per-frame mesh construction:\n\n  * Pass raw uniform pointer and byte count (fUniformData and fUniformSize)\n    through SKMeshMakeArgsNative and SKMeshMakeIndexedArgsNative directly to\n    native SkData::MakeWithCopy, read SKRuntimeEffectChildren.RawChildren\n    without cloning the array, and allocate the error SKString only when\n    captureErrors is true.\n  * Replace uniform.Flags.HasFlag(SKRuntimeEffectUniformFlagsNative.Array) in\n    SKRuntimeEffect.cs with a bitwise check so setting uniforms does not box\n    the flags enum on non-PGO paths.\n  * Add Utils.RentUtf8Strings (RentedUtf8Strings), a ref indexer on\n    Utils.RentedArray<T>, and a ReadOnlySpan<SKObject> overload on\n    Utils.RentHandlesArray so SKMeshSpecification.CreateCore marshals UTF-8\n    attribute and varying names using pooled buffers without heap allocations.\n    SKMeshBenchmark and RentedUtf8StringsBenchmark cover the per-frame builder\n    reuse and UTF-8 string marshalling paths.\n\n~~ CPU and Ganesh GPU mesh buffers ~~\n\nUpstream Skia provides CPU-backed buffers in SkMeshes and Ganesh GPU-backed\nbuffers in SkMeshGanesh.h, while Graphite consumes CPU-backed mesh buffers\ndirectly during draw recording.\n\nExpose parameterless CPU overloads and non-nullable GRContext Ganesh overloads\nfor Create, Copy, and Update on SKMeshVertexBuffer and SKMeshIndexBuffer.\nEnforce Skia's 4-byte size and offset alignment rules on Update in managed\ncode before calling into native Skia.\n\n~~ Gallery samples and GPU rendering tests ~~\n\nAdd three interactive GPU samples in samples/Gallery/Shared/Samples\n(MeshSample for a non-indexed 3D winding tunnel, MeshFlagSample for an indexed\nVerlet cloth flag, and MeshGlobeSample for an indexed 3D Earth globe using the\npublic-domain NASA Blue Marble texture) and default the MAUI Gallery window to\nGPU mode. Split the test suite into SKMeshSpecificationTest, SKMeshBufferTest,\nand SKMeshTest covering validation, reference retention after wrapper\ndisposal, default paint color modulation, raster no-op behavior, and pixel\nrendering across Ganesh OpenGL, Ganesh Metal, and Graphite Metal/Dawn.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@users.noreply.github.com>\nCo-authored-by: Ramez Gerges <ramez.ragaa@platform.uno>\nCo-authored-by: Ramez Gerges <ramezragaa@proton.me>\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+    "5743": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5743",
+      "title": "[release] Document the dedicated SkiaSharp NuGet publisher",
+      "body": "* [release] Document the dedicated SkiaSharp NuGet publisher\n\nReplace retired MAUI publication instructions with pipeline 1715's Runs API contract, exact producer Build-number selection, live production resource verification, and signed shipping artifact boundary. Preserve ESRP approval and separate Finish consent, and document reporting rather than replaying failed or partial publications.\n\nUpdate audit output and its existing regression checks so command-line guidance cannot route maintainers back to MAUI.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* [release] Tighten publisher guidance against production receipts\n\nConsolidate the operator procedure and remove repeated guidance. Clarify producer run lookup, Azure parameter read-back, NuGet propagation and separate Finish authorization.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* [release] Clarify publisher review guidance\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
-      "tag": "product",
-      "fixes": [
-        3777
-      ]
+      "tag": "internal"
     },
-    "5769": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5769",
-      "title": "[Skia] Sync m159 image-filter cache equality fix",
-      "body": "[Skia] Sync m159 image-filter cache equality fix (#5769)\n\nContext: https://github.com/mono/skia/pull/458\nContext: https://github.com/mono/SkiaSharp/pull/5776\nChanges: https://github.com/mono/skia/compare/96ee011489be9ba83512abb766d0712a27eb1f18...1c8b6db33a5c9ff2292fb58d65d7b344e91085f3\n\nAdvance externals/skia and its Component Governance registration to native\nmerge 1c8b6db33a5c9ff2292fb58d65d7b344e91085f3, incorporating the\nchrome/m159 cache-key fix at upstream\n8a65fa27c104d1bb5a58df5ec3e0c1655053fcf6. Keep milestone 159 and package\nand native ABI versions unchanged for this servicing update.\n\nThe image-filter cache hashes complete key bytes, while its former\nfieldwise equality used numerical matrix comparison and ignored the\nmatrix's cached type mask. Signed zero, differing type-mask state and\nruntime denormal handling could make equality inconsistent with hashing.\nThe native fix compares the complete key representation with memcmp,\nusing the constructor's existing type-mask initialization and explicit\npadding. Its upstream regression checks signed zero, type masks,\ncolliding subnormal translations, LRU eviction and purge behavior.\n\nRecord the landed native history rather than the pre-merge PR head.\nThe native merge has two parents, directly contains reviewed commit\nb57c805eedc66db3716e75ef6f5c8520be1be17b, and has the identical tree\n7dbf928a42d7006783c6aaf4ae567b34f0d37824. The dependent repin updates\nthe gitlink and matching manifest fork hash together; the manifest's\nupstream_merge_commit remains the upstream commit, not the fork merge.\n\nThe parent diff changes those two provenance files, not managed wrappers,\ngenerated declarations or tests. Independent regeneration matched the\nfive maintained generator configurations, and the fork DEPS blob is\nunchanged. Native tree equality preserves the reviewed content; it is\nnot a new native build or runtime/device test run.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+    "5814": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5814",
+      "title": "Update issue template version dropdowns",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5815": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5815",
+      "title": "Update 4.157 release support tier",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5819": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5819",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5801": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5801",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
+    "5784": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5784",
+      "title": "Remove Linux x86 native build and packaging",
+      "body": "Follow upstream .NET removal of linux-x86 cross-build infrastructure\n(dotnet/runtime#136997, dotnet/runtime#137008, dotnet/arcade#17770,\ndotnet/dotnet-buildtools-prereqs-docker#1821) by dropping the Linux x86\ncross-compilation Dockerfile, CI jobs, native artifact checks, and\nNuGet package entries.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
       "author": "mattleibow",
       "community": false,
       "tag": "product"
     },
-    "5774": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5774",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5772": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5772",
-      "title": "Build the docs site in parallel and validate it on every PR",
-      "body": "* Build the docs site in parallel and validate it on every PR\n\nThe Pages workflow built the docs and all three WASM apps serially in one\njob, and only built PRs with the automation/staging label. When the Uno 7\nmigration broke the Uno Gallery smoke test (#5771), nothing caught it on the\nPR and every main run since has failed, so the docs stopped publishing.\n\nSplit the build into setup, docs, wasm-natives, an app matrix and a quick\nassemble job. Each app uploads its output only after it builds and passes\nits smoke test; assemble copies whichever apps exist and warns about any\nthat are missing. Every PR, including forks, now builds and smoke-tests the\nsite and fails on any error. Publishing still requires a same-repo PR with\nautomation/staging, or a push/dispatch. On main, app jobs are\ncontinue-on-error so a broken app is omitted rather than blocking the docs.\n\nRelates to #5771\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Separate site validation from production and preview deployment\n\nBuild every PR event, including forks and label changes. Only publish production from main or staging for explicitly labeled same-repository PRs, and require successful app builds before publishing a PR preview.\\n\\nGate Go Live on the upstream publishing job rather than workflow success so validation-only and dry-run builds do not redeploy Pages.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5735": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5735",
-      "title": "Use the internal Skia mirror for Azure build-job checkouts",
-      "body": "* Use the internal Skia mirror for Azure build-job checkouts\n\nRoute internal package and test job submodule fetches through the existing mono-skia mirror with process-scoped URL rewriting and repository-scoped OAuth authentication. Explicitly reference the repository for protected job access, retain pinned sources and public GitHub checkout, and document the separate 1ES SDL checkout limitation.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Keep mirror routing in the existing checkout steps\n\nSelect internal routing from System.TeamProject and use Git command-scoped configuration with a step-local authorization environment variable. Remove the separate checkout template and configuration setup script while preserving inherited Git configuration and cache-miss timing.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Configure the Skia mirror once for every internal build job\n\nApply the non-secret global URL rewrite before checkout, independent of native job type or cache status. Reference the mirror in every internal bootstrapper job and retain step-local, mirror-scoped OAuth headers without persisting tokens.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Use explicit submodule checkout in public and internal jobs\n\nAlways check out self without submodules and share the existing cache-aware Git step. Remove project and cache-configuration branching from full submodule initialization while respecting checkoutSubmodules and skipSteps.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Drop internal CI details from the developer build guide\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Expand optional mirror authentication in shared checkout commands\n\nSet SKIA_GIT_OPTIONS to the header config option only for internal jobs and to empty for public jobs, avoiding duplicated Git commands. Keep global routing and checkout-step token scope unchanged.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5759": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5759",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5741": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5741",
-      "title": "[M159] Sync upstream glyph and Vulkan OOM fixes",
-      "body": "[M159] Sync upstream glyph and Vulkan OOM fixes (#5741)\n\nContext: https://github.com/mono/skia/pull/453\nContext: https://github.com/mono/SkiaSharp/pull/5757\nChanges: https://github.com/mono/skia/compare/1b7b8c4340f57877940b47d24ada18eb6ec66e68...96ee011489be9ba83512abb766d0712a27eb1f18\n\nAdvance the Skia gitlink and Component Governance registration to the landed\nnative merge, 96ee011489be9ba83512abb766d0712a27eb1f18, and record upstream\nchrome/m159 revision 7a06b6cf9fc9fe32f8906c63da21a4e35f7e9f15.\nThis is a same-milestone servicing sync; package and ABI versions remain\nunchanged.\n\nThe dependent repin records the actual two-parent native merge rather than\nthe reviewed branch head. Its tree was verified identical to reviewed commit\n9f50c1175e1de5b949820c9528594ccc3fde3979, preserving the reviewed native\ncontents while retaining the landed merge ancestry.\n\n~~ Mask-filtered glyph reload divergence ~~\n\nBring in the SkScalerContext::getImage hardening for stateful font scalers\nwhose successive glyph loads disagree about paths, mask formats or bounds.\nThe native fix rasterizes the reloaded glyph rather than stale initial\nstate, clears incompatible masks instead of overflowing sub-byte rows, and\nuses full plane strides when copying clipped emboss masks. Regression cases\nalso preserve overlapping SDF data and exercise changing path geometry.\n\n~~ Imagination Vulkan descriptor allocation failures ~~\n\nBring in the Ganesh and Graphite workaround for descriptor-set allocation\nreturning host or device OOM on Imagination drivers. The affected pool is\ndeliberately abandoned because destroying it can trigger a driver failure;\nGraphite also refuses further allocation through the abandoned handle.\nThe workaround is restricted to that vendor and those allocation errors.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "product"
-    },
-    "5752": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5752",
-      "title": "Update issue template version dropdowns",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5745": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5745",
-      "title": "Update 4.159 release support tier",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5749": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5749",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5744": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5744",
-      "title": "Update issue template version dropdowns",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5734": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5734",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5733": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5733",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5732": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5732",
-      "title": "Synchronize post-deadline screenshot confirmation test",
-      "body": "* Investigate screenshot deadline regression\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n* Synchronize post-deadline screenshot confirmation test\n\nThe confirmation fixture wrote a matching screenshot but awaited a 20ms timer before completing capture. When that continuation is delayed beyond the bounded confirmation budget, Golden correctly reports the cached 2x2 first mismatch instead.\\n\\nControl the pending confirmation explicitly, preserving real asynchronous capture coverage and the original deadline. Assert the expired budget, pending second capture, 2x2-to-4x4 transition, exactly two attempts, and successful attachment behavior without changing production retries or tolerances.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5723": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5723",
-      "title": "Fix OpenJDK validation with JVM diagnostics and task retries",
-      "body": "Match javac's version at the start of any output line so JAVA_TOOL_OPTIONS diagnostics do not reject a valid JDK. Keep exit-code and requested-major validation unchanged, and overwrite archive files on retry after a complete or partial extraction.\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
-      "author": "mattleibow",
-      "community": false,
-      "tag": "internal"
-    },
-    "5721": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5721",
-      "title": "docs: regenerate API diffs and release notes",
-      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
-      "author": "github-actions[bot]",
-      "community": false,
-      "tag": "internal"
-    },
-    "5717": {
-      "url": "https://github.com/mono/SkiaSharp/pull/5717",
+    "5796": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5796",
       "title": "docs: regenerate API diffs and release notes",
       "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "author": "github-actions[bot]",

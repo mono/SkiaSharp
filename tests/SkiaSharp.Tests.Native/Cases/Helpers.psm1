@@ -33,7 +33,7 @@ function Get-LinuxArtifacts([string] $NativeRoot) {
     foreach ($variant in 'linux', 'linuxnodeps', 'alpine', 'alpinenodeps', 'bionic') {
         $arches = switch -Wildcard ($variant) {
             'linux*' {
-                'x86', 'x64', 'arm', 'arm64', 'riscv64', 'loongarch64'
+                'x64', 'arm', 'arm64', 'riscv64', 'loongarch64'
             }
             'alpine*' {
                 'x64', 'arm', 'arm64', 'riscv64', 'loongarch64'

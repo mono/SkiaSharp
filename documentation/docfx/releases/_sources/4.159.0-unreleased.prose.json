@@ -1,52 +1,15 @@
 {
-  "theme": "Custom GPU mesh drawing",
-  "highlights_headline": "SkiaSharp 4.159.0 adds custom GPU mesh drawing with SkSL vertex and fragment programs.",
-  "highlights_body": "The unreleased line also corrects iOS and tvOS device frameworks, hardens mask-filtered glyph rendering, and incorporates image-filter cache and Imagination Vulkan fixes.",
-  "breaking": [],
-  "categories": [
+  "theme": "Linux native asset support",
+  "highlights_headline": "SkiaSharp 4.159 will no longer include Linux x86 native assets.",
+  "highlights_body": null,
+  "breaking": [
     {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "Custom vertex meshes",
-          "detail": "SKMeshSpecification and its builder define SkSL programs, vertex attributes, varyings, uniforms, and child effects. SKMeshBuilder and SKIndexedMeshBuilder construct meshes for SKCanvas.DrawMesh, with optional 16-bit indices. Drawing requires a GPU-backed surface; raster canvases do not draw meshes.",
-          "prs": [5760]
-        },
-        {
-          "lead": "Reusable mesh resources",
-          "detail": "SKMeshVertexBuffer and SKMeshIndexBuffer support CPU-backed buffers and GRContext-based Ganesh GPU buffers, with Create, Copy, and Update operations. Updates enforce 4-byte size and offset alignment. Built meshes retain native resources after their specification, builder, buffers, and child-shader wrappers are disposed.",
-          "prs": [5760]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Correct Apple device frameworks",
-          "detail": "iOS and tvOS device frameworks for SkiaSharp and HarfBuzzSharp now contain arm64 device binaries and matching platform metadata, avoiding App Store validation failures caused by embedded simulator slices. Simulator frameworks retain both x86_64 and arm64 support.",
-          "prs": [5649]
-        },
-        {
-          "lead": "More robust mask-filtered glyph rendering",
-          "detail": "Glyph rendering handles changing paths, formats, and bounds across font-scaler loads, using the reloaded glyph rather than stale outline state. Incompatible masks are cleared, and clipped emboss masks preserve full plane strides, avoiding sub-byte row overflows and corrupted mask output.",
-          "prs": [5741]
-        },
-        {
-          "lead": "Consistent image-filter cache keys",
-          "detail": "Image-filter cache equality now agrees with its bytewise hash for signed-zero representations, cached matrix type metadata, and subnormal values whose numeric comparison can depend on floating-point mode.",
-          "prs": [5769]
-        },
-        {
-          "lead": "Imagination Vulkan allocation workaround",
-          "detail": "Ganesh and Graphite abandon descriptor pools after host or device out-of-memory allocation errors on Imagination drivers, avoiding a driver failure during pool destruction. Graphite also prevents further allocation through an abandoned pool. The workaround is limited to that vendor and those errors.",
-          "prs": [5741]
-        }
-      ]
+      "title": "Move Linux x86 deployments to a supported architecture",
+      "body": "Linux x86 native assets will no longer be included in NuGet packages, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
+      "prs": [5784]
     }
   ],
-  "contributor_summaries": {
-    "kdpkke": "Corrected iOS and tvOS device framework binaries and metadata while preserving simulator support."
-  },
+  "categories": [],
+  "contributor_summaries": {},
   "preview_summaries": {}
 }

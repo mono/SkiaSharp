@@ -11,7 +11,7 @@ Release - Prepare -> paired mono/skia and SkiaSharp release branches
   -> resource-triggered skiasharp-tests
 
 Explicit publication request + exact Build/Tests/BAR evidence
-  -> MAUI release pipeline -> staged audit -> human approval -> NuGet.org
+  -> skiasharp-nuget-release -> isolated publisher / protected ESRP approval -> NuGet.org
 
 Public packages -> Release - Finish -> exact tag and GitHub Release
   -> support PR and documentation follow-ups
@@ -127,26 +127,23 @@ or visual goldens can diagnose failures but cannot substitute for this evidence.
 
 ## Protected publication
 
-The internal MAUI `dotnet-maui-release` definition 1445 owns production
-credentials and approval. It is queued only on an explicit publication
-request, not automatically after Tests. SkiaSharp publication is supported on
-the internal MAUI `main` branch; use the configured default, `refs/heads/main`.
+The dedicated `skiasharp-nuget-release` definition 1715 in `dnceng/internal`
+replaces MAUI publication for SkiaSharp. It consumes producer 1642's
+`arcade_shipping_signed` artifact through an explicitly selected pipeline
+resource. Publisher code, release tooling and package source are separate
+resources; changing the publisher ref does not select the shipment.
 
-Two commits have distinct roles:
+The current entry delegates to isolated publisher 1697 through
+`dotnet-release`/ESRP. Approval settings belong to that live configuration;
+protected ESRP approval is not replaced by a successful parent run.
+The [Release Guide](releasing.md#4-publish-the-packages) owns configuration
+discovery, request examples, producer read-back and publication checks.
 
-- the resolved MAUI source SHA selects the pipeline implementation;
-- `commitHash` selects the **SkiaSharp** source/BAR, not the Skia gitlink.
-
-The dispatcher reads back the resolved source ref/SHA and parameters. The
-pipeline resolves the SkiaSharp commit against BAR, stages shipping assets,
-and emits `NuGetReleaseAudit`. Human `ManualValidation` must verify repository,
-source commit, BAR, selected/staged package identities, ownership, and quota
-before `1ES.PublishNuget` can use the protected NuGet.org connection.
-
-An existing run is resumed/monitored, not duplicated. After approval, all exact
-staged shipping IDs/versions must be independently public before Finish.
-Partial or failed publication does not authorize automatic retry.
-See [publication inputs](releasing.md#4-publish-the-packages).
+Publication is not safely replayable: a failed parent job may already have
+queued an upload. Preserve source, producer/BAR, parent/isolated run and ESRP
+IDs before reporting a failure. Missing public packages can be propagation
+delay rather than upload failure; monitor without automatically requeueing.
+Finish still requires the complete public set and separate authorization.
 
 ## Finalization and concurrency
 
@@ -172,7 +169,7 @@ required reusable Milestones workflow:
 
 A downstream milestone failure fails Finish. The global `release-state`
 concurrency group covers **Finish through milestone completion**, not earlier
-MAUI package publication. Standalone milestone repairs share that group.
+dedicated package publication. Standalone milestone repairs share that group.
 Nested reusable calls use a run-specific child group to avoid deadlocking
 their Finish caller.
 
@@ -246,7 +243,7 @@ Sync CI is a source-branch package build, not PR merge validation.
 - The immediately following milestone is recognized before `main` advances,
   so pending sync work is visible rather than treated as an empty line.
 
-It does not inspect BAR contents, MAUI publication runs, support metadata,
+It does not inspect BAR contents, dedicated publication runs, support metadata,
 release notes, or milestone assignments. Those belong to their detailed
 workflows. Exit codes are `0` no action, `1` pending work, `2` required remote
 service/tool unavailable. `-Json` is undecorated; redirected text is plain.
@@ -254,10 +251,12 @@ service/tool unavailable. `-Json` is undecorated; redirected text is plain.
 ## Recovery and local entry points
 
 Matching branches, tags, Releases, PRs, and milestones are reused. Remote
-writes are verified; transient gateway failures may be retried, semantic
-conflicts may not. After interruption, inspect what persisted and rerun the
-owning operation with the same identity. Never repair by rewriting shipped
-state or substituting another BAR.
+writes are verified; transient gateway failures in idempotent repository
+operations may be retried, semantic conflicts may not. After interruption,
+inspect what persisted before resuming the owning operation with the same
+identity. Publication is not an idempotent repository mutation: follow the
+no-retry/reporting rules above rather than replaying a queue request or parent
+job. Never repair by rewriting shipped state or substituting another BAR.
 
 Workflows are the normal entry points. Local read-only equivalents:
 

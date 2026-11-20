@@ -47,7 +47,7 @@ Task("libSkiaSharp")
         // Architecture-specific Spectre mitigation flags
         // -mretpoline requires Clang; -mharden-sls=all works with both GCC and Clang
         var spectreFlags = arch switch {
-            "x64" or "x86" => ", '-mretpoline'",
+            "x64" => ", '-mretpoline'",
             "arm" or "arm64" => ", '-mharden-sls=all'",
             _ => ""  // RISC-V, LoongArch - no standard flags yet
         };
@@ -82,7 +82,7 @@ Task("libSkiaSharp")
             $"skia_enable_graphite=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-stdlib=libc++'{spectreFlags}{bionicDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DSK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING', '-stdlib=libc++'{spectreFlags}{bionicDefine} ] " +
             $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +

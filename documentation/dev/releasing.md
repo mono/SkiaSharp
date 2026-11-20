@@ -9,7 +9,7 @@ contracts and recovery details.
 1. [Audit](#1-audit-the-release-line) the line and resolve outstanding work.
 2. [Prepare](#2-prepare-the-release-branches) the paired release branches.
 3. [Verify](#3-verify-the-release-build-and-tests) the producing Build, Tests, and BAR.
-4. [Publish](#4-publish-the-packages) through the MAUI release pipeline, approve its package audit, and verify NuGet.org.
+4. [Publish](#4-publish-the-packages) through the dedicated SkiaSharp publisher and protected ESRP approval, then verify NuGet.org.
 5. [Finish](#5-finish-the-public-release) to publish the tag and GitHub Release and update milestones.
 6. [Complete follow-ups](#6-complete-follow-ups) by reviewing and merging the automation PRs.
 
@@ -22,9 +22,9 @@ contracts and recovery details.
 - Prepare, Finish, and Milestones require a read-only plan first (`push`
   unchecked), then confirmation before a second dispatch with identical inputs
   and `push` checked. Stop on conflicting remote state.
-- Package publication has a separate human approval gate in the internal MAUI
-  pipeline. A successful build does not authorize publication; public packages
-  do not authorize Finish.
+- Package publication uses the dedicated internal SkiaSharp publisher and
+  protected ESRP scan/release approval. A successful build does not authorize
+  publication; public packages do not authorize Finish.
 
 Choose the source branch or commit and the release identity before Prepare.
 Use `X.Y.Z-preview.N`, `X.Y.Z-rc.N`, or `X.Y.Z-stable`; four-part hotfixes
@@ -146,47 +146,124 @@ help diagnose failures but do not replace the producing Build/Tests evidence.
 
 ## 4. Publish the packages
 
-Verify the Build/Tests/BAR evidence and check for an existing publication run.
-Resume and monitor an existing run; do not queue a duplicate. The
+Verify the Build/Tests/BAR evidence and check for existing publication parents
+and their resolved `skiaSharpBuild` resources. Match the exact producer run ID,
+Build number, branch, and SHA, not just another release's successful run.
+Monitor an existing publication; do not queue a duplicate. The
 `release-publish` skill can perform these checks and queue the pipeline.
 
 Publication uses
-[`dotnet-maui-release`](https://dev.azure.com/dnceng/internal/_build?definitionId=1445),
-which supports SkiaSharp publication from the internal MAUI `main` branch.
-Use its configured default branch, `refs/heads/main`, not a feature branch.
+[`skiasharp-nuget-release`](https://dev.azure.com/dnceng/internal/_build?definitionId=1715)
+in `dnceng/internal`. Its repository is `dotnet-release-workflows`, with entry
+YAML `/eng/pipeline/entry/skiasharp-release-pipeline.yml`. The former MAUI
+publisher is retired for SkiaSharp; do not use it as a fallback.
 
-To queue it directly:
+Before dispatch, read the live definition and its entry YAML to find the
+production publisher ref/SHA and `dotnet-release` tooling ref/SHA. Trust the
+executable configuration over rollout comments, do not assume `main`, and stop
+if SkiaSharp support cannot be verified.
 
 ```bash
-az pipelines run \
-  --organization https://dev.azure.com/dnceng --project internal --id 1445 \
-  --parameters \
-    ghOwner=mono ghRepo=SkiaSharp \
-    commitHash=<exact-SkiaSharp-release-commit> \
-    pushWorkloadSet=false pushNugetOrg=true pushPackages=true \
-    nugetIncludeFilters=skip nugetExcludeFilters=skip \
+az pipelines show \
+  --organization https://dev.azure.com/dnceng --project internal --id 1715 \
   --output json
 ```
 
-`commitHash` is the **SkiaSharp release commit**, not the mono/skia gitlink
-or the MAUI pipeline-code commit. Read back the resolved MAUI source ref/SHA
-and parameters; verify `refs/heads/main` and the requested SkiaSharp commit.
+On an explicit publication request, write `publication.json` with verified
+values. `skiaSharpBuild.version` is the producer's full **Build number**
+(including any `+...` suffix), **not the numeric build ID**. Always select
+the exact producer; do not rely on a default.
 
-The same run stages packages and pauses at `ManualValidation`. Before a human
-approves it, compare `NuGetReleaseAudit` with the release record:
+```json
+{
+  "resources": {
+    "repositories": {
+      "self": {
+        "refName": "<verified-publisher-production-ref>",
+        "version": "<verified-publisher-commit-sha>"
+      },
+      "dotnet-release": {
+        "refName": "<verified-tooling-production-ref>",
+        "version": "<verified-tooling-commit-sha>"
+      }
+    },
+    "pipelines": {
+      "skiaSharpBuild": {
+        "version": "<exact-producing-SkiaSharp-build-number>"
+      }
+    }
+  },
+  "templateParameters": {
+    "validateOnly": false
+  }
+}
+```
 
-- repository, SkiaSharp source commit, and BAR ID;
-- selected and staged shipping package IDs and exact versions; and
-- package ownership and available NuGet.org quota.
+Use the tooling repository resource alias declared by the verified entry YAML
+(`dotnet-release` above). Boolean `validateOnly: false` is real NuGet.org
+production; `true` only validates and publishes nothing. This entry has no
+MAUI `ghOwner`, `ghRepo`, `commitHash`, `pushNugetOrg`, `pushPackages`, or
+NuGet-filter parameters: the pipeline resource selects the source.
 
-Preparation success is not approval. The protected `1ES.PublishNuget` job and
-`nuget.org (dotnetframework)` connection require human authorization.
+```bash
+az devops invoke \
+  --organization https://dev.azure.com/dnceng \
+  --area pipelines --resource runs --http-method POST \
+  --route-parameters project=internal pipelineId=1715 \
+  --api-version 7.1 --in-file publication.json --output json
+```
 
-After approval, monitor **that same run** and independently verify every
-staged shipping ID/version on NuGet.org. A partial publish or failed run must
-be investigated with its evidence intact, not automatically retried.
-Only a complete public package set permits a Finish plan.
-`finish-release.ps1` checks package completeness before creating tags or Releases.
+Read back the admitted run, even if the immediate POST response lacks resolved
+resources:
+
+```bash
+az devops invoke \
+  --organization https://dev.azure.com/dnceng \
+  --area pipelines --resource runs --http-method GET \
+  --route-parameters project=internal pipelineId=1715 runId=<publisher-run-id> \
+  --api-version 7.1 --output json
+```
+
+Match resolved publisher/tooling refs/SHAs and the selected producer Build
+number. Read `resources.pipelines.skiaSharpBuild.pipeline.id` as the **producer
+run ID**, not definition 1642 or the publisher run ID. Fetch that build:
+
+```bash
+az pipelines build show \
+  --organization https://dev.azure.com/dnceng --project internal \
+  --id <producer-run-id> --output json
+```
+
+Verify its definition is `skiasharp-package` (1642) and its Build number,
+release branch, source SHA and BAR match the release record. Runs read-back
+does not supply the producer branch/SHA. Also check `validateOnly`
+semantically: the request is a JSON boolean, but read-back can be the string
+`"false"`. Stop on mismatched resources or parameters.
+
+Publish only `arcade_shipping_signed`. Unsigned `nuget`/`arcade_shipping`
+and classic `Container` `PackageArtifacts` are not release inputs; the latter
+also includes nonshipping transport packages. Derive expected
+SkiaSharp/HarfBuzzSharp IDs and versions from the shipment source and shipping
+filter, not a hardcoded package count.
+
+Verify approval settings in the live entry and tooling. The current
+configuration invokes isolated publisher 1697 through `dotnet-release`/ESRP
+with parent `requireApproval: false`: no parent `ManualValidation`, but
+protected ESRP scan/release approval still applies. These settings can change;
+do not bypass approvals or change permissions.
+
+Check parent, isolated publisher and ESRP task results, not aggregate status
+alone. Independently verify every expected public ID/version and source
+provenance. NuGet propagation can leave an incomplete public set after a
+successful upload; continue monitoring the missing IDs without requeueing.
+On failed or stalled publication, preserve source, producer/BAR,
+parent/isolated run and ESRP IDs and report the missing packages. Do not retry
+failed parent jobs that may already have queued an upload or switch publish
+paths. A monitoring-only request does not authorize repairs.
+
+Finish requires the complete public set and separate explicit authorization.
+Even if a conditional Finish is authorized beforehand, review and confirm the
+Finish plan before dispatch.
 
 ## 5. Finish the public release
 
@@ -252,7 +329,7 @@ Keep these values together until verification and follow-ups are complete:
 | Source | SkiaSharp and mono/skia release branches and commits |
 | Validation | Producing Build ID/URL/run number and matching Tests ID/URL |
 | Artifacts | BAR ID and exact SkiaSharp/HarfBuzzSharp package versions |
-| Publication | MAUI run ID/URL, pipeline-code ref/SHA, and staged package audit |
+| Publication | Dedicated parent/isolated run IDs/URLs, ESRP IDs, resolved publisher/tooling refs/SHAs, producer resource, `validateOnly`, and exact shipping set |
 | Public release | Verified package set, exact tag, and GitHub Release URL |
 
 ## References

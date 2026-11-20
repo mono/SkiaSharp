@@ -182,10 +182,11 @@ The audit and this skill remain read-only until the user asks to act:
 - **Start:** invoke `release-branch`; show the Prepare dry run and planned refs
   before `push=true`.
 - **Publish packages:** when explicitly requested, invoke `release-publish` to
-  verify the exact producing Build/Tests runs and BAR, then queue the protected
-  MAUI pipeline from chat. The pipeline's human approval remains mandatory;
-  an audit never queues it automatically. The audit does not track already-queued
-  MAUI publication runs, so check for one before dispatch.
+  verify the exact producing Build/Tests runs and BAR and use dedicated
+  `skiasharp-nuget-release (1715)`. The audit does not track publisher runs:
+  the skill must check for an existing publication before queueing.
+  An incomplete public set can reflect propagation, not a failed upload.
+  Report missing packages and monitor the existing run; do not auto-requeue.
 - **Finish:** invoke `release-publish` after exact packages are public; show the
   Finish workflow's read-only plan and obtain confirmation before `push=true`.
 - **Sync Skia:** follow `update-skia` and obtain confirmation before dispatch.

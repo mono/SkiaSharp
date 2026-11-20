@@ -1,26 +1,16 @@
 {
-  "theme": "Skia and shaping updates",
-  "highlights_headline": "SkiaSharp 4.158.0 previews Skia m158 alongside HarfBuzz 15.0.0 and GPU correctness fixes.",
-  "highlights_body": "This line improves reflected hairlines, text-atlas selection, Graphite clipping and displacement precision. HarfBuzzSharp adds named script constants, while the shared hash-code polyfill switches to OS-generated randomness for its per-process seed.",
+  "theme": "Rendering fixes and HarfBuzz updates",
+  "highlights_headline": "SkiaSharp 4.158.0 previews Skia m158 and HarfBuzz 15.0.0, with new script constants and GPU rendering fixes.",
+  "highlights_body": "Release Candidate 1 corrects filtered image subsets, image-filter cache keys and mask-filtered glyph rendering. Earlier previews improved reflected hairlines, clipping and displacement precision. SkiaSharp managed signatures remain unchanged; HarfBuzzSharp adds 30 named Script values.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m158 with unchanged SkiaSharp managed signatures",
-          "detail": "Updates the bundled renderer to milestone 158 and incorporates subsequent same-milestone native fixes. The engine transition preserves SkiaSharp's managed binding surface.",
-          "prs": [5634, 5702]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "HarfBuzz 15 and complete named script coverage",
-          "detail": "Upgrades native HarfBuzz to 15.0.0 and adds 30 HarfBuzzSharp Script constants, including Jurchen, ProtoCuneiform and Seal. The existing 149 values, struct-based API, parsing, numeric conversions and direction lookup are preserved; no public managed member is removed.",
-          "prs": [5554]
+          "lead": "Skia milestone 158",
+          "detail": "Updates the bundled renderer to m158 without changing SkiaSharp managed bindings. The initial preview used HarfBuzzSharp package revision 14.4.0.300 with native HarfBuzz 14.4.0; Preview 2 separately introduced the HarfBuzz 15.0.0 engine upgrade.",
+          "prs": [5634, 5554]
         }
       ]
     },
@@ -28,18 +18,18 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "GPU hairlines and text-atlas selection are corrected",
-          "detail": "Reflected transforms no longer enlarge square caps on zero-length hairlines. Ganesh rounds interpolated atlas indices before selecting ordinary and LCD text samplers, avoiding the wrong atlas when interpolation is imprecise.",
-          "prs": [5669]
+          "lead": "Filtered images respect texture subset bounds",
+          "detail": "Retains sampling constraints under minification, strong skew, antialiased clips and MSAA so unrelated backing-texture pixels do not leak into filtered output. Image-filter cache keys now use equality consistent with their bytewise hash.",
+          "prs": [5768]
         },
         {
-          "lead": "Graphite clips and displacement sampling respect their bounds",
-          "detail": "Pass-capacity checks account for undrawn clip elements; draws whose clip stacks cannot fit a fresh pass are logged and rejected. Displacement scale and offset arithmetic use full precision to agree with filter bounds, while channel samples remain half precision.",
-          "prs": [5669, 5712]
+          "lead": "Mask-filtered glyphs honor reloaded formats and strides",
+          "detail": "Uses the regenerated glyph's own outline and mask format. Incompatible masks produce cleared output, and clipped embossed glyphs retain full plane strides, avoiding invalid copies, format assertions and uncleared mask planes.",
+          "prs": [5739]
         },
         {
-          "lead": "Vulkan wait handling and affected-device teardown improve",
-          "detail": "Failed synchronous fence waits now affect native Ganesh submission results, but GRContext.Submit remains void. Ganesh and Graphite delay device-loss cleanup by 1 ms only on affected ARM proprietary drivers from version 42 up to, but not including, 56; ordinary successful submissions are not delayed.",
+          "lead": "GPU clipping, hairlines and displacement corrected",
+          "detail": "Fixes reflected hairline cap sizes, text-atlas selection and Graphite clip capacity. Displacement offsets use fp32 arithmetic. Native synchronous Vulkan submission accounts for fence-wait failures, but GRContext.Submit remains void; the ARM driver device-loss delay is limited to affected versions 42 through below 56.",
           "prs": [5669, 5712]
         }
       ]
@@ -48,26 +38,27 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Hash-code seeds use OS-generated randomness",
-          "detail": "The shared hash-code polyfill in SkiaSharp and HarfBuzzSharp now uses RandomNumberGenerator rather than System.Random for its per-process seed. Hashes remain stable within a process and randomized between processes; first use now initializes cryptographic randomness.",
+          "lead": "OS-generated hash seeds",
+          "detail": "The shared hash-code polyfill uses OS-generated randomness for its per-process seed in both SkiaSharp and HarfBuzzSharp. Hash codes remain stable within a process and randomized between processes.",
           "prs": [5408]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "rolfbjarne": "Replaced the shared hash-code polyfill's seed with OS-generated randomness and added analyzer safeguards against unjustified System.Random use in shipped code."
+    "rolfbjarne": "Moved the shared hash-code polyfill to OS-generated random seeds and added analyzer enforcement for shipped code."
   },
   "preview_summaries": {
-    "v4.158.0-preview.3.26563.17": "Preview 3 improves displacement-filter precision and propagates failed synchronous Vulkan waits into native submission results without changing the void managed Submit API. The shared hash-code polyfill now seeds itself with OS-generated randomness while keeping hashes stable within a process.",
-    "v4.158.0-preview.2.26560.5": "Preview 2 updates HarfBuzz to 15.0.0 and adds 30 named Script constants. GPU fixes cover reflected hairlines, text-atlas selection, Graphite clip capacity and device-loss cleanup timing on affected ARM Vulkan drivers.",
-    "v4.158.0-preview.1.26556.2": "Preview 1 introduces the Skia m158 engine without changing managed bindings. HarfBuzzSharp moves to package revision 14.4.0.300 while native HarfBuzz remains 14.4.0."
+    "v4.158.0-preview.1.26556.2": "Preview 1 introduced Skia m158 without changing the managed bindings. HarfBuzzSharp moved to package revision 14.4.0.300 while its native engine remained at 14.4.0.",
+    "v4.158.0-preview.2.26560.5": "Preview 2 upgraded native HarfBuzz to 15.0.0 and added 30 named Script constants. GPU fixes corrected reflected hairlines, text-atlas selection and Graphite clip capacity, with a targeted ARM Vulkan device-loss cleanup delay.",
+    "v4.158.0-preview.3.26563.17": "Preview 3 improved displacement-filter precision and native synchronous Vulkan wait handling without changing managed signatures. The shared hash-code polyfill began using OS-generated seeds while preserving within-process stability.",
+    "v4.158.0-rc.1.26567.14": "Release Candidate 1 corrected mask-filtered glyph outlines, format handling and clipped mask planes. It also prevented filtered-image subset leaks under AA and MSAA and aligned image-filter cache equality with hashing."
   },
-  "harfbuzz_summary": "Updates native HarfBuzz to 15.0.0 and adds 30 named Script constants, including Jurchen, ProtoCuneiform and Seal, while retaining all existing values and the struct-based API. Removing the unused internal deprecated font-face setter import does not remove a public managed member.",
+  "harfbuzz_summary": "Upgrades the bundled engine to HarfBuzz 15.0.0 and adds 30 named Script constants, including Jurchen, ProtoCuneiform and Seal. Existing Script fields, parsing, numeric conversions and horizontal-direction lookup remain available.",
   "release_summaries": {
     "v4.158.0-preview.1.26556.2": {
-      "headline": "Preview 1 introduces the Skia m158 engine with unchanged managed bindings.",
-      "body": "HarfBuzzSharp moves to package revision 14.4.0.300 while the bundled HarfBuzz engine remains at 14.4.0."
+      "headline": "Preview 1 brings Skia m158 with unchanged managed bindings.",
+      "body": "HarfBuzzSharp uses package revision 14.4.0.300; its bundled native HarfBuzz engine remains at 14.4.0."
     },
     "v4.158.0-preview.2.26560.5": {
       "headline": "Preview 2 adds HarfBuzz 15.0.0 and GPU correctness fixes.",
@@ -76,6 +67,10 @@
     "v4.158.0-preview.3.26563.17": {
       "headline": "Preview 3 improves displacement-filter precision and native synchronous Vulkan wait handling.",
       "body": "The shared hash-code polyfill uses OS-generated randomness while remaining stable within a process. Managed API signatures are unchanged."
+    },
+    "v4.158.0-rc.1.26567.14": {
+      "headline": "Release Candidate 1 corrects filtered image subsets and mask-filtered glyph rendering.",
+      "body": "It prevents unrelated backing-texture pixels from entering antialiased filtered draws and makes image-filter cache equality consistent with hashing. Regenerated glyph outlines, mask formats and clipped planes are handled correctly without changing managed APIs."
     }
   }
 }

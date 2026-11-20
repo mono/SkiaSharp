@@ -623,6 +623,9 @@ def _login_from_email(email):
 
 _AUTHOR_CACHE_PATH = RELEASES_DIR / "_sources" / "pr-authors.json"
 _GRAPHQL_BATCH = 50
+# Reserved pr-authors.json key holding the manually maintained commit-email ->
+# GitHub-login map. Never written by automation; resolve_pr_authors preserves it.
+_EMAIL_LOGINS_KEY = "_email_logins"
 
 
 def load_author_cache():
@@ -635,6 +638,9 @@ def load_author_cache():
     GitHub could not map the PR to an account (e.g. a deleted user) so we do not
     re-query a known-unresolvable PR on every run. Delete an entry to force it to
     be looked up again (useful once a contributor registers their commit email).
+
+    The reserved ``_email_logins`` entry is the hand-maintained alias map — see
+    load_email_logins.
     """
     try:
         return json.loads(_AUTHOR_CACHE_PATH.read_text())
@@ -644,13 +650,37 @@ def load_author_cache():
 
 def save_author_cache(cache):
     # type: (dict) -> None
-    """Persist the PR-number -> login cache, sorted by PR number for stable diffs."""
-    try:
-        ordered = {k: cache[k] for k in sorted(cache, key=lambda n: int(n))}
-    except ValueError:
-        ordered = cache
+    """Persist the PR-number -> login cache, sorted by PR number for stable diffs.
+
+    The manual ``_email_logins`` map is kept first, with its emails sorted.
+    """
+    aliases = cache.get(_EMAIL_LOGINS_KEY)
+    numbered = {k: v for k, v in cache.items() if k != _EMAIL_LOGINS_KEY}
+    ordered = {}  # type: dict
+    if aliases is not None:
+        ordered[_EMAIL_LOGINS_KEY] = {k: aliases[k] for k in sorted(aliases)}
+    for k in sorted(numbered, key=lambda n: int(n)):
+        ordered[k] = numbered[k]
     _AUTHOR_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
     _AUTHOR_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
+
+
+def load_email_logins():
+    # type: () -> dict[str, str]
+    """Return the manual commit-email -> GitHub-login map (casefolded emails).
+
+    Co-author trailers and commit authors often use a personal or work email
+    that git history cannot tie to a GitHub account, so the notes would credit a
+    plain name (or two names for one person). Maintainers record the confirmed
+    login for such emails under ``_email_logins`` in pr-authors.json; nothing
+    here guesses or queries GitHub.
+    """
+    aliases = load_author_cache().get(_EMAIL_LOGINS_KEY) or {}
+    return {
+        str(email).strip().casefold(): login
+        for email, login in aliases.items()
+        if isinstance(login, str) and _SAFE_LOGIN_RE.fullmatch(login)
+    }
 
 
 def _graphql_pr_authors(numbers):
@@ -1767,6 +1797,17 @@ def _pr_category(files):
 _BOT_LOGINS = frozenset(
     {"github-actions[bot]", "github-actions", "copilot", "dependabot", "skia-sync"}
 )
+# Friendly labels for automation identities, so credits read "GitHub Actions"
+# rather than "@github-actions[bot]" and the bare/[bot] logins collapse to one.
+_AUTOMATION_LOGIN_LABELS = {
+    "github-actions": "GitHub Actions",
+    "github-actions[bot]": "GitHub Actions",
+}
+# Automation commit identities without a login, keyed by (name, email).
+# "SkiaSharp Release Bot" is the committer set by prepare-release.ps1.
+_AUTOMATION_NAME_LABELS = {
+    ("skiasharp release bot", "noreply@github.com"): "SkiaSharp Release Bot",
+}
 _AI_LOGIN_LABELS = {
     "copilot": "GitHub Copilot",
     "copilot[bot]": "GitHub Copilot",
@@ -1826,6 +1867,13 @@ def _identity_attribution(login=None, name=None, email=None):
     ai_label = _controlled_ai_label(login=login, name=name, email=email)
     if ai_label:
         return {"display": ai_label, "kind": "ai"}
+    automation_label = (
+        _AUTOMATION_LOGIN_LABELS.get((login or "").strip().lower())
+        or _AUTOMATION_NAME_LABELS.get(
+            ((name or "").strip().lower(), (email or "").strip().lower()))
+    )
+    if automation_label:
+        return {"display": automation_label, "kind": "automation"}
     if login:
         if not _SAFE_LOGIN_RE.fullmatch(login):
             return None
@@ -1883,6 +1931,7 @@ def resolve_release_attributions(prs, known_humans=None):
     # type: (list[dict], Optional[dict[str, str]]) -> list[dict]
     """Attach normalized primary/co-author attribution facts to every PR."""
     known_humans = {
+        **load_email_logins(),
         **(known_humans or {}),
         **_known_human_aliases(prs),
     }

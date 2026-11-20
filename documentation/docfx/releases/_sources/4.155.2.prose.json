@@ -1,0 +1,44 @@
+{
+  "theme": "Security and WebAssembly fixes",
+  "highlights_headline": "SkiaSharp 4.155.2 backports six upstream Skia security fixes and restores WebAssembly builds that link C sources.",
+  "highlights_body": "Managed APIs, the C API and the native ABI are unchanged.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "GPU clip and rounded-rectangle fixes",
+          "detail": "Backports fixes for a Graphite clip render-step overflow (CVE-2026-126871) and skewed elliptical rounded-rectangle geometry in Ganesh, whose radii are now clamped (CVE-2026-126882).",
+          "prs": [5793]
+        },
+        {
+          "lead": "High-severity Skia fixes",
+          "detail": "Backports fixes for 64-bit image-filter unique IDs (CVE-2026-118340), SkSL invalid-type rejection (CVE-2026-119261), a region-builder out-of-bounds write (CVE-2026-121086) and an analytic antialiasing blitter heap overflow (CVE-2026-126912).",
+          "prs": [5797]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WebAssembly apps linking C sources build again",
+          "detail": "The WebGPU C++ bindings are now compiled into libSkiaSharp.a, so WebAssembly apps that add their own native C sources, such as Uno Platform 7, link successfully.",
+          "prs": [5797]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Backported the upstream Skia security fixes and the WebAssembly WebGPU link fix to the 4.155 servicing line."
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": null,
+  "release_summaries": {
+    "v4.155.2": {
+      "headline": "SkiaSharp 4.155.2 backports upstream Skia fixes and restores WebAssembly builds that link C sources.",
+      "body": "It includes GPU geometry, SkSL, region and blitter corrections from upstream Skia. Managed APIs are unchanged."
+    }
+  }
+}

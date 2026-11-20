@@ -184,7 +184,7 @@ Task("libSkiaSharp")
         // link an object instead of compiling C++20 on their own link line.
         (SUPPORT_GRAPHITE ? $"skiasharp_emdawnwebgpu_dir='{EMDAWN_ROOT}' " : "") +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
+        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DSK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING', '-DXML_POOR_ENTROPY', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
         $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
