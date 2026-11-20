@@ -3,7 +3,7 @@
 
 Usage: python3 persist-skia-review.py /tmp/skiasharp/skia-review/20260320-164500/170.json
 """
-import os
+import argparse
 import shutil
 import subprocess
 import sys
@@ -11,11 +11,12 @@ from pathlib import Path
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 persist-skia-review.py <path-to-json>")
-        sys.exit(2)
-
-    path = Path(sys.argv[1])
+    parser = argparse.ArgumentParser(description="Validate and persist a Skia review with HTML.")
+    parser.add_argument("path", type=Path)
+    parser.add_argument("--output-dir", type=Path,
+                        default=Path("output/ai/repos/mono-skia/ai-review"))
+    args = parser.parse_args()
+    path = args.path
     if not path.exists():
         print(f"❌ File not found: {path}")
         sys.exit(2)
@@ -24,9 +25,6 @@ def main():
     if not number.isdigit():
         print(f"❌ Cannot extract PR number from filename: {path.name}")
         sys.exit(2)
-
-    dest_dir = Path("output/ai/repos/mono-skia/ai-review")
-    dest_dir.mkdir(parents=True, exist_ok=True)
 
     # Validate before persisting
     validate_script = Path(__file__).parent / "validate-skia-review.py"
@@ -37,16 +35,17 @@ def main():
     if result.returncode != 0:
         sys.exit(result.returncode)
 
-    dest = dest_dir / f"{number}.json"
-    shutil.copy2(str(path), str(dest))
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    dest = args.output_dir / f"{number}.json"
+    if path.resolve() != dest.resolve():
+        shutil.copy2(str(path), str(dest))
     print(f"✅ Copied to {dest}")
 
     # Render HTML report alongside the JSON
     render_script = Path(__file__).parent / "render-skia-review.py"
-    if render_script.exists():
-        subprocess.run(["python3", str(render_script), str(dest)])
-    else:
-        print("⚠️  render-skia-review.py not found — skipping HTML generation")
+    if not render_script.exists():
+        raise FileNotFoundError(f"render-skia-review.py not found: {render_script}")
+    subprocess.run([sys.executable, str(render_script), str(dest)], check=True)
 
 
 if __name__ == "__main__":
