@@ -23,10 +23,6 @@ namespace SkiaSharp
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
-		private GRVkDeviceLostDelegate deviceLost;
-		private GCHandle deviceLostHandle;
-		private void* deviceLostContext;
-
 		/// <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.GRVkBackendContext" /> and optionally releases the managed resources.</summary>
 		/// <param name="disposing"><see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
 		/// <remarks />
@@ -36,10 +32,6 @@ namespace SkiaSharp
 				if (getProcHandle.IsAllocated) {
 					getProcHandle.Free ();
 					getProcHandle = default;
-				}
-				if (deviceLostHandle.IsAllocated) {
-					deviceLostHandle.Free ();
-					deviceLostHandle = default;
 				}
 			}
 		}
@@ -126,27 +118,12 @@ namespace SkiaSharp
 
 		/// <summary>Gets or sets the callback invoked when Skia detects that the Vulkan device has been lost.</summary>
 		/// <value>The handler to invoke, or <see langword="null" /> to receive no notification.</value>
-		/// <remarks>This <see cref="T:SkiaSharp.GRVkBackendContext" /> must outlive any <see cref="T:SkiaSharp.GRContext" /> created from it. Do not dispose the <see cref="T:SkiaSharp.GRContext" /> inside the callback; schedule teardown after the current GPU operation completes.</remarks>
-		public GRVkDeviceLostDelegate DeviceLost {
-			get => deviceLost;
-			set {
-				deviceLost = value;
+		/// <remarks>Each <see cref="T:SkiaSharp.GRContext" /> captures the handler assigned when it is created and keeps it alive for the rest of the process, so changing this property or disposing this <see cref="T:SkiaSharp.GRVkBackendContext" /> does not affect existing contexts. Because the handler is never released, keep it lightweight and avoid capturing large objects such as views or pages. Do not dispose the <see cref="T:SkiaSharp.GRContext" /> inside the callback; schedule teardown after the current GPU operation completes.</remarks>
+		public GRVkDeviceLostDelegate DeviceLost { get; set; }
 
-				if (deviceLostHandle.IsAllocated)
-					deviceLostHandle.Free ();
-
-				deviceLostHandle = default;
-				deviceLostContext = null;
-
-				if (value != null) {
-					DelegateProxies.Create (value, out var gch, out var ctx);
-					deviceLostHandle = gch;
-					deviceLostContext = (void*)ctx;
-				}
-			}
-		}
-
-		internal GRVkBackendContextNative ToNative () =>
+		// The device-lost user data belongs to the GRContext being created, not to
+		// this backend: Skia's GrVkGpu keeps the pointer for the context's lifetime.
+		internal GRVkBackendContextNative ToNative (void* deviceLostUserData) =>
 			new GRVkBackendContextNative {
 				fInstance = VkInstance,
 				fDevice = VkDevice,
@@ -160,8 +137,8 @@ namespace SkiaSharp
 				fGetProcUserData = getProcContext,
 				fGetProc = getProcContext is not null ? DelegateProxies.GRVkGetProcProxy : null,
 				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0,
-				fDeviceLostUserData = deviceLostContext,
-				fDeviceLostProc = deviceLostContext is not null ? DelegateProxies.GRVkDeviceLostProxy : null,
+				fDeviceLostUserData = deviceLostUserData,
+				fDeviceLostProc = deviceLostUserData is not null ? DelegateProxies.GRVkDeviceLostProxy : null,
 			};
 	}
 }

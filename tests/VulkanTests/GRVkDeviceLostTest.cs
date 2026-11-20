@@ -288,5 +288,137 @@ namespace SkiaSharp.Vulkan.Tests
 				failQueueSubmit = false;
 			}
 		}
+
+		// Skia keeps the device-lost user data for the context's lifetime, so the
+		// context must own it: clearing the handler, disposing the backend and
+		// collecting it must not invalidate the handler an existing context uses.
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void GRContextKeepsDeviceLostHandlerAfterBackendIsClearedAndDisposed()
+		{
+			using var ctx = CreateSilkVkContext();
+			using var extensions = new GRVkExtensions();
+			extensions.Initialize((name, instance, device) => ctx.BaseGetProc(name, instance, device),
+				ctx.Instance.Handle, ctx.PhysicalDevice.Handle);
+
+			var callCount = 0;
+
+			failQueueSubmit = false;
+			try
+			{
+				using var grContext = CreateGaneshContextAndDropBackend(ctx, extensions, () => callCount++);
+				Assert.NotNull(grContext);
+
+				CollectGarbage();
+
+				using var surface = SKSurface.Create(grContext, budgeted: true, new SKImageInfo(64, 64));
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Red);
+
+				failQueueSubmit = true;
+				grContext.Flush(submit: true, synchronous: false);
+			}
+			finally
+			{
+				failQueueSubmit = false;
+			}
+
+			Assert.Equal(1, callCount);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void SKGraphiteContextKeepsDeviceLostHandlerAfterBackendIsClearedAndDisposed()
+		{
+			using var ctx = CreateSilkVkContext();
+
+			var callCount = 0;
+
+			failQueueSubmit = false;
+			try
+			{
+				using var graphiteContext = CreateGraphiteContextAndDropBackend(ctx, () => callCount++);
+				Assert.NotNull(graphiteContext);
+
+				CollectGarbage();
+
+				using var recorder = graphiteContext.CreateRecorder();
+				using var surface = SKSurface.Create(recorder, new SKImageInfo(64, 64), false, null);
+				Assert.NotNull(surface);
+				surface.Canvas.Clear(SKColors.Blue);
+				using var recording = recorder.Snap();
+				Assert.NotNull(recording);
+				graphiteContext.InsertRecording(recording);
+
+				failQueueSubmit = true;
+				Assert.False(graphiteContext.Submit(new SKGraphiteSubmitInfo { Sync = false }));
+			}
+			finally
+			{
+				failQueueSubmit = false;
+			}
+
+			Assert.Equal(1, callCount);
+		}
+
+		// Kept out of line so the backend and the original lambda are unreachable
+		// once it returns; only the context can keep the handler alive.
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static GRContext CreateGaneshContextAndDropBackend(SilkVkContext ctx, GRVkExtensions extensions, Action onDeviceLost)
+		{
+			var backend = new GRVkBackendContext
+			{
+				VkInstance = ctx.Instance.Handle,
+				VkPhysicalDevice = ctx.PhysicalDevice.Handle,
+				VkDevice = ctx.Device.Handle,
+				VkQueue = ctx.GraphicsQueue.Handle,
+				GraphicsQueueIndex = ctx.GraphicsFamily,
+				MaxAPIVersion = SilkVkContext.ApiVersion,
+				Extensions = extensions,
+				GetProcedureAddress = (name, instance, device) => ShimQueueSubmit(ctx, name, instance, device),
+				DeviceLost = _ => onDeviceLost(),
+			};
+
+			var grContext = GRContext.CreateVulkan(backend);
+
+			backend.DeviceLost = null;
+			backend.Dispose();
+
+			return grContext;
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKGraphiteContext CreateGraphiteContextAndDropBackend(SilkVkContext ctx, Action onDeviceLost)
+		{
+			var backend = new SKGraphiteVkBackendContext
+			{
+				VkInstance = ctx.Instance.Handle,
+				VkPhysicalDevice = ctx.PhysicalDevice.Handle,
+				VkDevice = ctx.Device.Handle,
+				VkQueue = ctx.GraphicsQueue.Handle,
+				GraphicsQueueIndex = ctx.GraphicsFamily,
+				MaxApiVersion = SilkVkContext.ApiVersion,
+				GetProcedureAddress = (name, instance, device) => ShimQueueSubmit(ctx, name, instance, device),
+				DeviceLost = _ => onDeviceLost(),
+			};
+
+			var graphiteContext = SKGraphiteContext.CreateVulkan(backend);
+
+			backend.DeviceLost = null;
+			backend.Dispose();
+
+			return graphiteContext;
+		}
+
+		private static IntPtr ShimQueueSubmit(SilkVkContext ctx, string name, IntPtr instance, IntPtr device)
+		{
+			var addr = ctx.BaseGetProc(name, instance, device);
+			if (name == "vkQueueSubmit")
+			{
+				realQueueSubmit = addr;
+				return GetQueueSubmitShimPointer();
+			}
+			return addr;
+		}
 	}
 }
