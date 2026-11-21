@@ -231,12 +231,14 @@ namespace SkiaSharp.Tests
 			Assert.Null(errors);
 
 			using var builder = new SKMeshBuilder(spec);
-			Assert.All(builder.Uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+			using var initial = builder.Uniforms.ToData();
+			Assert.All(initial.ToArray(), b => Assert.Equal(0, b));
 
 			builder.Uniforms["uImageSize"] = (ReadOnlySpan<float>)new[] { 512f, 512f };
 			builder.Uniforms["uTint"] = (ReadOnlySpan<float>)new[] { 1f, 2f, 3f, 4f };
 			builder.Uniforms.Reset();
-			Assert.All(builder.Uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+			using var reset = builder.Uniforms.ToData();
+			Assert.All(reset.ToArray(), b => Assert.Equal(0, b));
 			Assert.Equal(spec.UniformSize, builder.Uniforms.Size);
 		}
 	}
