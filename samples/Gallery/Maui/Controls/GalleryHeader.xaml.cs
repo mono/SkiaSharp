@@ -48,7 +48,7 @@ public partial class GalleryHeader : ContentView
     public bool CpuSelected => !settings.UseGpu;
     public bool GpuSelected => settings.UseGpu;
     public string CpuDescription => $"CPU renderer, {(CpuSelected ? "selected" : "not selected")}";
-    public string GpuDescription => $"GPU renderer, {(GpuSelected ? "selected" : "not selected")}";
+    public string GpuDescription => $"Ganesh renderer, {(GpuSelected ? "selected" : "not selected")}";
     public string BrandText
     {
         get => brandText;

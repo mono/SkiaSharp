@@ -17,7 +17,11 @@ public sealed partial class SampleDetailPage : ContentPage
     private readonly Dictionary<string, ControlItem> controlUpdaters = new(StringComparer.Ordinal);
     private IReadOnlyList<ControlItem> controlItemsData = [];
     private SKCanvasView? cpuView;
+#if WINDOWS
     private SKGLView? gpuView;
+#else
+    private SKGaneshView? gpuView;
+#endif
     private Task? initTask;
     private Window? subscribedWindow;
     private bool active;
@@ -233,7 +237,11 @@ public sealed partial class SampleDetailPage : ContentPage
         if (!active || sample is DocumentSampleBase) return;
         if (useGpu)
         {
+#if WINDOWS
             gpuView = new SKGLView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
+#else
+            gpuView = new SKGaneshView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
+#endif
             gpuView.PaintSurface += PaintGpu;
             gpuView.HandlerChanged += RendererReady;
             gpuView.SizeChanged += RendererReady;
@@ -253,7 +261,11 @@ public sealed partial class SampleDetailPage : ContentPage
     {
         if (!active || sender is not VisualElement view || view.Width <= 0 || view.Height <= 0) return;
         if (sender is SKCanvasView canvas && ReferenceEquals(canvas, cpuView)) canvas.InvalidateSurface();
+#if WINDOWS
         if (sender is SKGLView gl && ReferenceEquals(gl, gpuView)) gl.InvalidateSurface();
+#else
+        if (sender is SKGaneshView ganesh && ReferenceEquals(ganesh, gpuView)) ganesh.InvalidateSurface();
+#endif
     }
 
     private void RemoveRenderer()
@@ -291,7 +303,7 @@ public sealed partial class SampleDetailPage : ContentPage
                 : "Document generation unavailable";
             return;
         }
-        status.Text = useGpu ? "GPU · preparing surface…" : "CPU · preparing surface…";
+        status.Text = useGpu ? "Ganesh · preparing surface…" : "CPU · preparing surface…";
         InstallRenderer();
     }
 
@@ -324,7 +336,11 @@ public sealed partial class SampleDetailPage : ContentPage
     }
 
     private void PaintCpu(object? sender, SKPaintSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, false);
+#if WINDOWS
     private void PaintGpu(object? sender, SKPaintGLSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, true);
+#else
+    private void PaintGpu(object? sender, SKPaintGaneshSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, true);
+#endif
 
     private void Paint(object? renderer, SKCanvas canvas, SKImageInfo info, SKImageInfo raw, bool gpuFrame)
     {
@@ -340,12 +356,12 @@ public sealed partial class SampleDetailPage : ContentPage
             lastWidth = info.Width;
             lastHeight = info.Height;
             var backend = !gpuFrame ? "CPU · raster" :
-#if MACCATALYST
-                "GPU · Metal";
+#if IOS || MACCATALYST
+                "Ganesh · Metal";
 #elif WINDOWS
-                "GPU · ANGLE / DirectX";
+                "Ganesh · ANGLE / DirectX";
 #else
-                "GPU · OpenGL ES";
+                "Ganesh · OpenGL ES";
 #endif
             Dispatcher.Dispatch(() =>
             {
