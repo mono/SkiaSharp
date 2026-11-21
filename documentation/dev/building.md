@@ -69,6 +69,17 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 - [Xcode](https://developer.apple.com/xcode/) matching the installed Apple workloads; see [Xcode 27](#xcode-27)
 - Command Line Tools: `xcode-select --install`
 
+To install a missing Apple platform or a specific simulator runtime for the
+selected Xcode, use the same installer as CI:
+
+```powershell
+./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
+./scripts/infra/managed/install-apple-platform.ps1 -Platform iOS -Version 18.6
+```
+
+Omitting `-Version` installs Xcode's default platform; specifying it installs
+and verifies that exact simulator runtime.
+
 ### Preparation
 
 The latest master build bits can be downloaded by running the `externals-download` target:
@@ -224,12 +235,11 @@ their output directories contain the newly built libraries:
 ```
 
 Do not use `externals-download` for native changes or disable Xcode-version
-validation to work around an incompatible workload. Existing .NET 9 targets
-still need their matching older Apple toolchain; Xcode 27 has no .NET 9 Apple
-workload. The CI Apple toolchain and workload pins in
-`scripts/azure-templates-variables.yml` retain that coverage; use a compatible
-local pairing to validate Xcode 27 without changing the CI pins. The current
-macOS 15/Sequoia CI images cannot run Xcode 27.
+validation to work around an incompatible workload. Use the newest toolchain
+available on the selected CI image while retaining the existing target frameworks
+and deployment minimums. A lower target framework does not itself require an
+older compiler. CI's Xcode and workload pins are defined together in
+`scripts/azure-templates-variables.yml`.
 
 ## GTK4 Tests
 

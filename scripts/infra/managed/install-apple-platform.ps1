@@ -1,5 +1,8 @@
 Param(
     [Parameter(Mandatory)]
+    [ValidateSet('iOS', 'tvOS')]
+    [string] $Platform,
+
     [ValidatePattern('^[0-9]+\.[0-9]+(?:\.[0-9]+)?$')]
     [string] $Version
 )
@@ -7,12 +10,12 @@ Param(
 $ErrorActionPreference = 'Stop'
 
 if (-not $IsMacOS) {
-    throw 'iOS simulator runtimes can only be installed on macOS.'
+    throw 'Apple platforms can only be installed on macOS.'
 }
 
 $logDirectory = Join-Path $PSScriptRoot '../../../output/logs'
 New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
-Start-Transcript -Path (Join-Path $logDirectory 'install-ios-runtime.log') | Out-Null
+Start-Transcript -Path (Join-Path $logDirectory "install-$($Platform.ToLowerInvariant())-platform.log") | Out-Null
 
 try {
     function Test-SelectedRuntime {
@@ -32,7 +35,7 @@ try {
                 throw 'simctl returned malformed runtime inventory: expected name, version and boolean isAvailable.'
             }
 
-            if ($runtime.name.StartsWith('iOS ', [StringComparison]::Ordinal) -and
+            if ($runtime.name.StartsWith("$Platform ", [StringComparison]::Ordinal) -and
                 $runtime.version -ceq $Version -and
                 $runtime.isAvailable -eq $true) {
                 return $true
@@ -42,14 +45,19 @@ try {
         return $false
     }
 
-    if (-not (Test-SelectedRuntime)) {
-        & xcodebuild -downloadPlatform iOS -buildVersion $Version
-        if ($LASTEXITCODE -ne 0) {
-            throw "Selected iOS $Version runtime installation failed (exit code $LASTEXITCODE)."
+    if (-not $Version -or -not (Test-SelectedRuntime)) {
+        $downloadArguments = @('-downloadPlatform', $Platform)
+        if ($Version) {
+            $downloadArguments += @('-buildVersion', $Version)
         }
 
-        if (-not (Test-SelectedRuntime)) {
-            throw "The iOS $Version runtime is not available after installation. Check this Xcode's runtime catalog."
+        & xcodebuild @downloadArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "$Platform platform installation failed (exit code $LASTEXITCODE)."
+        }
+
+        if ($Version -and -not (Test-SelectedRuntime)) {
+            throw "The $Platform $Version runtime is not available after installation. Check this Xcode's runtime catalog."
         }
     }
 }

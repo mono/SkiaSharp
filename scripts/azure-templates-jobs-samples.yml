@@ -18,6 +18,11 @@ jobs:
                 manifestVersion: $(DOTNET_TIZEN_MANIFEST_VERSION)
           ${{ if eq(parameters.platform, 'macos') }}:
             installNinja: true
+          ${{ if and(eq(parameters.platform, 'macos'), eq(group, 'Build'), eq(variables['System.TeamProject'], 'public')) }}:
+            preBuildSteps:
+              - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
+                displayName: Install the tvOS simulator platform
+                retryCountOnTaskFailure: 3
           ${{ if eq(parameters.platform, 'linux') }}:
             packages: $(MANAGED_LINUX_PACKAGES)
             installEmsdk: true
