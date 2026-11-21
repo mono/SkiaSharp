@@ -370,7 +370,7 @@ public sealed partial class SampleDetailPage : ContentPage
 #elif WINDOWS
                 "Ganesh · ANGLE / DirectX";
 #else
-                "Ganesh · OpenGL ES";
+                useGraphite ? "Graphite · Vulkan" : "Ganesh · OpenGL ES";
 #endif
             Dispatcher.Dispatch(() =>
             {

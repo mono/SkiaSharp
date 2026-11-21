@@ -24,7 +24,7 @@ A real-time animated shader running at full frame rate on the GPU, with touch in
 
 **Features:**
 
-- **`SKGaneshView` / `SKGraphiteView`** — Hardware-accelerated Ganesh and Graphite GPU canvases that map to the platform-native GPU views (`SKGraphiteView` is supported on iOS and Mac Catalyst).
+- **`SKGaneshView` / `SKGraphiteView`** — Hardware-accelerated Ganesh and Graphite GPU canvases that map to the platform-native GPU views (`SKGraphiteView` is supported on Android, iOS, and Mac Catalyst).
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **`HasRenderLoop`** — Continuous animation driven by the platform's render loop.
 - **Touch interaction** — Touch position is passed as a shader uniform via MAUI's `Touch` event.

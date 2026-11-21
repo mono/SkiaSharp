@@ -9,7 +9,7 @@ using SkiaSharp.Views.Android;
 
 namespace SkiaSharpSample;
 
-public class GpuTextureFragment : Fragment
+public class GraphiteFragment : Fragment
 {
 	private const string SkslSource = @"
 uniform float iTime;
@@ -73,7 +73,7 @@ half4 main(float2 fragCoord) {
 
 	private readonly FpsCounter fpsCounter = new();
 
-	private SKGLTextureView skiaView;
+	private SKGraphiteView skiaView;
 	private TextView fpsLabel;
 	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
 	private SKPoint touchPos;
@@ -82,21 +82,23 @@ half4 main(float2 fragCoord) {
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		var view = inflater.Inflate(Resource.Layout.fragment_gpu_texture, container, false);
-		skiaView = view.FindViewById<SKGLTextureView>(Resource.Id.skiaView);
+		skiaView = view.FindViewById<SKGraphiteView>(Resource.Id.skiaView);
 		fpsLabel = view.FindViewById<TextView>(Resource.Id.fpsLabel);
 		skiaView.PaintSurface += OnPaintSurface;
+		skiaView.ContentDescription = "SkiaCanvas";
 		skiaView.Touch += OnTouch;
+		skiaView.HasRenderLoop = true;
 
 		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 		fpsCounter.Start();
 		return view;
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object sender, SKPaintGraphiteSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
 
 		var builder = shaderBuilder.Value;
 

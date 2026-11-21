@@ -53,7 +53,7 @@ namespace SkiaSharp.Views.Maui.Controls.Tests
 		}
 #endif
 
-#if IOS || MACCATALYST
+#if ANDROID || IOS || MACCATALYST
 		[UIFact]
 		public async Task GraphiteRendersRestoresAndClearsContextOnDetach()
 		{
@@ -278,7 +278,9 @@ namespace SkiaSharp.Views.Maui.Controls.Tests
 
 		private static void RequireGraphiteBackend()
 		{
-#if IOS || MACCATALYST
+#if ANDROID
+			GpuPolicy.RequireOrSkip(GpuBackends.GraphiteVulkan);
+#elif IOS || MACCATALYST
 			GpuPolicy.RequireOrSkip(GpuBackends.GraphiteMetal);
 #endif
 		}
