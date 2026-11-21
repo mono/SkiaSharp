@@ -5,6 +5,8 @@ public class AppDelegate : UIApplicationDelegate
 {
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
+
 	public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
 	{
 		UITabBar.Appearance.BackgroundColor = UIColor.Clear;

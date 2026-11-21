@@ -8,5 +8,7 @@ public class AppDelegate : NSApplicationDelegate
 {
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
+	public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
+
 	public override bool ApplicationShouldTerminateAfterLastWindowClosed(NSApplication sender) => true;
 }

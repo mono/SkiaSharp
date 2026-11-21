@@ -8,6 +8,12 @@ public partial class AppShell : Shell
 	{
 		InitializeComponent();
 
+		if (App.DefaultGpuBackend != GpuBackend.GL &&
+			(int)App.DefaultGpuBackend < gpuTab.Items.Count)
+		{
+			gpuTab.CurrentItem = gpuTab.Items[(int)App.DefaultGpuBackend];
+		}
+
 		if (App.DefaultPage != SamplePage.Cpu)
 			CurrentItem = Items[(int)App.DefaultPage];
 	}

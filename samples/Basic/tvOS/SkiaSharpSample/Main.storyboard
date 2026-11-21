@@ -17,8 +17,7 @@
                     </tabBar>
                     <connections>
                         <segue destination="cpuVC" kind="relationship" relationship="viewControllers" id="cpuSegue"/>
-                        <segue destination="gpuGLVC" kind="relationship" relationship="viewControllers" id="gpuGLSegue"/>
-                        <segue destination="gpuMetalVC" kind="relationship" relationship="viewControllers" id="gpuMetalSegue"/>
+                        <segue destination="gpuVC" kind="relationship" relationship="viewControllers" id="gpuSegue"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tabBarFirstResponder" sceneMemberID="firstResponder"/>
@@ -29,7 +28,7 @@
         <scene sceneID="cpuScene">
             <objects>
                 <viewController id="cpuVC" customClass="CpuViewController" sceneMemberID="viewController" storyboardIdentifier="CpuVC">
-                    <tabBarItem key="tabBarItem" title="CPU Canvas" id="cpuTabItem"/>
+                    <tabBarItem key="tabBarItem" title="CPU" id="cpuTabItem"/>
                     <view key="view" contentMode="scaleToFill" id="cpuRootView">
                         <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -54,11 +53,48 @@
             </objects>
             <point key="canvasLocation" x="-800" y="400"/>
         </scene>
+        <!--GPU-->
+        <scene sceneID="gpuScene">
+            <objects>
+                <viewController id="gpuVC" customClass="GpuViewController" sceneMemberID="viewController" storyboardIdentifier="GpuVC">
+                    <tabBarItem key="tabBarItem" title="GPU" id="gpuTabItem"/>
+                    <view key="view" contentMode="scaleToFill" id="gpuRootView">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gpuContainerView">
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="gpuSegmentedControl">
+                                <segments>
+                                    <segment title="Metal"/>
+                                    <segment title="GL"/>
+                                </segments>
+                            </segmentedControl>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="gpuSafeArea"/>
+                        <constraints>
+                            <constraint firstItem="gpuContainerView" firstAttribute="top" secondItem="gpuRootView" secondAttribute="top" id="gpuTop"/>
+                            <constraint firstItem="gpuContainerView" firstAttribute="leading" secondItem="gpuRootView" secondAttribute="leading" id="gpuLeading"/>
+                            <constraint firstItem="gpuContainerView" firstAttribute="trailing" secondItem="gpuRootView" secondAttribute="trailing" id="gpuTrailing"/>
+                            <constraint firstItem="gpuContainerView" firstAttribute="bottom" secondItem="gpuRootView" secondAttribute="bottom" id="gpuBottom"/>
+                            <constraint firstItem="gpuSegmentedControl" firstAttribute="centerX" secondItem="gpuRootView" secondAttribute="centerX" id="gpuSegCX"/>
+                            <constraint firstItem="gpuSegmentedControl" firstAttribute="top" secondItem="gpuSafeArea" secondAttribute="top" constant="24" id="gpuSegT"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="backendControl" destination="gpuSegmentedControl" id="gpuSegOutlet"/>
+                        <outlet property="containerView" destination="gpuContainerView" id="gpuContainerOutlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gpuFirstResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0" y="400"/>
+        </scene>
         <!--GPU GL-->
         <scene sceneID="gpuGLScene">
             <objects>
                 <viewController id="gpuGLVC" customClass="GpuGLViewController" sceneMemberID="viewController" storyboardIdentifier="GpuGLVC">
-                    <tabBarItem key="tabBarItem" title="GPU GL" id="gpuGLTabItem"/>
                     <view key="view" contentMode="scaleToFill" id="gpuGLRootView">
                         <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -81,13 +117,12 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gpuGLFirstResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="0" y="400"/>
+            <point key="canvasLocation" x="800" y="400"/>
         </scene>
         <!--GPU Metal-->
         <scene sceneID="gpuMetalScene">
             <objects>
                 <viewController id="gpuMetalVC" customClass="GpuMetalViewController" sceneMemberID="viewController" storyboardIdentifier="GpuMetalVC">
-                    <tabBarItem key="tabBarItem" title="GPU Metal" id="gpuMetalTabItem"/>
                     <view key="view" contentMode="scaleToFill" id="gpuMetalRootView">
                         <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -110,7 +145,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gpuMetalFirstResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="800" y="400"/>
+            <point key="canvasLocation" x="1600" y="400"/>
         </scene>
     </scenes>
 </document>

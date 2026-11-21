@@ -17,7 +17,7 @@
                     </tabBar>
                     <connections>
                         <segue destination="cpu-vc" kind="relationship" relationship="viewControllers" id="seg-cpu"/>
-                        <segue destination="gmt-vc" kind="relationship" relationship="viewControllers" id="seg-gmt"/>
+                        <segue destination="gpu-vc" kind="relationship" relationship="viewControllers" id="seg-gpu"/>
                         <segue destination="drw-vc" kind="relationship" relationship="viewControllers" id="seg-drw"/>
                     </connections>
                 </tabBarController>
@@ -55,10 +55,50 @@
             </objects>
             <point key="canvasLocation" x="-400" y="0"/>
         </scene>
+        <!--GPU View Controller-->
+        <scene sceneID="gpu-scene">
+            <objects>
+                <viewController id="gpu-vc" customClass="GpuViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="gpu-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gpu-cnt-001">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="gpu-seg-001">
+                                <rect key="frame" x="156" y="59" width="81" height="32"/>
+                                <segments>
+                                    <segment title="Metal"/>
+                                </segments>
+                            </segmentedControl>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="gpu-safe"/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="gpu-cnt-001" firstAttribute="leading" secondItem="gpu-vw-001" secondAttribute="leading" id="g1"/>
+                            <constraint firstItem="gpu-cnt-001" firstAttribute="trailing" secondItem="gpu-vw-001" secondAttribute="trailing" id="g2"/>
+                            <constraint firstItem="gpu-cnt-001" firstAttribute="top" secondItem="gpu-vw-001" secondAttribute="top" id="g3"/>
+                            <constraint firstItem="gpu-cnt-001" firstAttribute="bottom" secondItem="gpu-vw-001" secondAttribute="bottom" id="g4"/>
+                            <constraint firstItem="gpu-seg-001" firstAttribute="centerX" secondItem="gpu-vw-001" secondAttribute="centerX" id="g5"/>
+                            <constraint firstItem="gpu-seg-001" firstAttribute="top" secondItem="gpu-safe" secondAttribute="top" constant="12" id="g6"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="GPU" image="cube.fill" catalog="system" id="gpu-tab"/>
+                    <connections>
+                        <outlet property="backendControl" destination="gpu-seg-001" id="gpu-ol2"/>
+                        <outlet property="containerView" destination="gpu-cnt-001" id="gpu-ol1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gpu-fr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-400" y="400"/>
+        </scene>
         <!--GPU Metal View Controller-->
         <scene sceneID="gmt-scene">
             <objects>
-                <viewController id="gmt-vc" customClass="GpuMetalViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="GpuMetalViewController" id="gmt-vc" customClass="GpuMetalViewController" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="gmt-vw-001">
                         <rect key="frame" x="0" y="0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -67,7 +107,7 @@
                                 <rect key="frame" x="0" y="0" width="393" height="852"/>
                             </view>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="  FPS: --  " textAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gmt-fps">
-                                <rect key="frame" x="137" y="59" width="120" height="32"/>
+                                <rect key="frame" x="137" y="99" width="120" height="32"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="32" id="gmt-fh"/>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="120" id="gmt-fw"/>
@@ -94,10 +134,9 @@
                             <constraint firstItem="gmt-sk-001" firstAttribute="top" secondItem="gmt-vw-001" secondAttribute="top" id="m3"/>
                             <constraint firstItem="gmt-sk-001" firstAttribute="bottom" secondItem="gmt-vw-001" secondAttribute="bottom" id="m4"/>
                             <constraint firstItem="gmt-fps" firstAttribute="centerX" secondItem="gmt-vw-001" secondAttribute="centerX" id="m5"/>
-                            <constraint firstItem="gmt-fps" firstAttribute="top" secondItem="gmt-safe" secondAttribute="top" constant="12" id="m6"/>
+                            <constraint firstItem="gmt-fps" firstAttribute="top" secondItem="gmt-safe" secondAttribute="top" constant="52" id="m6"/>
                         </constraints>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Metal" image="cube.fill" catalog="system" id="gmt-tab"/>
                     <connections>
                         <outlet property="fpsLabel" destination="gmt-fps" id="gmt-ol2"/>
                         <outlet property="skiaView" destination="gmt-sk-001" id="gmt-ol1"/>
@@ -105,7 +144,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gmt-fr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-400" y="400"/>
+            <point key="canvasLocation" x="400" y="400"/>
         </scene>
         <!--Drawing View Controller-->
         <scene sceneID="drw-scene">
@@ -286,7 +325,7 @@
                             <constraint firstItem="drw-blur" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="drw-safe" secondAttribute="leading" constant="16" id="dk-ml"/>
                         </constraints>
                     </view>
-                    <tabBarItem key="tabBarItem" title="Draw" image="paintbrush.pointed" catalog="system" id="drw-tab"/>
+                    <tabBarItem key="tabBarItem" title="Drawing" image="paintbrush.pointed" catalog="system" id="drw-tab"/>
                     <connections>
                         <outlet property="skiaView" destination="drw-sk-001" id="drw-ol1"/>
                         <outlet property="clearButton" destination="drw-clear-btn" id="drw-ol2"/>
