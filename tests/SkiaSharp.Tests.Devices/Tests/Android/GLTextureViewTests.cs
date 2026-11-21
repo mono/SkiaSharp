@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Android.Opengl;
 using Android.Views;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
 using SkiaSharp.Tests;
 using SkiaSharp.Views.Maui.Controls.Tests;
 using Xunit;
@@ -16,7 +17,7 @@ namespace SkiaSharp.Views.Android.Tests;
 
 public class GLTextureViewTests : SKUITests
 {
-	[UIFact]
+	[Fact]
 	public Task Issue_533_ContinuousRenderingIsDisplayPaced() =>
 		WithTextureView(true, async (view, platformView, paints) =>
 		{
@@ -25,7 +26,7 @@ public class GLTextureViewTests : SKUITests
 			Assert.False(paints.PaintedOnUIThread);
 		});
 
-	[UIFact]
+	[Fact]
 	public Task Issue_533_WhenDirtyRequestsAndRenderModeTransitionsWork() =>
 		WithTextureView(false, async (view, platformView, paints) =>
 		{
@@ -53,7 +54,7 @@ public class GLTextureViewTests : SKUITests
 			await AssertDisplayPaced(paints);
 		});
 
-	[UIFact]
+	[Fact]
 	public Task Issue_533_GLThreadRenderModeTransitionsRestartFrameCallbacks() =>
 		WithTextureView(false, async (view, platformView, paints) =>
 		{
@@ -117,7 +118,7 @@ public class GLTextureViewTests : SKUITests
 			}
 		});
 
-	[UIFact]
+	[Fact]
 	public Task Issue_533_MissedDisplayFramesAreNotQueued() =>
 		WithTextureView(true, async (view, platformView, paints) =>
 		{
@@ -144,7 +145,7 @@ public class GLTextureViewTests : SKUITests
 			}
 		});
 
-	[UIFact]
+	[Fact]
 	public Task Issue_533_PauseResizeAndReattachmentPreserveRendering() =>
 		WithTextureView(true, async (view, platformView, paints) =>
 		{
@@ -177,9 +178,10 @@ public class GLTextureViewTests : SKUITests
 			await AssertSingleFrame(paints, platformView.RequestRender);
 		});
 
-	private async Task WithTextureView(
+	private Task WithTextureView(
 		bool hasRenderLoop,
 		Func<MauiGLView, SKGLTextureView, PaintCounter, Task> test)
+		=> MainThread.InvokeOnMainThreadAsync(async () =>
 	{
 		var paints = new PaintCounter();
 		var view = new MauiGLView
@@ -214,7 +216,7 @@ public class GLTextureViewTests : SKUITests
 			view.Handler?.DisconnectHandler();
 			platformView?.Dispose();
 		}
-	}
+	});
 
 	private static async Task AssertDisplayPaced(PaintCounter paints, Action? start = null)
 	{
