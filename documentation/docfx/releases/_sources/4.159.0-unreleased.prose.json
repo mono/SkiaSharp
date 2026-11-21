@@ -1,15 +1,49 @@
 {
-  "theme": "Linux native asset support",
-  "highlights_headline": "SkiaSharp 4.159 will no longer include Linux x86 native assets.",
-  "highlights_body": null,
+  "theme": "Image comparison and rendering fixes",
+  "highlights_headline": "SkiaSharp 4.159.0 adds experimental image comparison tools and corrects runtime-effect uniforms and texture-edge sampling.",
+  "highlights_body": "The unreleased line introduces a separate SkiaSharp.Testing package for visual assertions and difference diagnostics. It also changes Tizen's CPU blur selection and drops Linux x86 native assets.",
   "breaking": [
     {
-      "title": "Move Linux x86 deployments to a supported architecture",
-      "body": "Linux x86 native assets will no longer be included in NuGet packages, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
+      "title": "Move Linux x86 applications to a supported architecture",
+      "body": "Linux x86 native assets are no longer built or included in NuGet packages. Applications targeting 32-bit Linux must move to a supported Linux architecture before upgrading.",
       "prs": [5784]
     }
   ],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Experimental visual assertions",
+          "detail": "The separate SkiaSharp.Testing package adds SKImageComparison for images, bitmaps and pixmaps, with channel tolerances, masks, mismatch budgets, error metrics and five difference-image styles. Opt in to the experimental API by suppressing SKIA4001 with NoWarn or a pragma. Results retain no native handles; dispose returned difference images yourself.",
+          "prs": [5293]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Uniform buffers start cleared",
+          "detail": "New SKRuntimeEffectUniforms buffers now contain zeros rather than uninitialized memory. Reset clears the existing buffer in place, restoring the documented zero state without allocating a replacement native buffer or wrapper. Tests cover both runtime effects and meshes.",
+          "prs": [5843]
+        },
+        {
+          "lead": "Filtered texture samples stay inside subsets",
+          "detail": "Ganesh uses inward texture-subset clamping to avoid sampling undefined exterior texels at filtered edges, and avoids direct linear copies at affected logical texture edges. Texture-edge pixels may change; CPU and Graphite rendering are unaffected.",
+          "prs": [5679]
+        },
+        {
+          "lead": "Tizen CPU blur selection takes effect",
+          "detail": "Tizen now applies its blur-path setting when compiling Skia, selecting the existing ThreeBoxApprox/Tent paths instead of the shader-based Gaussian candidate. Blur pixels and performance may differ; Tizen rendering and performance were not measured in the supporting change.",
+          "prs": [5679]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "taublast": "Corrected uniform-buffer initialization and reset behavior, and disposed ToData snapshots in tests.",
+    "ramezgerges": "Restored the Uno Gallery and Uno views projects to the Windows samples solution."
+  },
   "preview_summaries": {}
 }
