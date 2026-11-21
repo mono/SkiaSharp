@@ -1,15 +1,43 @@
 {
-  "theme": "Linux native asset support",
-  "highlights_headline": "SkiaSharp 4.159 will no longer include Linux x86 native assets.",
-  "highlights_body": null,
+  "theme": "Image comparison and rendering refinements",
+  "highlights_headline": "The upcoming SkiaSharp 4.159.0 release adds experimental image comparison tools and refines texture-edge rendering.",
+  "highlights_body": "SkiaSharp.Testing provides configurable image acceptance policies and visual difference diagnostics. Ganesh texture sampling and Tizen CPU blur selection change, and Linux x86 native assets are being dropped.",
   "breaking": [
     {
-      "title": "Move Linux x86 deployments to a supported architecture",
-      "body": "Linux x86 native assets will no longer be included in NuGet packages, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
+      "title": "Linux x86 native assets are no longer packaged",
+      "body": "Linux x86 native builds and NuGet package entries are removed. Move Linux deployments off x86 before upgrading to this release.",
       "prs": [5784]
     }
   ],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Experimental image comparison package",
+          "detail": "SkiaSharp.Testing adds SKImageComparison for images, bitmaps and pixmaps, with channel tolerances, masks, mismatch budgets, error metrics and five difference-image styles. Opt in to experimental diagnostic SKIA4001 through NoWarn or a pragma. Results retain no native handles; callers own returned difference images.",
+          "prs": [5293]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Safer filtered texture-subset edges",
+          "detail": "Ganesh clamps linear texture sampling slightly inward to avoid reading undefined texels outside subset boundaries. Texture-edge pixels may differ; CPU and Graphite rendering are unaffected by this sampling change.",
+          "prs": [5679]
+        },
+        {
+          "lead": "Tizen CPU blur configuration takes effect",
+          "detail": "Tizen now uses Skia's existing ThreeBoxApprox/Tent CPU blur selection instead of the shader-based Gaussian candidate. Blur pixels and performance may differ; Tizen rendering and performance were not measured in the supporting change.",
+          "prs": [5679]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Restored the Uno Gallery and its view projects to the Windows samples solution."
+  },
   "preview_summaries": {}
 }
