@@ -37,7 +37,7 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		{
 			bottomNav.SelectedItemId = DefaultPage switch
 			{
-				SamplePage.GpuSurface => Resource.Id.nav_gpu_surface,
+				SamplePage.Ganesh => Resource.Id.nav_gpu_surface,
 				SamplePage.GpuTexture => Resource.Id.nav_gpu_texture,
 				SamplePage.Drawing => Resource.Id.nav_drawing,
 				_ => Resource.Id.nav_cpu,
@@ -57,7 +57,7 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 		{
 			Resource.Id.nav_cpu => new CpuFragment(),
-			Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
+			Resource.Id.nav_gpu_surface => new GaneshFragment(),
 			Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
 			Resource.Id.nav_drawing => new DrawingFragment(),
 			_ => new CpuFragment()
