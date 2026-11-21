@@ -17,6 +17,9 @@ namespace SkiaSharp.Views.Maui.Handlers
 				[nameof(ISKGaneshView.EnableTouchEvents)] = MapEnableTouchEvents,
 				[nameof(ISKGaneshView.IgnorePixelScaling)] = MapIgnorePixelScaling,
 				[nameof(ISKGaneshView.HasRenderLoop)] = MapHasRenderLoop,
+#if WINDOWS
+				[nameof(ISKGaneshView.Background)] = MapBackground,
+#endif
 			};
 
 		/// <summary>The command mapper that maps cross-platform commands to handler methods.</summary>
