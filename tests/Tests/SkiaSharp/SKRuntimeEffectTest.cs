@@ -331,6 +331,70 @@ namespace SkiaSharp.Tests
 				Assert.Equal(uniforms, builder.Uniforms);
 			}
 
+			// A new uniforms object starts with every value at zero, and Reset() sets every value back to
+			// zero, as documented. The native block comes from sk_data_new_uninitialized, so it must be cleared.
+			[Fact]
+			public void NewAndResetUniformsAreZero()
+			{
+				var src = $"""
+					uniform float4 a; uniform float4 b; uniform float3 c; uniform float d;
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				using var uniforms = new SKRuntimeEffectUniforms(effect);
+				Assert.All(uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+
+				uniforms["a"] = new[] { 1f, 2f, 3f, 4f };
+				uniforms["b"] = new[] { 5f, 6f, 7f, 8f };
+				uniforms["c"] = new[] { 9f, 10f, 11f };
+				uniforms["d"] = 12f;
+				Assert.Contains(uniforms.ToData().ToArray(), b => b != 0);
+
+				uniforms.Reset();
+				Assert.All(uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+				Assert.Equal(effect.UniformSize, uniforms.Size);
+
+				// Still writable after a reset.
+				uniforms["d"] = 12f;
+				Assert.Equal(12f, BitConverter.ToSingle(uniforms.ToData().ToArray(), uniforms.Size - sizeof(float)));
+			}
+
+			// Reset() clears the block in place, so a shader made before it must keep its own copy of the values.
+			[Fact]
+			public void ResetDoesNotChangeShaderMadeBefore()
+			{
+				const string src = """
+					uniform half4 color;
+					half4 main(float2 p) { return color; }
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				using var uniforms = new SKRuntimeEffectUniforms(effect);
+				uniforms["color"] = new[] { 1f, 0f, 0f, 1f };
+				using var red = effect.ToShader(uniforms);
+
+				uniforms.Reset();
+				uniforms["color"] = new[] { 0f, 0f, 1f, 1f };
+				using var blue = effect.ToShader(uniforms);
+
+				using var bitmap = new SKBitmap(new SKImageInfo(2, 1, SKColorType.Rgba8888, SKAlphaType.Premul));
+				using (var canvas = new SKCanvas(bitmap))
+				{
+					using var paint = new SKPaint { Shader = red };
+					canvas.DrawRect(SKRect.Create(0, 0, 1, 1), paint);
+					paint.Shader = blue;
+					canvas.DrawRect(SKRect.Create(1, 0, 1, 1), paint);
+				}
+
+				Assert.Equal(SKColors.Red, bitmap.GetPixel(0, 0));
+				Assert.Equal(SKColors.Blue, bitmap.GetPixel(1, 0));
+			}
+
 			// The SKRuntimeEffectUniforms constructor pre-sizes its internal name->Variable map to
 			// the known uniform count (SKRuntimeEffect.cs). This asserts that building the map with an
 			// explicit capacity is behaviour-identical to the default-sized map for a many-uniform
@@ -384,14 +448,12 @@ namespace SkiaSharp.Tests
 					Assert.Equal(i + 0.5f, floats[i]);
 			}
 
-			// SKRuntimeEffectUniforms.Reset() replaces its internal owned SKData buffer with a
-			// freshly-allocated one. The previous SKData is native ref-counted and owned by the
-			// uniforms object, so it must be disposed when it is replaced — otherwise every Reset()
-			// leaks a native SkData allocation that only the finalizer can reclaim. This asserts the
-			// old buffer's wrapper is deregistered from the handle dictionary (i.e. disposed)
-			// immediately after Reset(), without waiting for a GC.
+			// SKRuntimeEffectUniforms.Reset() clears its owned SKData buffer in place: every consumer
+			// (ToShader / ToColorFilter / ToBlender through ToData(), and SkMesh::Make) copies the
+			// uniform bytes, so nothing else holds the buffer. Reset() therefore allocates nothing and
+			// cannot leak a replaced buffer: the same, still-registered buffer is kept and zeroed.
 			[Fact]
-			public void ResetDisposesPreviousUniformBuffer()
+			public void ResetKeepsAndClearsUniformBuffer()
 			{
 				SkipOnMono();
 
@@ -417,12 +479,18 @@ namespace SkiaSharp.Tests
 				// the wrapper is currently registered against its handle
 				Assert.True(SKObject.GetInstance<SKData>(oldHandle, out _));
 
+				uniforms["uniform_float"] = 3f;
 				uniforms.Reset();
 
-				// after Reset(), the previous buffer must have been disposed and deregistered
-				SKHandleDictionaryTestHelpers.AssertDeregistered(oldHandle, oldData);
+				// after Reset(), the same buffer is in use, still registered, and all zero
+				Assert.Same(oldData, dataField.GetValue(uniforms));
+				Assert.Equal(oldHandle, oldData.Handle);
+				Assert.True(SKObject.GetInstance<SKData>(oldHandle, out _));
+				Assert.All(uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
 
+				// disposing the uniforms releases that buffer
 				uniforms.Dispose();
+				SKHandleDictionaryTestHelpers.AssertDeregistered(oldHandle, oldData);
 			}
 
 			[Fact]

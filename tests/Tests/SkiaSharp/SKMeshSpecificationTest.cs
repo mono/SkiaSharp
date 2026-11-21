@@ -214,5 +214,30 @@ namespace SkiaSharp.Tests
 			// Must not throw "Variable was not found".
 			builder.Uniforms["uImageSize"] = (ReadOnlySpan<float>)new[] { 512f, 512f };
 		}
+
+		[Fact]
+		public void MeshUniformsStartAtZeroAndResetToZero()
+		{
+			const string fragmentShaderWithUniform = @"
+				uniform float2 uImageSize;
+				uniform float4 uTint;
+				float2 main(const Varyings varyings) {
+					return varyings.position * uImageSize + uTint.xy;
+				}";
+
+			var specBuilder = new SKMeshSpecificationBuilder(SimpleVertexShader, fragmentShaderWithUniform);
+			specBuilder.AddAttribute("position", SKMeshSpecificationAttributeType.Float2);
+			using var spec = specBuilder.Build(out var errors);
+			Assert.Null(errors);
+
+			using var builder = new SKMeshBuilder(spec);
+			Assert.All(builder.Uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+
+			builder.Uniforms["uImageSize"] = (ReadOnlySpan<float>)new[] { 512f, 512f };
+			builder.Uniforms["uTint"] = (ReadOnlySpan<float>)new[] { 1f, 2f, 3f, 4f };
+			builder.Uniforms.Reset();
+			Assert.All(builder.Uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+			Assert.Equal(spec.UniformSize, builder.Uniforms.Size);
+		}
 	}
 }
