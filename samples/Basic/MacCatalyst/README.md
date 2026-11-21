@@ -28,6 +28,17 @@ A real-time animated shader running at full frame rate on the GPU via Apple's Me
 - **Render loop** — Continuous animation with `HasRenderLoop` and an FPS counter overlay.
 - **Touch interaction** — Touch/trackpad position is passed as a shader uniform via `UITouch` events.
 
+### Graphite
+
+A real-time animated shader running at full frame rate on the GPU via Skia's Graphite engine over Apple's Metal framework, with touch/trackpad interaction.
+
+**Features:**
+
+- **`SKGraphiteView`** — Hardware-accelerated Graphite GPU canvas backed by Metal.
+- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
+- **Render loop** — Continuous animation with `HasRenderLoop` and an FPS counter overlay.
+- **Touch interaction** — Touch/trackpad position is passed as a shader uniform via `UITouch` events.
+
 ### Drawing
 
 A freehand drawing canvas with a color palette, brush size slider, and a floating clear button.
@@ -60,7 +71,7 @@ To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
 public static SamplePage DefaultPage { get; set; } = SamplePage.Ganesh;
 ```
 
-Available pages: `Cpu` (default), `Ganesh`, `Drawing`
+Available pages: `Cpu` (default), `Ganesh`, `Drawing`, `Graphite`
 
 ## Screenshots
 
