@@ -334,6 +334,101 @@ namespace SkiaSharp
 		public SKGraphiteInsertStatus InsertRecording (SKGraphiteInsertRecordingInfo info) =>
 			SkiaApi.sk_graphite_context_insert_recording (Handle, &info);
 
+		/// <summary>Inserts a recording with target placement, external synchronization, and completion options.</summary>
+		/// <param name="recording">The recording to insert.</param>
+		/// <param name="options">The target, semaphore, and completion options.</param>
+		/// <returns>The result of inserting the recording.</returns>
+		/// <remarks>The caller owns the underlying semaphore objects and must retain them until GPU use has completed. The semaphore wrappers and texture-state descriptor are copied during insertion. Submit the context to execute the work.</remarks>
+		public SKGraphiteInsertStatus InsertRecording (
+			SKGraphiteRecording recording,
+			SKGraphiteInsertRecordingOptions options)
+		{
+			if (recording is null)
+				throw new ArgumentNullException (nameof (recording));
+			if (options.TargetTextureState is not null &&
+				options.TargetSurface is null) {
+				throw new ArgumentException (
+					"A target surface is required when a target texture state is supplied.",
+					nameof (options));
+			}
+			for (var i = 0; i < options.WaitSemaphores.Length; i++) {
+				if (options.WaitSemaphores[i] is null)
+					throw new ArgumentException (
+						"Wait semaphores cannot contain null values.",
+						nameof (options));
+			}
+			for (var i = 0; i < options.SignalSemaphores.Length; i++) {
+				if (options.SignalSemaphores[i] is null)
+					throw new ArgumentException (
+						"Signal semaphores cannot contain null values.",
+						nameof (options));
+			}
+
+			const int MaxStackSemaphoreCount = 16;
+			Span<IntPtr> waitHandles = options.WaitSemaphores.Length <= MaxStackSemaphoreCount
+				? stackalloc IntPtr[options.WaitSemaphores.Length]
+				: new IntPtr[options.WaitSemaphores.Length];
+			Span<IntPtr> signalHandles = options.SignalSemaphores.Length <= MaxStackSemaphoreCount
+				? stackalloc IntPtr[options.SignalSemaphores.Length]
+				: new IntPtr[options.SignalSemaphores.Length];
+			for (var i = 0; i < waitHandles.Length; i++)
+				waitHandles[i] = options.WaitSemaphores[i].Handle;
+			for (var i = 0; i < signalHandles.Length; i++)
+				signalHandles[i] = options.SignalSemaphores[i].Handle;
+
+			var contextHandle = Handle;
+			var recordingHandle = recording.Handle;
+			var targetSurfaceHandle = options.TargetSurface?.Handle ?? IntPtr.Zero;
+			var targetStateHandle = options.TargetTextureState?.Handle ?? IntPtr.Zero;
+			var targetClip = options.TargetClip;
+			var callbackInvoked = false;
+			var callback = options.Finished;
+			SKGraphiteFinishedDelegate completion = callback is null ? null : success => {
+				callbackInvoked = true;
+				callback (success);
+			};
+			DelegateProxies.Create (completion, out var finishedHandle, out var finishedContext);
+			var finishedProxy = completion is not null
+				? DelegateProxies.SKGraphiteFinishedProxy
+				: null;
+
+			SKGraphiteInsertStatus status;
+			try {
+				fixed (IntPtr* waits = waitHandles)
+				fixed (IntPtr* signals = signalHandles) {
+					status = SkiaApi.sk_graphite_context_insert_recording_full (
+						contextHandle,
+						recordingHandle,
+						targetSurfaceHandle,
+						options.TargetTranslation.X,
+						options.TargetTranslation.Y,
+						&targetClip,
+						targetStateHandle,
+						(void**)waits,
+						waitHandles.Length,
+						(void**)signals,
+						signalHandles.Length,
+						finishedProxy,
+						(void*)finishedContext);
+				}
+			} catch when (!callbackInvoked) {
+				if (finishedHandle.IsAllocated)
+					finishedHandle.Free ();
+				throw;
+			} finally {
+				GC.KeepAlive (this);
+				GC.KeepAlive (recording);
+				GC.KeepAlive (options.TargetSurface);
+				GC.KeepAlive (options.TargetTextureState);
+				for (var i = 0; i < options.WaitSemaphores.Length; i++)
+					GC.KeepAlive (options.WaitSemaphores[i]);
+				for (var i = 0; i < options.SignalSemaphores.Length; i++)
+					GC.KeepAlive (options.SignalSemaphores[i]);
+			}
+
+			return status;
+		}
+
 		/// <summary>Submits all inserted recordings to the GPU without waiting for completion.</summary>
 		/// <returns><see langword="true" /> if the work was submitted successfully; otherwise, <see langword="false" />.</returns>
 		/// <remarks />
