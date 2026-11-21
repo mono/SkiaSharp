@@ -345,21 +345,25 @@ namespace SkiaSharp.Tests
 				Assert.Null(errorText);
 
 				using var uniforms = new SKRuntimeEffectUniforms(effect);
-				Assert.All(uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+				using var initial = uniforms.ToData();
+				Assert.All(initial.ToArray(), b => Assert.Equal(0, b));
 
 				uniforms["a"] = new[] { 1f, 2f, 3f, 4f };
 				uniforms["b"] = new[] { 5f, 6f, 7f, 8f };
 				uniforms["c"] = new[] { 9f, 10f, 11f };
 				uniforms["d"] = 12f;
-				Assert.Contains(uniforms.ToData().ToArray(), b => b != 0);
+				using var written = uniforms.ToData();
+				Assert.Contains(written.ToArray(), b => b != 0);
 
 				uniforms.Reset();
-				Assert.All(uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+				using var reset = uniforms.ToData();
+				Assert.All(reset.ToArray(), b => Assert.Equal(0, b));
 				Assert.Equal(effect.UniformSize, uniforms.Size);
 
 				// Still writable after a reset.
 				uniforms["d"] = 12f;
-				Assert.Equal(12f, BitConverter.ToSingle(uniforms.ToData().ToArray(), uniforms.Size - sizeof(float)));
+				using var rewritten = uniforms.ToData();
+				Assert.Equal(12f, BitConverter.ToSingle(rewritten.ToArray(), uniforms.Size - sizeof(float)));
 			}
 
 			// Reset() clears the block in place, so a shader made before it must keep its own copy of the values.
@@ -486,7 +490,8 @@ namespace SkiaSharp.Tests
 				Assert.Same(oldData, dataField.GetValue(uniforms));
 				Assert.Equal(oldHandle, oldData.Handle);
 				Assert.True(SKObject.GetInstance<SKData>(oldHandle, out _));
-				Assert.All(uniforms.ToData().ToArray(), b => Assert.Equal(0, b));
+				using var cleared = uniforms.ToData();
+				Assert.All(cleared.ToArray(), b => Assert.Equal(0, b));
 
 				// disposing the uniforms releases that buffer
 				uniforms.Dispose();
