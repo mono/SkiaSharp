@@ -162,6 +162,8 @@ stages:
                 preBuildSteps:
                   - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
                     displayName: Install the iOS ${{ ios.version }} simulator runtime
+                    env:
+                      DEVELOPER_DIR: /Applications/Xcode_$(XCODE_VERSION_IOS_RUNTIME_DOWNLOAD).app/Contents/Developer
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:
