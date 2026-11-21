@@ -76,6 +76,7 @@ standard Darc/Maestro stages.
 | Sync - Skia Submodule | mono/SkiaSharp | Daily (10:30 UTC) | Skia submodule pin goes stale |
 | Sync - Release Notes & API Diffs | mono/SkiaSharp | Push to main + daily | Release notes stop auto-updating |
 | Sync - Skia Upstream | mono/SkiaSharp | Every 6h | Upstream tracking breaks |
+| Review - Skia Upstream | mono/SkiaSharp | Workflow dispatch after upstream sync | Independent Skia review reports stop |
 | Fixer - Memory Leak | mono/SkiaSharp | Every 12h | Leak-hunting automation stops |
 | Fixer - Performance | mono/SkiaSharp | Every 12h | Perf-hunting automation stops |
 | Sync - Issue Triage | mono/SkiaSharp | Daily | Triage automation stops |

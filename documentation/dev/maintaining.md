@@ -55,6 +55,18 @@ Reviewing PRs is mostly making sure the APIs are useful to the general community
 
 It is important to make sure that the new code and bugfixes have tests demonstrating the feature. As the upgrades happen, we need to ensure that the feature is covered.
 
+Automatic upstream Skia syncs dispatch **Review - Skia Upstream** after creating or
+updating both linked draft PRs. It runs the `review-skia-update` skill and posts an
+independent report on the SkiaSharp PR, with complete JSON/HTML in the run's agent
+artifact. Later reports hide older comments from the same workflow. Incomplete
+checks are reported as failures, not approval; maintainers still review and merge.
+
+To rerun a review of an open automatic sync PR:
+
+```bash
+gh workflow run review-skia-sync.lock.yml --repo mono/SkiaSharp --ref main -f skiasharp_pr=<number>
+```
+
 
 ---
 
