@@ -340,7 +340,7 @@ public sealed partial class SampleDetailPage : ContentPage
             lastWidth = info.Width;
             lastHeight = info.Height;
             var backend = !gpuFrame ? "CPU · raster" :
-#if MACCATALYST
+#if MACCATALYST || __MACOS__
                 "GPU · Metal";
 #elif WINDOWS
                 "GPU · ANGLE / DirectX";

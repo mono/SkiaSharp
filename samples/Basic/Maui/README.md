@@ -12,7 +12,7 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 
 **Features:**
 
-- **`SKCanvasView`** — Software-rendered canvas that maps to the platform-native SkiaSharp view on each target (Android, iOS, Mac Catalyst, Windows).
+- **`SKCanvasView`** — Software-rendered canvas that maps to the platform-native SkiaSharp view on each target (Android, iOS, Mac Catalyst, AppKit macOS, Windows).
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
@@ -24,9 +24,9 @@ A real-time animated shader running at full frame rate on the GPU, with touch in
 
 **Features:**
 
-- **`SKGLView`** — Hardware-accelerated canvas that maps per-platform: `SKGLTextureView` on Android, `SKGLView` on iOS, `SKMetalView` on Mac Catalyst, `SKSwapChainPanel` on Windows.
+- **`SKGLView`** — Hardware-accelerated canvas that maps per-platform: `SKGLTextureView` on Android, `SKGLView` on iOS, `SKMetalView` on Mac Catalyst and native AppKit macOS, `SKSwapChainPanel` on Windows.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **`EnableRenderLoop`** — Continuous animation driven by the platform's render loop.
+- **`HasRenderLoop`** — Continuous animation driven by the platform's render loop.
 - **Touch interaction** — Touch position is passed as a shader uniform via MAUI's `Touch` event.
 
 ### Drawing
@@ -43,7 +43,7 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 
 ## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - MAUI workload: `dotnet workload install maui`
 
 ## Running the Sample
@@ -51,10 +51,26 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 Build and run for a specific platform:
 
 ```bash
-dotnet build -f net8.0-maccatalyst
-dotnet build -f net8.0-android
-dotnet build -f net8.0-ios
+dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net10.0-maccatalyst
+dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net10.0-android
+dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net10.0-ios
 ```
+
+The separate experimental AppKit project reuses the same CPU, GPU, and Drawing
+pages without changing the stable MAUI sample. Build it from this source
+checkout; the generated-sample package suite does not include the experimental
+AppKit handler package:
+
+```bash
+dotnet run --project samples/Basic/Maui/SkiaSharpSample.MacOS/SkiaSharpSample.MacOS.csproj -f net10.0-macos -p:PlatformTargetFrameworks=net10.0-macos
+```
+
+It requires macOS 14+, .NET 10 with a compatible Xcode, MAUI 10.0.51+, the
+native `Microsoft.Maui.Platforms.MacOS` preview backend, and matching
+`output/native/osx/libSkiaSharp.dylib` assets. The platform override opts the
+shared native views project into its optional macOS target for local builds.
+The AppKit host registers MacOS Essentials and the experimental
+`UseSkiaSharpMacOS()` handlers.
 
 To start on a different page, change `DefaultPage` in `App.xaml.cs`:
 
