@@ -112,6 +112,56 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		// The PDF backend first offers a lazy image's encoded bytes to the JPEG
+		// decoder, so a PNG makes libjpeg fail through setjmp/longjmp.
+		[Fact]
+		public void Issue_5645_LazyImageCanBeDrawnOnPdf()
+		{
+			using var image = CreateLazyPngImage();
+			using var stream = new SKDynamicMemoryWStream();
+
+			using (var doc = SKDocument.CreatePdf(stream))
+			{
+				var canvas = doc.BeginPage(image.Width, image.Height);
+				canvas.DrawImage(image, 0, 0);
+				doc.EndPage();
+				doc.Close();
+			}
+
+			Assert.True(stream.BytesWritten > 0);
+		}
+
+		[Fact]
+		public void Issue_5645_LazyImageShaderCanBeDrawnOnPdf()
+		{
+			using var image = CreateLazyPngImage();
+			using var shader = image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
+			using var paint = new SKPaint { Shader = shader };
+			using var stream = new SKDynamicMemoryWStream();
+
+			using (var doc = SKDocument.CreatePdf(stream))
+			{
+				var canvas = doc.BeginPage(image.Width, image.Height);
+				canvas.DrawRect(SKRect.Create(image.Width, image.Height), paint);
+				doc.EndPage();
+				doc.Close();
+			}
+
+			Assert.True(stream.BytesWritten > 0);
+		}
+
+		static SKImage CreateLazyPngImage()
+		{
+			using var bitmap = new SKBitmap(64, 48);
+			bitmap.Erase(SKColors.Red);
+			using var source = SKImage.FromBitmap(bitmap);
+			using var encoded = source.Encode(SKEncodedImageFormat.Png, 100);
+
+			var image = SKImage.FromEncodedData(encoded);
+			Assert.True(image.IsLazyGenerated);
+			return image;
+		}
+
 		[Fact]
 		public void ManagedStreamDisposeOrder()
 		{

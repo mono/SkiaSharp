@@ -61,6 +61,14 @@ Task("libSkiaSharp")
         var spectreLibPath = GetSpectreLibPath(arch);
         var nativeOutDir = $"{VARIANT}/{arch}";
 
+        // LLVM 22+ pads some x64 calls with a nop for Windows EH but emits the
+        // CFG long-jump label for setjmp after that nop, one byte past the real
+        // return address. Windows then rejects every longjmp (libjpeg/libpng
+        // error recovery) and the process dies. Keep CFG, drop the long-jump
+        // table. https://github.com/mono/SkiaSharp/issues/5645
+        // Remove once LLVM is fixed: https://github.com/llvm/llvm-project/issues/244137
+        var guardLdflag = !string.IsNullOrEmpty(LLVM_PATH.FullPath) && skiaArch == "x64" ? "/guard:cf,nolongjmp" : "/guard:cf";
+
         GenerateGnBuild(nativeOutDir,
             $"target_os='win'" +
             $"target_cpu='{skiaArch}' " +
@@ -86,7 +94,7 @@ Task("libSkiaSharp")
             win_vcvars_version +
             win_sdk_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DSK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '{guardLdflag}', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
 
         RunNinjaWithVcVars(SKIA_PATH, $"out/{nativeOutDir}", "SkiaSharp", vcVarsArchitecture);
