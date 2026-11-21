@@ -15,15 +15,31 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 0,
+    "product": 1,
     "mixed": 0,
     "internal": 1
   },
   "breaking_candidates": [],
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "ramezgerges",
+      "url": "https://github.com/ramezgerges",
+      "prs": [
+        5835
+      ]
+    }
+  ],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5835": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5835",
+      "title": "[4.155] Pass -sUSE_WEBGPU to Uno WASM heads only on net8.0",
+      "body": "On .NET 9+ the WebAssembly block links Dawn's emdawnwebgpu port, whose\nlibrary_webgpu.js refuses to link with emsdk's -sUSE_WEBGPU. The Uno\nblock added that flag unconditionally, so an Uno 6.x WASM app with the\nSkia renderer failed to link with \"To use Dawn's library_webgpu.js,\ndisable -sUSE_WEBGPU\". Only net8.0 (emsdk 3.1.34) still uses the\nbuilt-in WebGPU port, so add the flag only there. Main no longer has the\nflag at all (the Uno block went with the Uno 7 move in #5377, and .NET 8\nWASM support was dropped).\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "product"
+    },
     "5803": {
       "url": "https://github.com/mono/SkiaSharp/pull/5803",
       "title": "Bump to the next version (4.155.3) after release",
