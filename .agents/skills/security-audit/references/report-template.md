@@ -21,7 +21,28 @@ Templates for formatting security audit findings. All dependencies — including
 | ⚪ False positive | N |
 ```
 
+Include TSA status immediately after the security summary:
+
+```markdown
+## TSA Azure Boards Work Items
+
+**Query:** success · **Active:** N · **Historical:** N
+**Codebase:** `TSA-skiasharp.skiasharp_main`
+
+| Activity | ID | State | Category | Tool / Rule | Title | Correlation |
+|----------|----|-------|----------|-------------|-------|-------------|
+| Active | [1234567](https://dev.azure.com/dnceng/internal/_workitems/edit/1234567) | Active | Compliance | Roslyn / CA2265 | ... | Unmatched |
+```
+
+Render active/actionable items first and historical records in a separate table. Do not omit
+resolved records: they are evidence for deduplication and suppression history. Include the
+codebase-tag search link and individual dnceng/internal work-item links.
+
 ## Detailed Findings
+
+Only include audited product dependencies from `findings`. Component Governance and TSA are
+rendered once in their dedicated sections; their actions may also appear in `nextSteps`, but must
+not be repeated as synthetic dependency findings.
 
 Use **separate tables per item** to avoid terminal wrapping issues.
 All dependencies — Skia core and third-party — are listed together, sorted by priority:
