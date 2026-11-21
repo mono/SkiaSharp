@@ -116,7 +116,14 @@ namespace SkiaSharp
 		/// <remarks />
 		public bool ProtectedContext { get; set; }
 
-		internal GRVkBackendContextNative ToNative () =>
+		/// <summary>Gets or sets the callback invoked when Skia detects that the Vulkan device has been lost.</summary>
+		/// <value>The handler to invoke, or <see langword="null" /> to receive no notification.</value>
+		/// <remarks>Each <see cref="T:SkiaSharp.GRContext" /> captures the handler assigned when it is created and keeps it alive for the rest of the process, so changing this property or disposing this <see cref="T:SkiaSharp.GRVkBackendContext" /> does not affect existing contexts. Because the handler is never released, keep it lightweight and avoid capturing large objects such as views or pages. Do not dispose the <see cref="T:SkiaSharp.GRContext" /> inside the callback; schedule teardown after the current GPU operation completes.</remarks>
+		public GRVkDeviceLostDelegate DeviceLost { get; set; }
+
+		// The device-lost user data belongs to the GRContext being created, not to
+		// this backend: Skia's GrVkGpu keeps the pointer for the context's lifetime.
+		internal GRVkBackendContextNative ToNative (void* deviceLostUserData) =>
 			new GRVkBackendContextNative {
 				fInstance = VkInstance,
 				fDevice = VkDevice,
@@ -129,7 +136,9 @@ namespace SkiaSharp
 				fDeviceFeatures2 = VkPhysicalDeviceFeatures2,
 				fGetProcUserData = getProcContext,
 				fGetProc = getProcContext is not null ? DelegateProxies.GRVkGetProcProxy : null,
-				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0
+				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0,
+				fDeviceLostUserData = deviceLostUserData,
+				fDeviceLostProc = deviceLostUserData is not null ? DelegateProxies.GRVkDeviceLostProxy : null,
 			};
 	}
 }

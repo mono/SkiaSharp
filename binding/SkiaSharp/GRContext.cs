@@ -2,9 +2,14 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+#if THROW_OBJECT_EXCEPTIONS
+	using GCHandle = SkiaSharp.GCHandleProxy;
+#endif
+
 	/// <summary>Represents an underlying backend 3D API context.</summary>
 	/// <remarks />
 	public unsafe class GRContext : GRRecordingContext
@@ -91,12 +96,32 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
-			if (options == null) {
-				return GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
-			} else {
-				var opts = options.ToNative ();
-				return GetObject (SkiaApi.gr_direct_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+			var opts = options?.ToNative () ?? default;
+
+			// One handle per context, intentionally never freed once the context
+			// exists. GrVkGpu keeps the raw user data and Skia gives no signal when
+			// the last native holder goes away, so no managed owner can know when
+			// freeing it is safe. Only a failed creation hands nothing to Skia.
+			GCHandle deviceLostHandle = default;
+			void* deviceLostUserData = null;
+			if (backendContext.DeviceLost is { } deviceLost) {
+				DelegateProxies.Create (deviceLost, out deviceLostHandle, out var userData);
+				deviceLostUserData = (void*)userData;
 			}
+
+			var native = backendContext.ToNative (deviceLostUserData);
+			var handle = options == null
+				? SkiaApi.gr_direct_context_make_vulkan (native)
+				: SkiaApi.gr_direct_context_make_vulkan_with_options (native, &opts);
+			GC.KeepAlive (backendContext);
+
+			if (handle == IntPtr.Zero) {
+				if (deviceLostHandle.IsAllocated)
+					deviceLostHandle.Free ();
+				return null;
+			}
+
+			return GetObject (handle);
 		}
 
 		/// <summary>Creates a <see cref="T:SkiaSharp.GRContext" /> for a Direct3D context.</summary>
