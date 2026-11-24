@@ -6,7 +6,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBFontFuncsTest : HBTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ImmutableFunctionsShouldNotChange()
 		{
 			using (var fontFuncs = new FontFunctions())
@@ -16,7 +16,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphContourPointDelegate()
 		{
 			using (var font = new Font(Font))
@@ -42,7 +42,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalFontExtentsDelegate()
 		{
 			using (var font = new Font(Font))
@@ -67,7 +67,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphExtentsDelegate()
 		{
 			using (var font = new Font(Font))
@@ -92,7 +92,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphFromNameDelegate()
 		{
 			using (var font = new Font(Font))
@@ -115,7 +115,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetGlyphNameDelegate()
 		{
 			using (var font = new Font(Font))
@@ -138,7 +138,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TryGetGlyphNameIsCorrectWithDelegate()
 		{
 			// get an array and fill it with things
@@ -168,7 +168,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphAdvanceDelegate()
 		{
 			using (var font = new Font(Font))
@@ -186,7 +186,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetNominalGlyphDelegate()
 		{
 			using (var font = new Font(Font))
@@ -209,7 +209,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetNominalGlyphsDelegate()
 		{
 			using (var font = new Font(Font))
@@ -232,7 +232,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphAdvancesDelegate()
 		{
 			using (var font = new Font(Font))
@@ -253,7 +253,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphOriginDelegate()
 		{
 			using (var font = new Font(Font))
@@ -277,7 +277,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetVariationGlyphDelegate()
 		{
 			using (var font = new Font(Font))
@@ -300,7 +300,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSetHorizontalGlyphKerningDelegate()
 		{
 			using (var font = new Font(Font))
@@ -315,6 +315,82 @@ namespace HarfBuzzSharp.Tests
 				var kerning = font.GetHorizontalGlyphKerning(49, 50);
 
 				Assert.Equal(1337, kerning);
+			}
+		}
+
+		[Fact]
+		public void FalseReturningDelegatesShouldReturnFalse()
+		{
+			using (var font = new Font(Face.Empty))
+			using (var fontFuncs = new FontFunctions())
+			{
+				fontFuncs.SetHorizontalFontExtentsDelegate((Font f, object fd, out FontExtents e) =>
+				{
+					e = default;
+					return false;
+				});
+				fontFuncs.SetVerticalFontExtentsDelegate((Font f, object fd, out FontExtents e) =>
+				{
+					e = default;
+					return false;
+				});
+				fontFuncs.SetNominalGlyphDelegate((Font f, object fd, uint u, out uint g) =>
+				{
+					g = 0;
+					return false;
+				});
+				fontFuncs.SetVariationGlyphDelegate((Font f, object fd, uint u, uint v, out uint g) =>
+				{
+					g = 0;
+					return false;
+				});
+				fontFuncs.SetHorizontalGlyphOriginDelegate((Font f, object fd, uint g, out int px, out int py) =>
+				{
+					px = 0;
+					py = 0;
+					return false;
+				});
+				fontFuncs.SetVerticalGlyphOriginDelegate((Font f, object fd, uint g, out int px, out int py) =>
+				{
+					px = 0;
+					py = 0;
+					return false;
+				});
+				fontFuncs.SetGlyphExtentsDelegate((Font f, object fd, uint g, out GlyphExtents e) =>
+				{
+					e = default;
+					return false;
+				});
+				fontFuncs.SetGlyphContourPointDelegate((Font f, object fd, uint g, uint p, out int px, out int py) =>
+				{
+					px = 0;
+					py = 0;
+					return false;
+				});
+				fontFuncs.SetGlyphNameDelegate((Font f, object fd, uint g, out string n) =>
+				{
+					n = string.Empty;
+					return false;
+				});
+				fontFuncs.SetGlyphFromNameDelegate((Font f, object fd, string n, out uint g) =>
+				{
+					g = 0;
+					return false;
+				});
+
+				fontFuncs.MakeImmutable();
+				font.SetFontFunctions(fontFuncs, "FontData");
+
+				Assert.False(font.TryGetHorizontalFontExtents(out _));
+				Assert.False(font.TryGetVerticalFontExtents(out _));
+				Assert.False(font.TryGetNominalGlyph('H', out _));
+				Assert.False(font.TryGetVariationGlyph('H', 1, out _));
+				Assert.False(font.TryGetHorizontalGlyphOrigin('H', out _, out _));
+				Assert.False(font.TryGetVerticalGlyphOrigin('H', out _, out _));
+				Assert.False(font.TryGetGlyphExtents('H', out _));
+				Assert.False(font.TryGetGlyphContourPoint('H', 0, out _, out _));
+				Assert.False(font.TryGetGlyphName('H', out _));
+				Assert.False(font.TryGetGlyphFromName("H", out _));
 			}
 		}
 	}

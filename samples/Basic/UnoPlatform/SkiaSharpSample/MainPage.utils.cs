@@ -1,5 +1,9 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 using HarfBuzzSharp;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
 
@@ -39,9 +43,9 @@ public partial class MainPage
 				.GetAssemblies()
 				.Select(a => a.GetName().Name)
 				.OrderBy(n => n);
-			foreach (var ass in assemblies)
+			foreach (var assemblyName in assemblies)
 			{
-				modules.Items.Add(new MenuFlyoutItem { Text = ass });
+				modules.Items.Add(new MenuFlyoutItem { Text = assemblyName });
 			}
 		};
 

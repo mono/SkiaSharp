@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -7,9 +8,11 @@ namespace SkiaSharp.Tests
 	public class SKFontManagerTest : SKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
+		[Fact]
 		public void TestFontManagerMatchCharacter()
 		{
+			SkipWhenNoSystemFontManager();
+
 			var fonts = SKFontManager.Default;
 			var emoji = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
@@ -28,13 +31,14 @@ namespace SkiaSharp.Tests
 			Assert.Contains(familyName, UnicodeFontFamilies);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestCreateDefault()
 		{
 			Assert.NotNull(SKFontManager.CreateDefault());
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestFamilyCount()
 		{
 			var fonts = SKFontManager.Default;
@@ -45,9 +49,11 @@ namespace SkiaSharp.Tests
 			Assert.Equal(fonts.FontFamilyCount, families.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestGetFontStyles()
 		{
+			SkipWhenNoSystemFontManager();
+
 			var fonts = SKFontManager.Default;
 
 			var set = fonts.GetFontStyles(DefaultFontFamily);
@@ -56,9 +62,11 @@ namespace SkiaSharp.Tests
 			Assert.True(set.Count > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestMatchFamilyStyle()
 		{
+			SkipWhenNoSystemFontManager();
+
 			var fonts = SKFontManager.Default;
 
 			var tf = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Bold);
@@ -67,7 +75,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((int)SKFontStyleWeight.Bold, tf.FontWeight);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NullWithMissingFile()
 		{
 			var fonts = SKFontManager.Default;
@@ -75,7 +83,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(fonts.CreateTypeface(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestFamilyName()
 		{
 			var fonts = SKFontManager.Default;
@@ -86,7 +94,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadNonASCIIFile()
 		{
 			var fonts = SKFontManager.Default;
@@ -97,7 +105,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadData()
 		{
 			var fonts = SKFontManager.Default;
@@ -110,17 +118,16 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public void StreamIsAccessibleFromNativeType()
 		{
-			var paint = CreateFont(out var typefaceHandle);
+			SkipOnMono();
+
+			var paint = CreateFont(out var typefaceHandle, out var weakTypeface);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(typefaceHandle, weakTypeface);
 
 			var tf = paint.Typeface;
 
@@ -128,14 +135,15 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.TryGetTableTags(out var tags));
 			Assert.NotEmpty(tags);
 
-			SKFont CreateFont(out IntPtr handle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			SKFont CreateFont(out IntPtr handle, out WeakReference typefaceRef)
 			{
 				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 				var dotnet = new MemoryStream(bytes);
 				var stream = new SKManagedStream(dotnet, true);
 
 				var typeface = SKFontManager.Default.CreateTypeface(stream);
-				handle = typeface.Handle;
+				SKHandleDictionaryTestHelpers.Track(typeface, out handle, out typefaceRef);
 
 				return new SKFont
 				{
@@ -144,7 +152,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadNonSeekableStream()
 		{
 			var fonts = SKFontManager.Default;
@@ -157,7 +165,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetFontStyles()
 		{
 			var fonts = SKFontManager.Default;
@@ -165,7 +173,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(fonts.GetFontStyles(0));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDisposeDefault()
 		{
 			// get the fist
@@ -183,7 +191,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(fonts);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromPathReturnsDifferentObject()
 		{
 			var fonts = SKFontManager.Default;
@@ -196,7 +204,7 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromStreamReturnsDifferentObject()
 		{
 			var fonts = SKFontManager.Default;
@@ -210,7 +218,7 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromDataReturnsDifferentObject()
 		{
 			var fonts = SKFontManager.Default;
@@ -223,7 +231,7 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromFamilyReturnsSameObject()
 		{
 			var fonts = SKFontManager.Default;
@@ -234,9 +242,11 @@ namespace SkiaSharp.Tests
 			Assert.Same(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromFamilyDisposeDoesNotDispose()
 		{
+			SkipWhenNoSystemFontManager();
+
 			var fonts = SKFontManager.Default;
 
 			var tf1 = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
@@ -250,32 +260,37 @@ namespace SkiaSharp.Tests
 			Assert.False(tf1.IsDisposed);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void TypefaceAndFontManagerReturnsSameObject()
 		{
+			SkipWhenNoSystemFontManager();
+
 			var fonts = SKFontManager.Default;
 
-			var tf1 = fonts.MatchFamily("Times New Roman");
-			var tf2 = SKTypeface.FromFamilyName("Times New Roman");
+			// Use a font family known to exist on the current platform
+			var familyName = DefaultFontFamily;
 
+			var tf1 = fonts.MatchFamily(familyName);
+			var tf2 = SKTypeface.FromFamilyName(familyName);
+
+			Assert.NotNull(tf1);
 			Assert.Same(tf1, tf2);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)]
-		[SkippableFact]
+		[Fact]
 		public unsafe void GCStillCollectsTypeface()
 		{
-			var handle = DoWork();
+			SkipOnNonWindows("Test uses Windows-specific font path");
+			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
+
+			DoWork(out var handle, out var weakTypeface);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKTypeface>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakTypeface);
 
-			static IntPtr DoWork()
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static void DoWork(out IntPtr typefaceHandle, out WeakReference typefaceRef)
 			{
 				var fonts = SKFontManager.Default;
 
@@ -299,8 +314,14 @@ namespace SkiaSharp.Tests
 				Assert.Equal(IntPtr.Zero, tf3.Handle);
 				Assert.True(tf3.IsDisposed);
 
-				return tf1.Handle;
+				SKHandleDictionaryTestHelpers.Track(tf1, out typefaceHandle, out typefaceRef);
 			}
+		}
+
+		[Fact]
+		public void FontManagerDefaultHasValidHandle()
+		{
+			Assert.NotEqual(IntPtr.Zero, SKFontManager.Default.Handle);
 		}
 	}
 }

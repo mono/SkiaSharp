@@ -11,13 +11,13 @@ This is a small set of tools that help with generating the p/invoke layer from t
 Regenerate all P/Invoke bindings:
 
 ```pwsh
-./utils/generate.ps1
+pwsh ./utils/generate.ps1
 ```
 
 Regenerate a specific binding:
 
 ```pwsh
-./utils/generate.ps1 -Config libSkiaSharp.json
+pwsh ./utils/generate.ps1 -Config libSkiaSharp.json
 ```
 
 Available configs:
@@ -39,8 +39,8 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- verif
   The path to the JSON file that help generate a useful set of p/invoke definions and structures.
 * `--skia externals/skia`  
   The path to the root of the skia source.
-* `--output binding/Binding/SkiaApi.generated.cs`  
-  The path to the generated file.
+* `--output binding/Binding/Generated`
+  The output directory for the generated source tree.
 
 ### Cookie Detector
 
@@ -61,17 +61,3 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cooki
   Read the assembly and log any missing interops.
 * `--type <full type name>`  
   The type containing the interops.
-
-## WasmTestRunner
-
-Run the WASM unit tests in a browser.
-
-This can be run with:
-
-```pwsh
-dotnet run --project=utils/WasmTestRunner/WasmTestRunner.csproj -- "http://localhost:5000/"
-```
-
-* `--output TestResults.xml`  
-* `--timeout 30`  
-* `--no-headless`  

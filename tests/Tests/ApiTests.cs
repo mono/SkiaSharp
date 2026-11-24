@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Xunit;
@@ -17,6 +18,7 @@ namespace SkiaSharp.Tests
 			typeof(HarfBuzzSharp.HarfBuzzApi),
 			typeof(SkiaSharp.SceneGraphApi),
 			typeof(SkiaSharp.SkottieApi),
+			typeof(SkiaSharp.ResourcesApi),
 		};
 
 		private static IEnumerable<Type> InteropApiDelegatesTypes => new[]
@@ -57,7 +59,7 @@ namespace SkiaSharp.Tests
 			InteropDelegates.Select(m => new object[] { m });
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void DelegateTypesAreValid()
 		{
 			var del = InteropDelegatesData;
@@ -69,9 +71,31 @@ namespace SkiaSharp.Tests
 #endif
 		}
 
+#if USE_LIBRARY_IMPORT
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
+		[Fact]
+		public void LibraryImportsUseCdeclCallingConvention()
+		{
+			foreach (var apiType in InteropApiTypes)
+			{
+				var methods = apiType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+					.Where(m => m.GetCustomAttribute<LibraryImportAttribute>() != null)
+					.ToArray();
+
+				Assert.NotEmpty(methods);
+				foreach (var method in methods)
+				{
+					var callConvs = method.GetCustomAttribute<UnmanagedCallConvAttribute>()?.CallConvs;
+					Assert.True(callConvs?.SequenceEqual(new[] { typeof(CallConvCdecl) }) == true,
+						$"{apiType.Name}.{method.Name} must use the cdecl calling convention.");
+				}
+			}
+		}
+#endif
+
 #if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropDelegatesData))]
 		public void DelegateTypesHaveAttributes(Type delegateType)
 		{
@@ -80,7 +104,7 @@ namespace SkiaSharp.Tests
 #endif
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreNotInvalid(MethodInfo method, string delegateName)
 		{
@@ -104,7 +128,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiReturnTypesArePrimitives(MethodInfo method, string delegateName)
 		{
@@ -131,7 +155,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(InteropMembersData))]
 		public void ApiTypesAreMarshalledCorrectly(MethodInfo method, string delegateName)
 		{
@@ -183,7 +207,8 @@ namespace SkiaSharp.Tests
 							paramType.FullName != typeof(SKManagedWStreamDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName &&
-							paramType.FullName != typeof(GRVkBackendContextNative).FullName; // TODO: this type probably needs better checks as it is not 100% delegates
+							paramType.FullName != typeof(GRVkBackendContextNative).FullName && // TODO: this type probably needs better checks as it is not 100% delegates
+							paramType.FullName != typeof(SKGraphiteVkBackendContextNative).FullName; // same shape as GRVkBackendContextNative (managed delegate field)
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
@@ -204,7 +229,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableTheory]
+		[Theory]
 		// too old
 		[InlineData("80.0", "0.0", "[80.0, 81.0)")]
 		// same version
@@ -248,21 +273,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void TestLibraryVersions()
 		{
 			Assert.True(SkiaSharpVersion.CheckNativeLibraryCompatible());
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void TestLibraryVersionsDoesNotThrow()
 		{
 			SkiaSharpVersion.CheckNativeLibraryCompatible(true);
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
-		[SkippableFact]
+		[Fact]
 		public void TestVersionsString()
 		{
 			Assert.Equal(SkiaSharpVersion.Native.ToString(2), SkiaSharpVersion.NativeString);

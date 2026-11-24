@@ -1,7 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../scripts/cake/shared.cake"
+#load "../../scripts/infra/shared/shared.cake"
 
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnWindows())
@@ -11,7 +11,9 @@ Task("libSkiaSharp")
         { "variant", "nanoserver" },
         { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
         { "arch", "x64" },
+        { "supportVulkan", "false" },
         { "supportDirect3D", "false" },
+        { "useFreeType", "true" },
     });
 
     DotNetTool("nano-api-scan " + OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libSkiaSharp.dll").FullPath);

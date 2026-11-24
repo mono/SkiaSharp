@@ -1,0 +1,88 @@
+{
+  "format": 6,
+  "version": "4.151.5",
+  "family": "skiasharp",
+  "status": "stable",
+  "banner": {
+    "kind": "stable",
+    "date": "September 29, 2026",
+    "nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.151.5",
+    "preview_nuget_url": null,
+    "github_release_url": "https://github.com/mono/SkiaSharp/releases/tag/v4.151.5"
+  },
+  "harfbuzz": {
+    "version": "14.2.1.105",
+    "api_diff_link": "harfbuzzsharp/14.2.1.105/index.md",
+    "prs": []
+  },
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [
+    {
+      "label": "SkiaSharp API diff",
+      "href": "4.151.5/index.md"
+    },
+    {
+      "label": "HarfBuzzSharp API diff",
+      "href": "harfbuzzsharp/14.2.1.105/index.md"
+    }
+  ],
+  "tallies": {
+    "product": 1,
+    "mixed": 0,
+    "internal": 1
+  },
+  "breaking_candidates": [],
+  "contributors": [],
+  "previews": [],
+  "shipments": [
+    {
+      "tag": "v4.151.5",
+      "core_version": "4.151.5",
+      "public_version": "4.151.5",
+      "channel": "stable",
+      "label": "Stable",
+      "previous_tag": "v4.151.4",
+      "target_sha": "28fbc38c117fcbd262b2bc912d57a1b677adc12c",
+      "date": "2026-09-29",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.151.4...v4.151.5",
+      "prs": [
+        5149,
+        5186
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "SkiaSharp Release Bot",
+          "kind": "human"
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        }
+      ]
+    }
+  ],
+  "prs": {
+    "5186": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5186",
+      "title": "[release/4.151.x] Disable RAW and DNG image decoding",
+      "body": "[release/4.151.x] Disable RAW and DNG image decoding (#5186)\n\nContext: https://github.com/mono/SkiaSharp/pull/5162\nRequires: https://github.com/mono/skia/pull/377\nChanges: https://github.com/mono/skia/compare/ad2b1b49da724dc996c773043075eed32690aa6c...74fb56c9f097a1241f38542d31e2edcbe685178b\n\nBackport the RAW/DNG retirement to M151 while preserving the public ABI\nand keeping dependency acquisition consistent with codec availability.\n\n~~ Codec support and ABI ~~\n\nSkiaSharp 4.151 should no longer decode RAW/DNG through Adobe's DNG SDK\nor extract embedded JPEG previews with PIEX. Disable both GN options in\nthe shared native configuration, remove conflicting platform overrides\nand the DNG-only Alpine __WORDSIZE workaround.\n\nRemove DNG from the Gallery picker. Preserve the original media bytes as\na test fixture and cover unsupported file, managed-stream, SKData,\nSKBitmap, and SKImage decoding.\n\nKeep SKEncodedImageFormat.Dng at numeric value 10 for ABI compatibility.\nNo replacement RAW reader, C API change, or milestone update is added.\n\n~~ Dependency downloads and provenance ~~\n\nThe merged native backport comments out dng_sdk and piex in DEPS, so\ndependency synchronization no longer downloads unused source trees.\nRemove their Component Governance entries and repin both the submodule\nand manifest to native merge 74fb56c9f097a1241f38542d31e2edcbe685178b.\nIts tree is identical to the reviewed native PR head. Update the related\nbuild, dependency, image-format, and Gallery documentation.\n\nThe macOS ARM64 native and Gallery shared builds passed; the new DNG\nregression did not fail. The local unfiltered console suite did not pass:\nGanesh GL DiagonalLines failed identically on an untouched release base,\nand a first-run managed-stream failure passed on rerun. No golden,\ntolerance, or skip was changed. The maintainer accepted the documented\nvalidation limitations for manual landing, not as a green-test claim.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5149": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5149",
+      "title": "Bump to the next version (4.151.5) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}

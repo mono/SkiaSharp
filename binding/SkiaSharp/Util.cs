@@ -1,12 +1,10 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Buffers;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Text;
-#if NETSTANDARD1_3 || WINDOWS_UWP
-using System.Reflection;
-#endif
 
 namespace SkiaSharp
 {
@@ -42,22 +40,39 @@ namespace SkiaSharp
 		internal static bool NearlyEqual (float a, float b, float tolerance) =>
 			Math.Abs (a - b) <= tolerance;
 
+		internal static int GetByteCount (this Encoding encoding, ReadOnlySpan<char> text)
+		{
+			if (text.Length == 0)
+				return 0;
+
+			fixed (char* t = text) {
+				return encoding.GetByteCount (t, text.Length);
+			}
+		}
+
+		internal static int GetBytes (this Encoding encoding, ReadOnlySpan<char> text, Span<byte> bytes)
+		{
+			if (text.Length == 0)
+				return 0;
+
+			fixed (char* t = text)
+			fixed (byte* b = bytes) {
+				return encoding.GetBytes (t, text.Length, b, bytes.Length);
+			}
+		}
+
 		internal static byte[] GetBytes (this Encoding encoding, ReadOnlySpan<char> text)
 		{
 			if (text.Length == 0)
 				return new byte[0];
 
-			fixed (char* t = text) {
-				var byteCount = encoding.GetByteCount (t, text.Length);
-				if (byteCount == 0)
-					return new byte[0];
+			var byteCount = encoding.GetByteCount (text);
+			if (byteCount == 0)
+				return new byte[0];
 
-				var bytes = new byte[byteCount];
-				fixed (byte* b = bytes) {
-					encoding.GetBytes (t, text.Length, b, byteCount);
-				}
-				return bytes;
-			}
+			var bytes = new byte[byteCount];
+			encoding.GetBytes (text, bytes);
+			return bytes;
 		}
 
 		public static RentedArray<T> RentArray<T> (int length, bool nullIfEmpty = false) =>
@@ -65,9 +80,9 @@ namespace SkiaSharp
 				? default
 				: new RentedArray<T> (length);
 
-		public static RentedArray<IntPtr> RentHandlesArray (SKObject[] objects, bool nullIfEmpty = false)
+		public static RentedArray<IntPtr> RentHandlesArray (ReadOnlySpan<SKObject> objects, bool nullIfEmpty = false)
 		{
-			var handles = RentArray<IntPtr> (objects?.Length ?? 0, nullIfEmpty);
+			var handles = RentArray<IntPtr> (objects.Length, nullIfEmpty);
 			for (var i = 0; i < handles.Length; i++) {
 				handles[i] = objects[i]?.Handle ?? IntPtr.Zero;
 			}
@@ -88,10 +103,8 @@ namespace SkiaSharp
 
 			public int Length => Span.Length;
 
-			public T this[int index] {
-				get => Span[index];
-				set => Span[index] = value;
-			}
+			public ref T this[int index] =>
+				ref Span[index];
 
 			[EditorBrowsable (EditorBrowsableState.Never)]
 			public ref T GetPinnableReference () =>
@@ -113,26 +126,59 @@ namespace SkiaSharp
 				scope.Span;
 		}
 
-#if NETSTANDARD1_3 || WINDOWS_UWP
-		internal static bool IsAssignableFrom (this Type type, Type c) =>
-			type.GetTypeInfo ().IsAssignableFrom (c.GetTypeInfo ());
-#endif
+		public static RentedUtf8Strings RentUtf8Strings (int count) =>
+			count <= 0 ? default : new RentedUtf8Strings (count);
+
+		internal ref struct RentedUtf8Strings
+		{
+			private RentedArray<byte[]> buffers;
+			private RentedArray<GCHandle> handles;
+			private int count;
+
+			internal RentedUtf8Strings (int capacity)
+			{
+				buffers = RentArray<byte[]> (capacity);
+				handles = RentArray<GCHandle> (capacity);
+				count = 0;
+			}
+
+			public void* Add (string value) =>
+				Add ((value ?? string.Empty).AsSpan ());
+
+			public void* Add (ReadOnlySpan<char> span)
+			{
+				var byteCount = Encoding.UTF8.GetByteCount (span);
+				var buffer = ArrayPool<byte>.Shared.Rent (byteCount + 1);
+				var written = Encoding.UTF8.GetBytes (span, buffer);
+				buffer[written] = 0;
+
+				var handle = GCHandle.Alloc (buffer, GCHandleType.Pinned);
+				buffers[count] = buffer;
+				handles[count] = handle;
+				count++;
+
+				return (void*)handle.AddrOfPinnedObject ();
+			}
+
+			public void Dispose ()
+			{
+				for (var i = 0; i < count; i++) {
+					if (handles[i].IsAllocated)
+						handles[i].Free ();
+					if (buffers[i] != null)
+						ArrayPool<byte>.Shared.Return (buffers[i]);
+				}
+				handles.Dispose ();
+				buffers.Dispose ();
+				count = 0;
+			}
+		}
 	}
 
+	/// <summary>Various utility methods for when working with strings and text.</summary>
+	/// <remarks />
 	public unsafe static class StringUtilities
 	{
-		internal const string NullTerminator = "\0";
-
-		// GetUnicodeStringLength
-
-		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
-			encoding switch {
-				SKTextEncoding.Utf8 => 1,
-				SKTextEncoding.Utf16 => 1,
-				SKTextEncoding.Utf32 => 2,
-				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported.")
-			};
-
 		// GetCharacterByteSize
 
 		internal static int GetCharacterByteSize (this SKTextEncoding encoding) =>
@@ -145,30 +191,75 @@ namespace SkiaSharp
 
 		// GetUnicodeCharacterCode
 
+		/// <summary>Returns the Unicode character code for the specified character.</summary>
+		/// <param name="character">The character to get the Unicode character code.</param>
+		/// <param name="encoding">The encoding of the string.</param>
+		/// <returns>Returns the Unicode character code.</returns>
+		/// <remarks />
 		public static int GetUnicodeCharacterCode (string character, SKTextEncoding encoding)
 		{
 			if (character == null)
 				throw new ArgumentNullException (nameof (character));
-			if (GetUnicodeStringLength (encoding) != character.Length)
-				throw new ArgumentException (nameof (character), $"Only a single character can be specified.");
 
 			var bytes = GetEncodedText (character, encoding);
-			return BitConverter.ToInt32 (bytes, 0);
+			if (bytes.Length != encoding.GetCharacterByteSize ())
+				throw new ArgumentException ("Only a single character can be specified.", nameof (character));
+
+			return bytes.Length switch {
+				1 => bytes[0],
+				2 => BitConverter.ToUInt16 (bytes, 0),
+				4 => BitConverter.ToInt32 (bytes, 0),
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
 		}
 
 		// GetEncodedText
 
+		/// <summary>Encodes the specified string using the encoding as a byte array.</summary>
+		/// <param name="text">The text to encode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the encoded text as a byte array.</returns>
+		/// <remarks />
 		public static byte[] GetEncodedText (string text, SKTextEncoding encoding) =>
 			GetEncodedText (text.AsSpan (), encoding);
 
 		internal static byte[] GetEncodedText (string text, SKTextEncoding encoding, bool addNull)
 		{
-			if (!string.IsNullOrEmpty (text) && addNull)
-				text += NullTerminator;
+			var span = text.AsSpan ();
 
-			return GetEncodedText (text.AsSpan (), encoding);
+			if (span.Length == 0 || !addNull)
+				return GetEncodedText (span, encoding);
+
+			return GetEncodedTextWithNullTerminator (span, encoding);
 		}
 
+		private static byte[] GetEncodedTextWithNullTerminator (ReadOnlySpan<char> text, SKTextEncoding encoding)
+		{
+			var enc = encoding switch {
+				SKTextEncoding.Utf8 => Encoding.UTF8,
+				SKTextEncoding.Utf16 => Encoding.Unicode,
+				SKTextEncoding.Utf32 => Encoding.UTF32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+
+			var nullBytes = encoding.GetCharacterByteSize ();
+
+			fixed (char* t = text) {
+				var byteCount = enc.GetByteCount (t, text.Length);
+				var bytes = new byte[byteCount + nullBytes];
+				fixed (byte* b = bytes) {
+					enc.GetBytes (t, text.Length, b, byteCount);
+				}
+				// the remaining nullBytes stay zero, matching the encoding of a trailing '\0'
+				return bytes;
+			}
+		}
+
+		/// <summary>Encodes the specified text using the encoding as a byte array.</summary>
+		/// <param name="text">The text to encode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the encoded text as a byte array.</returns>
+		/// <remarks />
 		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
 			encoding switch {
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
@@ -179,12 +270,35 @@ namespace SkiaSharp
 
 		// GetString
 
+		/// <summary>Decodes the specified bytes as a string.</summary>
+		/// <param name="data">The pointer to the bytes representing text.</param>
+		/// <param name="dataLength">The number of bytes to decode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
+		/// <remarks />
 		public static string GetString (IntPtr data, int dataLength, SKTextEncoding encoding) =>
 			GetString (data.AsReadOnlySpan (dataLength), 0, dataLength, encoding);
 
-		public static string GetString (byte[] data, SKTextEncoding encoding) =>
-			GetString (data, 0, data.Length, encoding);
+		/// <summary>Decodes the specified bytes as a string.</summary>
+		/// <param name="data">The bytes representing text.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
+		/// <remarks />
+		public static string GetString (byte[] data, SKTextEncoding encoding)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
 
+			return GetString (data, 0, data.Length, encoding);
+		}
+
+		/// <summary>Encodes the specified string using the encoding as a byte array.</summary>
+		/// <param name="data">The bytes representing text.</param>
+		/// <param name="index">The index to start decoding.</param>
+		/// <param name="count">The number of bytes to decode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
+		/// <remarks />
 		public static string GetString (byte[] data, int index, int count, SKTextEncoding encoding)
 		{
 			if (data == null)
@@ -198,9 +312,21 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <summary>Decodes the specified bytes as a string.</summary>
+		/// <param name="data">The bytes representing text.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
+		/// <remarks />
 		public static string GetString (ReadOnlySpan<byte> data, SKTextEncoding encoding) =>
 			GetString (data, 0, data.Length, encoding);
 
+		/// <summary>Decodes the specified bytes as a string.</summary>
+		/// <param name="data">The bytes representing text.</param>
+		/// <param name="index">The index to start decoding.</param>
+		/// <param name="count">The number of bytes to decode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
+		/// <remarks />
 		public static string GetString (ReadOnlySpan<byte> data, int index, int count, SKTextEncoding encoding)
 		{
 			data = data.Slice (index, count);

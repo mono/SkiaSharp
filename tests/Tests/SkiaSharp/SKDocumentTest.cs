@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKDocumentTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void PdfFileIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".pdf");
@@ -24,7 +26,7 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PdfFileWithNonASCIIPathIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + "上田雅美.pdf");
@@ -41,28 +43,28 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void XpsFileIsClosed()
 		{
+			Assert.SkipWhen(!SupportsXps, "XPS is only supported on desktop/server Windows");
+
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".xps");
 
 			using (new SKAutoCoInitialize())
 			using (var doc = SKDocument.CreateXps(path))
 			{
-				if (IsWindows)
-				{
-					Assert.NotNull(doc);
-					Assert.NotNull(doc.BeginPage(100, 100));
+				Assert.NotNull(doc);
+				Assert.NotNull(doc.BeginPage(100, 100));
 
-					doc.EndPage();
-					doc.Close();
-				}
+				doc.EndPage();
+				doc.Close();
 			}
 
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreatePdf()
 		{
 			using (var stream = new MemoryStream())
@@ -81,7 +83,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreatePdfWithMetadata()
 		{
 			var metadata = SKDocumentPdfMetadata.Default;
@@ -110,7 +112,57 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		// The PDF backend first offers a lazy image's encoded bytes to the JPEG
+		// decoder, so a PNG makes libjpeg fail through setjmp/longjmp.
+		[Fact]
+		public void Issue_5645_LazyImageCanBeDrawnOnPdf()
+		{
+			using var image = CreateLazyPngImage();
+			using var stream = new SKDynamicMemoryWStream();
+
+			using (var doc = SKDocument.CreatePdf(stream))
+			{
+				var canvas = doc.BeginPage(image.Width, image.Height);
+				canvas.DrawImage(image, 0, 0);
+				doc.EndPage();
+				doc.Close();
+			}
+
+			Assert.True(stream.BytesWritten > 0);
+		}
+
+		[Fact]
+		public void Issue_5645_LazyImageShaderCanBeDrawnOnPdf()
+		{
+			using var image = CreateLazyPngImage();
+			using var shader = image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
+			using var paint = new SKPaint { Shader = shader };
+			using var stream = new SKDynamicMemoryWStream();
+
+			using (var doc = SKDocument.CreatePdf(stream))
+			{
+				var canvas = doc.BeginPage(image.Width, image.Height);
+				canvas.DrawRect(SKRect.Create(image.Width, image.Height), paint);
+				doc.EndPage();
+				doc.Close();
+			}
+
+			Assert.True(stream.BytesWritten > 0);
+		}
+
+		static SKImage CreateLazyPngImage()
+		{
+			using var bitmap = new SKBitmap(64, 48);
+			bitmap.Erase(SKColors.Red);
+			using var source = SKImage.FromBitmap(bitmap);
+			using var encoded = source.Encode(SKEncodedImageFormat.Png, 100);
+
+			var image = SKImage.FromEncodedData(encoded);
+			Assert.True(image.IsLazyGenerated);
+			return image;
+		}
+
+		[Fact]
 		public void ManagedStreamDisposeOrder()
 		{
 			using (var stream = new MemoryStream())
@@ -130,56 +182,84 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateXps()
 		{
-			// XPS is only supported on Windows
+			Assert.SkipWhen(!SupportsXps, "XPS is only supported on desktop/server Windows");
 
 			using (var stream = new MemoryStream())
 			{
 				using (new SKAutoCoInitialize())
 				using (var doc = SKDocument.CreateXps(stream))
 				{
-					if (IsWindows)
-					{
-						Assert.NotNull(doc);
-						Assert.NotNull(doc.BeginPage(100, 100));
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
 
-						doc.EndPage();
-						doc.Close();
-					}
-					else
-					{
-						Assert.Null(doc);
-					}
+					doc.EndPage();
+					doc.Close();
 				}
 
-				if (IsWindows)
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
+			}
+		}
+
+		[Fact]
+		public void CanCreateXpsWithOptions()
+		{
+			Assert.SkipWhen(!SupportsXps, "XPS is only supported on desktop/server Windows");
+
+			var options = new SKDocumentXpsOptions { Dpi = 150, AllowNoPngs = true };
+
+			using (var stream = new MemoryStream())
+			{
+				using (new SKAutoCoInitialize())
+				using (var doc = SKDocument.CreateXps(stream, options))
 				{
-					Assert.True(stream.Length > 0);
-					Assert.True(stream.Position > 0);
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
+
+					doc.EndPage();
+					doc.Close();
 				}
-				else
+
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
+			}
+		}
+
+		[Fact]
+		public void CreateXpsReturnsNullWhereUnsupported()
+		{
+			Assert.SkipWhen(SupportsXps, "XPS is supported on this platform");
+
+			var options = new SKDocumentXpsOptions { Dpi = 150, AllowNoPngs = true };
+
+			using (var stream = new MemoryStream())
+			{
+				using (new SKAutoCoInitialize())
 				{
-					Assert.True(stream.Length == 0);
-					Assert.True(stream.Position == 0);
+					Assert.Null(SKDocument.CreateXps(stream));
+					Assert.Null(SKDocument.CreateXps(stream, options));
 				}
+
+				Assert.True(stream.Length == 0);
+				Assert.True(stream.Position == 0);
 			}
 		}
 
 
-		[SkippableFact]
-		public void StreamIsNotCollectedPrematurely()
+		[Fact]
+		public async Task StreamIsNotCollectedPrematurely()
 		{
-			DoWork(out var handle);
+			DoWork(out var handle, out var weakStream);
 
-			CollectGarbage();
+			await SKHandleDictionaryTestHelpers.CollectGarbageAndAssertCollectedAsync(handle, weakStream);
 
-			Assert.False(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
-
-			static void DoWork(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static void DoWork(out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				using (var document = CreateDocument(out streamHandle))
+				using (var document = CreateDocument(out streamHandle, out streamRef))
 				{
 					using (var pageCanvas = document.BeginPage(792, 842))
 					{
@@ -196,10 +276,11 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(streamHandle, out _));
 			}
 
-			static SKDocument CreateDocument(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static SKDocument CreateDocument(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKDynamicMemoryWStream();
-				streamHandle = stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
 			}

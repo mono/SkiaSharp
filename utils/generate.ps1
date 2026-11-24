@@ -5,11 +5,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 $projects = @(
-    @{ Json="libSkiaSharp.json";            Root="externals/skia";                                  Output="SkiaSharp/SkiaApi.generated.cs"                  },
-    @{ Json="libSkiaSharp.Skottie.json";    Root="externals/skia";                                  Output="SkiaSharp.Skottie/SkottieApi.generated.cs"       },
-    @{ Json="libSkiaSharp.SceneGraph.json"; Root="externals/skia";                                  Output="SkiaSharp.SceneGraph/SceneGraphApi.generated.cs" },
-    @{ Json="libSkiaSharp.Resources.json";  Root="externals/skia";                                  Output="SkiaSharp.Resources/ResourcesApi.generated.cs"   },
-    @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/HarfBuzzApi.generated.cs"          } # you may have to revert harfbuzz in Deps to 2.8.2 or 63e15eac4f443fa53565d1e4fb9611cdd7814f28
+    @{ Json="libSkiaSharp.json";            Root="externals/skia";                                  Output="SkiaSharp/Generated"            },
+    @{ Json="libSkiaSharp.Skottie.json";    Root="externals/skia";                                  Output="SkiaSharp.Skottie/Generated"    },
+    @{ Json="libSkiaSharp.SceneGraph.json"; Root="externals/skia";                                  Output="SkiaSharp.SceneGraph/Generated" },
+    @{ Json="libSkiaSharp.Resources.json";  Root="externals/skia";                                  Output="SkiaSharp.Resources/Generated"  },
+    @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/Generated"        }
 )
 
 # Filter to specific config if provided
@@ -26,18 +26,35 @@ New-Item -ItemType Directory -Force -Path "output/generated/" | Out-Null
 
 dotnet build utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj
 
+$failed = $false
 foreach ($proj in $projects) {
     $json = $proj.Json;
     $output = $proj.Output;
     $root = $proj.Root;
-    $filename = Split-Path $output -Leaf
+    $projectName = Split-Path (Split-Path $output -Parent) -Leaf
 
-    $cmd = "dotnet run --no-build --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/$json --root $root --output binding/$output"
-    Write-Host $cmd
-    Invoke-Expression $cmd
-    if (!$?) {
-        exit $LASTEXITCODE
+    $runArgs = @("run", "--no-build", "--no-launch-profile",
+              "--project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj",
+              "--", "generate",
+              "--config", "binding/$json",
+              "--root", $root,
+              "--output", "binding/$output")
+    Write-Host "dotnet $($runArgs -join ' ')"
+    & dotnet @runArgs
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Generation failed for $json with exit code $LASTEXITCODE"
+        $failed = $true
+        continue
     }
 
-    Copy-Item -Path binding/$output -Destination output/generated/$filename -Force
+    $destination = Join-Path "output/generated" $projectName
+    if (Test-Path $destination) {
+        Remove-Item -Path $destination -Recurse -Force
+    }
+    Copy-Item -Path binding/$output -Destination $destination -Recurse -Force
+}
+
+if ($failed) {
+    Write-Host "ERROR: One or more generation steps failed"
+    exit 1
 }

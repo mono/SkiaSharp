@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using CoreGraphics;
 using Foundation;
 using Metal;
+using SkiaSharp.Tests;
 using Xunit;
 
 namespace SkiaSharp.Views.iOS.Tests
 {
 	public class iOSExtensionsTests : iOSTests
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -23,7 +24,7 @@ namespace SkiaSharp.Views.iOS.Tests
 			ValidateTestBitmap(iosBitmap, alpha);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -37,7 +38,7 @@ namespace SkiaSharp.Views.iOS.Tests
 			ValidateTestBitmap(uiImage, alpha);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -52,7 +53,7 @@ namespace SkiaSharp.Views.iOS.Tests
 			ValidateTestBitmap(uiImage, alpha);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -68,7 +69,7 @@ namespace SkiaSharp.Views.iOS.Tests
 			ValidateTestBitmap(uiImage, alpha);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0, 0, 0, 0)]
 		[InlineData(5, 5, 5, 5)]
 		[InlineData(1, 2, 3, 4)]
@@ -85,7 +86,7 @@ namespace SkiaSharp.Views.iOS.Tests
 			Assert.Equal(expected, actual);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0, 0, 0, 0)]
 		[InlineData(5, 5, 5, 5)]
 		[InlineData(1, 2, 3, 4)]
@@ -102,11 +103,16 @@ namespace SkiaSharp.Views.iOS.Tests
 			Assert.Equal(expected, actual);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GRContextDisposeDoesNotCrash()
 		{
-			var device = MTLDevice.SystemDefault!;
-			Skip.If(device == null, "Metal is not supported on this device.");
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshMetal);
+
+			// Past the policy gate Metal must work here, so a missing device is a red
+			// test rather than a quiet pass.
+			var device = MTLDevice.SystemDefault
+				?? throw new InvalidOperationException(
+					"MTLDevice.SystemDefault returned null; no Metal device on this host.");
 
 			using var commandQueue = device.CreateCommandQueue();
 			using var backendContext = new GRMtlBackendContext()

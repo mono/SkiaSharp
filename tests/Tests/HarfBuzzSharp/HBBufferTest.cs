@@ -11,7 +11,7 @@ namespace HarfBuzzSharp.Tests
 
 		private const string SerializedSimpleText = "[gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772]";
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveCorrectContentType()
 		{
 			using (var buffer = new Buffer())
@@ -30,7 +30,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveDefaultStateAfterReset()
 		{
 			using (var buffer = new Buffer())
@@ -45,7 +45,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldClearContents()
 		{
 			using (var buffer = new Buffer())
@@ -60,7 +60,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldAdd()
 		{
 			using (var buffer = new Buffer())
@@ -77,7 +77,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldAddUtfByString()
 		{
 			using (var buffer = new Buffer())
@@ -96,7 +96,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldAddUtfBySpan()
 		{
 			using (var buffer = new Buffer())
@@ -123,7 +123,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldThrowInvalidOperationExceptionOnAddUtfWhenBufferIsShaped()
 		{
 			using (var buffer = new Buffer())
@@ -138,7 +138,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldThrowInvalidOperationExceptionOnSerializeGlyphsWhenBufferIsEmpty()
 		{
 			using (var buffer = new Buffer())
@@ -147,7 +147,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldThrowInvalidOperationExceptionOnSerializeGlyphsWhenBufferIsUnShaped()
 		{
 			using (var buffer = new Buffer())
@@ -158,7 +158,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldSerializeGlyphs()
 		{
 			using (var buffer = new Buffer())
@@ -175,7 +175,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldReverse()
 		{
 			using (var buffer = new Buffer())
@@ -192,7 +192,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldReverseClusters()
 		{
 			using (var buffer = new Buffer())
@@ -209,7 +209,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldReverseRange()
 		{
 			using (var buffer = new Buffer())
@@ -229,7 +229,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldAppendBuffer()
 		{
 			using (var buffer = new Buffer())
@@ -243,7 +243,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldNormalize()
 		{
 			using (var buffer = new Buffer())
@@ -263,7 +263,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldThrowInvalidOperationExceptionOnDeserializeGlyphsWhenBufferIsNonEmpty()
 		{
 			using (var buffer = new Buffer())
@@ -274,7 +274,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldDeserializeGlyphs()
 		{
 			using (var buffer = new Buffer())
@@ -294,6 +294,25 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(3u, buffer.GlyphInfos[3].Cluster);
 				Assert.Equal(28u, buffer.GlyphInfos[3].Codepoint);
+			}
+		}
+
+		[Fact]
+		public void ShouldRoundTripJsonGlyphSerialization()
+		{
+			string json;
+			using (var source = new Buffer())
+			{
+				source.AddUtf8(SimpleText);
+				source.GuessSegmentProperties();
+				Font.Shape(source);
+				json = source.SerializeGlyphs(Font, SerializeFormat.Json, SerializeFlag.Default);
+			}
+
+			using (var destination = new Buffer())
+			{
+				destination.DeserializeGlyphs(json, Font, SerializeFormat.Json);
+				Assert.Equal(SimpleText.Length, destination.Length);
 			}
 		}
 	}

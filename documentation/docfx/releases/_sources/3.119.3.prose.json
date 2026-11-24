@@ -1,0 +1,45 @@
+{
+  "theme": "Native loading and AOT reliability",
+  "highlights_headline": "The 3.119.3 preview fixes Linux ARM64 loading and reflection-disabled AOT initialization.",
+  "highlights_body": "Bundled image and compression dependencies are refreshed, with additional Spectre mitigation flags for native SkiaSharp binaries.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Linux ARM64 font loading",
+          "detail": "Correctly links the fontconfig runtime library, fixing native crashes involving the unresolved uuid_generate_random symbol.",
+          "prs": [3494]
+        },
+        {
+          "lead": "AOT initialization without reflection",
+          "detail": "SKBlender no longer uses reflection to enumerate blend modes during static initialization, avoiding TypeInitializationException when IlcDisableReflection=true.",
+          "prs": [3485]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Refreshed bundled dependencies",
+          "detail": "Updates libpng to 1.6.54, libwebp to 1.6.0, Brotli to 1.2.0, and libexpat to 2.7.3. The Brotli and libexpat updates address reported decompression and parser issues.",
+          "prs": [3452, 3478, 3469, 3458]
+        },
+        {
+          "lead": "Spectre mitigation build flags",
+          "detail": "Enables Spectre mitigation options for native SkiaSharp on Windows and Linux, using architecture-specific flags on Linux.",
+          "prs": [3496, 3502]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "sshumakov": "Spectre mitigation flags for Windows and Linux native SkiaSharp builds."
+  },
+  "preview_summaries": {
+    "v3.119.3-preview.1.1": "Fixed Linux ARM64 fontconfig loading and reflection-disabled AOT initialization, refreshed bundled native dependencies, and added Spectre mitigation flags."
+  },
+  "harfbuzz_summary": null
+}

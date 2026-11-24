@@ -1,17 +1,133 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://github.com/mono/SkiaSharp" target="_blank" class="ml-md-auto">About</a>
-        </div>
-
-        <article class="content px-4">
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-2">SkiaSharp</MudText>
+        <MudSpacer />
+        <MudTooltip Text="@_themeTooltip">
+            <MudIconButton Icon="@_themeIcon" Color="Color.Inherit" OnClick="CycleTheme" />
+        </MudTooltip>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always"
+               Breakpoint="Breakpoint.Md" Elevation="2" Variant="@DrawerVariant.Responsive">
+        <MudNavMenu Rounded="true" Margin="Margin.Dense" Color="Color.Primary" Class="pa-3">
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Computer">CPU</MudNavLink>
+            <MudNavLink Href="/gpu" Icon="@Icons.Material.Filled.DeveloperBoard">GPU</MudNavLink>
+            <MudNavLink Href="/drawing" Icon="@Icons.Material.Filled.Brush">Drawing</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="d-flex flex-column" Style="height: 100vh; overflow: hidden;">
+        <CascadingValue Value="_isDarkMode" Name="IsDarkMode">
             @Body
-        </article>
-    </main>
-</div>
+        </CascadingValue>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+    bool _isDarkMode;
+    ThemeMode _themeMode = ThemeMode.System;
+    MudThemeProvider _themeProvider = null!;
+
+    readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#594AE2",
+            AppbarBackground = "#594AE2",
+            DrawerBackground = "#f0eef6",
+            DrawerText = "#424242",
+            DrawerIcon = "#594AE2",
+            Background = "#fafafa",
+            Surface = "#ffffff",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#776be7",
+            AppbarBackground = "#1e1e2d",
+            DrawerBackground = "#1a1a27",
+            Background = "#121218",
+            Surface = "#1e1e2d",
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "12px",
+        },
+    };
+
+    string _themeIcon => _themeMode switch
+    {
+        ThemeMode.Light => Icons.Material.Filled.LightMode,
+        ThemeMode.Dark => Icons.Material.Filled.DarkMode,
+        _ => Icons.Material.Filled.SettingsBrightness,
+    };
+
+    string _themeTooltip => _themeMode switch
+    {
+        ThemeMode.Light => "Light mode (click for dark)",
+        ThemeMode.Dark => "Dark mode (click for system)",
+        _ => "System theme (click for light)",
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _themeProvider.GetSystemDarkModeAsync();
+            await _themeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+
+            var route = Program.DefaultPage switch
+            {
+                SamplePage.Gpu => "/gpu",
+                SamplePage.Drawing => "/drawing",
+                _ => null,
+            };
+            if (route is not null)
+                Navigation.NavigateTo(route);
+
+            StateHasChanged();
+        }
+    }
+
+    Task OnSystemPreferenceChanged(bool isDark)
+    {
+        if (_themeMode == ThemeMode.System)
+        {
+            _isDarkMode = isDark;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
+    async Task CycleTheme()
+    {
+        _themeMode = _themeMode switch
+        {
+            ThemeMode.System => ThemeMode.Light,
+            ThemeMode.Light => ThemeMode.Dark,
+            ThemeMode.Dark => ThemeMode.System,
+            _ => ThemeMode.System,
+        };
+
+        _isDarkMode = _themeMode switch
+        {
+            ThemeMode.Light => false,
+            ThemeMode.Dark => true,
+            _ => await _themeProvider.GetSystemDarkModeAsync(),
+        };
+
+        StateHasChanged();
+    }
+
+    void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    enum ThemeMode { System, Light, Dark }
+}

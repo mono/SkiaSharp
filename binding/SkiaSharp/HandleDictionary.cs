@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,20 @@ namespace SkiaSharp
 	{
 		private static readonly Type SkipObjectRegistrationType = typeof (ISKSkipObjectRegistration);
 
+		// Whether a given wrapper type skips registration in the global dictionary is a compile-time
+		// invariant (it depends only on whether the type implements ISKSkipObjectRegistration), yet the
+		// original code re-evaluated it with a reflection call (Type.IsAssignableFrom) on EVERY
+		// GetObject/GetOrAddObject/GetInstance — i.e. on every native-object wrap. Cache the result per
+		// TSkiaObject in a generic static holder so the reflection runs exactly once per type and every
+		// subsequent lookup is a plain static-field read. Behaviour is identical: the cached value is
+		// exactly what IsAssignableFrom returned.
+		internal static class SkipObjectRegistration<TSkiaObject>
+			where TSkiaObject : SKObject
+		{
+			internal static readonly bool Value =
+				SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject));
+		}
+
 #if THROW_OBJECT_EXCEPTIONS
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
@@ -26,9 +40,7 @@ namespace SkiaSharp
 
 		internal static readonly IPlatformLock instancesLock = PlatformLock.Create ();
 
-		/// <summary>
-		/// Retrieve the living instance if there is one, or null if not.
-		/// </summary>
+		/// <summary>Retrieve the living instance if there is one, or null if not.</summary>
 		/// <returns>The instance if it is alive, or null if there is none.</returns>
 		internal static bool GetInstance<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
@@ -38,7 +50,7 @@ namespace SkiaSharp
 				return false;
 			}
 
-			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
+			if (SkipObjectRegistration<TSkiaObject>.Value) {
 				instance = null;
 				return false;
 			}
@@ -51,17 +63,21 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Retrieve or create an instance for the native handle.
-		/// </summary>
+		/// <summary>Retrieve or create an instance for the native handle.</summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject =>
+			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
+
+		/// <summary>Retrieve or create an instance for the native handle. When<paramref name="disposeProtected" />is true, IgnorePublicDispose is set via PreventPublicDisposal on the wrapper that is returned (whether an existing one was found or a new one was created). This is safe because this method holds the upgradeable-read lock for its whole duration, which is mutually exclusive with the write lock public Dispose() holds around its IgnorePublicDispose check — so the flag set cannot race a concurrent public disposal. (PreventPublicDisposal itself takes no lock.)</summary>
+		/// <returns>The instance, or null if the handle was null.</returns>
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
+			if (SkipObjectRegistration<TSkiaObject>.Value) {
 #if THROW_OBJECT_EXCEPTIONS
 				throw new InvalidOperationException (
 					$"For some reason, the object was constructed using a factory function instead of the constructor. " +
@@ -86,10 +102,21 @@ namespace SkiaSharp
 						refcnt.SafeUnRef ();
 					}
 
+					if (disposeProtected)
+						// Safe against a concurrent PUBLIC Dispose: it holds the write lock, which is
+						// mutually exclusive with the upgradeable-read lock held here. Internal Dispose
+						// paths don't affect the flag's purpose, and no dispose-protected target can be
+						// internally disposed concurrently either (see PreventPublicDisposal's guard).
+						instance.PreventPublicDisposal ();
+
 					return instance;
 				}
 
 				var obj = objectFactory.Invoke (handle, owns);
+
+				// Cannot race with a concurrent public Dispose call. same reasoning as above.
+				if (disposeProtected && obj is not null)
+					obj.PreventPublicDisposal ();
 
 				return obj;
 			} finally {
@@ -97,10 +124,6 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Retrieve the living instance if there is one, or null if not. This does not use locks.
-		/// </summary>
-		/// <returns>The instance if it is alive, or null if there is none.</returns>
 		private static bool GetInstanceNoLocks<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
@@ -129,9 +152,7 @@ namespace SkiaSharp
 			return false;
 		}
 
-		/// <summary>
-		/// Registers the specified instance with the dictionary.
-		/// </summary>
+		/// <summary>Registers the specified instance with the dictionary.</summary>
 		internal static void RegisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero || instance == null)
@@ -170,9 +191,7 @@ namespace SkiaSharp
 			objectToDispose?.DisposeInternal ();
 		}
 
-		/// <summary>
-		/// Removes the registered instance from the dictionary.
-		/// </summary>
+		/// <summary>Removes the registered instance from the dictionary.</summary>
 		internal static void DeregisterHandle (IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero)

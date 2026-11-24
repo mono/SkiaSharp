@@ -1,37 +1,40 @@
-﻿using Microsoft.UI.Xaml;
-using SkiaSharp;
-using SkiaSharp.Views.Windows;
+using System;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public sealed partial class MainWindow : Window
 {
-	public sealed partial class MainWindow : Window
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	public MainWindow()
 	{
-		public MainWindow()
+		InitializeComponent();
+		NavView.Loaded += OnNavViewLoaded;
+	}
+
+	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
+	{
+		NavView.SelectedItem = NavView.MenuItems[(int)DefaultPage];
+	}
+
+	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+	{
+		if (args.SelectedItem is NavigationViewItem item)
 		{
-			InitializeComponent();
-		}
-
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
+			Type pageType = item.Tag?.ToString() switch
 			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
+				"cpu" => typeof(CpuPage),
+				"gpu" => typeof(GpuPage),
+				"drawing" => typeof(DrawingPage),
+				_ => typeof(CpuPage),
 			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+			ContentFrame.Navigate(pageType);
+
+			// Clear back stack so previous pages get Unloaded
+			// (stops GPU render loop when switching tabs)
+			ContentFrame.BackStack.Clear();
 		}
 	}
 }

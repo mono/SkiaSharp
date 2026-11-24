@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
-    <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="!$(IsLinux) and '$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-macos$(TPVmacOSNext)</TargetFrameworks>
+    <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMPrevious)-macos$(TPVmacOSPrevious);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
   </PropertyGroup>
   <ItemGroup>
     <PackageFile Include="..\..\output\native\osx\libHarfBuzzSharp*" PackagePath="runtimes\osx\native\%(Filename)%(Extension)" />
+    <PackageSymbolFile Include="..\..\output\native\osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">

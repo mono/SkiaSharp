@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -8,13 +9,55 @@ namespace SkiaSharp.Tests
 {
 	public class SKCodecTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void MinBufferedBytesNeededHasAValue()
 		{
 			Assert.True(SKCodec.MinBufferedBytesNeeded > 0);
 		}
 
-		[SkippableFact]
+		// Each header makes the decoder fail through libjpeg's/libpng's
+		// setjmp/longjmp error recovery, which used to kill the process on win-x64.
+		[Theory]
+		// JPEG SOF0 with a zero height.
+		[InlineData(SKCodecResult.InvalidInput, new byte[] {
+			0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x00, 0x00, 0x10, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xD9 })]
+		// PNG IHDR with a zero width (valid CRC).
+		[InlineData(SKCodecResult.IncompleteInput, new byte[] {
+			0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x7F, 0xB5, 0x38, 0xE0 })]
+		public void Issue_5645_MalformedHeaderReturnsNull(SKCodecResult expectedResult, byte[] bytes)
+		{
+			using var stream = new SKMemoryStream(bytes);
+			using var codec = SKCodec.Create(stream, out var result);
+
+			Assert.Null(codec);
+			Assert.Equal(expectedResult, result);
+		}
+
+		[Fact]
+		public void DngIsNotDecoded()
+		{
+			var path = Path.Combine(PathToImages, "adobe-dng.dng");
+
+			using var fileCodec = SKCodec.Create(path, out var fileResult);
+			Assert.Null(fileCodec);
+			Assert.Equal(SKCodecResult.Unimplemented, fileResult);
+
+			using var stream = File.OpenRead(path);
+			using var streamCodec = SKCodec.Create(stream, out var streamResult);
+			Assert.Null(streamCodec);
+			Assert.Equal(SKCodecResult.Unimplemented, streamResult);
+
+			using var data = SKData.Create(path);
+			using var dataCodec = SKCodec.Create(data);
+			using var bitmap = SKBitmap.Decode(data);
+			using var image = SKImage.FromEncodedData(data);
+			Assert.Null(dataCodec);
+			Assert.Null(bitmap);
+			Assert.Null(image);
+		}
+
+		[Fact]
 		public unsafe void ImageCanBeDecodedManyTimes()
 		{
 			var codec = SKCodec.Create(Path.Combine(PathToImages, "color-wheel.png"));
@@ -25,7 +68,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("P8211052.JPG", SKEncodedOrigin.LeftBottom)]
 		[InlineData("PA010741.JPG", SKEncodedOrigin.LeftBottom)]
 		public void CodecCanLoadCorrectOrigin(string image, SKEncodedOrigin origin)
@@ -35,7 +78,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(origin, codec.EncodedOrigin);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheCodecWasFinished()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -58,7 +101,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipToCodecButIsNotForgotten()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
@@ -78,7 +121,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -101,10 +144,10 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 
 			codec.Dispose();
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void InvalidStreamIsDisposedImmediately()
 		{
 			var stream = CreateTestSKStream();
@@ -116,30 +159,33 @@ namespace SkiaSharp.Tests
 
 			Assert.Null(SKCodec.Create(stream));
 
+			// Failed Create has no new native owner, so RevokeOwnership(null) runs
+			// DisposeInternal(): the wrapper is genuinely disposed and deregistered,
+			// not merely public-dispose-guarded. Hence IsDisposed (not IgnorePublicDispose).
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnorePublicDispose);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			Assert.True(stream.IsDisposed);
+			SKHandleDictionaryTestHelpers.AssertDeregistered(handle, stream);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
+			SkipOnMono();
+
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
-			DoWork(out var codecH, out var streamH);
+			DoWork(out var codecH, out var weakCodec, out var streamH, out var weakStream);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKMemoryStream>(streamH, out _));
-			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(streamH, weakStream);
+			SKHandleDictionaryTestHelpers.AssertCollected(codecH, weakCodec);
 
-			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			void DoWork(out IntPtr codecHandle, out WeakReference codecRef, out IntPtr streamHandle, out WeakReference streamRef)
 			{
-				var codec = CreateCodec(out streamHandle);
-				codecHandle = codec.Handle;
+				var codec = CreateCodec(out streamHandle, out streamRef);
+				SKHandleDictionaryTestHelpers.Track(codec, out codecHandle, out codecRef);
 
 				CollectGarbage();
 
@@ -149,12 +195,15 @@ namespace SkiaSharp.Tests
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
 				Assert.True(stream.IgnorePublicDispose);
+
+				GC.KeepAlive(codec);
 			}
 
-			SKCodec CreateCodec(out IntPtr streamHandle)
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			SKCodec CreateCodec(out IntPtr streamHandle, out WeakReference streamRef)
 			{
 				var stream = new SKMemoryStream(bytes);
-				streamHandle = stream.Handle;
+				SKHandleDictionaryTestHelpers.Track(stream, out streamHandle, out streamRef);
 
 				Assert.True(stream.OwnsHandle);
 				Assert.False(stream.IgnorePublicDispose);
@@ -164,7 +213,8 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateStreamCodec()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
@@ -179,7 +229,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateStreamCodecWithResult()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
@@ -195,7 +245,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, codec.Info.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetGifFrames()
 		{
 			const int FrameCount = 16;
@@ -249,7 +299,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetSingleGifFrame()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "animated-heart.gif"));
@@ -264,7 +314,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetEncodedInfo()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));
@@ -276,7 +326,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetPixels()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.png"));
@@ -287,7 +337,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodeImageScanlines()
 		{
 			var path = Path.Combine(PathToImages, "CMYK.jpg");
@@ -338,7 +388,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodePartialImage()
 		{
 			// read the data here, so we can fake a throttle/download
@@ -395,7 +445,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapDecodesCorrectly()
 		{
 			byte[] codecPixels;
@@ -414,7 +464,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(codecPixels, bitmapPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapDecodesCorrectlyWithManagedStream()
 		{
 			byte[] codecPixels;
@@ -434,7 +484,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(codecPixels, bitmapPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadManagedStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
@@ -442,7 +492,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(codec);
 		}
 
-		[SkippableFact(Skip = "This keeps breaking CI for some reason.")]
+		[Fact(Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream()
 		{
 			var httpClient = new HttpClient();
@@ -451,7 +501,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(bitmap);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReadOnlyStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png")))
@@ -460,7 +510,7 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(bitmap);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("CMYK.jpg")]
 		[InlineData("baboon.png")]
 		[InlineData("color-wheel.png")]
@@ -475,7 +525,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty(pixels);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("CMYK.jpg")]
 		[InlineData("baboon.png")]
 		[InlineData("color-wheel.png")]
@@ -487,6 +537,37 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(data);
 
 			using var codec = SKCodec.Create(data);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[Fact]
+		public void CanDecodeManagedStreamAfterCreate()
+		{
+			// Regression: SKCodec.Create(Stream) wraps the managed .NET stream and the
+			// codec decodes lazily. The underlying managed stream MUST stay readable
+			// until the codec is disposed — the singleton/lifecycle rework must not let
+			// the reparented wrapper's ownership transfer eagerly close the .NET stream.
+			using var stream = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "baboon.png")));
+			using var codec = SKCodec.Create(stream);
+			Assert.NotNull(codec);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[Fact]
+		public void CanDecodeNonSeekableManagedStreamAfterCreate()
+		{
+			// Non-seekable managed streams route through SKFrontBufferedManagedStream
+			// (a nested SKManagedStream). The lazy decode must still reach the underlying
+			// .NET stream through the front buffer + nested wrapper without it being
+			// closed early by the ownership transfer.
+			using var backing = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "baboon.png")));
+			using var nonSeekable = new NonSeekableReadOnlyStream(backing);
+			using var codec = SKCodec.Create(nonSeekable);
 			Assert.NotNull(codec);
 
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));

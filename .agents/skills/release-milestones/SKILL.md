@@ -1,0 +1,51 @@
+---
+name: release-milestones
+description: >
+  Reconcile shipped SkiaSharp pull requests and linked issues, maintain
+  Chromium-derived release milestone dates, roll open work forward, and close
+  shipped milestones with the repository-owned PowerShell script. Use whenever
+  a maintainer asks to update, repair, reconcile, advance, close, or inspect
+  release milestones, milestone dates, or release assignments.
+---
+
+# Release Milestones
+
+**Release - Finish** automatically runs both milestone operations after every
+successful preview, RC, stable, patch, or hotfix Finish. Its dry-run includes
+the milestone plan, and its push run verifies the exact immutable shipment tag
+before any milestone write.
+
+Use **Release - Milestones** separately for diagnostics or repairs, with the
+needed independent operations selected and `push` disabled for a read-only run.
+After reviewing that output, dispatch again with `push` enabled, or run the two
+repository-owned scripts separately:
+
+```powershell
+# Reconcile shipped assignments (read-only)
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
+  -Version 4.153.0
+
+# Reconcile shipped assignments
+./scripts/infra/publishing/reconcile-release-assignments.ps1 `
+  -Version 4.153.0 `
+  -Push
+
+# Update dates, roll work forward, and close shipped milestones (read-only)
+./scripts/infra/publishing/update-release-milestones.ps1
+
+# Apply milestone updates
+./scripts/infra/publishing/update-release-milestones.ps1 `
+  -Push
+```
+
+Assignment reconciliation maps merged pull requests and linked issues to the
+release where they shipped. Milestone updates maintain upcoming
+Chromium-derived dates, move remaining open work to the next unshipped
+milestone, and close shipped milestones. When an exact shipped-release
+milestone is missing, reconciliation plans or creates it before assigning work.
+
+Always run and present the selected read-only operation(s) before requesting
+confirmation for `-Push`. Missing shipped milestones are repaired
+automatically; missing tags, release boundaries, and ambiguous ownership still
+block remote reconciliation or closure. These scripts never create release
+branches, tags, packages, or GitHub Releases.

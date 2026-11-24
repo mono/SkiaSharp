@@ -1,0 +1,49 @@
+{
+  "theme": ".NET 7 and Blazor",
+  "highlights_headline": "SkiaSharp 2.88.3 adds .NET 7 support for the Blazor views and picks up build fixes.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": ".NET 7 support",
+          "detail": "Build infrastructure and the Blazor views now target .NET 7, and Emscripten builds regenerate against 3.1.12 with SIMD features enabled.",
+          "prs": [2255, 2254, 2259]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "GL interception hook",
+          "detail": "A hook lets .NET consumers intercept and capture GL calls, which is useful for diagnostics and custom render pipelines.",
+          "prs": [2268]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Skipping past data no longer allocates",
+          "detail": "A stream skip is now implemented as a read into a null buffer, avoiding a spurious allocation on the fast path.",
+          "prs": [2265]
+        },
+        {
+          "lead": "Deep-binding dlopen flag on Linux",
+          "detail": "The native loader now passes `RTLD_DEEPBIND` when opening the library, so symbols resolve within SkiaSharp's own module first on Linux hosts that mix incompatible native libraries.",
+          "prs": [2247]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeromelaban": "Regenerated the Emscripten bindings against 3.1.12 and enabled SIMD features",
+    "snnz": "Added the `RTLD_DEEPBIND` flag to the Linux native loader"
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": "HarfBuzzSharp 2.8.2.3 picks up the .NET 7 build infrastructure alongside the SkiaSharp bindings."
+}

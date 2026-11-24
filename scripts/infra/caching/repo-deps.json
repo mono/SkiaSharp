@@ -1,0 +1,197 @@
+{
+  "include": [
+    "scripts/VERSIONS.txt",
+    "scripts/infra/shared/**",
+    "scripts/azure-*.yml",
+    "nuget.config",
+    "global.json",
+    "eng/**",
+    ".config/**",
+    ".gitmodules",
+    ".editorconfig",
+    "scripts/infra/security/**"
+  ],
+  "exclude": [
+    "documentation/**",
+    "images/**",
+    ".azuredevops/**",
+    ".github/**",
+    ".devcontainer/**",
+    ".vscode/**",
+    ".agents/**",
+    "*.md",
+    ".gitattributes",
+    ".gitignore",
+    "es-metadata.yml",
+    "CodeQL.yml",
+    "externals/.gitignore",
+    "native/.gitignore",
+    "scripts/get-skiasharp-pr.*",
+    "scripts/infra/caching/**",
+    "scripts/infra/publishing/**",
+    "scripts/infra/perf/**",
+    "cgmanifest.json",
+    "utils/SkiaSharpGenerator/**",
+    "utils/Utils.slnx",
+    "utils/generate.ps1",
+    "utils/README.md"
+  ],
+  "jobs": {
+    "native": {
+      "include": [
+        "scripts/infra/native/shared/**"
+      ],
+      "submodules": [
+        "externals/skia"
+      ],
+      "children": {
+        "android": {
+          "include": [
+            "native/android/**",
+            "scripts/infra/native/android/**"
+          ]
+        },
+        "ios": {
+          "include": [
+            "native/ios/**",
+            "scripts/infra/native/apple/**"
+          ]
+        },
+        "macos": {
+          "include": [
+            "native/macos/**",
+            "scripts/infra/native/apple/**"
+          ]
+        },
+        "maccatalyst": {
+          "include": [
+            "native/maccatalyst/**",
+            "scripts/infra/native/apple/**",
+            "native/ios/**"
+          ]
+        },
+        "tvos": {
+          "include": [
+            "native/tvos/**",
+            "scripts/infra/native/apple/**"
+          ]
+        },
+        "windows": {
+          "include": [
+            "native/windows/**",
+            "scripts/infra/native/windows/**",
+            "source/.vsconfig"
+          ]
+        },
+        "winui": {
+          "include": [
+            "native/winui/**",
+            "scripts/infra/native/windows/**",
+            "source/.vsconfig"
+          ]
+        },
+        "winui_angle": {
+          "include": [
+            "native/winui-angle/**",
+            "scripts/infra/native/windows/**",
+            "source/.vsconfig"
+          ]
+        },
+        "nanoserver": {
+          "include": [
+            "native/nanoserver/**",
+            "scripts/infra/native/windows/**",
+            "native/windows/**",
+            "source/.vsconfig"
+          ]
+        },
+        "linux": {
+          "include": [
+            "native/linux/**",
+            "scripts/infra/native/linux/**"
+          ]
+        },
+        "linux_cross": {
+          "include": [
+            "native/linux-clang-cross/**",
+            "scripts/infra/native/linux/**",
+            "native/linux/**"
+          ]
+        },
+        "linuxnodeps": {
+          "include": [
+            "native/linuxnodeps/**",
+            "scripts/infra/native/linux/**",
+            "native/linux/**"
+          ]
+        },
+        "tizen": {
+          "include": [
+            "native/tizen/**",
+            "scripts/infra/native/tizen/**"
+          ]
+        },
+        "wasm": {
+          "include": [
+            "native/wasm/**",
+            "scripts/infra/native/wasm/**"
+          ]
+        }
+      }
+    },
+    "signing": {
+      "include": [
+        "scripts/infra/signing/**"
+      ]
+    },
+    "managed": {
+      "dependsOn": [
+        "native"
+      ],
+      "include": [
+        "binding/**",
+        "source/**",
+        "scripts/infra/managed/**",
+        "scripts/mono.*",
+        "build.cake",
+        "LICENSE.txt",
+        "images/nuget.png",
+        "External-Dependency-Info.txt"
+      ],
+      "submodules": [
+        "docs"
+      ],
+      "children": {
+        "libs": {},
+        "package": {
+          "include": [
+            "scripts/infra/package/**"
+          ],
+          "children": {
+            "api_diff": {
+              "include": [
+                "scripts/infra/docs/**",
+                "documentation/docfx/releases/**"
+              ]
+            },
+            "samples": {
+              "include": [
+                "samples/**",
+                "scripts/infra/tests/tests-samples.cake",
+                "scripts/infra/tests/tests-shared*.cake"
+              ]
+            }
+          }
+        },
+        "tests": {
+          "include": [
+            "tests/**",
+            "scripts/infra/tests/**",
+            "benchmarks/**",
+            "utils/NativeLibraryMiniTest/**"
+          ]
+        }
+      }
+    }
+  }
+}

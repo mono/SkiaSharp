@@ -1,5 +1,5 @@
 parameters:
-  - name: buildAgentHost
+  - name: buildAgent
     type: object
 
 stages:
@@ -8,11 +8,37 @@ stages:
     jobs:
       - job: prepare
         displayName: Prepare Build
-        pool: ${{ parameters.buildAgentHost.pool }}
+        pool: ${{ parameters.buildAgent.pool }}
         steps:
           - checkout: self
             submodules: false
             fetchDepth: 1
-            sparseCheckoutDirectories: scripts/set-build-variables.ps1
-          - pwsh: ./scripts/set-build-variables.ps1 -UpdateBuildNumber
+          - pwsh: ./scripts/infra/shared/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
+          - pwsh: ./scripts/infra/shared/tests/SetBuildVariables.Tests.ps1
+            displayName: Validate build identity rules
+          - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
+            displayName: Validate API Scan input preparation
+          - pwsh: |
+              python3 scripts/infra/caching/repo-deps.py validate
+              if ($LASTEXITCODE -ne 0) {
+                throw "Cache configuration validation exited with code $LASTEXITCODE."
+              }
+            displayName: Validate cache config coverage
+          - pwsh: |
+              $arguments = @('scripts/infra/caching/repo-deps.py', 'cache-key', '--job', 'all', '--name', 'prepare')
+
+              if ($env:SYSTEM_PULLREQUEST_TARGETBRANCH) {
+                $target = $env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', ''
+                git fetch origin $target --depth=1
+                if ($LASTEXITCODE -ne 0) {
+                  throw "Could not fetch target branch '$target'."
+                }
+                $arguments += @('--base', "origin/$target")
+              }
+
+              python3 @arguments
+              if ($LASTEXITCODE -ne 0) {
+                throw "Dependency tree exited with code $LASTEXITCODE."
+              }
+            displayName: Show dependency tree

@@ -6,7 +6,18 @@
     <BuildArch>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant)</BuildArch>
   </PropertyGroup>
   
-  <ItemGroup Condition="!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop'))">
+  <!--
+    Explicit native-platform override (used by the containerized test legs). When
+    SkiaSharpNativePlatform is set (e.g. 'nanoserver', 'alpine', 'linux'), copy the native library
+    from output/native/<SkiaSharpNativePlatform>/<arch> ONLY, instead of the OS-derived globs below.
+    Used by the containerized test legs — see documentation/dev/containerized-testing.md.
+  -->
+  <ItemGroup Condition="'$(SkiaSharpNativePlatform)' != '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(BuildArch)\libSkiaSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(Platform)\libSkiaSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SkiaSharpNativePlatform)' == '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libSkiaSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libSkiaSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libSkiaSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
@@ -19,9 +30,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-windows')) and ('$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU')">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x64'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-x86'" Visible="False" />
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win10-arm64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-x64'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\x86\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-x86'" Visible="False" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\arm64\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == 'win-arm64'" Visible="False" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libSkiaSharp.*" Condition="'$(RuntimeIdentifier)' == ''" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -46,32 +57,37 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('-tizen'))">
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\i586\libSkiaSharp.so">
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\x86_64\libSkiaSharp.so">
       <Visible>false</Visible>
-      <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
+      <TizenTpkSubDir>bin\runtimes\tizen-x64\native\</TizenTpkSubDir>
       <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
     </TizenTpkFiles>
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\armel\libSkiaSharp.so">
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\aarch64\libSkiaSharp.so">
       <Visible>false</Visible>
-      <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
+      <TizenTpkSubDir>bin\runtimes\tizen-arm64\native\</TizenTpkSubDir>
       <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
     </TizenTpkFiles>
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\**\*.a" Visible="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
-    <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
-    <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
+  <ItemGroup Condition="$(TargetFramework.Contains('-tvos')) and '$(RuntimeIdentifier)' != ''">
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvossimulator\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
   </ItemGroup>
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
+    <!-- Normalize to forward slashes: emcc swallows Windows backslashes in
+         library paths. The port is staged into the
+         WASM native output next to the libSkiaSharp*.a files. -->
+    <_SkiaSharpEmdawnwebgpuPkg>$([System.String]::Copy('$(MSBuildThisFileDirectory)..\output\native\wasm\emdawnwebgpu_pkg').Replace('\','/'))</_SkiaSharpEmdawnwebgpuPkg>
+    <!--
+      Don't use emcc's ports mechanism: that compiles into emcc's cache (needs
+      FROZEN_CACHE=0), and the .NET WASM SDK's FROZEN_CACHE=1 + parallel compile
+      races on sysroot_install.stamp. The port's webgpu.cpp is compiled into
+      libSkiaSharp.a by the native build, and its JS libraries are passed as
+      js-library Content (see _SkiaSharpAddEmdawnwebgpuJsLibraries), so no source or compile flag reaches the
+      app's link.
+    -->
     <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
@@ -79,11 +95,26 @@
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != ''">
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.12\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
-    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
+    <!-- SkiaSharp's interop reads Module.WebGPU.{mgr*,importJs*}, so export the
+         WebGPU runtime method. -->
+    <EmccExportedRuntimeMethod Include="WebGPU" />
+    <!-- emdawnwebgpu allocates refcounted WGPUTexture handles; the managed
+         interop releases them via the C ABI's wgpuTextureRelease, so export it
+         as Module._wgpuTextureRelease. -->
+    <EmccExportedFunction Include="_wgpuTextureRelease" />
+    <!-- Skia's DawnBackendContext needs a real WGPUInstance* — the emdawnwebgpu
+         port's wgpuCreateInstance returns one. Export it as Module._wgpuCreateInstance
+         so the managed WebGPU shim can call it instead of falling back to a fake
+         handle (a bogus pointer would hang inside wgpu::Instance::AddRef). -->
+    <EmccExportedFunction Include="_wgpuCreateInstance" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
+    <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\6.0.2\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0'))" />
   </ItemGroup>
+
+  <Target Name="_SkiaSharpCheckWasmTfm" BeforeTargets="PrepareForBuild"
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '9.0'))">
+    <Error Text="SkiaSharp WebAssembly native assets require .NET 9.0 or later. Please update your project to target net9.0 or newer." />
+  </Target>
 
   <!-- Workaround for https://github.com/dotnet/runtime/issues/109289 -->
   <Target Name="RuntimeIssue109289_Workaround"
@@ -100,6 +131,24 @@
       <_EmccLinkStepArgs Include="&quot;%(_WasmNativeFileForLinking.Identity)&quot;" />
       <_WasmLinkDependencies Include="@(_WasmNativeFileForLinking)" />
       <_WasmLinkStepArgs Include="@(_EmccLinkStepArgs)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    The emdawnwebgpu port's JS glue, in the order its port script loads it. The
+    WASM SDK links every .js Content item with a Kind as an emcc library. It is
+    added only for the link: as ordinary Content it would also be deployed by
+    hosts that publish every .js Content item (Uno Platform's bootstrapper
+    does), and it is not a runtime script.
+  -->
+  <Target Name="_SkiaSharpAddEmdawnwebgpuJsLibraries"
+          BeforeTargets="_BrowserWasmWriteRspForLinking"
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
+    <ItemGroup>
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_enum_tables.js" Kind="js-library" />
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_struct_info.js" Kind="js-library" />
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_sig_info.js" Kind="js-library" />
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu.js" Kind="js-library" />
     </ItemGroup>
   </Target>
 

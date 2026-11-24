@@ -1,27 +1,45 @@
-﻿using System;
+using System;
 using Android.Graphics;
 
 namespace SkiaSharp.Views.Android
 {
+	/// <summary>Various extension methods to convert between SkiaSharp types and Xamarin.Android types.</summary>
+	/// <remarks />
 	public static class AndroidExtensions
 	{
 		// Point*
 
+		/// <summary>Converts a Xamarin.Android point into a SkiaSharp point.</summary>
+		/// <param name="point">The Xamarin.Android point.</param>
+		/// <returns>Returns a SkiaSharp point.</returns>
+		/// <remarks />
 		public static SKPoint ToSKPoint(this PointF point)
 		{
 			return new SKPoint(point.X, point.Y);
 		}
 
+		/// <summary>Converts a Xamarin.Android point into a SkiaSharp point.</summary>
+		/// <param name="point">The Xamarin.Android point.</param>
+		/// <returns>Returns a SkiaSharp point.</returns>
+		/// <remarks />
 		public static SKPointI ToSKPoint(this Point point)
 		{
 			return new SKPointI(point.X, point.Y);
 		}
 
+		/// <summary>Converts a SkiaSharp point into a Xamarin.Android point.</summary>
+		/// <param name="point">The SkiaSharp point.</param>
+		/// <returns>Returns a Xamarin.Android point.</returns>
+		/// <remarks />
 		public static PointF ToPoint(this SKPoint point)
 		{
 			return new PointF(point.X, point.Y);
 		}
 
+		/// <summary>Converts a SkiaSharp point into a Xamarin.Android point.</summary>
+		/// <param name="point">The SkiaSharp point.</param>
+		/// <returns>Returns a Xamarin.Android point.</returns>
+		/// <remarks />
 		public static Point ToPoint(this SKPointI point)
 		{
 			return new Point(point.X, point.Y);
@@ -29,21 +47,37 @@ namespace SkiaSharp.Views.Android
 
 		// Rectangle*
 
+		/// <summary>Converts a Xamarin.Android rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The Xamarin.Android rectangle.</param>
+		/// <returns>Returns a SkiaSharp rectangle.</returns>
+		/// <remarks />
 		public static SKRect ToSKRect(this RectF rect)
 		{
 			return new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
+		/// <summary>Converts a Xamarin.Android rectangle into a SkiaSharp rectangle.</summary>
+		/// <param name="rect">The Xamarin.Android rectangle.</param>
+		/// <returns>Returns a SkiaSharp rectangle.</returns>
+		/// <remarks />
 		public static SKRectI ToSKRect(this Rect rect)
 		{
 			return new SKRectI(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
+		/// <summary>Converts a SkiaSharp rectangle into a Xamarin.Android rectangle.</summary>
+		/// <param name="rect">The SkiaSharp rectangle.</param>
+		/// <returns>Returns a Xamarin.Android rectangle.</returns>
+		/// <remarks />
 		public static RectF ToRect(this SKRect rect)
 		{
 			return new RectF(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
+		/// <summary>Converts a SkiaSharp rectangle into a Xamarin.Android rectangle.</summary>
+		/// <param name="rect">The SkiaSharp rectangle.</param>
+		/// <returns>Returns a Xamarin.Android rectangle.</returns>
+		/// <remarks />
 		public static Rect ToRect(this SKRectI rect)
 		{
 			return new Rect(rect.Left, rect.Top, rect.Right, rect.Bottom);
@@ -51,11 +85,19 @@ namespace SkiaSharp.Views.Android
 
 		// Color
 
+		/// <summary>Converts a Xamarin.Android color into a SkiaSharp color.</summary>
+		/// <param name="color">The Xamarin.Android color.</param>
+		/// <returns>Returns a SkiaSharp color.</returns>
+		/// <remarks />
 		public static SKColor ToSKColor(this Color color)
 		{
 			return (SKColor)(uint)(int)color;
 		}
 
+		/// <summary>Converts a SkiaSharp color into a Xamarin.Android color.</summary>
+		/// <param name="color">The SkiaSharp color.</param>
+		/// <returns>Returns a Xamarin.Android color.</returns>
+		/// <remarks />
 		public static Color ToColor(this SKColor color)
 		{
 			return new Color((int)(uint)color);
@@ -63,6 +105,10 @@ namespace SkiaSharp.Views.Android
 
 		// Matrix
 
+		/// <summary>Converts a Xamarin.Android matrix into a SkiaSharp matrix.</summary>
+		/// <param name="matrix">The Xamarin.Android matrix.</param>
+		/// <returns>Returns a SkiaSharp matrix.</returns>
+		/// <remarks />
 		public static SKMatrix ToSKMatrix(this Matrix matrix)
 		{
 			var values = new float[9];
@@ -70,6 +116,10 @@ namespace SkiaSharp.Views.Android
 			return new SKMatrix { Values = values };
 		}
 
+		/// <summary>Converts a SkiaSharp matrix into a Xamarin.Android matrix.</summary>
+		/// <param name="matrix">The SkiaSharp matrix.</param>
+		/// <returns>Returns a Xamarin.Android matrix.</returns>
+		/// <remarks />
 		public static Matrix ToMatrix(this SKMatrix matrix)
 		{
 			var native = new Matrix();
@@ -100,6 +150,10 @@ namespace SkiaSharp.Views.Android
 			return new SKImageInfo(bitmap.Width, bitmap.Height, colorType);
 		}
 
+		/// <summary>Converts a Xamarin.Android bitmap into a SkiaSharp image.</summary>
+		/// <param name="bitmap">The Xamarin.Android bitmap.</param>
+		/// <returns>Returns a copy of the bitmap data as a SkiaSharp image.</returns>
+		/// <remarks />
 		public static SKImage ToSKImage(this Bitmap bitmap)
 		{
 			var info = GetInfo(bitmap);
@@ -109,6 +163,10 @@ namespace SkiaSharp.Views.Android
 			return image;
 		}
 
+		/// <summary>Converts a Xamarin.Android bitmap into a SkiaSharp pixmap.</summary>
+		/// <param name="bitmap">The Xamarin.Android bitmap.</param>
+		/// <param name="pixmap">The SkiaSharp pixmap to hold the copy of the bitmap data.</param>
+		/// <remarks />
 		public static void ToSKPixmap(this Bitmap bitmap, SKPixmap pixmap)
 		{
 			// create an image that wraps the existing pixels
@@ -121,6 +179,10 @@ namespace SkiaSharp.Views.Android
 			bitmap.UnlockPixels();
 		}
 
+		/// <summary>Converts a Xamarin.Android bitmap into a SkiaSharp bitmap.</summary>
+		/// <param name="bitmap">The Xamarin.Android bitmap.</param>
+		/// <returns>Returns a copy of the bitmap data as a SkiaSharp bitmap.</returns>
+		/// <remarks />
 		public static SKBitmap ToSKBitmap(this Bitmap bitmap)
 		{
 			var info = GetInfo(bitmap);
@@ -129,6 +191,10 @@ namespace SkiaSharp.Views.Android
 			return bmp;
 		}
 
+		/// <summary>Converts a SkiaSharp bitmap into a Xamarin.Android bitmap.</summary>
+		/// <param name="skiaBitmap">The SkiaSharp bitmap.</param>
+		/// <returns>Returns a copy of the bitmap data as a Xamarin.Android bitmap.</returns>
+		/// <remarks />
 		public static Bitmap ToBitmap(this SKBitmap skiaBitmap)
 		{
 			using var pixmap = skiaBitmap.PeekPixels();
@@ -137,6 +203,10 @@ namespace SkiaSharp.Views.Android
 			return bmp;
 		}
 
+		/// <summary>Converts a SkiaSharp image into a Xamarin.Android bitmap.</summary>
+		/// <param name="skiaImage">The SkiaSharp image.</param>
+		/// <returns>Returns a copy of the image data as a Xamarin.Android bitmap.</returns>
+		/// <remarks />
 		public static Bitmap ToBitmap(this SKImage skiaImage)
 		{
 			var info = skiaImage.Info;
@@ -185,6 +255,10 @@ namespace SkiaSharp.Views.Android
 			return bmp;
 		}
 
+		/// <summary>Converts a SkiaSharp pixmap into a Xamarin.Android bitmap.</summary>
+		/// <param name="skiaPixmap">The SkiaSharp pixmap.</param>
+		/// <returns>Returns a copy of the pixel data as a Xamarin.Android bitmap.</returns>
+		/// <remarks />
 		public static Bitmap ToBitmap(this SKPixmap skiaPixmap)
 		{
 			using var image = SKImage.FromPixels(skiaPixmap);
@@ -192,6 +266,11 @@ namespace SkiaSharp.Views.Android
 			return bmp;
 		}
 
+		/// <summary>Converts a SkiaSharp picture into a Xamarin.Android bitmap.</summary>
+		/// <param name="skiaPicture">The SkiaSharp picture.</param>
+		/// <param name="dimensions">The dimensions of the picture.</param>
+		/// <returns>Returns a copy of the picture as a Xamarin.Android bitmap.</returns>
+		/// <remarks />
 		public static Bitmap ToBitmap(this SKPicture skiaPicture, SKSizeI dimensions)
 		{
 			using (var img = SKImage.FromPicture(skiaPicture, dimensions))

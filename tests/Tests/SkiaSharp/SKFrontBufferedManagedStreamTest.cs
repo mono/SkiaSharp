@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
@@ -15,6 +16,25 @@ namespace SkiaSharp.Tests
 		// smaller than the string length.
 		private const string gAbcsString = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwx";
 		private readonly byte[] gAbcs = StringUtilities.GetEncodedText (gAbcsString, SKTextEncoding.Utf8);
+
+		[Fact]
+		public async Task DisposedStreamDoesNotRetainBorrowedNativeStream ()
+		{
+			var weakStream = CreateDisposedStreamReference (out var bufferedStream);
+
+			await AssertEx.EventuallyGC (weakStream);
+			GC.KeepAlive (bufferedStream);
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		private static WeakReference CreateDisposedStreamReference (out SKFrontBufferedManagedStream bufferedStream)
+		{
+			var stream = new SKMemoryStream (new byte[] { 1 });
+			bufferedStream = new SKFrontBufferedManagedStream (stream, 1, disposeUnderlyingStream: false);
+			bufferedStream.Dispose ();
+
+			return new WeakReference (stream);
+		}
 
 		// Test that hasLength() returns the correct value, based on the stream
 		// being wrapped. A length can only be known if the wrapped stream has a
@@ -48,7 +68,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (expectations.Take (bytesRead), storage.Take (bytesRead));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -76,7 +96,7 @@ namespace SkiaSharp.Tests
 			test_read (bufferedStream, gAbcs, bufferSize);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -109,7 +129,7 @@ namespace SkiaSharp.Tests
 			test_rewind (bufferedStream, false);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -134,7 +154,7 @@ namespace SkiaSharp.Tests
 			test_rewind (bufferedStream, false);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -187,7 +207,7 @@ namespace SkiaSharp.Tests
 			protected internal override bool OnHasPosition () => fHasPosition;
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -232,7 +252,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamPeek ()
 		{
 			var gAbcsString = "abcdefghijklmnopqrstuvwxyz";
@@ -243,7 +263,7 @@ namespace SkiaSharp.Tests
 			test_fully_peekable_stream (memStream, memStream.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamPeek2 ()
 		{
 			var gAbcsString = "abcdefghijklmnopqrstuvwxyz";
@@ -275,7 +295,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamPeek3 ()
 		{
 			var gAbcsString = "abcdefghijklmnopqrstuvwxyz";

@@ -1,0 +1,48 @@
+{
+  "theme": "Native hardening and diagnostic assets",
+  "highlights_headline": "SkiaSharp 3.119.2 strengthens native binaries and makes Android native crashes easier to diagnose.",
+  "highlights_body": "The release also fills gaps in tvOS surface creation APIs without changing the engine milestone.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native binary hardening",
+          "detail": "Enables Control Flow Guard across Windows native DLLs and buffer security checks for HarfBuzz and ANGLE. Adds Spectre mitigation compiler flags for SkiaSharp native libraries on Windows and Linux.",
+          "prs": [3397, 3404, 3497, 3503]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "tvOS surface creation parity",
+          "detail": "Adds the missing SKSurface.Create overloads for tvOS.",
+          "prs": [3342]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Android native symbols",
+          "detail": "Preserves and packages Android native symbols to support crash investigation.",
+          "prs": [3374]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "Aguilex": "Control Flow Guard and native buffer security checks.",
+    "MartinZikmund": "Missing tvOS SKSurface.Create overloads."
+  },
+  "preview_summaries": {
+    "v3.119.2-preview.1.2": "Added missing tvOS surface creation overloads and packaged Android native symbols.",
+    "v3.119.2-preview.2.3": "Enabled Windows Control Flow Guard and native buffer security checks.",
+    "v3.119.2-preview.3.1": "Added Spectre mitigation flags for the Windows SkiaSharp native library."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp Windows binaries gain Control Flow Guard and buffer security checks, and Android native symbols are preserved for diagnostics. These are package and native-build changes, not a HarfBuzz engine upgrade."
+}

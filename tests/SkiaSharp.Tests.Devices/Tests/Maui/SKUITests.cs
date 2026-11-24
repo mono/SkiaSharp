@@ -14,7 +14,7 @@ public abstract class SKUITests : SKTest, IAsyncLifetime
 
 	protected IMauiContext MauiContext { get; private set; } = null!;
 
-	public async Task InitializeAsync()
+	public async ValueTask InitializeAsync()
 	{
 		Routing.RegisterRoute("uitests", typeof(ContentPage));
 
@@ -27,7 +27,7 @@ public abstract class SKUITests : SKTest, IAsyncLifetime
 		MauiContext = CurrentPage.Handler!.MauiContext!;
 	}
 
-	public async Task DisposeAsync()
+	public async ValueTask DisposeAsync()
 	{
 		// pop all modals
 		while (Shell.Current.CurrentPage.Navigation.ModalStack.Count > 0)

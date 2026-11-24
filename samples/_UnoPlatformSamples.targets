@@ -1,34 +1,53 @@
 <Project>
 
+  <PropertyGroup>
+    <!-- Lets a sample tell this in-tree build apart from a generated one, which strips this import. -->
+    <SkiaSharpInTreeSamples>true</SkiaSharpInTreeSamples>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Remove="@(ProjectReference)" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="2.88.7" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.WinUI" Version="2.88.7" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.7" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="2.88.7" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="2.88.7" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="2.88.7" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.7" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp" Version="7.3.0.1" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Android" Version="7.3.0.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="7.3.0.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.MacCatalyst" Version="7.3.0.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.1" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.macOS" Version="7.3.0.1" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="7.3.0.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="4.151.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
+    <PackageReference Include="SkiaSharp.Views.Uno.WinUI" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Android" Version="4.151.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.iOS" Version="4.151.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="4.151.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp" Version="14.2.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Android" Version="14.2.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="14.2.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="14.2.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.macOS" Version="14.2.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="14.2.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.WebAssembly" Version="14.2.1.1" ExcludeAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" Condition="!$(TargetFramework.Contains('-windows')) and !$(TargetFramework.Contains('-desktop')) and !$(TargetFramework.Contains('-browserwasm'))" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Skia\SkiaSharp.Views.Uno.WinUI.Skia.csproj" Condition="$(TargetFramework.Contains('-desktop'))" />
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI.Wasm\SkiaSharp.Views.Uno.WinUI.Wasm.csproj" Condition="$(TargetFramework.Contains('-browserwasm'))" />
   </ItemGroup>
 
+  <Choose>
+    <When Condition="$(TargetFramework.Contains('-windows'))">
+      <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.WinUI\SkiaSharp.Views.Uno.WinUI.csproj" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

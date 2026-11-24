@@ -1,0 +1,41 @@
+{
+  "theme": "API cleanup",
+  "highlights_headline": "SkiaSharp 1.55.0 trims optional parameters off public APIs and makes SKCodecOptions.Subset nullable.",
+  "highlights_body": "Several methods on SKCanvas, GRContext and SKPath drop their default parameter values so overload resolution is unambiguous. SKCodecOptions.Subset becomes a nullable SKRectI, and a handful of legacy helpers on SKCodec, SKDocument and SKMatrix are removed.",
+  "breaking": [
+    {
+      "title": "Default parameter values removed from public APIs",
+      "body": "Methods such as SKCanvas.ClipRect/ClipPath/DrawColor, GRContext.Flush and several SKPath overloads no longer supply default argument values \u2014 callers must pass the argument explicitly or use the matching overload. This is an ABI change; recompile against the new signatures.",
+      "prs": []
+    },
+    {
+      "title": "SKCodecOptions.Subset is now nullable",
+      "body": "SKCodecOptions.Subset changed from SKRectI to SKRectI? and HasSubset lost its setter. Assign null (or leave unset) to opt out of subsetting.",
+      "prs": []
+    },
+    {
+      "title": "Legacy methods removed",
+      "body": "SKCodec.GetValidSubset and SKDocument.Close were removed; use the replacement APIs on those types.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Optional parameters replaced with explicit overloads",
+          "detail": "Trims defaults off SKCanvas, GRContext and SKPath methods so the ABI is stable across future changes and overload resolution is deterministic.",
+          "prs": []
+        },
+        {
+          "lead": "SKCodecOptions.Subset is nullable",
+          "detail": "Subset now surfaces as SKRectI? and pairs with a read-only HasSubset, better reflecting that a subset is optional.",
+          "prs": []
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

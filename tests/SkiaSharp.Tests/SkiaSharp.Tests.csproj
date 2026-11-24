@@ -1,31 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious)</TargetFrameworks>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER;USE_LIBRARY_IMPORT</DefineConstants>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <NoWarn>$(NoWarn);SKIA4001</NoWarn>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
-    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
+    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SkiaSharp.Tests.Shared\SkiaSharp.Tests.Shared.csproj" />
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.Resources\SkiaSharp.Resources.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Testing\SkiaSharp.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**;..\Tests\SkiaSharp\Visual\Renderers\Desktop\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
+
 
 </Project>

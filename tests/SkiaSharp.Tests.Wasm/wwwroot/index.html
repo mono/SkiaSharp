@@ -1,16 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>SkiaSharp.Tests</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./main.css">
-  <script type='module' src="./main.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkiaSharp WASM Tests</title>
+  <base href="/" />
+  <link rel="preload" id="webassembly" />
+  <link href="_content/DeviceRunners.VisualRunners.Blazor/device-runners.css" rel="stylesheet" />
+  <script type="importmap"></script>
 </head>
 
 <body>
-  <pre>Loading tests...</pre>
+  <div id="app">
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;">
+      Loading test runner...
+    </div>
+  </div>
+  <div id="blazor-error-ui" style="display:none;position:fixed;bottom:0;width:100%;padding:1rem;background:#b32121;color:white;text-align:center;">
+    An unhandled error has occurred. <a href="" style="color:white;text-decoration:underline;">Reload</a>
+  </div>
+  <script src="_content/DeviceRunners.VisualRunners.Blazor/device-runners-interop.js"></script>
+  <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 
 </html>

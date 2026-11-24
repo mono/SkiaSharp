@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/sample-scout-schema.json",
+  "title": "SkiaSharp Sample Scout Report",
+  "description": "Audit of upstream Skia GM samples for SkiaSharp Gallery porting opportunities.",
+  "type": "object",
+  "required": ["meta", "summary", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["date", "schemaVersion", "source", "totalFiles"],
+      "additionalProperties": false,
+      "properties": {
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "schemaVersion": { "type": "string", "const": "1.0" },
+        "source": { "type": "string", "description": "e.g., google/skia/gm/" },
+        "totalFiles": { "type": "integer", "minimum": 0 },
+        "existingGallerySamples": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["totalFindings"],
+      "additionalProperties": true,
+      "properties": {
+        "totalFindings": { "type": "integer", "minimum": 0 },
+        "byInterest": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "byApiAvailability": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "bySampleStatus": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "opportunities": { "type": "integer", "minimum": 0, "description": "high + apis_available + sampleStatus=none" }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["file", "name", "description", "interesting", "apis_available", "missing_apis", "key_apis", "visualGoal", "suggestedControls", "category", "skiaSharpApis"],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "interesting": { "type": "string", "enum": ["high", "medium", "low"] },
+        "apis_available": { "type": "boolean" },
+        "missing_apis": { "type": "array", "items": { "type": "string" } },
+        "key_apis": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" },
+        "sampleStatus": { "type": "string", "enum": ["none", "similar", "existing"] },
+        "matchedSample": { "type": "string" },
+        "visualGoal": { "type": "string", "description": "What the user sees — 1-3 sentences describing the rendered output" },
+        "suggestedControls": { "type": "array", "items": { "type": "string" }, "description": "Interactive controls: sliders, toggles, pickers with ranges" },
+        "category": { "type": "string", "description": "Gallery category: Shaders, Text, Paths, Image Filters, General, etc." },
+        "skiaSharpApis": { "type": "array", "items": { "type": "string" }, "description": "C# SkiaSharp API equivalents (not C++ names)" }
+      }
+    }
+  }
+}

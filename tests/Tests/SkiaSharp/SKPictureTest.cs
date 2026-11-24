@@ -10,7 +10,8 @@ namespace SkiaSharp.Tests
 			(byte)'s', (byte)'k', (byte)'i', (byte)'a', (byte)'p', (byte)'i', (byte)'c', (byte)'t'
 		};
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanSerializeToData()
 		{
 			using var picture = CreateTestPicture();
@@ -23,7 +24,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(MagicBytes, span.Slice(0, 8).ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanSerializeToStream()
 		{
 			using var picture = CreateTestPicture();
@@ -35,7 +36,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(MagicBytes, stream.ToArray().Take(8));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDeserializeFromData()
 		{
 			using var picture = CreateTestPicture();
@@ -51,7 +52,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDeserializeFromStream()
 		{
 			using var picture = CreateTestPicture();
@@ -68,7 +69,47 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
+		public void CanDeserializeFromFileStream()
+		{
+			var tempFile = Path.GetTempFileName();
+			try
+			{
+				using (var picture = CreateTestPicture())
+				using (var output = File.Create(tempFile))
+				{
+					picture.Serialize(output);
+				}
+
+				using var input = File.OpenRead(tempFile);
+				using var deserialized = SKPicture.Deserialize(input);
+				Assert.NotNull(deserialized);
+
+				using var bmp = new SKBitmap(40, 40);
+				using var cnv = new SKCanvas(bmp);
+				cnv.DrawPicture(deserialized);
+
+				ValidateTestBitmap(bmp);
+			}
+			finally
+			{
+				File.Delete(tempFile);
+			}
+		}
+
+		[Fact]
+		public void DeserializeInvalidOrTruncatedStreamReturnsNull()
+		{
+			using var imageStream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
+			Assert.Null(SKPicture.Deserialize(imageStream));
+
+			using var picture = CreateTestPicture();
+			using var data = picture.Serialize();
+			using var truncated = new MemoryStream(data.ToArray(), 0, 12);
+			Assert.Null(SKPicture.Deserialize(truncated));
+		}
+
+		[Fact]
 		public void CanPlayback()
 		{
 			using var picture = CreateTestPicture();
@@ -81,7 +122,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawPicture()
 		{
 			using var picture = CreateTestPicture();
@@ -94,7 +135,7 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetApproximateOperationCount()
 		{
 			using var picture = CreateTestPicture();
@@ -102,7 +143,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(5, picture.ApproximateOperationCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetApproximateBytesUsed()
 		{
 			using var picture = CreateTestPicture();
@@ -110,7 +151,7 @@ namespace SkiaSharp.Tests
 			Assert.True(picture.ApproximateBytesUsed > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodesImageIntoPicture()
 		{
 			// create an image

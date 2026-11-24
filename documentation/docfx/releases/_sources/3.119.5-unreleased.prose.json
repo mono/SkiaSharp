@@ -1,0 +1,27 @@
+{
+  "theme": "Apple and WinUI package compatibility",
+  "highlights_headline": "The next servicing release fixes Apple workload compatibility and WinUI startup for .NET 9 applications.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Apple packages accept base 26.x workloads",
+          "detail": "Library TFMs use the base 26.0 platform version instead of 26.2, restoring native asset resolution for Avalonia Mac Catalyst applications and avoiding Uno iOS registrar and linker failures on older 26.x workloads.",
+          "prs": [4579]
+        },
+        {
+          "lead": "WinUI projection available to .NET 9",
+          "detail": "The native projection assembly is packaged for both .NET 9 and .NET 10, fixing startup FileNotFoundException in .NET 9 applications.",
+          "prs": [4086]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "drasticactions": "Backport of Apple library TFMs for base 26.0 workload compatibility."
+  },
+  "preview_summaries": {}
+}

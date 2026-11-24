@@ -5,22 +5,20 @@
     <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
   </PropertyGroup>
 
-  <!-- If this is an UNO Platform app -->
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <Content Include="@(SkiaSharpStaticLibrary)" Visible="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <!-- Include the GL symbol when running under net7 (https://github.com/dotnet/runtime/issues/76077) -->
-    <WasmShellEmccExportedRuntimeMethod Include="GL" />
-    <!-- Include the emscripten_gl* symbols in net8 -->
-    <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
-    <!-- Enable GLCtx when threading is available -->
-    <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
-  </ItemGroup>
-
   <!-- If this is a .NET web assembly app -->
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
+    <!-- Normalize to forward slashes: emcc swallows Windows backslashes in
+         library paths. -->
+    <_SkiaSharpEmdawnwebgpuPkg>$([System.String]::Copy('$(MSBuildThisFileDirectory)emdawnwebgpu_pkg').Replace('\','/'))</_SkiaSharpEmdawnwebgpuPkg>
+    <!--
+      Don't use emcc's ports mechanism: that compiles into emcc's cache (needs
+      FROZEN_CACHE=0), and the .NET WASM SDK's FROZEN_CACHE=1 + parallel compile
+      races on sysroot_install.stamp. The port's webgpu.cpp is compiled into
+      libSkiaSharp.a by the native build, and its JS libraries are passed as
+      js-library Content (see _SkiaSharpAddEmdawnwebgpuJsLibraries), so no source or compile flag reaches the
+      app's link.
+    -->
     <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>
     <!-- Pick the threading type: 'mt' for multi-threading or 'st' for single-threading -->
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
@@ -30,15 +28,29 @@
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <!-- net6.0 (only has st and non-simd) -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
-    <!-- net7.0 -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
-    <!-- net8.0 -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
-    <!-- net9.0+ -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
+    <!-- SkiaSharp's interop reads Module.WebGPU.{mgr*,importJs*}, so export the
+         WebGPU runtime method. -->
+    <EmccExportedRuntimeMethod Include="WebGPU" />
+    <!-- emdawnwebgpu allocates refcounted WGPUTexture handles; the managed
+         interop releases them via the C ABI's wgpuTextureRelease, so export it
+         as Module._wgpuTextureRelease. -->
+    <EmccExportedFunction Include="_wgpuTextureRelease" />
+    <!-- Skia's DawnBackendContext needs a real WGPUInstance* — the emdawnwebgpu
+         port's wgpuCreateInstance returns one. Export it as Module._wgpuCreateInstance
+         so the managed WebGPU shim can call it instead of falling back to a fake
+         handle (a bogus pointer would hang inside wgpu::Instance::AddRef). -->
+    <EmccExportedFunction Include="_wgpuCreateInstance" />
+    <!-- net9.0 - net10.0 -->
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)/3.1.56/$(_SkiaSharpNativeBinaryType)/*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
+    <!-- net11.0+ -->
+    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)/6.0.2/$(_SkiaSharpNativeBinaryType)/*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0'))" />
   </ItemGroup>
+
+  <!-- Error when targeting unsupported WASM TFMs -->
+  <Target Name="_SkiaSharpCheckWasmTfm" BeforeTargets="PrepareForBuild"
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '9.0'))">
+    <Error Text="SkiaSharp WebAssembly native assets require .NET 9.0 or later. Please update your project to target net9.0 or newer." />
+  </Target>
 
   <!-- Workaround for https://github.com/dotnet/runtime/issues/109289 -->
   <Target Name="_SkiaSharpRuntimeIssue109289Workaround" AfterTargets="_BrowserWasmWriteRspForLinking">
@@ -59,6 +71,24 @@
       <_EmccLinkStepArgs Include="&quot;%(_WasmNativeFileForLinking.Identity)&quot;" />
       <_WasmLinkDependencies Include="@(_WasmNativeFileForLinking)" />
       <_WasmLinkStepArgs Include="@(_EmccLinkStepArgs)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    The emdawnwebgpu port's JS glue, in the order its port script loads it. The
+    WASM SDK links every .js Content item with a Kind as an emcc library. It is
+    added only for the link: as ordinary Content it would also be deployed by
+    hosts that publish every .js Content item (Uno Platform's bootstrapper
+    does), and it is not a runtime script.
+  -->
+  <Target Name="_SkiaSharpAddEmdawnwebgpuJsLibraries"
+          BeforeTargets="_BrowserWasmWriteRspForLinking"
+          Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
+    <ItemGroup>
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_enum_tables.js" Kind="js-library" />
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_struct_info.js" Kind="js-library" />
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_sig_info.js" Kind="js-library" />
+      <Content Include="$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu.js" Kind="js-library" />
     </ItemGroup>
   </Target>
 

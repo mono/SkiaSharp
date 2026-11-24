@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-maccatalyst$(TPVMacCatalystNext)</TargetFrameworks>
+    <TargetFrameworks>$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
   </PropertyGroup>
   <ItemGroup>
     <PackageFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp*.framework.zip" PackagePath="runtimes\maccatalyst\native\%(Filename)%(Extension)" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework\Versions\A\libHarfBuzzSharp*" PackagePath="runtimes\maccatalyst\native\libHarfBuzzSharp.framework\Versions\A" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

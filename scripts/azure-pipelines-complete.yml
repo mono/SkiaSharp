@@ -1,73 +1,71 @@
 trigger:
   - main
-  - develop
   - release/*
 
 pr:
   - main
-  - develop
   - release/*
 
 parameters:
-  - name: buildExternals
-    displayName: 'The Build ID containing the specific native artifacts to use:'
-    type: string
-    default: 'latest'
+  - name: enableCaching
+    displayName: 'Enable build caching (skip native builds on cache hit):'
+    type: boolean
+    default: true
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
-        os: windows
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
+        os: linux
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals windows.vs2026.amd64.open
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals windows.vs2026.amd64.open
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: macos-14
+        name: AcesShared
+        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
         os: macos
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: macos-14
+        name: AcesShared
+        demands: ImageOverride -equals ACES_VM_SharedPool_Sequoia
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentLinuxNative
     displayName: 'The Linux build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: $(DncEngPublicBuildPool)
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
@@ -75,12 +73,11 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-14
-        os: macos
-      parameters:
-        installXcode: false
+        vmImage: ubuntu-24.04
+        os: linux
 
 variables:
+  - template: /eng/common/templates/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
 extends:
@@ -91,7 +88,6 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'complete'
-          buildExternals: ${{ parameters.buildExternals }}
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
@@ -100,3 +96,4 @@ extends:
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+          enableCaching: ${{ parameters.enableCaching }}

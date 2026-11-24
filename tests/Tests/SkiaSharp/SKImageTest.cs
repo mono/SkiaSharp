@@ -1,14 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class SKImageTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestLazyImage()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -20,7 +23,7 @@ namespace SkiaSharp.Tests
 			Assert.True(image.IsLazyGenerated);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestNotLazyImage()
 		{
 			var bitmap = CreateTestBitmap();
@@ -32,7 +35,50 @@ namespace SkiaSharp.Tests
 			Assert.False(image.IsLazyGenerated);
 		}
 
-		[SkippableFact]
+		[Fact]
+		public void FailedRasterCreateDoesNotLeakPixelBuffer()
+		{
+			// The leak is measured via System.Diagnostics.Process.PrivateMemorySize64, which is
+			// not supported on WASM (no System.Diagnostics.Process), iOS or Mac Catalyst. The fix
+			// itself is platform-agnostic and still exercised by the desktop and Android legs.
+			SkipOnPlatform(IsBrowser || IsIOS || IsMacCatalyst,
+				"System.Diagnostics.Process.PrivateMemorySize64 is not supported on WASM, iOS or Mac Catalyst");
+
+			// An Rgba8888 info with an Unknown alpha type has a positive BytesSize but is
+			// rejected by Skia, so sk_image_new_raster returns null. SKImage.Create must free
+			// the CoTaskMem pixel buffer it allocated, otherwise every failed call leaks it.
+			var info = new SKImageInfo(1024, 1024, SKColorType.Rgba8888, SKAlphaType.Unknown);
+			Assert.True(info.BytesSize > 0);
+
+			// sanity: creation really does fail for this info
+			Assert.Null(SKImage.Create(info));
+
+			CollectGarbage();
+
+			using var process = System.Diagnostics.Process.GetCurrentProcess();
+			process.Refresh();
+			var before = process.PrivateMemorySize64;
+
+			const int count = 200;
+			for (var i = 0; i < count; i++)
+			{
+				var image = SKImage.Create(info);
+				Assert.Null(image);
+			}
+
+			CollectGarbage();
+
+			process.Refresh();
+			var grownBytes = process.PrivateMemorySize64 - before;
+			var allocatedBytes = (long)count * info.BytesSize; // ~400 MB if leaked
+
+			// If the buffer leaks, growth is a large fraction of allocatedBytes. When freed
+			// correctly, growth stays near zero. Use a generous threshold to avoid flakiness.
+			Assert.True(grownBytes < allocatedBytes / 4,
+				$"Private memory grew {grownBytes / (1024 * 1024)} MB over {count} failed SKImage.Create calls (~{allocatedBytes / (1024 * 1024)} MB allocated) - the pixel buffer is leaking.");
+		}
+
+		[Fact]
 		public void ToRasterImageReturnsSameRaster()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -43,7 +89,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(image, image.ToRasterImage());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LazyRasterCanReadToNonLazy()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -59,7 +105,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(copy.PeekPixels());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToRasterImageTrueFalseReturnsNonLazy()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -75,7 +121,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(nonLazy, nonLazy.ToRasterImage());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToRasterImageTrueTrueReturnsNonLazy()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -91,7 +137,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(nonLazy, nonLazy.ToRasterImage(true));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImmutableBitmapsAreNotCopied()
 		{
 			// create "pixel data"
@@ -116,7 +162,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, image.PeekPixels().GetPixelColor(50, 50));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MutableBitmapsAreCopied()
 		{
 			var bitmap = new SKBitmap(100, 100);
@@ -129,7 +175,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, image.PeekPixels().GetPixelColor(50, 50));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseImagePixelsWasInvoked()
 		{
 			bool released = false;
@@ -155,7 +201,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DoesNotCrashWhenDecodingInvalidPath()
 		{
 			var path = Path.Combine(PathToImages, "file-does-not-exist.png");
@@ -163,7 +209,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(SKImage.FromEncodedData(path));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodingJpegImagePreservesColorSpace()
 		{
 			var path = Path.Combine(PathToImages, "baboon.jpg");
@@ -173,7 +219,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(image.ColorSpace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodingPngImagePreservesColorSpace()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -183,7 +229,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(image.ColorSpace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestFromPixelCopyIntPtr()
 		{
 			using (var bmp = CreateTestBitmap())
@@ -193,7 +239,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestFromPixelCopyByteArray()
 		{
 			using (var bmp = CreateTestBitmap())
@@ -208,7 +254,52 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
+		public void FromPixelCopyManagedBuffersMatchDataBackedImages()
+		{
+			var cases = new[] {
+				(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 12, 24),
+				(new SKImageInfo(3, 2, SKColorType.Rgba8888, SKAlphaType.Unpremul), 20, 40),
+				(new SKImageInfo(3, 2, SKColorType.Gray8, SKAlphaType.Opaque), 3, 6),
+				(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 12, 23),
+				(new SKImageInfo(3, 2, SKColorType.Bgra8888, SKAlphaType.Premul), 11, 24),
+				(SKImageInfo.Empty, 0, 0),
+			};
+
+			foreach (var (info, rowBytes, length) in cases)
+			{
+				var pixels = new byte[length];
+				for (var i = 0; i < pixels.Length; i++)
+					pixels[i] = (byte)(i * 17 + 3);
+
+				using var data = SKData.CreateCopy(pixels);
+				using var expected = SKImage.FromPixels(info, data, rowBytes);
+				using var actualArray = SKImage.FromPixelCopy(info, pixels, rowBytes);
+				using var actualSpan = SKImage.FromPixelCopy(info, pixels.AsSpan(), rowBytes);
+				pixels.AsSpan().Fill(0);
+
+				Assert.Equal(expected is null, actualArray is null);
+				Assert.Equal(expected is null, actualSpan is null);
+
+				if (expected is not null)
+				{
+					using var expectedPixels = expected.PeekPixels();
+					using var arrayPixels = actualArray.PeekPixels();
+					using var spanPixels = actualSpan.PeekPixels();
+					Assert.True(expectedPixels.GetPixelSpan().SequenceEqual(arrayPixels.GetPixelSpan()));
+					Assert.True(expectedPixels.GetPixelSpan().SequenceEqual(spanPixels.GetPixelSpan()));
+				}
+			}
+		}
+
+		[Fact]
+		public void FromPixelCopyByteArrayPreservesNullValidation()
+		{
+			var info = new SKImageInfo(1, 1);
+			Assert.Throws<ArgumentNullException>(() => SKImage.FromPixelCopy(info, (byte[])null));
+		}
+
+		[Fact]
 		public void TestFromPixelCopyStream()
 		{
 			using (var bmp = CreateTestBitmap())
@@ -224,7 +315,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SupportsNonASCIICharactersInPath()
 		{
 			var fileName = Path.Combine(PathToImages, "上田雅美.jpg");
@@ -235,7 +326,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestImageManagedBytesDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -259,7 +350,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestImageManagedStreamDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -283,7 +374,8 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestImageFileDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -306,7 +398,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestImageDataDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -339,7 +431,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKSamplingOptions(SKCubicResampler.Mitchell) };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetSamplingData))]
 		public void CanScalePixels(SKSamplingOptions sampling)
 		{
@@ -368,7 +460,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void DataInstanceIsCorrectlyDisposedWhenPassed()
 		{
 			var released = false;
@@ -380,7 +472,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, input.GetReferenceCount());
 
 				var image = SKImage.FromEncodedData(input);
-				Assert.Equal(3, input.GetReferenceCount());
+				Assert.Equal(2, input.GetReferenceCount());
 				Assert.False(released, "Data was disposed too soon.");
 
 				image.Dispose();
@@ -392,7 +484,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void EncodedDataReturnsTheSameInstanceAsTheInput()
 		{
 			var released = false;
@@ -417,7 +509,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void EncodeReturnTheSameInstanceIfItWasUsedToConstruct()
 		{
 			var released = false;
@@ -442,7 +534,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void DataCanBeResurrectedFromImage()
 		{
 			var released = false;
@@ -468,7 +560,7 @@ namespace SkiaSharp.Tests
 				handle = input.Handle;
 
 				var img = SKImage.FromEncodedData(input);
-				Assert.Equal(3, input.GetReferenceCount());
+				Assert.Equal(2, input.GetReferenceCount());
 				Assert.False(released, "Data was disposed too soon.");
 
 				var result = img.Encode();
@@ -498,9 +590,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void DataOutLivesImageUntilFinalizersRun()
 		{
+			SkipOnPlatform(IsBrowser, "WASM does not guarantee finalizers are invoked immediately");
+
 			var released = false;
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
@@ -523,7 +617,7 @@ namespace SkiaSharp.Tests
 				var handle = input.Handle;
 
 				var img = SKImage.FromEncodedData(input);
-				Assert.Equal(3, input.GetReferenceCount());
+				Assert.Equal(2, input.GetReferenceCount());
 				Assert.False(released, "Data was disposed too soon.");
 
 				img.Dispose();
@@ -534,7 +628,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void EncodeAndEncodedDataDoNotAdjustCountsWhenUsedTogether()
 		{
 			var released = false;
@@ -569,7 +663,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EncodingDoesNotKeepReference()
 		{
 			var bitmap = CreateTestBitmap();
@@ -582,33 +676,33 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, result.GetReferenceCount());
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public void DataCreatedByImageExpiresAfterFinalizers()
 		{
+			SkipOnMono();
+
 			var bitmap = CreateTestBitmap();
 			var image = SKImage.FromBitmap(bitmap);
 
-			var handle = DoEncode();
+			DoEncode(out var handle, out var weakData);
 
 			CollectGarbage();
 
-			Assert.False(SKObject.GetInstance<SKData>(handle, out _));
+			SKHandleDictionaryTestHelpers.AssertCollected(handle, weakData);
 
-			IntPtr DoEncode()
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			void DoEncode(out IntPtr dataHandle, out WeakReference dataRef)
 			{
 				var result = image.Encode();
 				Assert.NotNull(result);
 				Assert.Equal(1, result.GetReferenceCount());
 
-				return result.Handle;
+				SKHandleDictionaryTestHelpers.Track(result, out dataHandle, out dataRef);
 			}
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void RasterImageIsValidAlways()
 		{
 			using var image = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
@@ -623,7 +717,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void TextureImageIsValidOnContext()
 		{
 			using var ctx = CreateGlContext();
@@ -637,7 +731,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void RasterImageCanBecomeTexture()
 		{
 			using var image = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
@@ -655,7 +749,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void TextureImageCanBecomeRaster()
 		{
 			using var ctx = CreateGlContext();
@@ -673,7 +767,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void DecodingWithDataAndDrawingOnGPUCreatesCorrectImage()
 		{
 			var info = new SKImageInfo(120, 120);
@@ -709,7 +803,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void DecodingWithBitmapAndDrawingOnGPUCreatesCorrectImage()
 		{
 			var info = new SKImageInfo(120, 120);
@@ -745,7 +839,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void DecodingWithPathAndDrawingOnGPUCreatesCorrectImage()
 		{
 			var info = new SKImageInfo(120, 120);
@@ -779,7 +873,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodingWithDataCreatesCorrectImage()
 		{
 			var info = new SKImageInfo(120, 120);
@@ -802,7 +896,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodingWithBitmapCreatesCorrectImage()
 		{
 			var info = new SKImageInfo(120, 120);
@@ -825,7 +919,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DecodingWithPathCreatesCorrectImage()
 		{
 			var info = new SKImageInfo(120, 120);
@@ -847,7 +941,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0f, 0f, 0f, 0f)]
 		[InlineData(0f, 0f, 1f, 1f)]
 		[InlineData(0.5f, 0.5f, 1f, 1f)]
@@ -887,7 +981,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("osm-liberty.png", 30, 240, 0xFF725A50)]
 		[InlineData("testimage.png", 1040, 340, 0xFF0059FF)]
 		public void CanDecodePotentiallyCorruptPngFiles(string filename, int x, int y, uint color)
@@ -901,7 +995,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((SKColor)color, pixmap.GetPixelColor(x, y));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateRawShader()
 		{
 			var path = Path.Combine(PathToImages, "baboon.png");
@@ -913,7 +1007,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(shader);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CannotCreateRawShaderWithBicubicSampling()
 		{
 			var path = Path.Combine(PathToImages, "baboon.png");
@@ -926,7 +1020,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(shader);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromPictureDoesNotCrash()
 		{
 			using var picture = CreateTestPicture();

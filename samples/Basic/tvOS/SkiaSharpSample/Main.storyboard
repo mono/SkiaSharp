@@ -1,37 +1,116 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder.AppleTV.Storyboard" version="3.0" toolsVersion="13771" targetRuntime="AppleTV" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder.AppleTV.Storyboard" version="3.0" toolsVersion="13122.16" targetRuntime="AppleTV" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="tabBarVC">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.12"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
-        <scene sceneID="tne-QT-ifu">
+        <!--Tab Bar Controller-->
+        <scene sceneID="tabBarScene">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
-                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                <tabBarController id="tabBarVC" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="tabBar">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="76"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="cpuVC" kind="relationship" relationship="viewControllers" id="cpuSegue"/>
+                        <segue destination="gpuGLVC" kind="relationship" relationship="viewControllers" id="gpuGLSegue"/>
+                        <segue destination="gpuMetalVC" kind="relationship" relationship="viewControllers" id="gpuMetalSegue"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="tabBarFirstResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0" y="0"/>
+        </scene>
+        <!--CPU Canvas-->
+        <scene sceneID="cpuScene">
+            <objects>
+                <viewController id="cpuVC" customClass="CpuViewController" sceneMemberID="viewController" storyboardIdentifier="CpuVC">
+                    <tabBarItem key="tabBarItem" title="CPU Canvas" id="cpuTabItem"/>
+                    <view key="view" contentMode="scaleToFill" id="cpuRootView">
                         <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                         <subviews>
-                            <view contentMode="scaleToFill" id="166" customClass="SKCanvasView" translatesAutoresizingMaskIntoConstraints="NO" fixedFrame="YES">
-                                <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
-                                <autoresizingMask key="autoresizingMask" heightSizable="YES" widthSizable="YES"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cpuSkiaView" customClass="SKCanvasView">
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                         </subviews>
+                        <viewLayoutGuide key="safeArea" id="cpuSafeArea"/>
+                        <constraints>
+                            <constraint firstItem="cpuSkiaView" firstAttribute="top" secondItem="cpuRootView" secondAttribute="top" id="cpuTop"/>
+                            <constraint firstItem="cpuSkiaView" firstAttribute="leading" secondItem="cpuRootView" secondAttribute="leading" id="cpuLeading"/>
+                            <constraint firstItem="cpuSkiaView" firstAttribute="trailing" secondItem="cpuRootView" secondAttribute="trailing" id="cpuTrailing"/>
+                            <constraint firstItem="cpuSkiaView" firstAttribute="bottom" secondItem="cpuRootView" secondAttribute="bottom" id="cpuBottom"/>
+                        </constraints>
                     </view>
                     <connections>
-                        <outlet property="skiaView" destination="166" id="name-outlet-166"/>
+                        <outlet property="skiaView" destination="cpuSkiaView" id="cpuOutlet"/>
                     </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cpuFirstResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="0.0" y="0.0"/>
+            <point key="canvasLocation" x="-800" y="400"/>
+        </scene>
+        <!--GPU GL-->
+        <scene sceneID="gpuGLScene">
+            <objects>
+                <viewController id="gpuGLVC" customClass="GpuGLViewController" sceneMemberID="viewController" storyboardIdentifier="GpuGLVC">
+                    <tabBarItem key="tabBarItem" title="GPU GL" id="gpuGLTabItem"/>
+                    <view key="view" contentMode="scaleToFill" id="gpuGLRootView">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gpuGLSkiaView" customClass="SKGLView">
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="gpuGLSafeArea"/>
+                        <constraints>
+                            <constraint firstItem="gpuGLSkiaView" firstAttribute="top" secondItem="gpuGLRootView" secondAttribute="top" id="gpuGLTop"/>
+                            <constraint firstItem="gpuGLSkiaView" firstAttribute="leading" secondItem="gpuGLRootView" secondAttribute="leading" id="gpuGLLeading"/>
+                            <constraint firstItem="gpuGLSkiaView" firstAttribute="trailing" secondItem="gpuGLRootView" secondAttribute="trailing" id="gpuGLTrailing"/>
+                            <constraint firstItem="gpuGLSkiaView" firstAttribute="bottom" secondItem="gpuGLRootView" secondAttribute="bottom" id="gpuGLBottom"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="gpuGLSkiaView" id="gpuGLOutlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gpuGLFirstResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0" y="400"/>
+        </scene>
+        <!--GPU Metal-->
+        <scene sceneID="gpuMetalScene">
+            <objects>
+                <viewController id="gpuMetalVC" customClass="GpuMetalViewController" sceneMemberID="viewController" storyboardIdentifier="GpuMetalVC">
+                    <tabBarItem key="tabBarItem" title="GPU Metal" id="gpuMetalTabItem"/>
+                    <view key="view" contentMode="scaleToFill" id="gpuMetalRootView">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gpuMetalSkiaView" customClass="SKMetalView">
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="gpuMetalSafeArea"/>
+                        <constraints>
+                            <constraint firstItem="gpuMetalSkiaView" firstAttribute="top" secondItem="gpuMetalRootView" secondAttribute="top" id="gpuMetalTop"/>
+                            <constraint firstItem="gpuMetalSkiaView" firstAttribute="leading" secondItem="gpuMetalRootView" secondAttribute="leading" id="gpuMetalLeading"/>
+                            <constraint firstItem="gpuMetalSkiaView" firstAttribute="trailing" secondItem="gpuMetalRootView" secondAttribute="trailing" id="gpuMetalTrailing"/>
+                            <constraint firstItem="gpuMetalSkiaView" firstAttribute="bottom" secondItem="gpuMetalRootView" secondAttribute="bottom" id="gpuMetalBottom"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="gpuMetalSkiaView" id="gpuMetalOutlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gpuMetalFirstResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="400"/>
         </scene>
     </scenes>
 </document>

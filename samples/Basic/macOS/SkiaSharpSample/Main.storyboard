@@ -1,23 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="wc-main">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16096"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22505"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Application-->
-        <scene sceneID="JPo-4y-FX3">
+        <!--Application Scene-->
+        <scene sceneID="scene-app">
             <objects>
-                <application id="hnw-xV-0zn" sceneMemberID="viewController">
-                    <menu key="mainMenu" title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
+                <application id="app-main" sceneMemberID="viewController">
+                    <menu key="mainMenu" title="Main Menu" systemMenu="main" id="menu-main">
                         <items>
-                            <menuItem title="SkiaSharpSample" id="1Xt-HY-uBw">
+                            <!--App Menu-->
+                            <menuItem title="SkiaSharp" id="mi-app">
                                 <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="SkiaSharpSample" systemMenu="apple" id="uQy-DD-JDr">
+                                <menu key="submenu" title="SkiaSharp" systemMenu="apple" id="menu-app">
                                     <items>
-                                        <menuItem title="Quit SkiaSharpSample" keyEquivalent="q" id="4sb-4s-VLi">
+                                        <menuItem title="About SkiaSharp" id="mi-about">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="terminate:" target="Ady-hI-5gd" id="Te7-pn-YzF"/>
+                                                <action selector="orderFrontStandardAboutPanel:" target="fr-app" id="ac-about"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep1"/>
+                                        <menuItem title="Services" id="mi-services">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <menu key="submenu" title="Services" systemMenu="services" id="menu-services"/>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep2"/>
+                                        <menuItem title="Hide SkiaSharp" keyEquivalent="h" id="mi-hide">
+                                            <connections>
+                                                <action selector="hide:" target="fr-app" id="ac-hide"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Hide Others" keyEquivalent="h" id="mi-hide-others">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="hideOtherApplications:" target="fr-app" id="ac-hide-others"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Show All" id="mi-show-all">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="unhideAllApplications:" target="fr-app" id="ac-show-all"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep3"/>
+                                        <menuItem title="Quit SkiaSharp" keyEquivalent="q" id="mi-quit">
+                                            <connections>
+                                                <action selector="terminate:" target="fr-app" id="ac-quit"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <!--File Menu-->
+                            <menuItem title="File" id="mi-file">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="File" id="menu-file">
+                                    <items>
+                                        <menuItem title="Close" keyEquivalent="w" id="mi-close">
+                                            <connections>
+                                                <action selector="performClose:" target="fr-app" id="ac-close"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <!--Edit Menu-->
+                            <menuItem title="Edit" id="mi-edit">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Edit" id="menu-edit">
+                                    <items>
+                                        <menuItem title="Undo" keyEquivalent="z" id="mi-undo">
+                                            <connections>
+                                                <action selector="undo:" target="fr-app" id="ac-undo"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Redo" keyEquivalent="Z" id="mi-redo">
+                                            <connections>
+                                                <action selector="redo:" target="fr-app" id="ac-redo"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep-edit1"/>
+                                        <menuItem title="Cut" keyEquivalent="x" id="mi-cut">
+                                            <connections>
+                                                <action selector="cut:" target="fr-app" id="ac-cut"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Copy" keyEquivalent="c" id="mi-copy">
+                                            <connections>
+                                                <action selector="copy:" target="fr-app" id="ac-copy"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Paste" keyEquivalent="v" id="mi-paste">
+                                            <connections>
+                                                <action selector="paste:" target="fr-app" id="ac-paste"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Select All" keyEquivalent="a" id="mi-selectall">
+                                            <connections>
+                                                <action selector="selectAll:" target="fr-app" id="ac-selectall"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <!--View Menu-->
+                            <menuItem title="View" id="mi-view">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="View" id="menu-view">
+                                    <items>
+                                        <menuItem title="Enter Full Screen" keyEquivalent="f" id="mi-fullscreen">
+                                            <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="toggleFullScreen:" target="fr-app" id="ac-fullscreen"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <!--Window Menu-->
+                            <menuItem title="Window" id="mi-window">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Window" systemMenu="window" id="menu-window">
+                                    <items>
+                                        <menuItem title="Minimize" keyEquivalent="m" id="mi-minimize">
+                                            <connections>
+                                                <action selector="performMiniaturize:" target="fr-app" id="ac-minimize"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Zoom" id="mi-zoom">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="performZoom:" target="fr-app" id="ac-zoom"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep-win1"/>
+                                        <menuItem title="Bring All to Front" id="mi-front">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="arrangeInFront:" target="fr-app" id="ac-front"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <!--Help Menu-->
+                            <menuItem title="Help" id="mi-help">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="SkiaSharp Help" systemMenu="help" id="menu-help">
+                                    <items>
+                                        <menuItem title="SkiaSharp Help" keyEquivalent="?" id="mi-help-item">
+                                            <connections>
+                                                <action selector="showHelp:" target="fr-app" id="ac-help"/>
                                             </connections>
                                         </menuItem>
                                     </items>
@@ -26,56 +162,280 @@
                         </items>
                     </menu>
                     <connections>
-                        <outlet property="delegate" destination="Voe-Tx-rLC" id="PrD-fu-P6m"/>
+                        <outlet property="delegate" destination="app-delegate" id="out-app-del"/>
                     </connections>
                 </application>
-                <customObject id="Voe-Tx-rLC" customClass="AppDelegate"/>
-                <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <customObject id="fr-app" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <customObject id="app-delegate" userLabel="AppDelegate" customClass="AppDelegate"/>
             </objects>
-            <point key="canvasLocation" x="75" y="0.0"/>
+            <point key="canvasLocation" x="75" y="0"/>
         </scene>
         <!--Window Controller-->
-        <scene sceneID="R2V-B0-nI4">
+        <scene sceneID="scene-wc">
             <objects>
-                <windowController id="B8D-0N-5wS" sceneMemberID="viewController">
-                    <window key="window" title="SkiaSharp" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
+                <windowController id="wc-main" sceneMemberID="viewController">
+                    <window key="window" title="SkiaSharp" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="win-main">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="196" y="240" width="480" height="270"/>
+                        <rect key="contentRect" x="196" y="240" width="800" height="500"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
                         <connections>
-                            <outlet property="delegate" destination="B8D-0N-5wS" id="s4p-NL-T9Q"/>
+                            <outlet property="delegate" destination="wc-main" id="out-wc-del"/>
                         </connections>
                     </window>
                     <connections>
-                        <segue destination="XfG-lQ-9wD" kind="relationship" relationship="window.shadowedContentViewController" id="cq2-FE-JQM"/>
+                        <segue destination="tvc-main" kind="relationship" relationship="window.shadowedContentViewController" id="seg-wc-tvc"/>
                     </connections>
                 </windowController>
-                <customObject id="Oky-zY-oP4" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                <customObject id="fr-wc" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="75" y="250"/>
         </scene>
-        <!--View Controller-->
-        <scene sceneID="hIz-AP-VOD">
+        <!--Tab View Controller-->
+        <scene sceneID="scene-tvc">
             <objects>
-                <viewController id="XfG-lQ-9wD" customClass="ViewController" sceneMemberID="viewController">
-                    <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <subviews>
-                            <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ziu-aF-ZW6" customClass="SKCanvasView">
-                                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            </customView>
-                        </subviews>
-                    </view>
+                <tabViewController customClass="MainTabViewController" selectedTabViewItemIndex="0" tabStyle="toolbar" id="tvc-main" sceneMemberID="viewController">
+                    <tabViewItems>
+                        <tabViewItem label="CPU" image="cpu" catalog="system" id="tvi-cpu"/>
+                        <tabViewItem label="GPU (GL)" image="display" catalog="system" id="tvi-gl"/>
+                        <tabViewItem label="GPU (Metal)" image="bolt.fill" catalog="system" id="tvi-metal"/>
+                        <tabViewItem label="Drawing" image="pencil.tip" catalog="system" id="tvi-draw"/>
+                    </tabViewItems>
+                    <tabView key="tabView" type="noTabsNoBorder" id="tv-inner">
+                        <font key="font" metaFont="system"/>
+                    </tabView>
                     <connections>
-                        <outlet property="skiaView" destination="ziu-aF-ZW6" id="iKd-6c-GHT"/>
+                        <outlet property="tabView" destination="tv-inner" id="out-tv"/>
+                        <segue destination="vc-cpu" kind="relationship" relationship="tabItems" id="seg-cpu"/>
+                        <segue destination="vc-gl" kind="relationship" relationship="tabItems" id="seg-gl"/>
+                        <segue destination="vc-metal" kind="relationship" relationship="tabItems" id="seg-metal"/>
+                        <segue destination="vc-draw" kind="relationship" relationship="tabItems" id="seg-draw"/>
                     </connections>
-                </viewController>
-                <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+                </tabViewController>
+                <customObject id="fr-tvc" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="75" y="655"/>
+        </scene>
+        <!--CPU View Controller-->
+        <scene sceneID="scene-cpu">
+            <objects>
+                <viewController id="vc-cpu" customClass="CpuViewController" sceneMemberID="viewController">
+                    <view key="view" wantsLayer="YES" id="v-cpu">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="cv-cpu" customClass="SKCanvasView">
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                            </customView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="cv-cpu" firstAttribute="leading" secondItem="v-cpu" secondAttribute="leading" id="c-cpu-l"/>
+                            <constraint firstItem="cv-cpu" firstAttribute="trailing" secondItem="v-cpu" secondAttribute="trailing" id="c-cpu-r"/>
+                            <constraint firstItem="cv-cpu" firstAttribute="top" secondItem="v-cpu" secondAttribute="top" id="c-cpu-t"/>
+                            <constraint firstItem="cv-cpu" firstAttribute="bottom" secondItem="v-cpu" secondAttribute="bottom" id="c-cpu-b"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="cv-cpu" id="out-cpu-skia"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-cpu" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="450" y="655"/>
+        </scene>
+        <!--GPU GL View Controller-->
+        <scene sceneID="scene-gl">
+            <objects>
+                <viewController id="vc-gl" customClass="GpuGLViewController" sceneMemberID="viewController">
+                    <view key="view" wantsLayer="YES" id="v-gl">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="cv-gl" customClass="SKGLView">
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                            </customView>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fps-gl">
+                                <rect key="frame" x="330" y="464" width="140" height="24"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="  FPS: 0 (GL)  " id="fpsc-gl">
+                                    <font key="font" metaFont="smallSystem"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="cv-gl" firstAttribute="leading" secondItem="v-gl" secondAttribute="leading" id="c-gl-l"/>
+                            <constraint firstItem="cv-gl" firstAttribute="trailing" secondItem="v-gl" secondAttribute="trailing" id="c-gl-r"/>
+                            <constraint firstItem="cv-gl" firstAttribute="top" secondItem="v-gl" secondAttribute="top" id="c-gl-t"/>
+                            <constraint firstItem="cv-gl" firstAttribute="bottom" secondItem="v-gl" secondAttribute="bottom" id="c-gl-b"/>
+                            <constraint firstItem="fps-gl" firstAttribute="centerX" secondItem="v-gl" secondAttribute="centerX" id="c-fps-gl-cx"/>
+                            <constraint firstItem="fps-gl" firstAttribute="top" secondItem="v-gl" secondAttribute="top" constant="12" id="c-fps-gl-t"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="cv-gl" id="out-gl-skia"/>
+                        <outlet property="fpsLabel" destination="fps-gl" id="out-gl-fps"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-gl" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="825" y="655"/>
+        </scene>
+        <!--GPU Metal View Controller-->
+        <scene sceneID="scene-metal">
+            <objects>
+                <viewController id="vc-metal" customClass="GpuMetalViewController" sceneMemberID="viewController">
+                    <view key="view" wantsLayer="YES" id="v-metal">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="cv-metal" customClass="SKMetalView">
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                            </customView>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fps-metal">
+                                <rect key="frame" x="330" y="464" width="140" height="24"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="  FPS: 0 (Metal)  " id="fpsc-metal">
+                                    <font key="font" metaFont="smallSystem"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="cv-metal" firstAttribute="leading" secondItem="v-metal" secondAttribute="leading" id="c-metal-l"/>
+                            <constraint firstItem="cv-metal" firstAttribute="trailing" secondItem="v-metal" secondAttribute="trailing" id="c-metal-r"/>
+                            <constraint firstItem="cv-metal" firstAttribute="top" secondItem="v-metal" secondAttribute="top" id="c-metal-t"/>
+                            <constraint firstItem="cv-metal" firstAttribute="bottom" secondItem="v-metal" secondAttribute="bottom" id="c-metal-b"/>
+                            <constraint firstItem="fps-metal" firstAttribute="centerX" secondItem="v-metal" secondAttribute="centerX" id="c-fps-metal-cx"/>
+                            <constraint firstItem="fps-metal" firstAttribute="top" secondItem="v-metal" secondAttribute="top" constant="12" id="c-fps-metal-t"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="cv-metal" id="out-metal-skia"/>
+                        <outlet property="fpsLabel" destination="fps-metal" id="out-metal-fps"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-metal" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1200" y="655"/>
+        </scene>
+        <!--Drawing View Controller-->
+        <scene sceneID="scene-draw">
+            <objects>
+                <viewController id="vc-draw" customClass="DrawingViewController" sceneMemberID="viewController">
+                    <view key="view" wantsLayer="YES" id="v-draw">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="cv-draw" customClass="SKCanvasView">
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                            </customView>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="btn-clear">
+                                <rect key="frame" x="716" y="464" width="72" height="28"/>
+                                <buttonCell key="cell" type="roundTextured" title="Clear" bezelStyle="texturedRounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bc-clear">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                            </button>
+                            <box translatesAutoresizingMaskIntoConstraints="NO" boxType="custom" borderWidth="0" cornerRadius="16" id="toolbox">
+                                <rect key="frame" x="100" y="16" width="600" height="48"/>
+                                <view key="contentView" id="toolbox-content">
+                                    <rect key="frame" x="0.0" y="0.0" width="600" height="48"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <stackView distribution="fillEqually" orientation="horizontal" alignment="centerY" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="swatch-stack">
+                                            <rect key="frame" x="16" y="8" width="228" height="32"/>
+                                            <subviews>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="sw-0">
+                                                    <rect key="frame" x="0" y="0" width="32" height="32"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="c-sw0-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="c-sw0-h"/>
+                                                    </constraints>
+                                                </customView>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="sw-1">
+                                                    <rect key="frame" x="40" y="0" width="32" height="32"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="c-sw1-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="c-sw1-h"/>
+                                                    </constraints>
+                                                </customView>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="sw-2">
+                                                    <rect key="frame" x="80" y="0" width="32" height="32"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="c-sw2-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="c-sw2-h"/>
+                                                    </constraints>
+                                                </customView>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="sw-3">
+                                                    <rect key="frame" x="120" y="0" width="32" height="32"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="c-sw3-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="c-sw3-h"/>
+                                                    </constraints>
+                                                </customView>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="sw-4">
+                                                    <rect key="frame" x="160" y="0" width="32" height="32"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="c-sw4-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="c-sw4-h"/>
+                                                    </constraints>
+                                                </customView>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="sw-5">
+                                                    <rect key="frame" x="200" y="0" width="32" height="32"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="c-sw5-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="c-sw5-h"/>
+                                                    </constraints>
+                                                </customView>
+                                            </subviews>
+                                        </stackView>
+                                        <slider translatesAutoresizingMaskIntoConstraints="NO" minValue="1" maxValue="50" doubleValue="4" id="sl-brush">
+                                            <rect key="frame" x="260" y="14" width="240" height="22"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="120" id="c-sl-minw"/>
+                                            </constraints>
+                                            <sliderCell key="cell" controlSize="small" alignment="left" minValue="1" maxValue="50" doubleValue="4" tickMarkPosition="above" id="slc-brush"/>
+                                        </slider>
+                                        <textField translatesAutoresizingMaskIntoConstraints="NO" id="lbl-brush">
+                                            <rect key="frame" x="508" y="16" width="40" height="18"/>
+                                            <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="4px" id="lbc-brush">
+                                                <font key="font" metaFont="smallSystem"/>
+                                            </textFieldCell>
+                                        </textField>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="swatch-stack" firstAttribute="leading" secondItem="toolbox-content" secondAttribute="leading" constant="16" id="c-sw-l"/>
+                                        <constraint firstItem="swatch-stack" firstAttribute="centerY" secondItem="toolbox-content" secondAttribute="centerY" id="c-sw-cy"/>
+                                        <constraint firstItem="sl-brush" firstAttribute="leading" secondItem="swatch-stack" secondAttribute="trailing" constant="16" id="c-sl-l"/>
+                                        <constraint firstItem="sl-brush" firstAttribute="centerY" secondItem="toolbox-content" secondAttribute="centerY" id="c-sl-cy"/>
+                                        <constraint firstItem="lbl-brush" firstAttribute="leading" secondItem="sl-brush" secondAttribute="trailing" constant="8" id="c-lb-l"/>
+                                        <constraint firstItem="lbl-brush" firstAttribute="centerY" secondItem="toolbox-content" secondAttribute="centerY" id="c-lb-cy"/>
+                                        <constraint firstItem="lbl-brush" firstAttribute="trailing" secondItem="toolbox-content" secondAttribute="trailing" constant="-16" id="c-lb-r"/>
+                                    </constraints>
+                                </view>
+                            </box>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="cv-draw" firstAttribute="leading" secondItem="v-draw" secondAttribute="leading" id="c-draw-l"/>
+                            <constraint firstItem="cv-draw" firstAttribute="trailing" secondItem="v-draw" secondAttribute="trailing" id="c-draw-r"/>
+                            <constraint firstItem="cv-draw" firstAttribute="top" secondItem="v-draw" secondAttribute="top" id="c-draw-t"/>
+                            <constraint firstItem="cv-draw" firstAttribute="bottom" secondItem="v-draw" secondAttribute="bottom" id="c-draw-b"/>
+                            <constraint firstItem="btn-clear" firstAttribute="trailing" secondItem="v-draw" secondAttribute="trailing" constant="-12" id="c-clr-r"/>
+                            <constraint firstItem="btn-clear" firstAttribute="top" secondItem="v-draw" secondAttribute="top" constant="12" id="c-clr-t"/>
+                            <constraint firstItem="toolbox" firstAttribute="centerX" secondItem="v-draw" secondAttribute="centerX" id="c-tb-cx"/>
+                            <constraint firstItem="toolbox" firstAttribute="bottom" secondItem="v-draw" secondAttribute="bottom" constant="-16" id="c-tb-b"/>
+                            <constraint firstItem="toolbox" firstAttribute="height" constant="48" id="c-tb-h"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="cv-draw" id="out-draw-skia"/>
+                        <outlet property="clearButton" destination="btn-clear" id="out-draw-clear"/>
+                        <outlet property="brushSlider" destination="sl-brush" id="out-draw-sl"/>
+                        <outlet property="brushLabel" destination="lbl-brush" id="out-draw-lbl"/>
+                        <outlet property="swatchStack" destination="swatch-stack" id="out-draw-sw"/>
+                        <outlet property="toolbox" destination="toolbox" id="out-draw-tb"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-draw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1575" y="655"/>
         </scene>
     </scenes>
 </document>

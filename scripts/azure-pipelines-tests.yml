@@ -10,14 +10,14 @@ parameters:
       pool:
         name: Azure Pipelines
         vmImage: ubuntu-22.04
-        os: windows
+        os: linux
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
         name: Azure Pipelines
-        vmImage: windows-2022
+        vmImage: windows-2025-vs2026
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -25,7 +25,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-14
+        vmImage: macos-15
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
@@ -41,18 +41,22 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-14
-        os: macos
-      parameters:
-        installXcode: false
+        vmImage: ubuntu-24.04
+        os: linux
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
+  repositories:
+    - repository: skiaMirror
+      type: git
+      name: internal/mono-skia
+      ref: refs/heads/skiasharp
   pipelines:
     - pipeline: SkiaSharp
-      source: SkiaSharp
+      # Azure DevOps requires the full path for pipelines stored in folders.
+      source: '\dotnet\skiasharp\skiasharp-package'
       trigger: true
 
 extends:

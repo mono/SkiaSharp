@@ -1,0 +1,86 @@
+{
+  "theme": "Skia m119 and wider GPU support",
+  "highlights_headline": "SkiaSharp 3.119.0 adds Direct3D on Windows and broadens Linux architecture support on the Skia m119 engine.",
+  "highlights_body": "Windows ARM gains OpenGL, tvOS gains SKMetalView, and Android libraries support 16 KB pages. New save-layer and color-filter APIs accompany fixes for WebAssembly, legacy .NET packaging, and image creation.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m119 baseline",
+          "detail": "Advances through the m117 and m118 previews to Skia m119, with updated GPU context bindings and a new color type.",
+          "prs": [3047, 3048, 3062]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "More GPU backends and views",
+          "detail": "Adds Direct3D bindings and native support on Windows, enables OpenGL on Windows ARM, and adds tvOS SKMetalView. Metal render-target APIs are available across platforms, and iOS Simulator Metal performance is improved.",
+          "prs": [2823, 3189, 3114, 3070, 3156]
+        },
+        {
+          "lead": "Linux architectures and Android page sizes",
+          "detail": "Adds RISC-V 64-bit and LoongArch64 native build support, extends Alpine cross-compilation, and broadens Linux coverage using Debian 10. Android native libraries move to NDK r27c with 16 KB alignment.",
+          "prs": [3192, 3198, 3200, 3209, 3096]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Layer and color-filter control",
+          "detail": "Exposes SkCanvas SaveLayerRec through the managed API and adds missing SKColorFilter types.",
+          "prs": [2962, 2882]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "WebAssembly application compatibility",
+          "detail": "Fixes .NET 9 Blazor behavior and base-path imports, and applies the WASM workaround even when applications do not use Blazor views.",
+          "prs": [3064, 3082, 3088, 3092]
+        },
+        {
+          "lead": "Legacy project restore and picture images",
+          "detail": "Restores .NET Framework and Mono projects using packages.config, corrects native package path metadata, and fixes SKImage.FromPicture.",
+          "prs": [3112, 3100, 3231]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native dependency updates",
+          "detail": "Refreshes libpng to 1.6.44, libexpat to 2.6.4, FreeType to a 2.13.3-based revision, and VulkanMemoryAllocator to 3.2.1, alongside the libjpeg-turbo dependency refresh.",
+          "prs": [3059, 3056, 3061, 3196, 3060]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "kasperk81": "RISC-V native support, Alpine cross-build coverage, Linux test fixes, and VulkanMemoryAllocator updates.",
+    "4Darmygeometry": "LoongArch64 native build and package support.",
+    "ahmed605": "Managed SaveLayerRec support.",
+    "Kation": "Windows Direct3D backend bindings and native builds.",
+    "kkwpsv": "Correction of an incorrect API call.",
+    "MartinZikmund": "SKMetalView support on tvOS.",
+    "pjcollins": "Development dependency update for Microsoft.DotNet.Interactive.",
+    "spouliot": "Cross-platform Metal render-target API availability.",
+    "sungaila": "packages.config compatibility for .NET Framework and Mono.",
+    "taublast": "Metal performance improvements in the iOS Simulator."
+  },
+  "preview_summaries": {
+    "v3.118.0-preview.1.2": "Updated the engine to Skia m118 and refreshed the HarfBuzz dependency to 8.3.1.",
+    "v3.118.0-preview.2.3": "Improved .NET 9 WebAssembly compatibility and base-path imports, exposed Metal render-target APIs across platforms, and refreshed native dependencies.",
+    "v3.119.0-preview.1.2": "Moved to Skia m119 with Windows Direct3D, Windows ARM OpenGL, tvOS Metal views, and broader Linux architecture coverage. Added Android 16 KB alignment and repaired packages.config support."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp native assets gain RISC-V and LoongArch64 support and Android 16 KB alignment. Package-path and WASM integration fixes are included; the 8.3.1.1 package revision does not imply a new HarfBuzz engine."
+}

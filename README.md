@@ -12,8 +12,7 @@
 [![HarfBuzzSharp API Docs](https://img.shields.io/badge/docs-harfbuzzsharp-1faece.svg)](https://docs.microsoft.com/dotnet/api/SkiaSharp)
 [![SkiaSharp Guides](https://img.shields.io/badge/docs-guides-1faece.svg)](https://docs.microsoft.com/xamarin/graphics-games/skiasharp/)
 
-[![Build Status](https://dev.azure.com/devdiv/DevDiv/_apis/build/status/Xamarin/Components/SkiaSharp?branchName=main)](https://dev.azure.com/devdiv/DevDiv/_build/latest?definitionId=10789&branchName=main)
-[![Build Status](https://dev.azure.com/xamarin/public/_apis/build/status/mono/SkiaSharp/SkiaSharp%20(Public)?branchName=main)](https://dev.azure.com/xamarin/public/_build/latest?definitionId=4&branchName=main)
+[![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/345?branchName=main)](https://dev.azure.com/dnceng-public/public/_build?definitionId=345&branchName=main)
 
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
 Skia Graphics Library ([skia.org](https://skia.org/)). It provides a comprehensive 2D API that can
@@ -21,9 +20,10 @@ be used across mobile, server and desktop models to render images.
 
 SkiaSharp provides cross-platform bindings for:
 
- - .NET Standard 1.3
+ - .NET Standard 2.0
+ - .NET Framework 4.6.2+ (Recommended .NET Framework 4.8)
  - .NET Core
- - .NET 6
+ - .NET 6+
  - Tizen
  - Android
  - iOS
@@ -33,7 +33,7 @@ SkiaSharp provides cross-platform bindings for:
  - WinUI 3 (Windows App SDK / Uno Platform)
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Web Assembly (WASM)
- - Uno Platform (iOS / macOS / Android / WebAssembly)
+ - [Uno Platform](https://platform.uno) (iOS / Android / Windows / macOS / Linux / WebAssembly)
 
 The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.
@@ -48,10 +48,10 @@ nuget install SkiaSharp
 
 _Because there are multiple distros of Linux, and we cannot possibly support them all, we have a separate NuGet package that will contain the supported binaries for a few distros: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). ([distros](https://github.com/mono/SkiaSharp/issues/453)) ([more info](https://github.com/mono/SkiaSharp/issues/312))_
 
-There is also a early access feed that you can use to get the latest and greatest, before it goes out to the public:
+There is also an early access feed that you can use to get the latest and greatest, before it goes out to the public:
 
 ```
-https://aka.ms/skiasharp-eap/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json
 ```
 
 ## Building SkiaSharp
@@ -60,8 +60,8 @@ Building SkiaSharp is mostly straight forward. The main issue is the multiple de
 
 However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there are ways to skip all the native builds.
 
-- To get started building, see [documentation/building.md](documentation/building.md)
-- If you are just wanting a custom Linux build, see [documentation/building-linux.md](documentation/building-linux.md)
+- To get started building, see [documentation/dev/building.md](documentation/dev/building.md)
+- If you are just wanting a custom Linux build, see [documentation/dev/building-linux.md](documentation/dev/building-linux.md)
 
 ## Contributing
 
@@ -73,7 +73,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 For comprehensive documentation:
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
-- **[documentation/](documentation/)** - Architecture, build instructions, and maintainer guides
+- **[documentation/dev/](documentation/dev/)** - Architecture, build instructions, and maintainer guides
 
 ## Contributors
 
@@ -83,11 +83,3 @@ For comprehensive documentation:
 
 
 Made with [contrib.rocks](https://contrib.rocks).
-
-## Compare Code
-
-Here are some links to show the differences in our code as compared to Google's code.
-
-What version are we on? [**m119**](https://github.com/google/skia/tree/chrome/m119)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m119)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m119...mono:skiasharp)  

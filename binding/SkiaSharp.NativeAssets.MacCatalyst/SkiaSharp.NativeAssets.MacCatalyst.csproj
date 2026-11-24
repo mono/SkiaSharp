@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-maccatalyst$(TPVMacCatalystNext)</TargetFrameworks>
+    <TargetFrameworks>$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
   </PropertyGroup>
   <ItemGroup>
     <PackageFile Include="..\..\output\native\maccatalyst\libSkiaSharp*.framework.zip" PackagePath="runtimes\maccatalyst\native\%(Filename)%(Extension)" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp*" PackagePath="runtimes\maccatalyst\native\libSkiaSharp.framework\Versions\A" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

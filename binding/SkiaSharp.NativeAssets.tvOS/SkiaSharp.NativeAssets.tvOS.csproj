@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent)-tvos$(TPVtvOSCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-tvos$(TPVtvOSNext)</TargetFrameworks>
+    <TargetFrameworks>$(TFMPrevious)-tvos$(TPVtvOSPrevious);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for tvOS</Title>
   </PropertyGroup>
   <ItemGroup>
     <PackageFile Include="..\..\output\native\tvos\libSkiaSharp.framework\**" PackagePath="runtimes\tvos\native\libSkiaSharp.framework" />
+    <PackageFile Include="..\..\output\native\tvossimulator\libSkiaSharp.framework\**" PackagePath="runtimes\tvossimulator\native\libSkiaSharp.framework" />
+    <PackageSymbolFile Include="..\..\output\native\tvos\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\tvos\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\tvossimulator\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\tvossimulator\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\tvossimulator\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\tvossimulator\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -6,8 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
-using SkiaSharp.Extended;
+using SkiaSharp.Tests.Shared;
+using SkiaSharp.Testing;
 
 namespace SkiaSharp.Tests
 {
@@ -187,35 +187,54 @@ namespace SkiaSharp.Tests
 
 		protected static void AssertSimilar(ReadOnlySpan<float> expected, ReadOnlySpan<float> actual, int precision = PRECISION)
 		{
-			var pow = Math.Pow(10, precision);
-
 			var eTrimmed = expected.ToArray()
-				.Select(v => (int)(v * pow) / pow)
+				.Select(v => Math.Round(v, precision))
 				.ToArray();
 
 			var aTrimmed = actual.ToArray()
-				.Select(v => (int)(v * pow) / pow)
+				.Select(v => Math.Round(v, precision))
 				.ToArray();
 
 			Assert.Equal(eTrimmed, aTrimmed);
+		}
+
+		protected static void AssertSimilarColor(SKColor expected, SKColor actual, int tolerance = 1)
+		{
+			Assert.True(Math.Abs(expected.Alpha - actual.Alpha) <= tolerance,
+				$"Alpha differs: expected {expected.Alpha}, actual {actual.Alpha} (tolerance {tolerance})");
+			Assert.True(Math.Abs(expected.Red - actual.Red) <= tolerance,
+				$"Red differs: expected {expected.Red}, actual {actual.Red} (tolerance {tolerance})");
+			Assert.True(Math.Abs(expected.Green - actual.Green) <= tolerance,
+				$"Green differs: expected {expected.Green}, actual {actual.Green} (tolerance {tolerance})");
+			Assert.True(Math.Abs(expected.Blue - actual.Blue) <= tolerance,
+				$"Blue differs: expected {expected.Blue}, actual {actual.Blue} (tolerance {tolerance})");
 		}
 
 		protected void AssertSimilar(SKBitmap expected, SKBitmap actual, int precision = PRECISION)
 		{
 			var percentage = 1 / Math.Pow(10, precision);
 
-			var result = SKPixelComparer.Compare(expected, actual);
+			var result = SKImageComparison.Compare(expected, actual, new()
+			{
+				AlphaType = SKAlphaType.Premul,
+				AlphaTolerance = null,
+			});
 
 			try
 			{
-				Assert.True(result.ErrorPixelPercentage < percentage);
+				Assert.True(result.MismatchedPixelFraction < percentage);
 			}
 			catch
 			{
 				WriteOutput(expected, "EXPECTED bitmap");
 				WriteOutput(actual, "ACTUAL bitmap");
 
-				using var diff = SKPixelComparer.GenerateDifferenceMask(expected, actual);
+				using var diff = SKImageComparison.GenerateDifferenceImage(
+					expected, actual, SKDifferenceStyle.BinaryMask, new()
+					{
+						AlphaType = SKAlphaType.Premul,
+						AlphaTolerance = null,
+					});
 				WriteOutput(diff, "DIFF bitmap");
 
 				throw;
@@ -224,14 +243,9 @@ namespace SkiaSharp.Tests
 
 		protected GlContext CreateGlContext()
 		{
-			try
-			{
-				return TestConfig.Current.CreateGlContext();
-			}
-			catch (Exception ex)
-			{
-				throw new SkipException($"Unable to create GL context: {ex.Message}");
-			}
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshGl);
+
+			return TestConfig.Current.CreateGlContext();
 		}
 
 		public static IEnumerable<object[]> GetAllColorTypes()

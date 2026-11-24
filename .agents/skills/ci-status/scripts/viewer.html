@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CI Status Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1200px; }
+    .sticky-header { position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border); }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .verdict-healthy { background: #dcfce7; border-color: #86efac; }
+    .verdict-degraded { background: #fef3c7; border-color: #fcd34d; }
+    .verdict-broken { background: #fee2e2; border-color: #fca5a5; }
+    .risk-low { color: #166534; }
+    .risk-medium { color: #92400e; }
+    .risk-high { color: #991b1b; font-weight: 700; }
+    .sev-critical { color: #7f1d1d; font-weight: 700; }
+    .sev-high { color: #991b1b; font-weight: 600; }
+    .sev-medium { color: #92400e; }
+    .sev-low { color: #6b7280; }
+    .status-pill { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; display: inline-block; }
+    .pill-healthy { background: #dcfce7; color: #166534; }
+    .pill-failing { background: #fee2e2; color: #991b1b; }
+    .pill-degraded { background: #fef3c7; color: #92400e; }
+    .pill-stale { background: #f3f4f6; color: #6b7280; }
+    .pill-skipped { background: #f3f4f6; color: #6b7280; }
+    .category-badge { font-size: 0.7rem; padding: 1px 6px; border-radius: 4px; }
+    .cat-code_regression { background: #fee2e2; color: #991b1b; }
+    .cat-flake { background: #fef3c7; color: #92400e; }
+    .cat-infra_network { background: #dbeafe; color: #1e40af; }
+    .cat-quota_resource { background: #ede9fe; color: #5b21b6; }
+    .cat-chain_blockage { background: #f3f4f6; color: #6b7280; }
+    .cat-unknown { background: #f3f4f6; color: #6b7280; }
+    .chain-cascade { border-left: 3px solid #f59e0b; padding-left: 10px; }
+    .chain-independent { border-left: 3px solid #3b82f6; padding-left: 10px; }
+    .rec-card { border-left: 4px solid; padding: 8px 12px; margin-bottom: 8px; background: var(--surface); }
+    .rec-critical { border-color: #dc2626; }
+    .rec-high { border-color: #f59e0b; }
+    .rec-medium { border-color: #6b7280; }
+    .rec-low { border-color: #d1d5db; }
+    .meta-table td, .meta-table th { font-size: 0.85rem; padding: 4px 8px; }
+    code { font-size: 0.8rem; }
+    .section-header { cursor: pointer; }
+    .section-header:hover { color: #0969da; }
+  </style>
+</head>
+<body>
+<!--INJECT_DATA_HERE-->
+<div class="page-shell mx-auto px-3 py-4">
+
+  <!-- Sticky header -->
+  <div class="sticky-header py-2 px-3 mb-3 rounded-bottom">
+    <div class="d-flex align-items-center justify-content-between">
+      <h5 class="mb-0"><i class="bi bi-activity"></i> SkiaSharp CI Status</h5>
+      <small class="text-muted" id="header-date"></small>
+    </div>
+  </div>
+
+  <!-- Verdict card -->
+  <div class="card mb-3" id="verdict-card">
+    <div class="card-body">
+      <h4 id="verdict-title"></h4>
+      <p class="mb-0" id="verdict-summary"></p>
+    </div>
+  </div>
+
+  <!-- AzDO Health Matrix -->
+  <div class="card mb-3">
+    <div class="card-header section-header" onclick="toggle('azdo-body')">
+      <h6 class="mb-0"><i class="bi bi-grid-3x3"></i> Azure DevOps Health Matrix</h6>
+    </div>
+    <div class="card-body" id="azdo-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered" id="azdo-table"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain Analysis -->
+  <div class="card mb-3" id="chain-card" style="display:none">
+    <div class="card-header section-header" onclick="toggle('chain-body')">
+      <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Pipeline Chain Analysis</h6>
+    </div>
+    <div class="card-body" id="chain-body"></div>
+  </div>
+
+  <!-- Root Causes -->
+  <div class="card mb-3" id="rootcauses-card" style="display:none">
+    <div class="card-header section-header" onclick="toggle('rootcauses-body')">
+      <h6 class="mb-0"><i class="bi bi-bug"></i> Root Causes</h6>
+    </div>
+    <div class="card-body" id="rootcauses-body"></div>
+  </div>
+
+  <!-- GitHub Actions -->
+  <div class="card mb-3">
+    <div class="card-header section-header" onclick="toggle('gha-body')">
+      <h6 class="mb-0"><i class="bi bi-github"></i> GitHub Actions</h6>
+    </div>
+    <div class="card-body" id="gha-body">
+      <div id="gha-summary" class="mb-2"></div>
+      <div class="table-responsive">
+        <table class="table table-sm" id="gha-table"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flakes -->
+  <div class="card mb-3" id="flakes-card" style="display:none">
+    <div class="card-header section-header" onclick="toggle('flakes-body')">
+      <h6 class="mb-0"><i class="bi bi-shuffle"></i> Flake Detection</h6>
+    </div>
+    <div class="card-body" id="flakes-body"></div>
+  </div>
+
+  <!-- Release Risk -->
+  <div class="card mb-3" id="release-card" style="display:none">
+    <div class="card-header section-header" onclick="toggle('release-body')">
+      <h6 class="mb-0"><i class="bi bi-shield-exclamation"></i> Release Risk Assessment</h6>
+    </div>
+    <div class="card-body" id="release-body"></div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="card mb-3">
+    <div class="card-header">
+      <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Top Recommendations</h6>
+    </div>
+    <div class="card-body" id="recs-body"></div>
+  </div>
+
+  <!-- Meta -->
+  <div class="card mb-3">
+    <div class="card-header section-header" onclick="toggle('meta-body')">
+      <h6 class="mb-0"><i class="bi bi-info-circle"></i> Report Metadata</h6>
+    </div>
+    <div class="card-body" id="meta-body">
+      <table class="table table-sm meta-table" id="meta-table"></table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function render() {
+  if (typeof DATA === 'undefined') return;
+  const {meta, verdict, azdoHealth, chainAnalysis, rootCauses, githubActions, flakes, releaseRisk, recommendations} = DATA;
+
+  // Header
+  document.getElementById('header-date').textContent = meta.date || '';
+
+  // Verdict
+  const vc = document.getElementById('verdict-card');
+  vc.classList.add(`verdict-${verdict.status}`);
+  document.getElementById('verdict-title').innerHTML = `${verdict.emoji || ''} ${(verdict.status||'').toUpperCase()}`;
+  document.getElementById('verdict-summary').textContent = verdict.summary || '';
+
+  // AzDO Health Matrix
+  const azTable = document.getElementById('azdo-table');
+  if (azdoHealth.branches && azdoHealth.branches.length > 0) {
+    const pipeNames = [];
+    azdoHealth.branches.forEach(b => b.pipelines.forEach(p => {
+      if (!pipeNames.includes(p.name)) pipeNames.push(p.name);
+    }));
+    let html = '<thead><tr><th>Branch</th>' + pipeNames.map(n => `<th>${esc(n)}</th>`).join('') + '<th>Risk</th></tr></thead><tbody>';
+    azdoHealth.branches.forEach(b => {
+      const pipeMap = {};
+      b.pipelines.forEach(p => pipeMap[p.name] = p);
+      html += '<tr>';
+      html += `<td><code>${esc(b.name)}</code></td>`;
+      pipeNames.forEach(pn => {
+        const p = pipeMap[pn];
+        if (p) {
+          const rate = p.passRate != null && p.passRate < 100 ? ` (${Math.round(p.passRate)}%)` : '';
+          html += `<td>${p.latestIcon || '❓'} ${esc(p.latestResult||'')}${rate}</td>`;
+        } else {
+          html += '<td>—</td>';
+        }
+      });
+      html += `<td class="risk-${b.risk}">${b.risk}</td>`;
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    azTable.innerHTML = html;
+  }
+
+  // Chain Analysis
+  if (chainAnalysis && chainAnalysis.length > 0) {
+    document.getElementById('chain-card').style.display = '';
+    const body = document.getElementById('chain-body');
+    body.innerHTML = chainAnalysis.map(c => {
+      const cls = c.verdict === 'cascade' ? 'chain-cascade' : 'chain-independent';
+      return `<div class="${cls} mb-2"><strong><code>${esc(c.branch)}</code></strong> [${esc(c.verdict)}]<br><small>${esc(c.summary)}</small></div>`;
+    }).join('');
+  }
+
+  // Root Causes
+  if (rootCauses && rootCauses.length > 0) {
+    document.getElementById('rootcauses-card').style.display = '';
+    const body = document.getElementById('rootcauses-body');
+    body.innerHTML = rootCauses.map(rc => {
+      const catCls = `cat-${rc.category}`;
+      return `<div class="mb-3 border-bottom pb-2">
+        <strong>[${esc(rc.id)}]</strong> <span class="sev-${rc.severity}">${esc(rc.severity).toUpperCase()}</span>
+        <span class="category-badge ${catCls}">${esc(rc.category)}</span><br>
+        <strong>${esc(rc.title)}</strong><br>
+        <small class="text-muted">Branches: ${(rc.footprint?.branches||[]).map(b=>`<code>${esc(b)}</code>`).join(', ')}
+        | Pipelines: ${(rc.footprint?.pipelines||[]).join(', ')}</small><br>
+        ${rc.sampleError ? `<pre class="bg-light p-2 mt-1 mb-0" style="font-size:0.75rem;max-height:100px;overflow:auto">${esc(rc.sampleError.substring(0,500))}</pre>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // GitHub Actions
+  const ghaSummary = githubActions.summary || {};
+  document.getElementById('gha-summary').innerHTML =
+    `<strong>${ghaSummary.total||0}</strong> workflows: ` +
+    `✅ ${ghaSummary.healthy||0} healthy | ❌ ${ghaSummary.failing||0} failing | ⏳ ${ghaSummary.stale||0} stale`;
+
+  const ghaTable = document.getElementById('gha-table');
+  const wfs = githubActions.workflows || [];
+  if (wfs.length > 0) {
+    let html = '<thead><tr><th>Workflow</th><th>Repo</th><th>Trigger</th><th>Severity</th><th>Status</th></tr></thead><tbody>';
+    wfs.forEach(wf => {
+      const pillCls = `pill-${wf.status}`;
+      html += `<tr>
+        <td>${esc(wf.name)}</td>
+        <td><code>${esc(wf.repo)}</code></td>
+        <td><small>${esc(wf.trigger)}</small></td>
+        <td class="sev-${wf.severity}">${esc(wf.severity)}</td>
+        <td><span class="status-pill ${pillCls}">${esc(wf.status)}</span></td>
+      </tr>`;
+    });
+    html += '</tbody>';
+    ghaTable.innerHTML = html;
+  }
+
+  // Flakes
+  if (flakes && flakes.length > 0) {
+    document.getElementById('flakes-card').style.display = '';
+    const body = document.getElementById('flakes-body');
+    let html = '<table class="table table-sm"><thead><tr><th>Branch</th><th>Pipeline</th><th>Pattern</th><th>Confidence</th><th>Description</th></tr></thead><tbody>';
+    flakes.forEach(f => {
+      html += `<tr><td><code>${esc(f.branch)}</code></td><td>${esc(f.pipeline)}</td><td>${esc(f.pattern)}</td><td>${esc(f.confidence)}</td><td>${esc(f.description)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    body.innerHTML = html;
+  }
+
+  // Release Risk
+  if (releaseRisk && releaseRisk.length > 0) {
+    document.getElementById('release-card').style.display = '';
+    const body = document.getElementById('release-body');
+    let html = '<table class="table table-sm"><thead><tr><th>Branch</th><th>Shippable</th><th>Days Since Green</th><th>Blockers</th><th>Recommendation</th></tr></thead><tbody>';
+    releaseRisk.forEach(rr => {
+      const ship = rr.shippable ? '✅ Yes' : '❌ No';
+      html += `<tr><td><code>${esc(rr.branch)}</code></td><td>${ship}</td><td>${rr.daysSinceGreen ?? '—'}</td><td>${(rr.blockers||[]).join(', ')||'—'}</td><td>${esc(rr.recommendation)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    body.innerHTML = html;
+  }
+
+  // Recommendations
+  const recsBody = document.getElementById('recs-body');
+  if (recommendations && recommendations.length > 0) {
+    recsBody.innerHTML = recommendations.map(r => {
+      const url = r.buildUrl ? `<a href="${esc(r.buildUrl)}" target="_blank" class="text-decoration-none"><i class="bi bi-box-arrow-up-right"></i></a>` : '';
+      return `<div class="rec-card rec-${r.severity}">
+        <strong>#${r.priority}</strong> ${esc(r.action)} ${url}<br>
+        <small class="text-muted">${esc(r.reason)}</small><br>
+        <small>Target: <code>${esc(r.target)}</code></small>
+      </div>`;
+    }).join('');
+  } else {
+    recsBody.innerHTML = '<p class="text-muted">No recommendations — all systems healthy.</p>';
+  }
+
+  // Meta
+  const metaTable = document.getElementById('meta-table');
+  metaTable.innerHTML = `
+    <tr><th>Date</th><td>${esc(meta.date)}</td></tr>
+    <tr><th>Timestamp</th><td>${esc(meta.timestamp)}</td></tr>
+    <tr><th>Schema</th><td>v${esc(meta.schemaVersion)}</td></tr>
+    <tr><th>Window</th><td>${meta.window?.buildsPerPipeline} builds × ${meta.window?.branchesCount} branches</td></tr>
+    <tr><th>Branches</th><td>${(meta.branches||[]).map(b=>`<code>${esc(b)}</code>`).join(', ')}</td></tr>
+  `;
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Windows.ApplicationModel;
 
 #if WINDOWS
@@ -23,6 +23,8 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.UWP
 #endif
 {
+	/// <summary>A XAML canvas that can be drawn on using SkiaSharp drawing commands.</summary>
+	/// <remarks />
 	public partial class SKXamlCanvas : Canvas
 	{
 		private const float DpiBase = 96.0f;
@@ -45,6 +47,8 @@ namespace SkiaSharp.Views.UWP
 		// workaround for https://github.com/mono/SkiaSharp/issues/1118
 		private int loadUnloadCounter = 0;
 
+		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Windows.SKXamlCanvas" /> class.</summary>
+		/// <remarks />
 		public SKXamlCanvas()
 		{
 			if (designMode)
@@ -67,8 +71,14 @@ namespace SkiaSharp.Views.UWP
 			SetBinding(ProxyVisibilityProperty, binding);
 		}
 
+		/// <summary>Gets the current canvas size.</summary>
+		/// <value>The current canvas size in pixels.</value>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize { get; private set; }
 
+		/// <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
+		/// <value><see langword="true" /> if the canvas should ignore pixel scaling; otherwise, <see langword="false" />.</value>
+		/// <remarks>By default, when <see langword="false" />, the canvas is resized to 1 canvas pixel per display pixel. When <see langword="true" />, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -79,10 +89,74 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		/// <summary>Gets the current DPI for the canvas.</summary>
+		/// <value>The current DPI value.</value>
+		/// <remarks />
 		public double Dpi { get; private set; } = 1;
 
+		/// <summary>Occurs when the surface needs to be redrawn.</summary>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// ## Remarks
+		///
+		/// There are two ways to draw on this surface: by overriding the
+		/// <xref:SkiaSharp.Views.Windows.SKXamlCanvas.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs)>
+		/// method, or by attaching a handler to the
+		/// <xref:SkiaSharp.Views.Windows.SKXamlCanvas.PaintSurface>
+		/// event.
+		///
+		/// ## Examples
+		///
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.Info.Width;
+		///     var surfaceHeight = e.Info.Height;
+		///
+		///     var canvas = surface.Canvas;
+		///
+		///     // draw on the canvas
+		///
+		///     canvas.Flush ();
+		/// };
+		/// ```
+		/// ]]></format></remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		/// <summary>Implement this to draw on the canvas.</summary>
+		/// <param name="e">The event arguments that contain the drawing surface and information.</param>
+		/// <remarks><format type="text/markdown"><![CDATA[
+		/// ## Remarks
+		///
+		/// There are two ways to draw on this surface: by overriding the
+		/// <xref:SkiaSharp.Views.Windows.SKXamlCanvas.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs)>
+		/// method, or by attaching a handler to the
+		/// <xref:SkiaSharp.Views.Windows.SKXamlCanvas.PaintSurface>
+		/// event.
+		///
+		/// > [!IMPORTANT]
+		/// > If this method is overridden, then the base must be called, otherwise the
+		/// > event will not be fired.
+		///
+		/// ## Examples
+		///
+		/// ```csharp
+		/// protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
+		/// {
+		///     // call the base method
+		///     base.OnPaintSurface (e);
+		///
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.Info.Width;
+		///     var surfaceHeight = e.Info.Height;
+		///
+		///     var canvas = surface.Canvas;
+		///
+		///     // draw on the canvas
+		///
+		///     canvas.Flush ();
+		/// }
+		/// ```
+		/// ]]></format></remarks>
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			PaintSurface?.Invoke(this, e);
@@ -158,6 +232,8 @@ namespace SkiaSharp.Views.UWP
 			FreeBitmap();
 		}
 
+		/// <summary>Invalidates the entire surface of the control and causes the control to be redrawn.</summary>
+		/// <remarks />
 		public void Invalidate()
 		{
 #if WINDOWS

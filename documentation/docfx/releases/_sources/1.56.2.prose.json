@@ -1,0 +1,51 @@
+{
+  "theme": "Index8 rework",
+  "highlights_headline": "SkiaSharp 1.56.2 reworks the indexed-colour APIs and trims a handful of SKPath and SKBitmap helpers.",
+  "highlights_body": "SKColorTable now speaks premultiplied colours (SKPMColor) to match how Skia stores its palette, and SKBitmap.GetIndex8Color is gone. Several SKPath overloads drop optional add-mode defaults so their overload set is explicit.",
+  "breaking": [
+    {
+      "title": "SKColorTable exposes SKPMColor",
+      "body": "SKColorTable.Colors and the indexer now return SKPMColor[] / SKPMColor rather than SKColor. Convert to and from premultiplied colours when interacting with palette data.",
+      "prs": []
+    },
+    {
+      "title": "SKBitmap.GetIndex8Color removed",
+      "body": "GetIndex8Color(x, y) is gone. Read the palette index and look it up through the bitmap's SKColorTable instead.",
+      "prs": []
+    },
+    {
+      "title": "SKPath.AddPath defaults removed",
+      "body": "The AddMode = 0 default was removed from the SKPath.AddPath overloads. Pass the AddMode explicitly.",
+      "prs": []
+    },
+    {
+      "title": "SKPath.Iterator.Next overload removed",
+      "body": "The Next(SKPoint[], bool doConsumeDegenerates, bool exact) overload was removed from SKPath.Iterator; use the remaining overload.",
+      "prs": []
+    },
+    {
+      "title": "SKImageInfo fields no longer readonly",
+      "body": "SKImageInfo.Empty and SKImageInfo.PlatformColorType are no longer readonly, so referencing code that expected compile-time constness needs to adjust.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Indexed-colour APIs use premultiplied colours",
+          "detail": "SKColorTable now surfaces SKPMColor, matching Skia's internal storage and avoiding a hidden conversion on every palette read.",
+          "prs": []
+        },
+        {
+          "lead": "SKPath overloads made explicit",
+          "detail": "Removes optional AddMode defaults from SKPath.AddPath so overloads resolve unambiguously and the ABI is stable.",
+          "prs": []
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

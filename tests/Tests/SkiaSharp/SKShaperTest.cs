@@ -1,4 +1,5 @@
-﻿using System.IO;
+using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using HarfBuzzSharp;
@@ -9,7 +10,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 {
 	public class SKShaperTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void DrawShapedTextExtensionMethodDraws()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(512, 512)))
@@ -21,7 +22,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			{
 				canvas.Clear(SKColors.White);
 
-				canvas.DrawShapedText(shaper, "متن", 100, 200, font, paint);
+				canvas.DrawShapedText(shaper, "متن", 100, 200, SKTextAlign.Left, font, paint);
 
 				canvas.Flush();
 
@@ -35,7 +36,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -54,7 +55,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -73,7 +74,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFaceShaperFromTypeface()
 		{
 			var skiaTypeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
@@ -103,7 +104,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextAlign.Left, 300)]
 		[InlineData(SKTextAlign.Center, 162)]
 		[InlineData(SKTextAlign.Right, 23)]
@@ -149,6 +150,31 @@ namespace SkiaSharp.HarfBuzz.Tests
 			Assert.Equal(SKColors.Black, bitmap.GetPixel(x + 271, y + 83));
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 83));
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
+		}
+
+		[Fact]
+		public void ToHarfBuzzBlobDisposesNonMemoryBackedStream()
+		{
+			// A non-memory-backed SKStreamAsset takes the copy-into-native path in
+			// ToHarfBuzzBlob. The blob owns the copied buffer and, having consumed the
+			// stream, must also dispose the asset when it is released — otherwise the
+			// asset's native handle leaks until finalization.
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "content-font.ttf"));
+
+			var asset = new SKManagedStream(new MemoryStream(bytes), true);
+
+			// Confirm the non-memory-backed branch is exercised.
+			Assert.Equal(IntPtr.Zero, asset.GetMemoryBase());
+
+			using (var blob = asset.ToHarfBuzzBlob())
+			{
+				// The blob has taken ownership of the consumed asset but has not
+				// released it yet, so it must still be alive.
+				Assert.False(asset.IsDisposed);
+			}
+
+			// Releasing the blob must dispose the owned asset.
+			Assert.True(asset.IsDisposed);
 		}
 	}
 }

@@ -1,18 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(TFMNext)' == ''">$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TFMNext)' != ''">$(MauiTargetFrameworksAppNext)</TargetFrameworks>
+    <TargetFrameworks>$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
+    <ValidateXcodeVersion>true</ValidateXcodeVersion>
     <SingleProject>true</SingleProject>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
     <AssemblyName>SkiaSharp.Tests.Devices</AssemblyName>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <SignAssembly>false</SignAssembly>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
-    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Visual</GoldenRoot>
+    <EmbedGoldens>true</EmbedGoldens>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,24 +24,26 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
   <PropertyGroup>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">6.5</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">10.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="xunit.skippablefact" Version="1.4.13" />
-    <PackageReference Include="Validation" Version="2.4.22" />
-    <PackageReference Include="DeviceRunners.VisualRunners.Maui" Version="0.1.0-preview.1" />
-    <PackageReference Include="DeviceRunners.VisualRunners.Xunit" Version="0.1.0-preview.1" />
-    <PackageReference Include="DeviceRunners.XHarness.Maui" Version="0.1.0-preview.1" />
-    <PackageReference Include="DeviceRunners.XHarness.Xunit" Version="0.1.0-preview.1" />
-    <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.1" />
-    <PackageReference Include="DeviceRunners.UITesting.Xunit" Version="0.1.0-preview.1" />
+    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Maui" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Xunit3" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.UITesting.Xunit3" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.Testing.Targets" Version="0.1.0-preview.12" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
@@ -59,6 +63,14 @@
     <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
   </ItemGroup>
 
+  <!-- Vulkan tests: only the device platforms whose native library is built with Vulkan and whose
+       linker can resolve the Vulkan P/Invokes (android, windows). The library is unsigned so it can
+       reference the unsigned Silk.NET/SharpVk packages; MauiProgram registers its assembly so the
+       renderer catalog and the test runner both discover it. -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-windows'))">
+    <ProjectReference Include="..\SkiaSharp.Vulkan.Tests\SkiaSharp.Vulkan.Tests.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
     <MauiSplashScreen Include="Resources\Splash\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
@@ -66,6 +78,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <Compile Include="..\Tests\SkiaSharp\GlContexts\Wgl\*.cs" Link="SkiaSharp\GlContexts\Wgl\%(Filename)%(Extension)" />
+    <Compile Include="..\Tests\Utils\Win32\Gdi32.cs;..\Tests\Utils\Win32\PIXELFORMATDESCRIPTOR.cs" Link="Utils\Win32\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -81,5 +98,7 @@
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
 
 </Project>

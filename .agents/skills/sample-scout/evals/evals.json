@@ -1,0 +1,35 @@
+{
+  "skill_name": "sample-scout",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Scout the upstream Skia GM samples and find interesting demos we should port to the SkiaSharp Gallery. Do a full scan.",
+      "expected_output": "Full scan of 400+ GM files from google/skia/gm/. Should categorize each by interest level, check API availability, and cross-reference with existing Gallery samples. Should identify top opportunities.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON file that passes validate-sample-scout.py with exit code 0",
+        "Produces a Markdown report via render-sample-scout.py",
+        "JSON meta.source is 'google/skia/gm/'",
+        "JSON findings array has at least 300 entries",
+        "JSON summary.totalFindings equals actual findings count",
+        "At least 50 findings have interesting='high'",
+        "At least one finding references mesh.cpp with apis_available=false",
+        "At least one finding references runtimeshader.cpp with apis_available=true",
+        "sampleStatus field is present on findings",
+        "summary.opportunities count matches actual high+available+none count"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What Skia GM samples can we build today with existing SkiaSharp APIs? I want to find demos we're missing.",
+      "expected_output": "Should filter to samples where apis_available=true and sampleStatus='none'. Focus on the actionable opportunities.",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON report",
+        "Identifies samples with sampleStatus 'none' that have apis_available true",
+        "Presents a focused list of buildable opportunities",
+        "Each opportunity has a clear description of what it demonstrates"
+      ]
+    }
+  ]
+}

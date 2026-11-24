@@ -1,28 +1,45 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
-DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
-string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
-
+// GPU features can be disabled for NanoServer builds
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
+string USE_FREETYPE_VAR = Argument ("useFreeType", EnvironmentVariable ("USE_FREETYPE") ?? "false");
+bool USE_FREETYPE = USE_FREETYPE_VAR == "1" || USE_FREETYPE_VAR.ToLower () == "true";
+bool USE_FONTMGR_WIN = !USE_FREETYPE;
+
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/shared/msbuild.cake"
+#load "../../scripts/infra/native/windows/windows-shared.cake"
+
+DirectoryPath LLVM_PATH = string.IsNullOrEmpty(LLVM_HOME) || LLVM_HOME.ToLower() == "msvc" ? "" : LLVM_HOME;
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
-Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
-Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
+Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_PATH.FullPath) ? "(Using MSVC)" : LLVM_PATH);
 Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
 Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
 
+Task("validate-windows-llvm")
+    .IsDependentOn("validate-windows-toolchain")
+    .WithCriteria(IsRunningOnWindows())
+    .Does(() =>
+{
+    if (string.IsNullOrEmpty(LLVM_PATH.FullPath))
+        return;
+
+    var clang = LLVM_PATH.CombineWithFilePath("bin/clang-cl.exe");
+    if (!FileExists(clang))
+        throw new Exception($"Visual Studio LLVM was not installed: {clang}");
+});
+
 Task("libSkiaSharp")
+    .IsDependentOn("validate-windows-llvm")
     .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
@@ -35,20 +52,32 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
-        var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
-        var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
+        var clang = string.IsNullOrEmpty(LLVM_PATH.FullPath) ? "" : $"clang_win='{LLVM_PATH}' ";
+        var win_toolchain_version = $"win_toolchain_version='{TOOLSET_VERSION.Value}' ";
+        var win_vcvars_version = $"win_vcvars_version='{TOOLSET_VERSION.Value.Substring(0, 4)}' ";
+        var win_sdk_version = $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
+        var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
+        var spectreLibPath = GetSpectreLibPath(arch);
+        var nativeOutDir = $"{VARIANT}/{arch}";
 
-        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
+        // LLVM 22+ pads some x64 calls with a nop for Windows EH but emits the
+        // CFG long-jump label for setjmp after that nop, one byte past the real
+        // return address. Windows then rejects every longjmp (libjpeg/libpng
+        // error recovery) and the process dies. Keep CFG, drop the long-jump
+        // table. https://github.com/mono/SkiaSharp/issues/5645
+        // Remove once LLVM is fixed: https://github.com/llvm/llvm-project/issues/244137
+        var guardLdflag = !string.IsNullOrEmpty(LLVM_PATH.FullPath) && skiaArch == "x64" ? "/guard:cf,nolongjmp" : "/guard:cf";
+
+        GenerateGnBuild(nativeOutDir,
             $"target_os='win'" +
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_fontmgr_win_gdi=false " +
-            $"skia_use_dng_sdk=true " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
-            $"skia_use_piex=true " +
-            $"skia_use_sfntly=false " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_system_expat=false " +
+            $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
@@ -56,11 +85,19 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
+            $"skia_use_freetype={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_custom_empty={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
+            $"skia_enable_graphite=true " +
             clang +
+            win_toolchain_version +
             win_vcvars_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf' ] " +
+            win_sdk_version +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DSK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '{guardLdflag}', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
+
+        RunNinjaWithVcVars(SKIA_PATH, $"out/{nativeOutDir}", "SkiaSharp", vcVarsArchitecture);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
@@ -70,6 +107,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
+    .IsDependentOn("validate-windows-toolchain")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
@@ -81,7 +119,11 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.sln", platformTarget: arch);
+        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch,
+            properties: new Dictionary<string, string> {
+                { "VCToolsVersion", TOOLSET_VERSION.Value },
+                { "WindowsTargetPlatformVersion", WINDOWS_SDK_VERSION }
+            });
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);

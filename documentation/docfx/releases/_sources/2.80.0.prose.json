@@ -1,0 +1,100 @@
+{
+  "theme": "Skia m80 and Vulkan everywhere",
+  "highlights_headline": "SkiaSharp 2.80.0 rebases on Skia m80, brings Vulkan everywhere, and adds Linux ARM, Alpine, ARM64, and WebAssembly natives.",
+  "highlights_body": "Vulkan is now available on every platform that supports it, alongside a cleaned-up GPU API. Native coverage grows to Linux ARM32/ARM64, Alpine, and Win32 ARM64, plus a first WebAssembly build. SKFont becomes the canonical text/glyph type, and several disposal and GL crashes are fixed.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Rebased on Skia m80",
+          "detail": "The bundled engine is refreshed from a much older Skia to milestone 80, bringing years of upstream rendering and text fixes into SkiaSharp.",
+          "prs": [986]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Vulkan on every supported platform",
+          "detail": "Vulkan support is built for Win32 alongside the existing platforms, with a shared managed API so consumers can target Vulkan the same way everywhere.",
+          "prs": [1010, 1287]
+        },
+        {
+          "lead": "GPU APIs cleaned up",
+          "detail": "The GPU surface is reworked for consistency across backends and to expose the pieces callers previously had to reach around.",
+          "prs": [1294]
+        },
+        {
+          "lead": "SKFont becomes the text/glyph type",
+          "detail": "SKFont's public API is now glyph-only, and the other text types are built on top of it — the canonical shape for text work going forward.",
+          "prs": [1299]
+        },
+        {
+          "lead": "New drawing and path helpers",
+          "detail": "SKCanvas.DrawTextOnPath, SKPath.ToWinding, SKPaint.ColorF, and image snapshots with bounds fill in gaps that consumers previously had to work around.",
+          "prs": [1198, 1326, 1325, 1357]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "GL and shader crashes fixed",
+          "detail": "A crash when no GL context is present is resolved, the correct shaders are used, and GL ES 3.x is explicitly requested when available.",
+          "prs": [1328, 1323, 1388]
+        },
+        {
+          "lead": "Text and font lifetime corrected",
+          "detail": "The text blob builder and font set are now kept alive while in use, fixing intermittent crashes during text rendering.",
+          "prs": [1365, 1362]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Managed/native disposal reworked",
+          "detail": "The relationship between managed wrappers and native objects is disposed correctly again, closing a class of finalizer and use-after-dispose issues.",
+          "prs": [1344]
+        },
+        {
+          "lead": "Native library loading on desktop",
+          "detail": "Desktop and .NET Framework hosts now load a specific native library rather than relying on ambient search order, and libSkiaSharp is no longer embedded inside the managed assemblies.",
+          "prs": [1342, 1296]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Linux ARM, Alpine, and Win32 ARM64 natives",
+          "detail": "Ships native libraries for Linux ARM32 (armhf) and ARM64 (aarch64), Alpine, and Win32 ARM64 — SkiaSharp now runs out of the box on those targets.",
+          "prs": [1382, 1339, 1358]
+        },
+        {
+          "lead": "WebAssembly build",
+          "detail": "There is now a libSkiaSharp build for WebAssembly and a matching WASM package, laying the groundwork for browser-hosted rendering.",
+          "prs": [1359, 1389]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "bender2k14": "Made SkiaSharpSample the default startup project in the WPF sample solution",
+    "ziriax": "Contributed the SKCanvas.DrawTextOnPath implementation"
+  },
+  "preview_summaries": {
+    "v2.80.0-preview.33": "Preview 33 wrapped up packaging fixes and text/font lifetime fixes ahead of stable.",
+    "v2.80.0-preview.24": "Preview 24 added Win32 ARM64 natives, image snapshots with bounds, and disposal fixes.",
+    "v2.80.0-preview.14": "Preview 14 introduced the Alpine native libraries.",
+    "v2.80.0-preview.12": "Preview 12 added SKPath.ToWinding, SKPaint.ColorF, and fixed a crash when no GL context is present.",
+    "v2.80.0-preview.3": "Preview 3 was the initial v2 preview: Skia m80, Vulkan for Win32, GPU API cleanup, the SKFont refactor, and SKCanvas.DrawTextOnPath."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 2.6.1.5 rides along with the SkiaSharp packaging, native library, and platform coverage work — the same builds now ship for Linux ARM, Alpine, and the other new targets."
+}

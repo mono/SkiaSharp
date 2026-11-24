@@ -20,8 +20,8 @@ namespace SkiaSharpGenerator
 		protected readonly Dictionary<string, FunctionMapping> functionMappings = new Dictionary<string, FunctionMapping>();
 		protected readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
 
-		protected readonly List<string> excludedFiles = new List<string>();
-		protected readonly List<string> excludedTypes = new List<string>();
+		protected readonly HashSet<string> excludedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		protected readonly List<string> excludedSymbols = new List<string>();
 
 		protected CppCompilation compilation = new CppCompilation();
 		protected Config config = new Config();
@@ -59,11 +59,12 @@ namespace SkiaSharpGenerator
 				{
 					var version = Directory.GetDirectories(root)
 						.OrderByDescending(d => Version.TryParse(Path.GetFileName(d), out var v) ? v : new Version(0, 0, 0))
+						.ThenBy(d => d, StringComparer.Ordinal)
 						.FirstOrDefault();
 					if (version is not null)
 					{
 						Log?.LogVerbose($"Found Clang include folder: {version}");
-						options.IncludeFolders.Add(Path.Combine(root, version, "include"));
+						options.SystemIncludeFolders.Add(Path.Combine(root, version, "include"));
 					}
 					else
 					{
@@ -74,6 +75,78 @@ namespace SkiaSharpGenerator
 				{
 					Log?.LogWarning("Clang include folder not found, parsing may fail.");
 				}
+
+				// Add macOS SDK system include path (needed for #include_next in clang headers)
+				var sdkPaths = new[]
+				{
+					"/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+				};
+				var process = new System.Diagnostics.Process
+				{
+					StartInfo = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = "xcrun",
+						Arguments = "--show-sdk-path",
+						RedirectStandardOutput = true,
+						UseShellExecute = false,
+						CreateNoWindow = true,
+					}
+				};
+				try
+				{
+					process.Start();
+					var xcrunSdkPath = process.StandardOutput.ReadToEnd().Trim();
+					process.WaitForExit();
+					if (!string.IsNullOrEmpty(xcrunSdkPath))
+						sdkPaths = new[] { Path.Combine(xcrunSdkPath, "usr/include") };
+				}
+				catch
+				{
+					// fall back to default paths
+				}
+
+				foreach (var sdkPath in sdkPaths)
+				{
+					if (Directory.Exists(sdkPath))
+					{
+						Log?.LogVerbose($"Found macOS SDK include folder: {sdkPath}");
+						options.SystemIncludeFolders.Add(sdkPath);
+						break;
+					}
+				}
+			}
+
+			if (OperatingSystem.IsLinux())
+			{
+				var process = new System.Diagnostics.Process
+				{
+					StartInfo = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = "clang",
+						Arguments = "-print-resource-dir",
+						RedirectStandardOutput = true,
+						UseShellExecute = false,
+						CreateNoWindow = true,
+					}
+				};
+				try
+				{
+					process.Start();
+					var resourceDir = process.StandardOutput.ReadToEnd().Trim();
+					process.WaitForExit();
+					if (!string.IsNullOrEmpty(resourceDir))
+					{
+						var include = Path.Combine(resourceDir, "include");
+						if (Directory.Exists(include))
+							options.SystemIncludeFolders.Add(include);
+					}
+				}
+				catch { }
+				foreach (var sys in new[] { "/usr/include/x86_64-linux-gnu", "/usr/include" })
+				{
+					if (Directory.Exists(sys))
+						options.SystemIncludeFolders.Add(sys);
+				}
 			}
 
 			foreach (var header in config.IncludeDirs)
@@ -83,27 +156,24 @@ namespace SkiaSharpGenerator
 			}
 
 			var headers = new List<string>();
-			foreach (var header in config.Headers)
+			foreach (var header in config.Headers.OrderBy(h => h.Key, StringComparer.Ordinal))
 			{
 				var path = Path.Combine(SkiaRoot, header.Key);
 				options.IncludeFolders.Add(path);
-				foreach (var filter in header.Value)
-				{
-					headers.AddRange(Directory.EnumerateFiles(path, filter));
-				}
 			}
 
-			foreach (var filter in config.Exclude.Files)
-			{
-				excludedFiles.AddRange(Directory.EnumerateFiles(SkiaRoot, filter));
-			}
+			headers.AddRange(StableOrdering.EnumerateFiles(
+				SkiaRoot,
+				config.Headers,
+				Directory.EnumerateFiles));
 
-			foreach (var filter in config.Exclude.Types)
-			{
-				excludedTypes.Add(filter);
-				excludedTypes.Add(filter + "*");
-				excludedTypes.Add(filter + "**");
-			}
+			excludedFiles.UnionWith(StableOrdering.EnumerateFiles(
+				SkiaRoot,
+				config.Exclude.Files,
+				Directory.EnumerateFiles)
+				.Select(path => StableOrdering.NormalizePath(SkiaRoot, path)));
+
+			excludedSymbols.AddRange(config.Exclude.Symbols);
 
 			foreach (var f in excludedFiles)
 				Log?.LogVerbose("Skipping everything in: " + f);
@@ -153,14 +223,16 @@ namespace SkiaSharpGenerator
 				{ "signed int",           nameof(Int32) },
 				{ "unsigned",             nameof(UInt32) },
 				{ "unsigned int",         nameof(UInt32) },
-				{ "long",                 nameof(Int64) },
-				{ "long int",             nameof(Int64) },
+				// NOTE: C `long` / `unsigned long` / `signed long` (and the
+				// equivalent `long int` spellings) are intentionally omitted.
+				// Their size is platform-dependent (32-bit on Windows LLP64,
+				// 64-bit on Linux/macOS LP64), so no single managed type maps
+				// correctly on all platforms. GetType() below rejects them with
+				// a diagnostic pointing at int32_t / int64_t.
 				{ "long long",            nameof(Int64) },
 				{ "long long int",        nameof(Int64) },
-				{ "signed long",          nameof(Int64) },
-				{ "signed long int",      nameof(Int64) },
-				{ "unsigned long",        nameof(UInt64) },
-				{ "unsigned long int",    nameof(UInt64) },
+				{ "unsigned long long",   nameof(UInt64) },
+				{ "unsigned long long int", nameof(UInt64) },
 				{ "float",                nameof(Single) },
 				{ "double",               nameof(Double) },
 				// TODO: long double, wchar_t ?
@@ -226,21 +298,28 @@ namespace SkiaSharpGenerator
 				var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
 				var t = GetType(p.Type);
 				var cppT = GetCppType(p.Type);
-				if (t == "Boolean" || cppT == "bool")
-					t = "[MarshalAs (UnmanagedType.I1)] bool";
+				if (cppT == "bool")
+					t = nameof(Byte);
+				else if (t == "Boolean")
+					t = nameof(Int32);
 				if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
 					t = newT;
 				paramsList.Add($"{t} {n}");
 			}
 
 			var returnType = GetType(function.ReturnType);
+			var returnCppType = GetCppType(function.ReturnType);
 			if (map != null && map.Parameters.TryGetValue("-1", out var newR))
 			{
 				returnType = newR;
 			}
-			else if (returnType == "Boolean" || GetCppType(function.ReturnType) == "bool")
+			else if (returnCppType == "bool")
 			{
-				returnType = "bool";
+				returnType = nameof(Byte);
+			}
+			else if (returnType == "Boolean")
+			{
+				returnType = nameof(Int32);
 			}
 			return (paramsList, returnType);
 		}
@@ -266,8 +345,10 @@ namespace SkiaSharpGenerator
 						var (cppType, i) = tuple;
 						var t = GetType(cppType);
 						var cppT = GetCppType(cppType);
-						if (t == "Boolean" || cppT == "bool")
-							t = "bool";
+						if (cppT == "bool")
+							t = nameof(Byte);
+						else if (t == "Boolean")
+							t = nameof(Int32);
 						if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
 							t = newT;
 						return t;
@@ -278,6 +359,16 @@ namespace SkiaSharpGenerator
 			return null;
 		}
 
+		// C types whose sizes differ between LLP64 (Windows) and LP64 (Linux/macOS)
+		// platforms. There is no single managed mapping that is correct on both,
+		// so we refuse to generate bindings for them instead of silently picking
+		// one and propagating the platform-dependent bug.
+		private static readonly HashSet<string> PlatformDependentLongTypes = new()
+		{
+			"long", "signed long", "unsigned long",
+			"long int", "signed long int", "unsigned long int",
+		};
+
 		protected string GetType(CppType type)
 		{
 			var typeName = GetCppType(type);
@@ -287,10 +378,21 @@ namespace SkiaSharpGenerator
 			var pointers = pointerIndex == -1 ? "" : typeName.Substring(pointerIndex);
 			var noPointers = pointerIndex == -1 ? typeName : typeName.Substring(0, pointerIndex);
 
+			if (PlatformDependentLongTypes.Contains(noPointers.TrimEnd()))
+			{
+				throw new InvalidOperationException(
+					$"C type '{noPointers.TrimEnd()}' has a platform-dependent size " +
+					$"(32-bit on Windows LLP64, 64-bit on Linux/macOS LP64). " +
+					$"Use int32_t or int64_t explicitly in the C header, " +
+					$"or add an explicit type override in the JSON config.");
+			}
+
 			if (skiaTypes.TryGetValue(noPointers, out var isStruct))
 			{
 				if (!isStruct)
-					return noPointers + pointers.Substring(1);
+					return pointers.Length == 0
+						? noPointers
+						: noPointers + pointers[1..];
 				if (typeMappings.TryGetValue(noPointers, out var map))
 					return (map.CsType ?? CleanName(noPointers)) + pointers;
 			}
@@ -313,8 +415,12 @@ namespace SkiaSharpGenerator
 		{
 			var typeName = type.GetDisplayName();
 
-			// remove the const
-			typeName = typeName.Replace("const ", "");
+			// remove the const (both prefix and suffix forms — CppAst switched between them)
+			typeName = typeName.Replace("const ", "").Replace(" const", "");
+
+			// normalize whitespace around pointer/reference sigils: newer CppAst emits
+			// "T *" instead of "T*", which breaks the pointer/name split downstream
+			typeName = typeName.Replace(" *", "*").Replace(" &", "&");
 
 			// replace the [] with a *
 			int start;
@@ -426,6 +532,16 @@ namespace SkiaSharpGenerator
 			}
 
 			return true;
+		}
+
+		protected bool IsExcludedSymbol(string name)
+		{
+			var pointerIndex = name.IndexOfAny(['*', '&']);
+			if (pointerIndex >= 0)
+				name = name[..pointerIndex];
+
+			return excludedSymbols.Any(pattern =>
+				Regex.IsMatch(name, $"^{Regex.Escape(pattern).Replace(@"\*", ".*")}$"));
 		}
 
 		protected string GetNamespace(string name)

@@ -4,7 +4,7 @@ using Microsoft.Maui;
 
 namespace SkiaSharp.Tests
 {
-	[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
+	[Activity(Name = "com.companyname.SkiaSharpTests.MainActivity", Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize)]
 	public class MainActivity : MauiAppCompatActivity
 	{
 	}

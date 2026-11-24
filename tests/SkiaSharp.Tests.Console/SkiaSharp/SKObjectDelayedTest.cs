@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKObjectDelayedTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public async Task DelayedConstructionDoesNotCreateInvalidState()
 		{
 			var handle = GetNextPtr();
@@ -60,7 +60,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(objFast, objSlow);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public async Task DelayedDestructionDoesNotCreateInvalidState()
 		{
 			var handle = GetNextPtr();

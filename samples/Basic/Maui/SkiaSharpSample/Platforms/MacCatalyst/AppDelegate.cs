@@ -2,11 +2,10 @@
 using Microsoft.Maui;
 using Microsoft.Maui.Hosting;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+[Register(nameof(AppDelegate))]
+public class AppDelegate : MauiUIApplicationDelegate
 {
-	[Register(nameof(AppDelegate))]
-	public class AppDelegate : MauiUIApplicationDelegate
-	{
-		protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
-	}
+	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }

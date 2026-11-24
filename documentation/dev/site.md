@@ -1,0 +1,227 @@
+# Building the Website
+
+This guide covers how to build, preview, and iterate on the SkiaSharp documentation site at [mono.github.io/SkiaSharp](https://mono.github.io/SkiaSharp/).
+
+## Site Structure
+
+The published site is assembled from independently-built components:
+
+| URL Path | Source | Build Tool |
+|----------|--------|------------|
+| `/` | `documentation/site/` | Static HTML/CSS (no build) |
+| `/docs/` | `documentation/docfx/` | [DocFX](https://dotnet.github.io/docfx/) |
+| `/gallery/` | `samples/Gallery/Blazor/` | Blazor WASM (`dotnet publish`) |
+| `/gallery-uno/` | `samples/Gallery/Uno/` | Uno WASM (`dotnet publish`) |
+| `/fiddle/` | `samples/SkiaFiddle/` | Uno WASM (`dotnet publish`) |
+
+The CI workflow (`build-site.yml`) builds the docs and apps in parallel, then
+assembles the site. Deployment is restricted to `main` and opted-in PR previews.
+
+## Prerequisites
+
+```bash
+dotnet tool restore   # installs DocFX and other tools
+```
+
+You also need `python3` if you want to use the preview server script.
+
+## Building Locally
+
+### Landing Page
+
+The landing page is plain HTML/CSS — no build step. Just edit and refresh:
+
+- `documentation/site/index.html`
+- `documentation/site/style.css`
+- `documentation/site/404.html`
+
+To preview in a browser, open `documentation/site/index.html` directly. Note that links to `/docs/` and `/gallery/` won't work since those require the full assembled site.
+
+### DocFX Conceptual Docs
+
+Build the DocFX site locally to iterate on content, styling, templates, or configuration:
+
+```bash
+dotnet docfx documentation/docfx/docfx.json
+```
+
+This outputs to `output/site/docs/`. To preview with live rebuild on changes:
+
+```bash
+dotnet docfx documentation/docfx/docfx.json --serve
+```
+
+This starts a local server (typically at `http://localhost:8080`) and watches for file changes. This is the fastest way to iterate on:
+
+- Markdown content (`documentation/docfx/basics/`, `paths/`, etc.)
+- Table of contents (`documentation/docfx/TOC.yml`)
+- DocFX configuration (`documentation/docfx/docfx.json`)
+- Templates and styling (see [Customizing DocFX](#customizing-docfx) below)
+
+### API Cross-Reference Archives
+
+The `xrefmaps/*.zip` inputs listed in `documentation/docfx/docfx.json` are
+imported API reference snapshots. The site workflow consumes the committed maps;
+it does not regenerate them from this checkout's bindings. Updating a source
+summary therefore does not refresh an older map automatically.
+
+For a terminology finding inside a map, inspect the associated API entries,
+including their summaries, rather than treating the archive as a single
+exemption. Preserve compatibility identifiers, reference UIDs, links, and
+standardized codes. Review prose separately: a required API name does not exempt
+the surrounding description.
+
+Correct editable prose at its authoritative source, then obtain a refreshed map
+from that API documentation publisher. For SkiaSharp, the authoritative API prose
+is the source `///` documentation; see
+[API design](api-design.md#xml-documentation) for the package and publication
+boundary. Do not hand-edit generated ZIPs or exclude all reference maps to hide
+stale descriptions. Any retained technical match needs its own observed
+fingerprint and contextual justification in the active suppression file.
+
+### Gallery (Blazor WASM)
+
+The gallery requires SkiaSharp NuGet packages from CI. Building locally:
+
+```bash
+# 1. Obtain CI packages from a supported source
+# For a PR build:
+pwsh scripts/get-skiasharp-pr.ps1 <PR_NUMBER> -SuccessfulOnly -Force
+# Copy its .nupkg files from ~/.skiasharp/hives/pr-<PR_NUMBER>/packages/ to output/nugets/.
+#
+# For an exact public build, download and extract its canonical `nuget` artifact.
+
+# 2. Detect the version
+#    Look at output/nugets/ for the SkiaSharp package version
+
+# 3. Generate samples (converts ProjectReference → PackageReference)
+dotnet cake --target=samples-generate \
+  --previewLabel="preview.0" \
+  --buildNumber="76"
+
+# 4. Add the local NuGet source
+dotnet nuget add source "$(pwd)/output/nugets" --name local-ci-packages
+
+# 5. Publish the Blazor WASM app
+dotnet publish "output/samples-preview/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
+  -c Release \
+  -o output/site/gallery
+```
+
+> **Tip:** The gallery build is complex. For most docs work, you can skip it and focus on DocFX or the landing page.
+
+## Previewing the Deployed Site
+
+After CI deploys a same-repository pull request, the staging site is available
+at:
+
+```
+https://mono.github.io/SkiaSharp/staging/<PR_NUMBER>/
+```
+
+The workflow posts the exact staging URL to the pull request. Production is
+published from `main` at <https://mono.github.io/SkiaSharp/>.
+
+## CI Workflow
+
+The `build-site.yml` workflow builds the docs and each app in parallel, then
+combines them in a quick assemble job:
+
+```
+┌───────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐
+│ setup │──▶│ wasm-natives │──▶│ app (matrix) │──▶│           │
+│       │   └──────────────┘   │ Gallery      │   │ assemble  │──▶ deploy
+│       │                      │ Gallery Uno  │   │           │
+│       │                      │ SkiaFiddle   │   │           │
+│       │──▶ docs (DocFX) ────────────────────────▶│           │
+└───────┘                                         └───────────┘
+```
+
+Each app uploads its output only after it builds and any configured smoke test passes.
+The assemble job copies whichever apps are present and warns about any that
+are missing.
+
+| Trigger | Validates | Publishes |
+|---------|-----------|-----------|
+| Push to `main` | Yes | `docs-live` (production) |
+| Any PR, including forks | Yes, failures fail the run | No |
+| Same-repo PR with `automation/staging` | Yes, failures fail the run | `staging/<PR_NUMBER>/`, only if all builds pass |
+| Manual dispatch | Yes | Production only from `main`, or a labeled same-repo PR's staging preview |
+
+On pull requests a failing docs or app build fails the run. On `main` and
+manual dispatches a failing app is left out of the site so the docs still
+publish; a failing docs build still blocks publishing.
+
+Building and deploying are separate. Every PR builds, including label changes,
+but forks never deploy, even with `automation/staging`. Removing the label
+returns a same-repo PR to validation-only builds and removes its preview.
+
+Deployment has two steps:
+
+1. **Pages - Deploy / Deploy** writes the assembled site to `docs-live`: production
+   at the root, or an opted-in PR preview under `staging/<PR_NUMBER>/`.
+2. **Pages - Go Live!** publishes `docs-live` to GitHub Pages only after the
+   upstream publishing job succeeds. A successful validation-only build or dry
+   run does not publish. Cleanup jobs also trigger publication so removed
+   previews disappear from the live site. A manual Go Live run is allowed only
+   from `main`.
+
+These are workflow checks; making them mandatory merge gates also requires
+configuring the repository's required status checks.
+
+## Customizing DocFX
+
+DocFX configuration lives in `documentation/docfx/docfx.json`. Key settings:
+
+| Setting | Purpose |
+|---------|---------|
+| `template` | `["default", "modern"]` — the visual theme |
+| `globalMetadata._appTitle` | Site title shown in the header |
+| `globalMetadata._appLogoPath` | Logo image path |
+| `globalMetadata._enableSearch` | Enable/disable search |
+| `dest` | Output directory (currently `../../output/site/docs`) |
+
+### Custom Templates
+
+To customize the look of the DocFX site beyond what configuration offers, you can add a [custom template](https://dotnet.github.io/docfx/docs/template.html):
+
+1. Export the default template: `dotnet docfx template export modern`
+2. Copy the files you want to override into a folder (e.g., `documentation/docfx/template/`)
+3. Add your template folder to `docfx.json`:
+   ```json
+   "template": ["default", "modern", "template"]
+   ```
+4. Rebuild: `dotnet docfx documentation/docfx/docfx.json --serve`
+
+Common customizations:
+- **Styles:** Override CSS in `template/public/main.css`
+- **Layout:** Override partials in `template/partials/`
+- **Header/Footer:** Modify `template/partials/head.tmpl.partial` or `template/partials/footer.tmpl.partial`
+
+## File Reference
+
+```
+documentation/
+  docfx/                    # DocFX project root (→ /docs/)
+    docfx.json              # DocFX configuration
+    index.md                # Docs landing page
+    TOC.yml                 # Top nav bar (Conceptual, API Reference)
+    guides/             # Tutorial content (→ /docs/guides/)
+      TOC.yml               # Sidebar navigation tree
+      basics/               # Tutorial sections...
+      paths/
+      transforms/
+      curves/
+      bitmaps/
+      effects/
+      images/               # Shared images
+    xrefmaps/               # API cross-reference data
+  site/                     # Landing page source (→ /)
+    index.html
+    style.css
+    404.html
+  dev/                      # Internal developer docs (not published)
+    site.md                 # This file
+.github/workflows/
+  build-site.yml            # Unified build + deploy workflow
+```

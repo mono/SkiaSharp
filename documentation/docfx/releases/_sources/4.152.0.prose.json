@@ -1,0 +1,43 @@
+{
+  "theme": "Graphite and asynchronous readback",
+  "highlights_headline": "SkiaSharp 4.152.0 introduces Graphite GPU bindings and backend-neutral asynchronous pixel readback.",
+  "highlights_body": "Built on Skia m152, this release adds Silk.NET Vulkan helpers and explicit font loading on Nano Server, while correcting source lifetimes and reducing text and data-copy overhead.",
+  "breaking": [],
+  "categories": [
+    {"heading": "Engine", "bullets": [
+      {"lead": "Skia m152", "detail": "Updates the renderer to milestone 152 and VulkanMemoryAllocator to 3.4.0, preserving the allocator fallback used by SkiaSharp callers.", "prs": [4651]}
+    ]},
+    {"heading": "API Surface", "bullets": [
+      {"lead": "Graphite GPU backend", "detail": "Adds contexts, recorders, recordings and texture wrappers for Vulkan, Metal and Dawn, including browser WebGPU. Graphite uses explicit record, snap, insert and submit operations; existing Ganesh APIs remain unchanged.", "prs": [3968]},
+      {"lead": "Asynchronous pixel readback", "detail": "Adds RequestReadPixels to SKImage and SKSurface. Results are callback-scoped: copy data inside the callback to retain it, and handle a null result on failure. Ganesh completion requires submission and CheckAsyncWorkCompletion; Graphite surfaces use asynchronous rather than synchronous readback.", "prs": [4545, 3968]},
+      {"lead": "Silk.NET Vulkan integration", "detail": "Adds SkiaSharp.Vulkan.Silk.NET with typed backend-context and extension helpers, and makes the GRVkExtensions constructor public. The existing SharpVk package remains available; package production now includes the Silk.NET helper.", "prs": [4527, 4841]}
+    ]},
+    {"heading": "Lifecycle & Internals", "bullets": [
+      {"lead": "Keep borrowed native sources alive", "detail": "Region iterators retain their source region, and pixmap subsets and With* results retain the ultimate pixel owner, preventing premature finalization while derived objects are still in use.", "prs": [4355, 4558]},
+      {"lead": "Deterministic resource cleanup", "detail": "Releases the previous uniform buffer on Reset, disposes copied stream assets when HarfBuzz blobs release them, and frees raster pixel storage when image creation fails. Native cached-data destruction now releases its mutex guard before deleting the owner.", "prs": [4783, 4710, 4455, 4925]},
+      {"lead": "Less copying and allocation", "detail": "Font.Shape avoids copying an existing feature array, tag formatting avoids boxed characters, and text marshalling and uniform lookup construction allocate less. SKData.SaveTo writes native spans directly on span-capable targets; .NET Framework and netstandard2.0 retain buffered copying.", "prs": [4690, 4752, 4498, 4512, 4550, 4630]}
+    ]},
+    {"heading": "Bug Fixes", "bullets": [
+      {"lead": "Do not read stale GPU textures", "detail": "Ganesh readbacks no longer return stale texture data when prerequisite render tasks fail to flush; additional font-rendering and Ganesh stability corrections are included.", "prs": [4538, 4568]}
+    ]},
+    {"heading": "Platform", "bullets": [
+      {"lead": "Explicit Nano Server font loading", "detail": "The Nano Server native build uses FreeType so fonts loaded from files, streams or data can render. It still has no system font manager: load a typeface explicitly rather than relying on the default font. Normal Windows builds retain DirectWrite.", "prs": [4280]},
+      {"lead": "Native debugging assets", "detail": "Produces separate Apple symbol packages with complete dSYM bundles for SkiaSharp and HarfBuzzSharp, without adding symbols to customer runtime packages. Android libraries retain matching build IDs and split-debug identities.", "prs": [4846, 4843]}
+    ]}
+  ],
+  "contributor_summaries": {
+    "jeffska": "Enabled FreeType-backed font loading on Windows Nano Server.",
+    "mmitche": "Reduced Windows native build overhead by initializing the Visual C++ environment once per build.",
+    "ramezgerges": "Introduced Graphite GPU backend bindings for Vulkan, Metal and Dawn."
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Introduced Skia m152, Graphite, asynchronous pixel readback and Silk.NET Vulkan helpers. Also enabled explicit Nano Server font loading and corrected region, pixmap and failed-image source lifetimes.",
+    "v4.152.0-rc.1.26426.14": "Reduced shaping and tag-formatting overhead, corrected uniform-buffer and blob-stream cleanup, restored Silk.NET package production and added native debugging assets."
+  },
+  "harfbuzz_summary": "Font.Shape avoids a defensive feature-array copy, and Tag.ToString avoids character boxing. Apple symbol packages and deterministic Android debug identities improve native diagnostics; NuGet READMEs provide package-specific guidance.",
+  "release_summaries": {
+    "v4.152.0-preview.1.1": {"headline": "Preview 1 introduced Graphite, asynchronous pixel readback, Silk.NET Vulkan helpers, Nano Server font loading, and source-lifetime fixes.", "body": null},
+    "v4.152.0-rc.1.26426.14": {"headline": "The release candidate reduced shaping allocations, fixed uniform-buffer and blob-stream cleanup, restored Silk.NET package production, and added native debugging assets.", "body": null},
+    "v4.152.0": {"headline": "SkiaSharp 4.152.0 finalizes the release with a cached-data lifetime correction.", "body": "The native mutex guard is released before its owning cached-data object is deleted."}
+  }
+}

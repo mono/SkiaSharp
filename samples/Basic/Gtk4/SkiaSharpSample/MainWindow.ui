@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SkiaSharp GTK4 Sample – MainWindow layout (shell only)
+  Pages are self-contained widgets added to the stack in code.
+-->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkBox" id="rootBox">
+    <property name="orientation">horizontal</property>
+    <child>
+      <object class="GtkStackSidebar" id="sidebar">
+        <property name="width-request">200</property>
+        <property name="stack">contentStack</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkStack" id="contentStack">
+        <property name="hexpand">True</property>
+        <property name="transition-type">crossfade</property>
+        <property name="transition-duration">300</property>
+      </object>
+    </child>
+  </object>
+</interface>

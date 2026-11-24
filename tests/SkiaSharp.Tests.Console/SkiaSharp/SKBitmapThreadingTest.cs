@@ -11,11 +11,22 @@ namespace SkiaSharp.Tests
 {
 	public class SKBitmapThreadingTest : SKTest
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(10, 10)]
+		[InlineData(10, 100)]
 		[InlineData(100, 1000)]
 		public static void ImageScalingMultipleThreadsTest(int numThreads, int numIterationsPerThread)
 		{
+			// The (100, 1000) variant creates 100K undisposed native allocations to stress
+			// GC finalizer throughput. On x86 (2GB address space), the GC can't keep up and
+			// Skia's native allocator fails. See #3608. On musl (Alpine) the same allocation
+			// pressure across 100 threads stalls the allocator/finalizer interaction and the
+			// run hangs indefinitely (deterministic on x64 musl; glibc keeps up and passes).
+			// Skip the heavy variant on both; the (10,10) and (10,100) variants still run and
+			// exercise concurrent bitmap scaling on every platform.
+			if (numThreads >= 100 && numIterationsPerThread >= 1000 && (IntPtr.Size == 4 || IsMusl))
+				Assert.Skip("Heavy threading stress variant is skipped on x86 (address space limit) and musl (allocator/finalizer stalls).");
+
 			var referenceFile = Path.Combine(PathToImages, "baboon.jpg");
 
 			var tasks = new List<Task>();

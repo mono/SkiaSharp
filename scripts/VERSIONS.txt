@@ -1,37 +1,57 @@
 # native sources
-harfbuzz                                        release     8.3.1
-skia                                            release     m119
-ANGLE                                           release     chromium/6275
+harfbuzz                                        release     15.0.0
+skia                                            release     m159
+ANGLE                                           release     chromium/8118
+ANGLE                                           revision    d39da9a2abc47fc5fee3711b18b461feab80d34c
 
 # product dependencies
 AtkSharp                                        release     3.24.24.95
+GirCore.Gdk-4.0                                 release     0.7.0
+GirCore.Gtk-4.0                                 release     0.7.0
+GirCore.Cairo-1.0                               release     0.7.0
+GirCore.FreeType2-2.0                           release     0.7.0
+GirCore.GdkPixbuf-2.0                           release     0.7.0
+GirCore.Gio-2.0                                 release     0.7.0
+GirCore.GLib-2.0                                release     0.7.0
+GirCore.GObject-2.0                             release     0.7.0
+GirCore.Graphene-1.0                            release     0.7.0
+GirCore.Gsk-4.0                                 release     0.7.0
+GirCore.HarfBuzz-0.0                            release     0.7.0
+GirCore.Pango-1.0                               release     0.7.0
+GirCore.PangoCairo-1.0                          release     0.7.0
 GdkSharp                                        release     3.24.24.95
 GLibSharp                                       release     3.24.24.95
 GtkSharp                                        release     3.24.24.95
 Microsoft.AspNetCore.Components                 release     6.0.0
 Microsoft.AspNetCore.Components.Web             release     6.0.0
-Microsoft.iOS.Ref.net8.0_17.0                   release     17.0.8523
-Microsoft.MacCatalyst.Ref.net8.0_17.0           release     17.0.8523
-Microsoft.macOS.Ref.net8.0_14.0                 release     14.0.8523
-Microsoft.Maui.Controls                         release     8.0.3
-Microsoft.Maui.Controls.Core                    release     8.0.3
-Microsoft.Maui.Core                             release     8.0.3
+Microsoft.iOS.Ref.net10.0_26.0                  release     26.0.11017
+Microsoft.JSInterop                             release     6.0.0
+Microsoft.MacCatalyst.Ref.net10.0_26.0          release     26.0.11017
+Microsoft.macOS.Ref.net10.0_26.0                release     26.0.11017
+Microsoft.Maui.Controls                         release     10.0.31
+Microsoft.Maui.Controls.Compatibility           release     10.0.31
+Microsoft.Maui.Controls.Core                    release     10.0.31
+Microsoft.Maui.Core                             release     10.0.31
 Microsoft.Maui.Graphics                         release     7.0.92
-Microsoft.tvOS.Ref.net8.0_17.0                  release     17.0.8523
+Microsoft.tvOS.Ref.net10.0_26.0                 release     26.0.11017
 Microsoft.Windows.SDK.Contracts                 release     10.0.19041.1
 Microsoft.Windows.SDK.NET.Ref                   release     10.0.19041.27
-Microsoft.WindowsAppSDK                         release     1.4.230913002
+Microsoft.Web.WebView2                          release     1.0.3179.45
+Microsoft.WindowsAppSDK                         release     1.7.250909003
 Microsoft.WindowsDesktop.App.Ref                release     6.0.0
+Mono.GtkSharp                                   release     2.12.0.1
 OpenTK                                          release     3.1.0
 OpenTK.GLControl                                release     3.1.0
 OpenTK.GLWpfControl                             release     4.3.4
-Samsung.Tizen.Ref                               release     10.0.109
+Samsung.Tizen.Ref                               release     10.0.122
 SharpVk                                         release     0.4.2
-System.Memory                                   release     4.5.5
+Silk.NET.Vulkan                                 release     2.23.0
+System.Memory                                   release     4.6.3
+System.Runtime.CompilerServices.Unsafe          release     6.1.2
 System.Runtime.WindowsRuntime                   release     4.7.0
 System.Runtime.WindowsRuntime.UI.Xaml           release     4.7.0
 Uno.UI                                          release     4.0.8
-Uno.WinUI                                       release     5.2.175
+Uno.WinUI                                       release     7.0.0-dev.2333
 Vortice.Direct3D12                              release     3.5.0
 Xamarin.Android.Sdk                             url         https://download.visualstudio.microsoft.com/download/pr/a3846965-8f4c-42fa-b728-b6ea5f0a2a16/90d568134f0f5b472e5c085fc6573c76bd40231892a89eb7551940dcc055eb8a/Xamarin.Android.Sdk-13.2.2.0.vsix
 Xamarin.Forms                                   release     4.8.0.1821
@@ -40,7 +60,6 @@ Xamarin.Forms.Platform.GTK                      release     4.8.0.1821
 Xamarin.VisualStudio.Apple.Sdk                  url         https://download.visualstudio.microsoft.com/download/pr/42786999-d45b-4428-b946-248bb9676505/d37d5503fe30287fb73facbc34321865fdced518ba9205ab5581c7487e4ed6d6/Xamarin.VisualStudio.Apple.Sdk.17.12.0.94.vsix
 
 # repo tools
-mdoc                                            release     5.8.9
 xunit                                           release     2.4.2
 xunit.runner.console                            release     2.4.2
 
@@ -48,62 +67,69 @@ xunit.runner.console                            release     2.4.2
 # this is related to the API versions, not the library versions
 #  - milestone: the skia milestone determined by Google/Chromium
 #  - increment: the C API version increment caused by new APIs (externals\skia\include\c\sk_types.h)
-libSkiaSharp            milestone   119
+libSkiaSharp            milestone   159
 libSkiaSharp            increment   0
 
 # native sonames
 # <milestone>.<increment>.0
-libSkiaSharp            soname      119.0.0
+libSkiaSharp            soname      159.0.0
 # 0.<60000 + major*100 + minor*10 + micro>.0
-HarfBuzz                soname      0.60831.0
+HarfBuzz                soname      0.61500.0
 
 # SkiaSharp.dll
-SkiaSharp               assembly    3.119.0.0
-SkiaSharp               file        3.119.3.0
+# SkiaSharp.dll
+SkiaSharp               assembly    4.159.0.0
+SkiaSharp               file        4.159.0.0
 
+# HarfBuzzSharp package revision N reserves 100 values per Skia milestone.
+# The milestone adopting native X.Y.Z uses 0-99; later milestones add 100.
+# Native HarfBuzz upgrades reset N to 0 and establish a new base milestone.
 # HarfBuzzSharp.dll
 HarfBuzzSharp           assembly    1.0.0.0
-HarfBuzzSharp           file        8.3.1.4
+HarfBuzzSharp           file        15.0.0.100
 
 # nuget versions
 # SkiaSharp
-SkiaSharp                                       nuget       3.119.3
-SkiaSharp.NativeAssets.Linux                    nuget       3.119.3
-SkiaSharp.NativeAssets.Linux.NoDependencies     nuget       3.119.3
-SkiaSharp.NativeAssets.NanoServer               nuget       3.119.3
-SkiaSharp.NativeAssets.WebAssembly              nuget       3.119.3
-SkiaSharp.NativeAssets.Android                  nuget       3.119.3
-SkiaSharp.NativeAssets.iOS                      nuget       3.119.3
-SkiaSharp.NativeAssets.MacCatalyst              nuget       3.119.3
-SkiaSharp.NativeAssets.macOS                    nuget       3.119.3
-SkiaSharp.NativeAssets.Tizen                    nuget       3.119.3
-SkiaSharp.NativeAssets.tvOS                     nuget       3.119.3
-SkiaSharp.NativeAssets.Win32                    nuget       3.119.3
-SkiaSharp.NativeAssets.WinUI                    nuget       3.119.3
-SkiaSharp.Views                                 nuget       3.119.3
-SkiaSharp.Views.Desktop.Common                  nuget       3.119.3
-SkiaSharp.Views.Gtk3                            nuget       3.119.3
-SkiaSharp.Views.WindowsForms                    nuget       3.119.3
-SkiaSharp.Views.WPF                             nuget       3.119.3
-SkiaSharp.Views.Uno.WinUI                       nuget       3.119.3
-SkiaSharp.Views.WinUI                           nuget       3.119.3
-SkiaSharp.Views.Maui.Core                       nuget       3.119.3
-SkiaSharp.Views.Maui.Controls                   nuget       3.119.3
-SkiaSharp.Views.Blazor                          nuget       3.119.3
-SkiaSharp.HarfBuzz                              nuget       3.119.3
-SkiaSharp.Skottie                               nuget       3.119.3
-SkiaSharp.SceneGraph                            nuget       3.119.3
-SkiaSharp.Resources                             nuget       3.119.3
-SkiaSharp.Vulkan.SharpVk                        nuget       3.119.3
-SkiaSharp.Direct3D.Vortice                      nuget       3.119.3
+SkiaSharp                                       nuget       4.159.0
+SkiaSharp.Testing                               nuget       4.159.0
+SkiaSharp.NativeAssets.Linux                    nuget       4.159.0
+SkiaSharp.NativeAssets.Linux.NoDependencies     nuget       4.159.0
+SkiaSharp.NativeAssets.NanoServer               nuget       4.159.0
+SkiaSharp.NativeAssets.WebAssembly              nuget       4.159.0
+SkiaSharp.NativeAssets.Android                  nuget       4.159.0
+SkiaSharp.NativeAssets.iOS                      nuget       4.159.0
+SkiaSharp.NativeAssets.MacCatalyst              nuget       4.159.0
+SkiaSharp.NativeAssets.macOS                    nuget       4.159.0
+SkiaSharp.NativeAssets.Tizen                    nuget       4.159.0
+SkiaSharp.NativeAssets.tvOS                     nuget       4.159.0
+SkiaSharp.NativeAssets.Win32                    nuget       4.159.0
+SkiaSharp.NativeAssets.WinUI                    nuget       4.159.0
+SkiaSharp.Views                                 nuget       4.159.0
+SkiaSharp.Views.Desktop.Common                  nuget       4.159.0
+SkiaSharp.Views.Gtk3                            nuget       4.159.0
+SkiaSharp.Views.Gtk4                            nuget       4.159.0
+SkiaSharp.Views.WindowsForms                    nuget       4.159.0
+SkiaSharp.Views.WPF                             nuget       4.159.0
+SkiaSharp.Views.Uno.WinUI                       nuget       4.159.0
+SkiaSharp.Views.WinUI                           nuget       4.159.0
+SkiaSharp.Views.Maui.Core                       nuget       4.159.0
+SkiaSharp.Views.Maui.Controls                   nuget       4.159.0
+SkiaSharp.Views.Blazor                          nuget       4.159.0
+SkiaSharp.HarfBuzz                              nuget       4.159.0
+SkiaSharp.Skottie                               nuget       4.159.0
+SkiaSharp.SceneGraph                            nuget       4.159.0
+SkiaSharp.Resources                             nuget       4.159.0
+SkiaSharp.Vulkan.SharpVk                        nuget       4.159.0
+SkiaSharp.Vulkan.Silk.NET                       nuget       4.159.0
+SkiaSharp.Direct3D.Vortice                      nuget       4.159.0
 # HarfBuzzSharp
-HarfBuzzSharp                                   nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.Android              nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.iOS                  nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.Linux                nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.MacCatalyst          nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.macOS                nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.Tizen                nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.tvOS                 nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.WebAssembly          nuget       8.3.1.4
-HarfBuzzSharp.NativeAssets.Win32                nuget       8.3.1.4
+HarfBuzzSharp                                   nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.Android              nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.iOS                  nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.Linux                nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.MacCatalyst          nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.macOS                nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.Tizen                nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.tvOS                 nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.WebAssembly          nuget       15.0.0.100
+HarfBuzzSharp.NativeAssets.Win32                nuget       15.0.0.100

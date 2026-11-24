@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpSample"
+             xmlns:items="clr-namespace:SkiaSharpSample.Controls"
+             x:Class="SkiaSharpSample.GalleryPage"
+             x:DataType="local:GalleryPage"
+             BackgroundColor="{StaticResource BrandNavy}">
+    <Grid x:Name="root" RowDefinitions="Auto,Auto,Auto,*" SafeAreaEdges="Container">
+        <ContentView x:Name="headerHost" />
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="16,8"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <Label Text="Explore samples by API type, rendering technique, or concept."
+                   FontSize="12" Style="{StaticResource SecondaryLabel}" />
+            <Label Grid.Column="1" Text="{Binding UniqueApiCountText}"
+                   FontSize="12" FontAttributes="Bold" Style="{StaticResource AccentLabel}" />
+        </Grid>
+        <ScrollView x:Name="activeStrip" Grid.Row="2" Orientation="Horizontal"
+                    HeightRequest="44" Padding="12,2"
+                    IsVisible="{Binding HasActiveFilters}"
+                    AutomationId="gallery-active-filters"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding ActiveChips}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="items:ActiveFacet">
+                        <Button Text="{Binding Text}" AutomationId="{Binding Id}"
+                                SemanticProperties.Description="{Binding Description}"
+                                Style="{StaticResource GalleryPill}" Clicked="ActiveChipClicked">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsTag}" Value="True">
+                                    <Setter Property="FontFamily" Value="{StaticResource ApiMonoFont}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+        </ScrollView>
+        <Grid x:Name="main" Grid.Row="3"
+              BackgroundColor="{AppThemeBinding Light={StaticResource PageBackgroundLight}, Dark={StaticResource PageBackgroundDark}}">
+            <ContentView x:Name="railHost" IsVisible="False" />
+            <Grid RowDefinitions="Auto,Auto,*">
+                <Grid x:Name="compactSearch" ColumnDefinitions="*,Auto"
+                      ColumnSpacing="6" Padding="12,6,12,2">
+                    <items:GallerySearchView x:Name="searchField"
+                            SearchAutomationId="gallery-search"
+                            SearchPlaceholder="Search samples and APIs" />
+                    <Grid Grid.Column="1" WidthRequest="50">
+                        <ImageButton x:Name="filterTrigger"
+                                     AutomationId="gallery-filter-trigger"
+                                     SemanticProperties.Description="Open gallery filters"
+                                     BackgroundColor="{AppThemeBinding Light={StaticResource SubtleBackgroundLight}, Dark={StaticResource SubtleBackgroundDark}}"
+                                     CornerRadius="11" Padding="10"
+                                     MinimumWidthRequest="44" MinimumHeightRequest="44">
+                            <ImageButton.Source>
+                                <FontImageSource Glyph="&#xf3e1;" FontFamily="BootstrapIcons" Size="17"
+                                                 Color="{AppThemeBinding Light={StaticResource BrandNavy}, Dark={StaticResource PrimaryTextDark}}" />
+                            </ImageButton.Source>
+                        </ImageButton>
+                        <Label x:Name="filterBadge" Text="{Binding FilterBadgeText}" Grid.Column="0"
+                               IsVisible="{Binding HasActiveFilters}" FontSize="10" FontAttributes="Bold"
+                               HorizontalOptions="End" VerticalOptions="Start"
+                               Style="{StaticResource AccentLabel}" BackgroundColor="White"
+                               InputTransparent="True" />
+                    </Grid>
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8"
+                      Padding="14,5">
+                    <Label x:Name="count" Text="{Binding ResultCountText}"
+                           AutomationId="gallery-result-count" FontSize="13" FontAttributes="Bold"
+                           Style="{StaticResource PrimaryLabel}" VerticalOptions="Center" />
+                    <Grid Grid.Column="1" WidthRequest="150">
+                        <Button x:Name="sortTrigger" Text="{Binding SortLabel}"
+                                AutomationId="gallery-sort-trigger"
+                                SemanticProperties.Description="{Binding SortDescription}"
+                                Style="{StaticResource GalleryPill}" Padding="30,3,6,3" />
+                        <Label Text="&#xf575;" FontFamily="BootstrapIcons" FontSize="15"
+                               Style="{StaticResource AccentLabel}" WidthRequest="18"
+                               Margin="8,0,0,0" HorizontalOptions="Start"
+                               VerticalOptions="Center" InputTransparent="True" />
+                    </Grid>
+                </Grid>
+                <Grid x:Name="listArea" Grid.Row="2">
+                    <Label x:Name="empty" Text="No samples match these filters. Try a different query or clear filters."
+                           AutomationId="gallery-empty" FontSize="16"
+                           Style="{StaticResource PrimaryLabel}"
+                           IsVisible="{Binding IsEmpty}"
+                           HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

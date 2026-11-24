@@ -1,0 +1,77 @@
+{
+  "theme": "GPU meshes and Skia m159",
+  "highlights_headline": "SkiaSharp 4.159.0 brings custom GPU mesh drawing alongside the Skia m159 engine update.",
+  "highlights_body": "The release candidate adds programmable vertex meshes, corrects iOS and tvOS device frameworks, and incorporates upstream glyph, image-filter cache, and Vulkan fixes. WebAssembly consumers must use .NET 9 or later; non-WebAssembly .NET 8 support is unchanged.",
+  "breaking": [
+    {
+      "title": "Use .NET 9 or later for WebAssembly",
+      "body": "SkiaSharp and HarfBuzzSharp no longer ship .NET 8 WebAssembly native assets, and their build targets reject unsupported WebAssembly frameworks. Upgrade WebAssembly projects to .NET 9 or later and use the runtime-matched native archives; newer archives cannot substitute for an older .NET toolchain. Non-WebAssembly .NET 8 support is unchanged.",
+      "prs": [5700]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia milestone 159",
+          "detail": "Updates the bundled renderer with WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and image/rendering correctness fixes.",
+          "prs": [5685]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Programmable GPU meshes",
+          "detail": "SKMeshSpecification, indexed and non-indexed mesh builders, vertex/index buffers, and SKCanvas.DrawMesh expose custom SkSL vertex and fragment programs with uniforms and child effects. Meshes draw only on GPU-backed surfaces; raster drawing is a no-op. Built meshes retain native resources after their source wrappers are disposed.",
+          "prs": [5760]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Correct iOS and tvOS device frameworks",
+          "detail": "SkiaSharp and HarfBuzzSharp device frameworks now contain only arm64 device binaries and matching platform metadata, avoiding App Store validation failures caused by simulator slices. Simulator frameworks retain both x86_64 and arm64 support.",
+          "prs": [5649]
+        },
+        {
+          "lead": "More robust mask-filtered glyph rendering",
+          "detail": "Handles font scalers whose repeated glyph loads change paths, mask formats, or bounds. The native renderer uses the reloaded glyph state, clears incompatible masks, and correctly copies clipped emboss masks.",
+          "prs": [5741]
+        },
+        {
+          "lead": "Imagination Vulkan allocation failure handling",
+          "detail": "Ganesh and Graphite avoid a driver failure when descriptor-set allocation reports host or device out-of-memory on Imagination GPUs. The workaround is limited to that vendor and those allocation errors.",
+          "prs": [5741]
+        },
+        {
+          "lead": "Consistent image-filter cache keys",
+          "detail": "Makes image-filter cache equality agree with hashing for signed zero, matrix type-mask state, and subnormal translations, correcting native cache lookup behavior without changing package or ABI versions.",
+          "prs": [5769]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "kdpkke": "Corrected iOS and tvOS device framework binaries and metadata for SkiaSharp and HarfBuzzSharp while preserving simulator support."
+  },
+  "preview_summaries": {
+    "v4.159.0-rc.1.26567.13": "Release Candidate 1 adds programmable GPU mesh drawing and corrects iOS/tvOS device frameworks. It also brings upstream glyph-rendering, image-filter cache, and Imagination Vulkan allocation fixes.",
+    "v4.159.0-preview.1.26563.22": "Preview 1 introduces Skia m159 with WebAssembly SIMD CPU rasterization and Windows font-loading improvements. WebAssembly now requires .NET 9 or later; non-WebAssembly .NET 8 support is unchanged."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp now requires .NET 9 or later for WebAssembly, while non-WebAssembly .NET 8 support is unchanged. Its iOS and tvOS device frameworks now use device-only binaries and matching metadata, retaining separate simulator support; package revision 15.0.0.100 keeps native HarfBuzz at 15.0.0 with no public managed API changes.",
+  "release_summaries": {
+    "v4.159.0-preview.1.26563.22": {
+      "headline": "SkiaSharp 4.159.0 Preview 1 introduces Skia m159 with WebAssembly SIMD rasterization and Windows font-loading improvements.",
+      "body": "WebAssembly consumers now require .NET 9 or later; non-WebAssembly .NET 8 support is unchanged. HarfBuzzSharp package revision 15.0.0.100 retains native HarfBuzz 15.0.0."
+    },
+    "v4.159.0-rc.1.26567.13": {
+      "headline": "SkiaSharp 4.159.0 Release Candidate 1 adds programmable GPU mesh drawing.",
+      "body": "Custom SkSL mesh programs support indexed and non-indexed geometry on GPU-backed surfaces; raster drawing is a no-op. This candidate also corrects SkiaSharp and HarfBuzzSharp iOS/tvOS device frameworks and incorporates glyph-rendering, image-filter cache, and Imagination Vulkan allocation fixes."
+    }
+  }
+}

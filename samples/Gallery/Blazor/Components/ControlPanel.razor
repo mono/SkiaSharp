@@ -1,0 +1,139 @@
+@using SkiaSharpSample.Controls
+
+@if (Controls is { Count: > 0 })
+{
+    <div class="control-panel p-3 border rounded bg-light">
+        @foreach (var control in Controls)
+        {
+            @RenderControl(control, "")
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<SampleControl>? Controls { get; set; }
+    [Parameter] public EventCallback<(string id, object value)> OnChanged { get; set; }
+
+    private readonly Dictionary<string, object> values = new();
+
+    private RenderFragment RenderControl(SampleControl control, string prefix) => __builder =>
+    {
+        var fullId = string.IsNullOrEmpty(prefix) ? control.Id : $"{prefix}.{control.Id}";
+
+        if (control is GroupControl group)
+        {
+            <div class="card mb-2">
+                <div class="card-header py-1 px-2 d-flex align-items-center">
+                    <div class="form-check form-switch mb-0 me-2">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@GetToggleValue(fullId, group.Enabled)"
+                               @onchange="e => OnToggleChanged(fullId, e)" />
+                    </div>
+                    <span class="small fw-bold">@group.Label</span>
+                </div>
+                @if (!string.IsNullOrEmpty(group.Description))
+                {
+                    <div class="px-2 py-1">
+                        <small class="text-muted">@group.Description</small>
+                    </div>
+                }
+                @if (GetToggleValue(fullId, group.Enabled))
+                {
+                    <div class="card-body py-2 px-2">
+                        @foreach (var child in group.Children)
+                        {
+                            @RenderControl(child, fullId)
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mb-2">
+                @if (control is SliderControl slider)
+                {
+                    <label class="form-label mb-0 small">@slider.Label: <strong>@FormatSliderValue(GetSliderValue(fullId, slider.Value))</strong></label>
+                    <input type="range" class="form-range"
+                           min="@slider.Min" max="@slider.Max"
+                           step="@(slider.Step > 0 ? slider.Step : (slider.Max - slider.Min) / 1000f)"
+                           value="@GetSliderValue(fullId, slider.Value)"
+                           @oninput="e => OnSliderChanged(fullId, e)" />
+                }
+                else if (control is ToggleControl toggle)
+                {
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@GetToggleValue(fullId, toggle.Value)"
+                               @onchange="e => OnToggleChanged(fullId, e)" />
+                        <label class="form-check-label small">@toggle.Label</label>
+                    </div>
+                }
+                else if (control is PickerControl picker)
+                {
+                    <label class="form-label mb-0 small">@picker.Label</label>
+                    <select class="form-select form-select-sm"
+                            value="@GetPickerValue(fullId, picker.SelectedIndex)"
+                            @onchange="e => OnPickerChanged(fullId, e)">
+                        @for (var i = 0; i < picker.Options.Length; i++)
+                        {
+                            <option value="@i">@picker.Options[i]</option>
+                        }
+                    </select>
+                }
+                @if (!string.IsNullOrEmpty(control.Description))
+                {
+                    <small class="text-muted d-block">@control.Description</small>
+                }
+            </div>
+        }
+    };
+
+    private static string FormatSliderValue(float value)
+    {
+        if (MathF.Abs(value) < 1f && value != 0f)
+            return value.ToString("F3");
+        if (MathF.Abs(value) < 100f)
+            return value.ToString("F2");
+        return value.ToString("F1");
+    }
+
+    private float GetSliderValue(string id, float defaultValue) =>
+        values.TryGetValue(id, out var v) ? (float)v : defaultValue;
+
+    private bool GetToggleValue(string id, bool defaultValue) =>
+        values.TryGetValue(id, out var v) ? (bool)v : defaultValue;
+
+    private int GetPickerValue(string id, int defaultValue) =>
+        values.TryGetValue(id, out var v) ? (int)v : defaultValue;
+
+    private async Task OnSliderChanged(string id, ChangeEventArgs e)
+    {
+        if (float.TryParse(e.Value?.ToString(), out var val))
+        {
+            values[id] = val;
+            await OnChanged.InvokeAsync((id, (object)val));
+        }
+    }
+
+    private async Task OnToggleChanged(string id, ChangeEventArgs e)
+    {
+        var val = (bool)(e.Value ?? false);
+        values[id] = val;
+        await OnChanged.InvokeAsync((id, (object)val));
+    }
+
+    private async Task OnPickerChanged(string id, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idx))
+        {
+            values[id] = idx;
+            await OnChanged.InvokeAsync((id, (object)idx));
+        }
+    }
+
+    public void Reset()
+    {
+        values.Clear();
+    }
+}

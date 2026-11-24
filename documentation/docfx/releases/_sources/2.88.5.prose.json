@@ -1,0 +1,31 @@
+{
+  "theme": "WASM and coordinate fixes",
+  "highlights_headline": "SkiaSharp 2.88.5 fixes SKXamlCanvas on WASM and rounds SKRectI conversions the right way.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKRectI conversion floors outwards",
+          "detail": "Converting a `SKRect` to `SKRectI` now floors outwards so the integer rectangle fully contains the source instead of clipping fractional pixels.",
+          "prs": [2574]
+        },
+        {
+          "lead": "SKXamlCanvas tolerates a missing canvas on WASM",
+          "detail": "The WASM `SKXamlCanvas` no longer fails when the target canvas element can't be found, matching the behaviour on other platforms.",
+          "prs": [2564]
+        },
+        {
+          "lead": "Uno canvas context is active on render",
+          "detail": "On Uno, the canvas' GL context is ensured active before rendering, avoiding intermittent blank frames.",
+          "prs": [2560]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {},
+  "harfbuzz_summary": null
+}

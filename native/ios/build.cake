@@ -1,17 +1,14 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/xcode.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/native/apple/xcode.cake"
 
 string VARIANT = (BUILD_VARIANT ?? "ios").ToLower();
 
 string GetDeploymentTarget(string arch)
 {
-    switch (VARIANT) {
-        case "maccatalyst": return "13.1";
-        default: return "11.0";
-    }
+    return "15.0";
 }
 
 Task("libSkiaSharp")
@@ -25,11 +22,8 @@ Task("libSkiaSharp")
         Build("iphoneos", "arm64", "arm64");
         // Build("iphoneos", "arm64", "arm64", "arm64e");
 
-        SafeCopy(
-            $"libSkiaSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
-            OUTPUT_PATH.Combine($"ios/libSkiaSharp/x86_64.xcarchive"));
-
-        CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
+        if (!Skip("arm64"))
+            CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
         CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libSkiaSharp"));
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64", "x64");
@@ -56,15 +50,15 @@ Task("libSkiaSharp")
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
-            $"skia_use_piex=true " +
-            $"skia_use_sfntly=false " +
+            $"skia_enable_graphite=true " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DSK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING', '-DHAVE_ARC4RANDOM_BUF' ] " +
             ADDITIONAL_GN_ARGS);
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
@@ -88,11 +82,8 @@ Task("libHarfBuzzSharp")
         Build("iphoneos", "arm64");
         // Build("iphoneos", "arm64e");
 
-        SafeCopy(
-            $"libHarfBuzzSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
-            OUTPUT_PATH.Combine($"ios/libHarfBuzzSharp/x86_64.xcarchive"));
-
-        CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
+        if (!Skip("arm64"))
+            CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
         CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp"));
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64");

@@ -1,0 +1,46 @@
+{
+  "theme": "Encoded-format alignment",
+  "highlights_headline": "SkiaSharp 1.57.0 unifies the encoded-image format enums and drops a few obsolete GPU and image helpers.",
+  "highlights_body": "SKCodec.EncodedFormat now returns the shared SKEncodedImageFormat, SKImageEncodeFormat is renumbered to match, and the deprecated GRPixelConfig.Index8 value plus SKImage.ToTextureImage are removed.",
+  "breaking": [
+    {
+      "title": "SKCodec.EncodedFormat returns SKEncodedImageFormat",
+      "body": "The property no longer returns SKEncodedFormat \u2014 callers should switch to the shared SKEncodedImageFormat enum used across the API.",
+      "prs": []
+    },
+    {
+      "title": "SKImageEncodeFormat values renumbered",
+      "body": "The Unknown = 0 value was removed and the remaining values shifted down by one (Bmp = 0, Gif = 1, \u2026). Recompile against the new enum values \u2014 persisted integer values are not compatible.",
+      "prs": []
+    },
+    {
+      "title": "GRPixelConfig.Index8 removed",
+      "body": "The Index8 pixel config was removed from GRPixelConfig, matching Skia's removal of GPU support for indexed colour.",
+      "prs": []
+    },
+    {
+      "title": "SKImage.ToTextureImage removed",
+      "body": "SKImage.ToTextureImage(GRContext) is gone. Create a GPU-backed image with the GRContext-based SKImage factories instead.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Encoded-image format enums unified",
+          "detail": "SKCodec and the encoders now speak the same SKEncodedImageFormat enum, removing the parallel SKEncodedFormat / SKImageEncodeFormat duplication.",
+          "prs": []
+        },
+        {
+          "lead": "Deprecated GPU helpers removed",
+          "detail": "Drops GRPixelConfig.Index8 and SKImage.ToTextureImage, matching what Skia itself supports on the GPU.",
+          "prs": []
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

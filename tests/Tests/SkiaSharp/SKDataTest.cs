@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 	{
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyDataIsNotDisposed()
 		{
 			var empty = SKData.Empty;
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyAndZeroLengthSameObject()
 		{
 			var empty = SKData.Empty;
@@ -28,7 +28,8 @@ namespace SkiaSharp.Tests
 			Assert.Same(empty, zero);
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ValidDataProperties()
 		{
 			var data = SKData.CreateCopy(OddData);
@@ -37,7 +38,32 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
+		public void CreateCopyRejectsLengthLargerThanArray()
+		{
+			Assert.Throws<ArgumentOutOfRangeException>(() => SKData.CreateCopy(OddData, (ulong)OddData.Length + 1));
+		}
+
+		[Theory]
+		[InlineData(null, new byte[] { 0 })]
+		[InlineData("", new byte[] { 0 })]
+		[InlineData("A", new byte[] { 65, 0 })]
+		[InlineData("ABC", new byte[] { 65, 66, 67, 0 })]
+		[InlineData("https://example.com/path/to/a/document?query=annotation#destination", null)]
+		[InlineData("上田", new byte[] { 63, 63, 0 })]
+		[InlineData("a😀b", new byte[] { 97, 63, 63, 98, 0 })]
+		[InlineData("embedded\0null", new byte[] { 101, 109, 98, 101, 100, 100, 101, 100, 0, 110, 117, 108, 108, 0 })]
+		public void Issue5426_FromCStringIncludesNullTerminator(string str, byte[] expected)
+		{
+			expected ??= System.Text.Encoding.ASCII.GetBytes((str ?? string.Empty) + '\0');
+
+			using var data = SKData.FromCString(str);
+
+			Assert.Equal(expected.Length, data.Size);
+			Assert.Equal(expected, data.ToArray());
+		}
+
+		[Fact]
 		public void AsStreamReturnsCorrectStreamData()
 		{
 			var data = SKData.CreateCopy(OddData);
@@ -50,7 +76,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanWriteToAsStream()
 		{
 			var data = SKData.Create(5);
@@ -61,7 +87,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCopyToAsStream()
 		{
 			var data = SKData.Create(5);
@@ -73,7 +99,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(null, 0, 0, 0)]
 		[InlineData("", 0, 0, 0)]
 		[InlineData("H", 1, 1, 2)]
@@ -91,7 +117,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(terminatedLength, bytes.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromStream()
 		{
 			using var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.jpg"));
@@ -103,7 +129,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromManagedStream()
 		{
 			using var managed = File.OpenRead(Path.Combine(PathToImages, "baboon.jpg"));
@@ -114,7 +140,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -123,7 +149,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromNonASCIIFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "上田雅美.jpg"));
@@ -132,7 +158,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NoDelegateDataCanBeCreated()
 		{
 			var memory = Marshal.AllocCoTaskMem(10);
@@ -146,7 +172,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(memory);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseDataWasInvoked()
 		{
 			bool released = false;
@@ -169,7 +195,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFromNonSeekable()
 		{
 			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
@@ -179,7 +205,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(data);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFromPartiallyReadStream()
 		{
 			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
@@ -192,7 +218,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFromPartiallyReadNonSeekable()
 		{
 			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
@@ -205,7 +231,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
-		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
+		[Fact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data
@@ -224,6 +250,56 @@ namespace SkiaSharp.Tests
 
 			// since the data was nuked, they will differ
 			Assert.NotEqual(OddData, buffer);
+		}
+
+		// Reference implementation: the previous (buffered) SaveTo path — copy native memory into a
+		// pooled managed buffer with Marshal.Copy, then write that buffer to the stream. Used as the
+		// oracle to prove the current (span-based) SaveTo is byte-for-byte identical.
+		private static unsafe void SaveToBuffered(SKData data, Stream target)
+		{
+			const int CopyBufferSize = 81920;
+			var ptr = data.Data;
+			var total = data.Size;
+			var buffer = new byte[CopyBufferSize];
+			for (var left = total; left > 0;)
+			{
+				var copyCount = (int)Math.Min(CopyBufferSize, left);
+				Marshal.Copy(ptr, buffer, 0, copyCount);
+				left -= copyCount;
+				ptr += copyCount;
+				target.Write(buffer, 0, copyCount);
+			}
+			GC.KeepAlive(data);
+		}
+
+		[Theory]
+		// Sizes chosen to cross the 81920-byte internal chunk boundary: empty, sub-chunk, exactly one
+		// chunk, one chunk + 1, and several chunks + a partial tail.
+		[InlineData(0)]
+		[InlineData(1)]
+		[InlineData(5)]
+		[InlineData(81919)]
+		[InlineData(81920)]
+		[InlineData(81921)]
+		[InlineData(200000)]
+		public void SaveToMatchesBufferedReference(int size)
+		{
+			var bytes = new byte[size];
+			for (var i = 0; i < size; i++)
+				bytes[i] = (byte)(i * 31 + 7);
+
+			using var data = SKData.CreateCopy(bytes);
+
+			using var actual = new MemoryStream();
+			data.SaveTo(actual);
+
+			using var expected = new MemoryStream();
+			SaveToBuffered(data, expected);
+
+			// The written stream must equal both the buffered-reference output and the source bytes.
+			Assert.Equal(expected.ToArray(), actual.ToArray());
+			Assert.Equal(bytes, actual.ToArray());
+			Assert.Equal(size, actual.Length);
 		}
 	}
 }

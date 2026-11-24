@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="tab-vc-001">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23503"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+    </dependencies>
+    <scenes>
+        <!--Tab Bar Controller-->
+        <scene sceneID="tab-scene-001">
+            <objects>
+                <tabBarController id="tab-vc-001" sceneMemberID="viewController">
+                    <tabBar key="tabBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="tab-bar-001">
+                        <rect key="frame" x="0" y="0" width="393" height="49"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </tabBar>
+                    <connections>
+                        <segue destination="cpu-vc" kind="relationship" relationship="viewControllers" id="seg-cpu"/>
+                        <segue destination="gmt-vc" kind="relationship" relationship="viewControllers" id="seg-gmt"/>
+                        <segue destination="drw-vc" kind="relationship" relationship="viewControllers" id="seg-drw"/>
+                    </connections>
+                </tabBarController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="tab-fr-001" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0" y="0"/>
+        </scene>
+        <!--CPU View Controller-->
+        <scene sceneID="cpu-scene">
+            <objects>
+                <viewController id="cpu-vc" customClass="CpuViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="cpu-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" customClass="SKCanvasView" id="cpu-sk-001">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                            </view>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="cpu-safe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="cpu-sk-001" firstAttribute="leading" secondItem="cpu-vw-001" secondAttribute="leading" id="c1"/>
+                            <constraint firstItem="cpu-sk-001" firstAttribute="trailing" secondItem="cpu-vw-001" secondAttribute="trailing" id="c2"/>
+                            <constraint firstItem="cpu-sk-001" firstAttribute="top" secondItem="cpu-vw-001" secondAttribute="top" id="c3"/>
+                            <constraint firstItem="cpu-sk-001" firstAttribute="bottom" secondItem="cpu-vw-001" secondAttribute="bottom" id="c4"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="CPU" image="cpu" catalog="system" id="cpu-tab"/>
+                    <connections>
+                        <outlet property="skiaView" destination="cpu-sk-001" id="cpu-ol1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cpu-fr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-400" y="0"/>
+        </scene>
+        <!--GPU Metal View Controller-->
+        <scene sceneID="gmt-scene">
+            <objects>
+                <viewController id="gmt-vc" customClass="GpuMetalViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="gmt-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" customClass="SKMetalView" id="gmt-sk-001">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="  FPS: --  " textAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gmt-fps">
+                                <rect key="frame" x="137" y="59" width="120" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="32" id="gmt-fh"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="120" id="gmt-fw"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="Menlo-Bold" family="Menlo" pointSize="14"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" red="0" green="0" blue="0" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="16"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.borderWidth">
+                                        <real key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="gmt-safe"/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="gmt-sk-001" firstAttribute="leading" secondItem="gmt-vw-001" secondAttribute="leading" id="m1"/>
+                            <constraint firstItem="gmt-sk-001" firstAttribute="trailing" secondItem="gmt-vw-001" secondAttribute="trailing" id="m2"/>
+                            <constraint firstItem="gmt-sk-001" firstAttribute="top" secondItem="gmt-vw-001" secondAttribute="top" id="m3"/>
+                            <constraint firstItem="gmt-sk-001" firstAttribute="bottom" secondItem="gmt-vw-001" secondAttribute="bottom" id="m4"/>
+                            <constraint firstItem="gmt-fps" firstAttribute="centerX" secondItem="gmt-vw-001" secondAttribute="centerX" id="m5"/>
+                            <constraint firstItem="gmt-fps" firstAttribute="top" secondItem="gmt-safe" secondAttribute="top" constant="12" id="m6"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Metal" image="cube.fill" catalog="system" id="gmt-tab"/>
+                    <connections>
+                        <outlet property="fpsLabel" destination="gmt-fps" id="gmt-ol2"/>
+                        <outlet property="skiaView" destination="gmt-sk-001" id="gmt-ol1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gmt-fr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-400" y="400"/>
+        </scene>
+        <!--Drawing View Controller-->
+        <scene sceneID="drw-scene">
+            <objects>
+                <viewController id="drw-vc" customClass="DrawingViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="drw-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" customClass="SKCanvasView" id="drw-sk-001">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                            </view>
+                            <!--Floating Clear Button (top-right)-->
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="drw-clear-btn">
+                                <rect key="frame" x="320" y="59" width="57" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="32" id="clr-h"/>
+                                </constraints>
+                                <inset key="contentEdgeInsets" minX="12" minY="4" maxX="12" maxY="4"/>
+                                <color key="backgroundColor" red="0" green="0" blue="0" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <state key="normal" title="Clear">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="16"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                            </button>
+                            <!--Floating Toolbox (centered, max width)-->
+                            <visualEffectView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-blur">
+                                <rect key="frame" x="16" y="750" width="361" height="54"/>
+                                <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="drw-blur-content">
+                                    <rect key="frame" x="0" y="0" width="361" height="54"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="drw-swatch-stack">
+                                            <rect key="frame" x="12" y="8" width="180" height="38"/>
+                                            <subviews>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-sw1">
+                                                    <rect key="frame" x="0" y="3" width="32" height="32"/>
+                                                    <color key="backgroundColor" red="0" green="0" blue="0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="sw1-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="sw1-h"/>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-sw2">
+                                                    <rect key="frame" x="40" y="3" width="32" height="32"/>
+                                                    <color key="backgroundColor" red="0.898" green="0.224" blue="0.208" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="sw2-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="sw2-h"/>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-sw3">
+                                                    <rect key="frame" x="80" y="3" width="32" height="32"/>
+                                                    <color key="backgroundColor" red="0.118" green="0.533" blue="0.898" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="sw3-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="sw3-h"/>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-sw4">
+                                                    <rect key="frame" x="120" y="3" width="32" height="32"/>
+                                                    <color key="backgroundColor" red="0.263" green="0.627" blue="0.278" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="sw4-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="sw4-h"/>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-sw5">
+                                                    <rect key="frame" x="160" y="3" width="32" height="32"/>
+                                                    <color key="backgroundColor" red="0.984" green="0.549" blue="0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="sw5-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="sw5-h"/>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="drw-sw6">
+                                                    <rect key="frame" x="200" y="3" width="32" height="32"/>
+                                                    <color key="backgroundColor" red="0.557" green="0.141" blue="0.667" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="32" id="sw6-w"/>
+                                                        <constraint firstAttribute="height" constant="32" id="sw6-h"/>
+                                                    </constraints>
+                                                    <userDefinedRuntimeAttributes>
+                                                        <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                            <integer key="value" value="16"/>
+                                                        </userDefinedRuntimeAttribute>
+                                                        <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                                    </userDefinedRuntimeAttributes>
+                                                </view>
+                                            </subviews>
+                                        </stackView>
+                                        <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="4" minValue="1" maxValue="50" translatesAutoresizingMaskIntoConstraints="NO" id="drw-slider">
+                                            <rect key="frame" x="200" y="11" width="90" height="32"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="sl-mw"/>
+                                            </constraints>
+                                        </slider>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="4px" textAlignment="center" lineBreakMode="tailTruncation" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="drw-brush-lbl">
+                                            <rect key="frame" x="296" y="11" width="34" height="32"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                            <color key="textColor" systemColor="labelColor"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="36" id="lbl-mw"/>
+                                            </constraints>
+                                        </label>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="drw-swatch-stack" firstAttribute="leading" secondItem="drw-blur-content" secondAttribute="leading" constant="12" id="d1"/>
+                                        <constraint firstItem="drw-swatch-stack" firstAttribute="centerY" secondItem="drw-blur-content" secondAttribute="centerY" id="d2"/>
+                                        <constraint firstItem="drw-slider" firstAttribute="leading" secondItem="drw-swatch-stack" secondAttribute="trailing" constant="8" id="d3"/>
+                                        <constraint firstItem="drw-slider" firstAttribute="centerY" secondItem="drw-blur-content" secondAttribute="centerY" id="d4"/>
+                                        <constraint firstItem="drw-brush-lbl" firstAttribute="leading" secondItem="drw-slider" secondAttribute="trailing" constant="6" id="d5"/>
+                                        <constraint firstItem="drw-brush-lbl" firstAttribute="centerY" secondItem="drw-blur-content" secondAttribute="centerY" id="d6"/>
+                                        <constraint firstItem="drw-brush-lbl" firstAttribute="trailing" secondItem="drw-blur-content" secondAttribute="trailing" constant="-12" id="d9"/>
+                                    </constraints>
+                                </view>
+                                <blurEffect style="systemMaterial"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="54" id="blur-h"/>
+                                </constraints>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="22"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                            </visualEffectView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="drw-safe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="drw-sk-001" firstAttribute="leading" secondItem="drw-vw-001" secondAttribute="leading" id="dk1"/>
+                            <constraint firstItem="drw-sk-001" firstAttribute="trailing" secondItem="drw-vw-001" secondAttribute="trailing" id="dk2"/>
+                            <constraint firstItem="drw-sk-001" firstAttribute="top" secondItem="drw-vw-001" secondAttribute="top" id="dk3"/>
+                            <constraint firstItem="drw-sk-001" firstAttribute="bottom" secondItem="drw-vw-001" secondAttribute="bottom" id="dk4"/>
+                            <!--Clear button: top-right, pill shape-->
+                            <constraint firstItem="drw-clear-btn" firstAttribute="trailing" secondItem="drw-safe" secondAttribute="trailing" constant="-16" id="dk-cl1"/>
+                            <constraint firstItem="drw-clear-btn" firstAttribute="top" secondItem="drw-safe" secondAttribute="top" constant="12" id="dk-cl2"/>
+                            <!--Toolbox: centered, prefers 420pt, min safe-area inset-->
+                            <constraint firstItem="drw-blur" firstAttribute="centerX" secondItem="drw-vw-001" secondAttribute="centerX" id="dk5"/>
+                            <constraint firstItem="drw-blur" firstAttribute="bottom" secondItem="drw-safe" secondAttribute="bottom" constant="-12" id="dk7"/>
+                            <constraint firstItem="drw-blur" firstAttribute="width" constant="420" priority="750" id="dk-pw"/>
+                            <constraint firstItem="drw-blur" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="drw-safe" secondAttribute="leading" constant="16" id="dk-ml"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Draw" image="paintbrush.pointed" catalog="system" id="drw-tab"/>
+                    <connections>
+                        <outlet property="skiaView" destination="drw-sk-001" id="drw-ol1"/>
+                        <outlet property="clearButton" destination="drw-clear-btn" id="drw-ol2"/>
+                        <outlet property="brushSlider" destination="drw-slider" id="drw-ol3"/>
+                        <outlet property="brushLabel" destination="drw-brush-lbl" id="drw-ol4"/>
+                        <outlet property="swatchStack" destination="drw-swatch-stack" id="drw-ol5"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="drw-fr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-400" y="800"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="cpu" catalog="system" width="128" height="128"/>
+        <image name="cube.fill" catalog="system" width="128" height="128"/>
+        <image name="paintbrush.pointed" catalog="system" width="128" height="128"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

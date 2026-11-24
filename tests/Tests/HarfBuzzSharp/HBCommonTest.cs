@@ -6,7 +6,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBCommonTest : HBTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateLanguageByCulture()
 		{
 			var language = new Language(new CultureInfo("en"));
@@ -14,7 +14,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, language.Handle);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateLanguageByString()
 		{
 			var language = new Language("en");
@@ -22,7 +22,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, language.Handle);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LanguageShouldBeEqual()
 		{
 			var langA = new Language("en");

@@ -4,7 +4,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKRotationScaleMatrixTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void TranslationToMatrixIsCorrect()
 		{
 			var m = SKMatrix.CreateTranslation(5, 7);
@@ -13,7 +13,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(m.Values, rsm.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RotationToMatrixIsCorrect()
 		{
 			var m = SKMatrix.CreateRotationDegrees(45);
@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(m.Values, rsm.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ScaleToMatrixIsCorrect()
 		{
 			var m = SKMatrix.CreateScale(3.5f, 3.5f);

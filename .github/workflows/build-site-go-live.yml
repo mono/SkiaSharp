@@ -1,0 +1,103 @@
+name: "Pages - Go Live!"
+
+on:
+  workflow_run:
+    workflows:
+      - "Pages - Deploy"
+      - "Pages - PR Staging - Cleanup"
+      - "Pages - PR Staging - Sweep Stale"
+    types:
+      - completed
+  workflow_dispatch:
+
+# Default to no permissions — each job declares only what it needs.
+permissions: {}
+
+# Serialize go-live deployments: each must complete before the next starts.
+# cancel-in-progress must be false — cancelling a running deploy-pages action
+# orphans the in-progress GitHub Pages deployment, which then blocks all
+# subsequent deployments with "due to in progress deployment" errors.
+concurrency:
+  group: "docs-go-live"
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check deployment
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      publish: ${{ steps.check.outputs.publish }}
+    steps:
+      - name: Check upstream publishing job
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.eventName === 'workflow_dispatch') {
+              core.setOutput('publish', 'true');
+              return;
+            }
+
+            const run = context.payload.workflow_run;
+            const publishingJobs = {
+              '.github/workflows/build-site.yml': 'Deploy',
+              '.github/workflows/build-site-cleanup.yml': 'cleanup',
+              '.github/workflows/build-site-cleanup-stale.yml': 'sweep'
+            };
+            const publishingJob = publishingJobs[run.path];
+            if (!publishingJob) {
+              throw new Error(`Unexpected upstream workflow: ${run.path}`);
+            }
+
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+              attempt_number: run.run_attempt,
+              per_page: 100
+            });
+            const job = jobs.find(job => job.name === publishingJob);
+            if (!job) {
+              throw new Error(`Missing upstream publishing job: ${publishingJob}`);
+            }
+            const publish = job.conclusion === 'success';
+            core.info(`${publishingJob} succeeded: ${publish}`);
+            core.setOutput('publish', String(publish));
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.publish == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout docs-live
+        uses: actions/checkout@v4
+        with:
+          ref: docs-live
+
+      - name: Remove .git directory
+        run: rm -rf .git
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

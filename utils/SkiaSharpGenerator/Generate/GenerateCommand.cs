@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using CppAst;
 using Mono.Options;
@@ -22,7 +23,7 @@ namespace SkiaSharpGenerator
 		{
 			{ "r|root=", "The root of the source", v => SourceRoot = v },
 			{ "c|config=", "The config file path", v => ConfigPath = v },
-			{ "o|output=", "The output path", v => OutputPath = v },
+			{ "o|output=", "The output directory", v => OutputPath = v },
 		};
 
 		protected override bool OnValidateArguments(IEnumerable<string> extras)
@@ -52,33 +53,56 @@ namespace SkiaSharpGenerator
 			}
 
 			if (string.IsNullOrEmpty(OutputPath))
-				OutputPath = Path.Combine(Directory.GetCurrentDirectory(), "SkiaApi.generated.cs");
+				OutputPath = Path.Combine(Directory.GetCurrentDirectory(), "Generated");
 
 			return !hasError;
 		}
 
 		protected override bool OnInvoke(IEnumerable<string> extras)
 		{
-			var dir = Path.GetDirectoryName(OutputPath);
-			if (!Directory.Exists(dir))
-				Directory.CreateDirectory(dir);
+			var outputPath = Path.GetFullPath(OutputPath!);
+			var parent = Directory.GetParent(outputPath)?.FullName
+				?? throw new InvalidOperationException("The output directory must have a parent directory.");
+			var outputName = Path.GetFileName(outputPath);
+			var temporaryOutputPath = Path.Combine(parent, $".{outputName}.{Guid.NewGuid():N}.generating");
+			var backupOutputPath = Path.Combine(parent, $".{outputName}.{Guid.NewGuid():N}.previous");
 
-			var docStore = OutputPath is not null && File.Exists(OutputPath)
-				? new DocumentationStore(OutputPath)
+			var docStore = Directory.Exists(outputPath)
+				? new DocumentationStore(Directory.EnumerateFiles(outputPath, "*.cs", SearchOption.AllDirectories))
 				: null;
 
-			using var file = File.Create(OutputPath);
-			using var writer = new StreamWriter(file);
-
-			var generator = new Generator(SourceRoot!, ConfigPath!, writer, docStore);
+			var generator = new Generator(SourceRoot!, ConfigPath!, temporaryOutputPath, docStore);
 			generator.Log = Program.Log;
 
 			try
 			{
 				generator.GenerateAsync().Wait();
+
+				if (Directory.Exists(outputPath))
+					Directory.Move(outputPath, backupOutputPath);
+
+				try
+				{
+					Directory.Move(temporaryOutputPath, outputPath);
+				}
+				catch
+				{
+					if (Directory.Exists(backupOutputPath) && !Directory.Exists(outputPath))
+						Directory.Move(backupOutputPath, outputPath);
+
+					throw;
+				}
+
+				if (Directory.Exists(backupOutputPath))
+					Directory.Delete(backupOutputPath, recursive: true);
 			}
 			catch
 			{
+				if (Directory.Exists(temporaryOutputPath))
+					Directory.Delete(temporaryOutputPath, recursive: true);
+				if (Directory.Exists(backupOutputPath) && !Directory.Exists(outputPath))
+					Directory.Move(backupOutputPath, outputPath);
+
 				if (generator.HasErrors)
 				{
 					foreach (var dgn in generator.Messages)
@@ -92,6 +116,12 @@ namespace SkiaSharpGenerator
 			}
 
 			return true;
+		}
+
+		internal static StreamWriter CreateOutputWriter(string outputPath)
+		{
+			Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+			return new StreamWriter(File.Create(outputPath));
 		}
 	}
 }

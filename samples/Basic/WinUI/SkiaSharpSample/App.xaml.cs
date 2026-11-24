@@ -1,20 +1,19 @@
 ﻿using Microsoft.UI.Xaml;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public partial class App : Application
 {
-	public partial class App : Application
+	private Window window;
+
+	public App()
 	{
-		private Window window;
+		InitializeComponent();
+	}
 
-		public App()
-		{
-			InitializeComponent();
-		}
-
-		protected override void OnLaunched(LaunchActivatedEventArgs args)
-		{
-			window = new MainWindow();
-			window.Activate();
-		}
+	protected override void OnLaunched(LaunchActivatedEventArgs args)
+	{
+		window = new MainWindow();
+		window.Activate();
 	}
 }

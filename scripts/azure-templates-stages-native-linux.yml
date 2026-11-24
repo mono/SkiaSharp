@@ -1,10 +1,11 @@
 parameters:
-  - name: buildExternals
-    type: string
   - name: buildAgentLinuxNative
     type: object
   - name: use1ESPipelineTemplates
     type: boolean
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
 
@@ -13,41 +14,53 @@ stages:
     dependsOn: prepare
     jobs:
 
+      - ${{ each arch in split('x86,x64,arm,arm64', ',') }}:
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android (Linux)
+          parameters:
+            name: native_android_${{ arch }}_linux
+            displayName: Android ${{ arch }}
+            buildAgent: ${{ parameters.buildAgentLinuxNative }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+            docker: scripts/infra/native/android/docker
+            dotnetSdks: []
+            target: externals-android
+            cacheJob: native/android
+            enableCaching: ${{ parameters.enableCaching }}
+            additionalArgs: --buildarch=${{ arch }}
+            skipInstall: true
+
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Linux)
         parameters:
-          buildExternals: ${{ parameters.buildExternals }}
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
             - name: ''
             - name: nodeps
               desc: 'No Deps'
-              additionalArgs: --verifyExcluded=fontconfig
               gnArgs: skia_use_fontconfig=false
           matrix:
-            - arch: x64
-              docker: scripts/Docker/debian/amd64
-            - arch: loongarch64
-              docker: scripts/Docker/debian/clang-cross/13
-              target: externals-linux-clang-cross
-              additionalArgs: --verifyGlibcMax=2.38
-            - ${{ each arch in split('arm,arm64,x86,riscv64', ',') }}: # separate x64 as it fails when cross-compiling
+            # .NET official cross images (glibc)
+            - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}:
               - arch: ${{ arch }}
-                docker: scripts/Docker/debian/clang-cross/10
+                docker: scripts/infra/native/linux/docker/glibc
                 target: externals-linux-clang-cross
-            - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}: # removed x86 as it is having issues building
+            # .NET official cross images (musl/Alpine)
+            - ${{ each arch in split('arm,arm64,x64,riscv64,loongarch64', ',') }}:
               - arch: ${{ arch }}
                 variant: alpine
-                docker: scripts/Docker/alpine/clang-cross
+                docker: scripts/infra/native/linux/docker/alpine
                 target: externals-linux-clang-cross
 
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen (Linux)
+      - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
         parameters:
-          name: native_tizen_linux
-          displayName: Tizen
+          enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          buildExternals: ${{ parameters.buildExternals }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-          packages: $(TIZEN_LINUX_PACKAGES)
-          target: externals-tizen
-          condition: false # https://github.com/mono/SkiaSharp/issues/2933
+          builds:
+            - name: ''
+          matrix:
+            - ${{ each arch in split('arm64,x64', ',') }}:
+              - arch: ${{ arch }}
+                variant: bionic
+                docker: scripts/infra/native/linux/docker/bionic

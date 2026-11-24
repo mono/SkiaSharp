@@ -4,31 +4,33 @@ parameters:
   buildAgent: ''                                # the configuration for the build agent
   packages: ''                                  # any additional packages
   target: ''                                    # the bootstrapper target
+  cacheJob: ''                                  # the job name in repo-deps.config.json for caching (empty = no caching)
+  enableCaching: false                          # whether to use build caching (opt-in)
   dependsOn: []                                 # the dependiencies
   variables: []                                 # the job variables
   requiredArtifacts: []                         # the artifacts that this build needs to download
   preBuildSteps: []                             # any steps to run before the build
   provisioningSteps: []                         # any steps to run to provision the machine
   postBuildSteps: []                            # any additional steps to run after the build
+  env: {}                                       # environment variables to set for the bootstrapper (also forwarded into Docker)
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
   retryCount: 3                                 # the number of times to retry the bootstrapper
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
   configuration: $(CONFIGURATION)               # the build configuration
-  buildExternals: ''                            # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
-  installTizenSdk: true                         # whether or not to install the Tizen SDK
-  installWindowsSdk: false                      # whether or not to install the Windows SDK
-  installPreviewVs: false                       # whether or not to install the preview VS
-  installDotNet: true                           # whether or not to install the dotnet SDK
-  installLlvm: true                             # whether or not to install the LLVM compiler
+  dotnetSdks:
+    - sdkVersion: $(DOTNET_VERSION)              # SDK-only unless workloads are requested explicitly
+  jobSdkVersion: ''                             # explicit whole-job SDK selection; empty keeps repository global.json
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
+  installNode: true                             # whether or not to install Node.js
+  checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
@@ -45,16 +47,21 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     continueOnError: ${{ parameters.continueOnError }}
+    ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+      uses:
+        repositories:
+          - skiaMirror
     variables:
       DOTNET_NOLOGO: true
+      ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+        SKIA_GIT_OPTIONS: --config-env=http.https://dev.azure.com/dnceng/internal/_git/mono-skia.extraheader=SKIA_MIRROR_AUTH_HEADER
+      ${{ else }}:
+        SKIA_GIT_OPTIONS: ''
       ${{ if ne(parameters.buildAgent.variables, '') }}:
         ${{ parameters.buildAgent.variables }}
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     templateContext:
-      ${{ if and(ne(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
-        authenticatedContainerRegistries:
-          - serviceConnection: skiasharp-docker
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
@@ -72,6 +79,8 @@ jobs:
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
             artifactName: ${{ additionalArtifact.name }}
             targetPath: ${{ additionalArtifact.path }}
+            ${{ if ne(additionalArtifact.isProduction, '') }}:
+              isProduction: ${{ additionalArtifact.isProduction }}
           - ${{ if eq(additionalArtifact.always, 'true') }}:
             - output: pipelineArtifact
               displayName: 'Publish the failed ${{ additionalArtifact.name }} artifacts'
@@ -80,30 +89,120 @@ jobs:
               targetPath: ${{ additionalArtifact.path }}
 
     steps:
+      - ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+        - pwsh: git config --global --replace-all url.https://dev.azure.com/dnceng/internal/_git/mono-skia.insteadOf https://github.com/mono/skia.git
+          displayName: Configure internal Skia mirror
+
       - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
         displayName: Get the volume information before the run
         condition: always()
 
-      # prepare
-      - checkout: self
-        submodules: recursive
-      - pwsh: ./scripts/set-build-variables.ps1
-        displayName: Configure build variables
+      - ${{ if and(ne(parameters.skipSteps, 'true'), or(not(startsWith(parameters.name, 'native_')), eq(parameters.docker, ''), and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)))) }}:
+        - ${{ if and(eq(parameters.use1ESPipelineTemplates, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
+          - pwsh: |
+              $python = 'C:\1ESPT\Python\python.exe'
+              if (!(Test-Path $python -PathType Leaf)) {
+                throw "1ES Python executable was not installed: $python"
+              }
+              & $python --version
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure 1ES Python
+        - ${{ else }}:
+          - pwsh: |
+              $architecture = $env:AGENT_OSARCHITECTURE.ToLowerInvariant()
+              if ($architecture -notin @('x86', 'x64', 'arm64')) {
+                throw "Unsupported Python architecture: $architecture"
+              }
+              Write-Host "##vso[task.setvariable variable=PYTHON_ARCHITECTURE]$architecture"
+            displayName: Configure Python architecture
+          - task: UsePythonVersion@0
+            name: usePython
+            displayName: Install Python
+            retryCountOnTaskFailure: 3
+            inputs:
+              versionSpec: '3.x'
+              architecture: $(PYTHON_ARCHITECTURE)
+          - pwsh: |
+              $executable = if ($IsMacOS -or $IsLinux) { 'bin/python' } else { 'python.exe' }
+              $python = Join-Path '$(usePython.pythonLocation)' $executable
+              if (!(Test-Path $python -PathType Leaf)) {
+                throw "Python executable was not installed: $python"
+              }
+              Write-Host "##vso[task.setvariable variable=PYTHON_EXE]$python"
+            displayName: Configure Python
 
-      - pwsh: .\scripts\get-free-space.ps1
+      # prepare - checkout strategy depends on caching
+      - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
+        - checkout: self
+          submodules: false
+          fetchDepth: 1
+        - pwsh: ./scripts/infra/shared/set-build-variables.ps1
+          displayName: Configure build variables
+        - pwsh: |
+            & "$(PYTHON_EXE)" scripts/infra/caching/repo-deps.py cache-key `
+              --name '${{ parameters.name }}' `
+              --job '${{ parameters.cacheJob }}' `
+              --docker '${{ parameters.docker }}'
+            if ($LASTEXITCODE -ne 0) {
+              throw "Cache key calculation exited with code $LASTEXITCODE."
+            }
+          displayName: Compute cache key
+        - task: Cache@2
+          inputs:
+            key: '"$(CACHE_KEY)"'
+            path: 'output'
+            cacheHitVar: CACHE_HIT
+          displayName: Build cache
+        - pwsh: |
+            $cacheHit = '$(CACHE_HIT)'
+            if ($cacheHit -eq 'true') {
+                Write-Host "##[section]Cache HIT - skipping build for ${{ parameters.name }}"
+                Write-Host "##vso[task.setvariable variable=CACHE_SKIP]true"
+            } else {
+                Write-Host "##[section]Cache MISS - full build required"
+            }
+          displayName: Evaluate cache decision
+      - ${{ else }}:
+        - checkout: self
+          submodules: false
+        - pwsh: ./scripts/infra/shared/set-build-variables.ps1
+          displayName: Configure build variables
+
+      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
+        - pwsh: .\scripts\infra\native\windows\select-vs.ps1
+          displayName: Select Visual Studio 2026
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - pwsh: .\scripts\infra\native\windows\install-components.ps1
+          displayName: Apply Visual Studio 2026 components
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+
+      # Native source builds only use Skia. Merge-only jobs use no submodules.
+      - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipSteps, 'true')) }}:
+        - pwsh: git $(SKIA_GIT_OPTIONS) submodule update --init --recursive externals/skia
+          displayName: Checkout native build submodules
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+            env:
+              SKIA_MIRROR_AUTH_HEADER: 'AUTHORIZATION: bearer $(System.AccessToken)'
+      - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipSteps, 'true'), eq(parameters.checkoutSubmodules, 'true')) }}:
+        - pwsh: git $(SKIA_GIT_OPTIONS) submodule update --init --recursive
+          displayName: Full checkout (submodules)
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+            env:
+              SKIA_MIRROR_AUTH_HEADER: 'AUTHORIZATION: bearer $(System.AccessToken)'
+
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
         condition: always()
 
-      # # checkout required skia PR
-      # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
-      #   displayName: Checkout required skia PR
-      #   condition: eq(variables['Build.Reason'], 'PullRequest')
+      # free disk space on hosted agents - skip on cache hit (not building)
+      - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
+        - pwsh: ./scripts/infra/native/shared/free-disk-space.ps1
+          displayName: Free disk space
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
-      # determine build type
-      - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'
-        displayName: Determine build type
-
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the provisioning
         condition: always()
 
@@ -120,156 +219,100 @@ jobs:
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install additional package dependencies
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne('${{ parameters.packages }}', ''))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'), ne('${{ parameters.packages }}', ''))
 
       # install extra bits for the native builds
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipInstall, 'true')) }}:
-        # switch to the correct Python version
-        - task: UsePythonVersion@0
-          displayName: Switch to the correct Python version
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          inputs:
-            versionSpec: '3.x'
-            architecture: 'x64'
         # install ninja
-        - pwsh: .\scripts\install-ninja.ps1
-          displayName: Install Ninja
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+        - ${{ if eq(parameters.docker, '') }}:
+          - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
+            displayName: Configure Ninja
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if or(contains(parameters.name, '_win32_'), contains(parameters.name, '_winui_angle_')) }}:
+          - pwsh: .\scripts\infra\native\windows\select-llvm.ps1
+            displayName: Select Visual Studio LLVM
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if not(contains(parameters.name, '_checks_')) }}:
           # install android ndk
           - ${{ if and(eq(parameters.installAndroidNdk, 'true'), contains(parameters.name, '_android_')) }}:
-            - pwsh: .\scripts\install-android-ndk.ps1
+            - pwsh: .\scripts\infra\native\android\install-android-ndk.ps1
               displayName: Install the Android NDK
               retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          # install tizen
-          - ${{ if and(eq(parameters.installTizenSdk, 'true'), contains(parameters.name, '_tizen_')) }}:
-            - pwsh: .\scripts\install-tizen.ps1
-              displayName: Install the Tizen SDK
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          # install llvm
-          - ${{ if and(eq(parameters.installLlvm, 'true'), contains(parameters.name, '_win32_')) }}:
-            - pwsh: .\scripts\install-7zip.ps1
-              displayName: Install 7-zip
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            - pwsh: .\scripts\install-llvm.ps1
-              displayName: Install LLVM
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+
+      # install the bits needed for .NET
+      - ${{ if ne(parameters.skipInstall, 'true') }}:
+        - template: /scripts/azure-templates-steps-dotnet.yml@self
+          parameters:
+            sdks: ${{ parameters.dotnetSdks }}
+            platform: ${{ parameters.buildAgent.pool.os }}
+            jobSdkVersion: ${{ parameters.jobSdkVersion }}
+        - ${{ if and(ne(length(parameters.dotnetSdks), 0), eq(parameters.buildAgent.pool.os, 'linux')) }}:
+          - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
+            displayName: Fix the Microsoft.WinFX.* file
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if ne(length(parameters.dotnetSdks), 0) }}:
+          - pwsh: dotnet --info
+            displayName: Display all the .NET information
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+
+      # Restore before Android provisioning and pre-build hooks.
+      - ${{ if or(and(eq(parameters.docker, ''), ne(parameters.skipSteps, 'true')), and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true'), eq(parameters.installAndroidSdk, 'true'))) }}:
+        - pwsh: dotnet tool restore
+          displayName: Restore the .NET tools
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
+        - ${{ if and(eq(parameters.installNode, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
+          - task: UseNode@1
+            displayName: Install Node.js
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              version: 24.x
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
-          - pwsh: .\scripts\install-ninja.ps1
-            displayName: Install Ninja
+          - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
+            displayName: Configure Ninja
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-        # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
-          - pwsh: .\scripts\install-openjdk.ps1
-            displayName: Install OpenJDK
+          - pwsh: .\scripts\infra\managed\install-openjdk.ps1 -Version "$(OPENJDK_VERSION)"
+            displayName: Install OpenJDK $(OPENJDK_VERSION)
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the correct version of the Android SDK
-          - pwsh: .\scripts\install-android-sdk.ps1
-            displayName: Install Android SDK
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools", "build-tools;35.0.0", "build-tools;36.0.0"
+            displayName: Install Android SDK, platform tools and build tools
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
-          - pwsh: .\scripts\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
+          - pwsh: .\scripts\infra\managed\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
             displayName: Install Android APIs
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-        # install the bits needed for .NET
-        - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
-            - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
-              displayName: Cleanup existing versions of .NET
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - task: UseDotNet@2
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            inputs:
-              packageType: 'sdk'
-              version: $(DOTNET_VERSION)
-            retryCountOnTaskFailure: 3
-            displayName: Install .NET $(DOTNET_VERSION)
-          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the preview version of .NET
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
-          - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
-            - pwsh: .\scripts\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-              displayName: Fix the Microsoft.WinFX.* file
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          # display dotnet info
-          - pwsh: dotnet --info
-            displayName: Display all the .NET information
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          # install VS
-          - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-            - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
-              displayName: Install Visual Studio $(VISUAL_STUDIO_VERSION)
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
-          # install workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $true
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
-            retryCountOnTaskFailure: 3
-            displayName: Install the preview .NET workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $false
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
-            retryCountOnTaskFailure: 3
-            displayName: Install the .NET workloads
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION)
+          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if startsWith(parameters.name, 'native_') }}:
-          - bash: sudo ./scripts/select-xcode.sh $(XCODE_VERSION_NATIVE)
+          - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION_NATIVE)
             displayName: Switch to the latest Xcode
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the linux tools
       - ${{ if and(eq(parameters.installEmsdk, 'true'), eq(parameters.buildAgent.pool.os, 'linux'), ne(parameters.skipInstall, 'true')) }}:
-        - bash: ./scripts/install-emsdk.sh $(EMSCRIPTEN_VERSION)
+        - bash: ./scripts/infra/native/wasm/install-emsdk.sh $(EMSCRIPTEN_VERSION)
           displayName: Install the Emscripten SDK
           retryCountOnTaskFailure: 3
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-
-      # install the Windows tools
-      - ${{ if and(eq(parameters.buildAgent.pool.os, 'windows'), ne(parameters.skipInstall, 'true')) }}:
-        # select the correct/latest version of Visual Studio
-        - pwsh: .\scripts\select-vs.ps1
-          displayName: Select Visual Studio
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-        - ${{ if not(contains(parameters.name, '_checks_')) }}:
-          # install the older Windows SDKs
-          - ${{ if eq(parameters.installWindowsSdk, 'true') }}:
-            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 619296  -Version 10.0.10240.0
-              displayName: Install the Windows 10 SDK 10.0.10240
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 864422  -Version 10.0.16299.0
-              displayName: Install the Windows 10 SDK 10.0.16299
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2083338 -Version 10.0.18362.0
-              displayName: Install the Windows 10 SDK 10.0.18362
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-            - pwsh: .\scripts\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
-              displayName: Install the Windows 10 SDK 10.0.19041
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:
@@ -277,25 +320,19 @@ jobs:
           - pwsh: dotnet tool install -g ${{ tool }}
             displayName: Install ${{ tool }}
             retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before downloading artifacts
         condition: always()
 
-      # download artifacts
+      # download artifacts from other jobs in this pipeline run
       - template: /scripts/azure-templates-steps-download-artifacts.yml@self
         parameters:
-          condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           artifacts: ${{ parameters.requiredArtifacts }}
-      - template: /scripts/azure-templates-steps-download-artifacts.yml@self
-        parameters:
-          condition: and(succeeded(), ne(variables['DOWNLOAD_EXTERNALS'], ''))
-          sourceBuildId: $(DOWNLOAD_EXTERNALS)
-          artifacts:
-            - name: ${{ parameters.name }}
 
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after downloading artifacts
         condition: always()
 
@@ -305,7 +342,7 @@ jobs:
       - ${{ if ne(length(parameters.preBuildSteps), 0) }}:
         - ${{ parameters.preBuildSteps }}
 
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the build
         condition: always()
 
@@ -314,10 +351,7 @@ jobs:
         - ${{ if eq(parameters.docker, '') }}:
           - pwsh: dotnet --info
             displayName: Display all the .NET information
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - pwsh: dotnet tool restore
-            displayName: Restore the .NET tools
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
                 Get-Content $PSCommandPath
@@ -325,13 +359,17 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
-                LLVM_HOME: $(LLVM_HOME)
+                PYTHON_EXE: $(PYTHON_EXE)
+                VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false
+                ${{ each pair in parameters.env }}:
+                  ${{ pair.key }}: ${{ pair.value }}
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 cat ${BASH_SOURCE[0]}
@@ -339,55 +377,101 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
+                ${{ each pair in parameters.env }}:
+                  ${{ pair.key }}: ${{ pair.value }}
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if ne(parameters.docker, '') }}:
           - ${{ if eq(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: 1ES.BuildContainerImage@1
               displayName: Build the Docker image for ${{ parameters.docker }}
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
               inputs:
                 dockerfile: ${{ parameters.docker }}/Dockerfile
                 context: ${{ parameters.docker }}
                 image: skiasharp:skiasharp
-                buildArguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
+                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: Docker@2
-              displayName: Authenticate with the Docker registry
-              inputs:
-                command: login
-                containerRegistry: skiasharp-docker
-            - task: Docker@2
               displayName: Build the Docker image for ${{ parameters.docker }}
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
               inputs:
                 command: build
                 buildContext: ${{ parameters.docker }}
                 dockerfile: ${{ parameters.docker }}/Dockerfile
-                arguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
-          - bash: |
-              echo dotnet tool restore > cmd.sh
-              echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
-              sed -i 's/--gnArgs=\" \"//' cmd.sh
-              cat cmd.sh
-            displayName: Generate the script for the Docker image
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          - bash: |
-              docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
-            displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
-            retryCountOnTaskFailure: ${{ parameters.retryCount }}
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
+                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
+          # Run the target inside the image against the mounted repo. Linux and Windows containers
+          # differ in shell and mount path, so the run step is branched by agent OS.
+          #
+          # The container inherits nothing from the agent, so `env` is materialised into an env-file
+          # and handed to `docker run --env-file`. The file is always created (empty when no `env`
+          # is declared) so the run command stays uniform.
+          - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
+            - bash: |
+                echo dotnet tool restore > cmd.sh
+                echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+                sed -i 's/--gnArgs=\" \"//' cmd.sh
+                cat cmd.sh
+                : > docker.env
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - ${{ each pair in parameters.env }}:
+              # The value travels in the step's own environment rather than being
+              # pasted into the script, so a quote in it cannot break out.
+              - bash: |
+                  printf '%s=%s\n' "$PAIR_KEY" "$PAIR_VALUE" >> docker.env
+                env:
+                  PAIR_KEY: ${{ pair.key }}
+                  PAIR_VALUE: ${{ pair.value }}
+                displayName: Forward ${{ pair.key }} into the Docker image
+                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - bash: |
+                docker run --rm --name skiasharp --env-file docker.env --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
+              displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - bash: rm -f docker.env
+              displayName: Remove the Docker env-file
+              condition: always()
+          - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+            - pwsh: |
+                'dotnet tool restore' | Set-Content cmd.cmd -Encoding ascii
+                'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
+                Get-Content cmd.cmd
+                # Docker's env-file parser keeps a trailing CR as part of the value, so write LF only.
+                [IO.File]::WriteAllText("$PWD/docker.env", "")
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - ${{ each pair in parameters.env }}:
+              # As above: the value is read from the environment, never interpolated
+              # into the script, so quotes and $ in it stay literal.
+              - pwsh: |
+                  [IO.File]::AppendAllText("$PWD/docker.env", "${env:PAIR_KEY}=${env:PAIR_VALUE}`n")
+                env:
+                  PAIR_KEY: ${{ pair.key }}
+                  PAIR_VALUE: ${{ pair.value }}
+                displayName: Forward ${{ pair.key }} into the Docker image
+                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
+                docker run --rm --name skiasharp --env-file docker.env --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
+              displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: Remove-Item docker.env -Force -ErrorAction SilentlyContinue
+              displayName: Remove the Docker env-file
+              condition: always()
 
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
         condition: always()
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
 
-      - pwsh: .\scripts\get-free-space.ps1
+      - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the entire run
         condition: always()

@@ -1,0 +1,714 @@
+name: "Pages - Deploy"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, labeled, unlabeled ]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to deploy as staging (leave blank to deploy to root)'
+        required: false
+        default: ''
+        type: string
+      dry_run:
+        description: 'Dry run — build everything but do not deploy'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Default to no permissions— each job declares only what it needs.
+permissions: {}
+
+jobs:
+  # ── Resolve build variables ──────────────────────────────────
+  # Every PR (including forks) builds and smoke-tests the site so a broken
+  # docs, Gallery or SkiaFiddle build fails the PR. Only same-repo PRs with
+  # the automation/staging label are published as a staging preview.
+  #
+  # The docs and each app build in parallel, then a quick assemble job
+  # combines them. On PRs any failure fails the run. On main and manual
+  # dispatches a failing app is left out of the site so the docs still ship.
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      artifact_name: ${{ steps.vars.outputs.artifact_name }}
+      is_staging: ${{ steps.vars.outputs.is_staging }}
+      pr_number: ${{ steps.vars.outputs.pr_number }}
+      publish: ${{ steps.vars.outputs.publish }}
+      checkout_ref: ${{ steps.vars.outputs.checkout_ref }}
+      build_footer: ${{ steps.vars.outputs.build_footer }}
+      gallery_base_href: ${{ steps.vars.outputs.gallery_base_href }}
+    steps:
+      - name: Setup build variables
+        id: vars
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER_EVENT: ${{ github.event.number }}
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+          PR_STAGING: >-
+            ${{ github.event_name == 'pull_request' &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            contains(github.event.pull_request.labels.*.name, 'automation/staging') }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          if [ "$EVENT_NAME" == "pull_request" ]; then
+            PR_NUMBER="$PR_NUMBER_EVENT"
+            CHECKOUT_REF="$GITHUB_REF"
+            BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+            # Unlabeled and fork PRs are validated but never published.
+            PUBLISH="$PR_STAGING"
+          elif [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$PR_NUMBER_INPUT" ]; then
+            PR_NUMBER="$PR_NUMBER_INPUT"
+            # Staging is an explicit opt-in even for manual dispatches.
+            if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+              echo "Invalid PR number: $PR_NUMBER"
+              exit 1
+            fi
+            PR_JSON="$(gh pr view "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json headRepository,labels)"
+            if ! jq -e --arg repository "$GITHUB_REPOSITORY" \
+              '.headRepository.nameWithOwner == $repository and
+               any(.labels[].name; . == "automation/staging")' \
+              <<<"$PR_JSON" >/dev/null; then
+              echo "PR #$PR_NUMBER must be from this repository and have the automation/staging label"
+              exit 1
+            fi
+            CHECKOUT_REF="refs/pull/${PR_NUMBER}/merge"
+            BRANCH_NAME="pr/${PR_NUMBER}"
+            PUBLISH=true
+          else
+            PR_NUMBER=""
+            CHECKOUT_REF="$GITHUB_REF"
+            BRANCH_NAME="${GITHUB_REF_NAME}"
+            PUBLISH=false
+            if [ "$GITHUB_REF" == "refs/heads/main" ]; then
+              PUBLISH=true
+            fi
+          fi
+          echo "publish=${PUBLISH}" >> $GITHUB_OUTPUT
+
+          if [ -n "$PR_NUMBER" ]; then
+            # Validate PR_NUMBER is a positive integer
+            if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+              echo "Invalid PR number: $PR_NUMBER"
+              exit 1
+            fi
+            echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
+            echo "is_staging=true" >> $GITHUB_OUTPUT
+            echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
+            SOURCE_LABEL="PR #${PR_NUMBER}"
+          else
+            echo "artifact_name=main-site" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
+            echo "is_staging=false" >> $GITHUB_OUTPUT
+            echo "pr_number=" >> $GITHUB_OUTPUT
+            echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
+            SOURCE_LABEL="main"
+          fi
+          echo "build_footer=${SOURCE_LABEL} · ${BRANCH_NAME} · ${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+
+  # ── Build DocFX documentation ────────────────────────────────
+  docs:
+    name: Build Docs
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Build DocFX
+        env:
+          APP_FOOTER: ${{ needs.setup.outputs.build_footer }}
+        run: |
+          jq --arg footer "$APP_FOOTER" \
+            '.build.globalMetadata._appFooter = $footer' \
+            documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
+          dotnet docfx documentation/docfx/docfx-build.json
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-docs
+          path: output/site/docs
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Build WASM native libraries for the apps ─────────────────
+  wasm-natives:
+    name: Build WASM Natives
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+          submodules: recursive
+
+      - name: Build WASM native libraries
+        run: |
+          bash scripts/infra/native/wasm/docker/build-local.sh 3.1.56 "_wasmeh,st"
+          sudo chown -R $(id -u):$(id -g) output
+
+      - name: Upload WASM natives
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-natives
+          path: output/native/wasm
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Build and smoke-test each WASM app ───────────────────────
+  app:
+    name: Build ${{ matrix.name }}
+    needs: [setup, wasm-natives]
+    # The smoke scripts' pinned Playwright supports Ubuntu 24.04, not 26.04.
+    runs-on: ubuntu-24.04
+    continue-on-error: ${{ github.event_name != 'pull_request' }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: gallery
+            name: Gallery (Blazor)
+            project: samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj
+            publish_args: ''
+            smoke: ''
+          - id: gallery-uno
+            name: Gallery (Uno Platform)
+            project: samples/Gallery/Uno/SkiaSharpSample.Uno.csproj
+            publish_args: -f net10.0-browserwasm -p:WasmEnableSIMD=false
+            smoke: samples/Gallery/Uno/scripts/smoke.sh
+          - id: fiddle
+            name: SkiaFiddle
+            project: samples/SkiaFiddle/SkiaFiddle.csproj
+            publish_args: -f net10.0-browserwasm -p:WasmEnableSIMD=false
+            smoke: samples/SkiaFiddle/scripts/smoke.sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+
+      - name: Download WASM natives
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-natives
+          path: output/native/wasm
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Publish ${{ matrix.name }}
+        env:
+          PROJECT: ${{ matrix.project }}
+          PUBLISH_ARGS: ${{ matrix.publish_args }}
+          BUILD_FOOTER: ${{ needs.setup.outputs.build_footer }}
+        run: |
+          # PUBLISH_ARGS is intentionally word-split into separate arguments.
+          # shellcheck disable=SC2086
+          dotnet publish "$PROJECT" \
+            -c Release \
+            -o output/app-publish \
+            -p:PlatformTargetFrameworks="" \
+            -p:BuildFooter="$BUILD_FOOTER" \
+            $PUBLISH_ARGS
+
+      - name: Smoke test ${{ matrix.name }}
+        if: matrix.smoke != ''
+        env:
+          SMOKE: ${{ matrix.smoke }}
+        run: |
+          bash "$SMOKE" \
+            output/app-publish/wwwroot \
+            --screenshot output/app-smoke.png
+
+      # The Uno apps publish with WasmShellWebAppBasePath=./ so they load under
+      # any prefix (/gallery-uno/, /staging/<PR>/fiddle/). Fail the app if a
+      # root-absolute asset reference creeps back in (for example after an
+      # Uno.Wasm.Bootstrap update); the site then omits it like any failed app.
+      - name: Check ${{ matrix.name }} asset paths are relative
+        if: matrix.smoke != ''
+        env:
+          APP_NAME: ${{ matrix.name }}
+        run: |
+          dir=output/app-publish/wwwroot
+          # A quoted string that starts with "/" (or is exactly "/"), for
+          # example "/package_<hash>/...", "/_framework/...", "/uno-config.js".
+          pattern="[\"']/([A-Za-z0-9_.-][^\"']*)?[\"']"
+          hits=$(grep -HnoE "$pattern" \
+            "$dir/index.html" "$dir/uno-config.js" "$dir/service-worker.js" || true)
+          if [ -n "$hits" ]; then
+            echo "::error::$APP_NAME contains root-absolute asset references; it will not load under its deployment prefix:"
+            echo "$hits" | head -20
+            exit 1
+          fi
+
+      - name: Upload smoke screenshot on failure
+        if: failure() && matrix.smoke != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.id }}-smoke-screenshot
+          path: output/app-smoke.png
+          if-no-files-found: ignore
+
+      # Only uploaded once the app has built and passed its smoke test, so
+      # the assemble job copies nothing for an app that failed.
+      - name: Upload ${{ matrix.name }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-app-${{ matrix.id }}
+          path: output/app-publish/wwwroot
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Assemble complete site ───────────────────────────────────
+  assemble:
+    name: Assemble Site
+    needs: [setup, docs, app]
+    if: >-
+      always() &&
+      needs.setup.result == 'success' &&
+      needs.docs.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.checkout_ref }}
+
+      - name: Download docs
+        uses: actions/download-artifact@v4
+        with:
+          name: site-docs
+          path: output/site/docs
+
+      - name: Download apps
+        uses: actions/download-artifact@v4
+        with:
+          pattern: site-app-*
+          path: output/apps
+
+      # ── Assemble complete site ─────────────────────────────────
+      - name: Assemble site
+        env:
+          GALLERY_BASE_HREF: ${{ needs.setup.outputs.gallery_base_href }}
+          BUILD_FOOTER: ${{ needs.setup.outputs.build_footer }}
+        shell: bash
+        run: |
+
+          mkdir -p site
+
+          # Landing page → root (copy all site assets)
+          cp documentation/site/index.html site/
+          cp documentation/site/style.css site/
+          cp documentation/site/site.js site/
+          cp documentation/site/theme-init.js site/
+          cp documentation/site/404.html site/
+          if [ -d documentation/site/images ]; then
+            cp -r documentation/site/images site/images
+          fi
+
+          # AI in SkiaSharp page → /ai/
+          cp -r documentation/site/ai site/ai
+
+          # Refresh the "Moving faster with AI" dashboard cache. Best-effort: the
+          # committed snapshot (already copied above) is the fallback, and each
+          # source degrades independently keeping its last-known "as of" values.
+          # Deepen only the superproject (never the huge Skia submodule) so the
+          # generator can read milestone-bump history from git instead of the API.
+          git fetch --no-recurse-submodules --unshallow 2>/dev/null \
+            || git fetch --no-recurse-submodules --deepen=5000 2>/dev/null \
+            || true
+          python3 scripts/infra/docs/generate-ai-dashboard.py \
+            --output site/ai/dashboard-data.json \
+            --base documentation/site/ai/dashboard-data.json \
+            || echo "::warning::AI dashboard refresh failed; shipping committed snapshot"
+
+          touch site/.nojekyll
+
+          # Inject build info into landing page footer
+          sed -i "s|Built with ❤️ by the .NET community.|Built with ❤️ by the .NET community.<br><small>${BUILD_FOOTER}</small>|" site/index.html
+
+          # Docs → /docs/
+          cp -r output/site/docs site/docs
+
+          # Perf dashboard → /perf/ (unlinked; there is intentionally no nav entry).
+          # Copied verbatim, NOT rendered through render_html.py: with no embedded
+          # window.__PERF_DATA__ the page live-fetches benchmarks/index.json +
+          # sizes/index.json from the aw-data branch (raw.githubusercontent.com sends
+          # Access-Control-Allow-Origin: *), so /perf/ always shows the latest nightly
+          # data without needing a site rebuild. A ?data=<base-url> override still works.
+          mkdir -p site/perf
+          cp scripts/infra/perf/templates/dashboard.html site/perf/index.html
+
+          # Apps are only present if they built and passed their smoke test.
+          # A missing app is left out of the site so the docs still publish.
+          app_available() {
+            if [ -d "output/apps/site-app-$1" ]; then
+              return 0
+            fi
+            echo "::warning::$2 was not built or failed its smoke test; it is omitted from the site"
+            return 1
+          }
+
+          # Gallery (Blazor) → /gallery/
+          if app_available gallery "Gallery (Blazor)"; then
+            cp -r output/apps/site-app-gallery site/gallery
+            # Rewrite gallery base href for deployment path
+            sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
+          fi
+
+          # The Uno apps publish with WasmShellWebAppBasePath=./ (set in their
+          # projects), so every asset path is relative and the copies work under
+          # any prefix as-is. Their app jobs verify this before uploading.
+
+          # Gallery (Uno Platform) → /gallery-uno/
+          if app_available gallery-uno "Gallery (Uno Platform)"; then
+            cp -r output/apps/site-app-gallery-uno site/gallery-uno
+          fi
+
+          # SkiaFiddle (Uno Platform) → /fiddle/
+          if app_available fiddle "SkiaFiddle"; then
+            cp -r output/apps/site-app-fiddle site/fiddle
+          fi
+
+          echo "=== Site layout ==="
+          find site -maxdepth 2 -type f | head -30
+          echo "..."
+          echo "Total files: $(find site -type f | wc -l)"
+
+      - name: Upload site artifact
+        if: needs.setup.outputs.publish == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.artifact_name }}
+          path: site
+          include-hidden-files: true
+          retention-days: 1
+
+  # ── Deploy to docs-live ───────────────────────────────────────
+  deploy:
+    name: Deploy
+    needs: [setup, app, assemble]
+    runs-on: ubuntu-latest
+    # Serialize deploys: main deploys serialize together, each PR gets its
+    # own group. cancel-in-progress ensures newer commits win over older ones.
+    concurrency:
+      group: "docs-deploy-${{ needs.setup.outputs.is_staging == 'true' && format('pr-{0}', needs.setup.outputs.pr_number) || 'main' }}"
+      cancel-in-progress: true
+    if: |
+      always() &&
+      needs.assemble.result == 'success' &&
+      (github.event_name != 'pull_request' || needs.app.result == 'success') &&
+      !inputs.dry_run &&
+      needs.setup.outputs.publish == 'true'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout docs-live branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git init .
+          git remote add origin "$REMOTE_URL"
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+          # Fetch docs-live (depth=1 to avoid accumulating history)
+          if git fetch --depth=1 origin docs-live 2>/dev/null; then
+            git checkout -b docs-live origin/docs-live
+          else
+            echo "docs-live branch does not exist, creating orphan branch"
+            git checkout --orphan docs-live
+            git rm -rf . 2>/dev/null || true
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "docs-live"
+            # If another workflow beat us to creating the branch, just use theirs
+            if ! git push origin docs-live 2>/dev/null; then
+              echo "Branch was created by another workflow, fetching it instead"
+              git fetch --depth=1 origin docs-live
+              git checkout -B docs-live origin/docs-live
+            fi
+          fi
+
+      - name: Download site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.setup.outputs.artifact_name }}
+          path: /tmp/site-temp
+
+      - name: Deploy main site content
+        if: needs.setup.outputs.is_staging == 'false'
+        run: |
+          # Remove everything except staging/ and .git/
+          find . -maxdepth 1 \
+              -not -name 'staging' \
+              -not -name '.git' \
+              -not -name '.' \
+              -not -name '..' \
+            -exec rm -rf {} \;
+          cp -r /tmp/site-temp/. .
+
+          # Ensure .nojekyll exists so _framework/ directories are served
+          touch .nojekyll
+
+          git add -A
+          if ! git diff --cached --quiet; then
+            # Amend the single commit to prevent history accumulation (keeps repo clone size small)
+            git commit --amend -m "docs-live"
+            # Force-push with lease: fails atomically if another workflow pushed in the meantime
+            for attempt in 1 2 3 4 5; do
+              if git push --force-with-lease origin docs-live; then
+                break
+              fi
+              echo "Push failed (attempt $attempt), re-fetching and retrying..."
+              # Hard-reset to latest origin (picks up any staging changes from parallel workflows)
+              # then re-apply our main site content on top, preserving their staging/ dirs.
+              git fetch --depth=1 origin docs-live
+              git reset --hard origin/docs-live
+              find . -maxdepth 1 \
+                  -not -name 'staging' \
+                  -not -name '.git' \
+                  -not -name '.' \
+                  -not -name '..' \
+                -exec rm -rf {} \;
+              cp -r /tmp/site-temp/. .
+              touch .nojekyll
+              git add -A
+              git commit --amend -m "docs-live"
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              sleep $((attempt * 2))
+            done
+          else
+            echo "No changes to commit"
+          fi
+
+          rm -rf /tmp/site-temp
+
+      - name: Deploy staging site content
+        if: needs.setup.outputs.is_staging == 'true'
+        env:
+          PR_NUMBER: ${{ needs.setup.outputs.pr_number }}
+        run: |
+          # Validate PR_NUMBER is a positive integer before using in paths
+          if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid PR number: $PR_NUMBER"
+            exit 1
+          fi
+          # Recreate the staging directory to ensure no stale files (including dotfiles)
+          rm -rf "staging/$PR_NUMBER"
+          mkdir -p "staging/$PR_NUMBER"
+          cp -r /tmp/site-temp/. "staging/$PR_NUMBER/"
+
+          # Ensure .nojekyll exists at root so _framework is served
+          touch .nojekyll
+
+          git add .nojekyll "staging/$PR_NUMBER"
+          if ! git diff --cached --quiet; then
+            # Amend the single commit to prevent history accumulation (keeps repo clone size small)
+            git commit --amend -m "docs-live"
+            # Force-push with lease: fails atomically if another workflow pushed in the meantime
+            for attempt in 1 2 3 4 5; do
+              if git push --force-with-lease origin docs-live; then
+                break
+              fi
+              echo "Push failed (attempt $attempt), re-fetching and retrying..."
+              # Hard-reset to latest origin, then re-apply our staging content
+              git fetch --depth=1 origin docs-live
+              git reset --hard origin/docs-live
+              rm -rf "staging/$PR_NUMBER"
+              mkdir -p "staging/$PR_NUMBER"
+              cp -r /tmp/site-temp/. "staging/$PR_NUMBER/"
+              touch .nojekyll
+              git add .nojekyll "staging/$PR_NUMBER"
+              git commit --amend -m "docs-live"
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              sleep $((attempt * 2))
+            done
+          else
+            echo "No changes to commit"
+          fi
+
+          rm -rf /tmp/site-temp
+
+  # ── Explain staging opt-in on unlabeled PRs ──────────────────
+  staging-instructions:
+    name: Staging Instructions
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !contains(github.event.pull_request.labels.*.name, 'automation/staging') &&
+      (github.event.action == 'opened' || github.event.action == 'reopened' ||
+       (github.event.action == 'unlabeled' && github.event.label.name == 'automation/staging'))
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.issue.number;
+            const marker = '<!-- skiasharp-docs-staging-preview -->';
+            const commentBody = [
+              marker,
+              '📖 **Documentation Preview**',
+              '',
+              'Every PR builds and smoke-tests the site. Add the `automation/staging` label to also publish a documentation preview for this PR.',
+              '',
+              'Removing the label removes the preview. While the label is present, each new commit updates it.',
+              '',
+              '---',
+              '*This comment is automatically updated by the documentation staging workflow.*'
+            ].join('\n');
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+            const botComment = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes(marker)
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+            }
+
+  # ── Comment on PR with preview URL ──────────────────────────
+  comment:
+    name: Comment on PR
+    needs: [setup, deploy]
+    runs-on: ubuntu-latest
+    if: |
+      needs.setup.outputs.is_staging == 'true' &&
+      needs.setup.outputs.publish == 'true' &&
+      (github.event_name == 'pull_request' &&
+       (github.event.action == 'opened' || github.event.action == 'reopened' ||
+        github.event.action == 'synchronize' || github.event.action == 'labeled'))
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.setup.outputs.pr_number }};
+            const stagingUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/`;
+            const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
+            const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
+            const unoGalleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery-uno/`;
+            const fiddleUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/fiddle/`;
+
+            // Hidden marker to uniquely identify this workflow's comment
+            const marker = '<!-- skiasharp-docs-staging-preview -->';
+
+            const commentBody = [
+              marker,
+              '📖 **Documentation Preview**',
+              '',
+              'The documentation for this PR has been deployed and is available at:',
+              '',
+              `🔗 **[View Staging Site](${stagingUrl})**`,
+              `🔗 **[View Staging Docs](${docsUrl})**`,
+              `🔗 **[View Staging Gallery (Blazor)](${galleryUrl})**`,
+              `🔗 **[View Staging Gallery (Uno Platform)](${unoGalleryUrl})**`,
+              `🔗 **[View Staging SkiaFiddle](${fiddleUrl})**`,
+              '',
+              'This preview will be updated automatically when you push new commits to this PR.',
+              '',
+              '---',
+              '*This comment is automatically updated by the documentation staging workflow.*'
+            ].join('\n');
+
+            // Paginate to find existing bot comment with our marker
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+            const botComment = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes(marker)
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+            }

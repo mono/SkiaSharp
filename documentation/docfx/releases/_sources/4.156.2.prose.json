@@ -1,0 +1,32 @@
+{
+  "theme": "Filtered image and glyph fixes",
+  "highlights_headline": "SkiaSharp 4.156.2 corrects filtered image sampling and mask-filtered glyph rendering.",
+  "highlights_body": "This servicing release brings Skia m156 fixes for image subsets, image-filter caching and glyph masks without changing managed bindings.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Filtered images stay within their texture subsets",
+          "detail": "Corrects sampling under minification, strong skew, antialiased clipping and MSAA so unrelated backing-texture pixels do not leak into filtered images. Image-filter cache-key equality now matches hashing, including distinct floating-point and matrix representations.",
+          "prs": [5773]
+        },
+        {
+          "lead": "Mask-filtered glyphs handle regenerated data safely",
+          "detail": "Uses the reloaded glyph's outline, rejects incompatible mask copies and preserves full plane strides when clipping embossed glyphs. This avoids stale outlines, sub-byte buffer overwrites and corrupted or uncleared mask planes when consecutive glyph loads differ.",
+          "prs": [5742]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {},
+  "harfbuzz_summary": null,
+  "release_summaries": {
+    "v4.156.2": {
+      "headline": "SkiaSharp 4.156.2 corrects filtered image sampling and mask-filtered glyph rendering.",
+      "body": "It prevents unrelated backing-texture pixels from entering filtered images, makes image-filter cache equality consistent with hashing, and handles regenerated glyph outlines and mask planes correctly. Managed bindings are unchanged."
+    }
+  }
+}

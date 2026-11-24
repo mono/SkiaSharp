@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 				"lottie-base64_women-thinking.json",
 			};
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void DefaultBuilderIsTheSameAsDefaultCreate(string filename)
 		{
@@ -39,7 +39,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(directAnimation.Size, builderAnimation.Size);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void DefaultBuilderHasStats(string filename)
 		{
@@ -58,7 +58,7 @@ namespace SkiaSharp.Tests
 			Assert.True(stats.AnimatorCount > 0);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(Base64Files))]
 		public void CanLoadBase64ImagesFromData(string filename)
 		{
@@ -74,7 +74,7 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(Base64Files))]
 		public void CanLoadBase64ImagesFromFilename(string filename)
 		{
@@ -89,7 +89,7 @@ namespace SkiaSharp.Tests
 			Assert.True(animation.Duration > TimeSpan.Zero);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(Base64Files))]
 		public void CanRenderWithBase64(string filename)
 		{
@@ -110,7 +110,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(beforePixels, afterPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WrappedResourceManagersAreNotCollectedPrematurely()
 		{
 			var (builder, weak) = CreateBuilder();
@@ -135,6 +135,37 @@ namespace SkiaSharp.Tests
 					.SetResourceProvider(provider);
 
 				return (builder, new WeakReference(provider));
+			}
+		}
+
+		[Fact]
+		public void BuilderCanBeDisposedBeforeAnimationIsRendered()
+		{
+			Animation animation;
+			using (var provider = new DataUriResourceProvider())
+			using (var builder = Animation.CreateBuilder().SetResourceProvider(provider))
+			{
+				animation = builder.Build(Path.Combine(PathToImages, "lottie-base64_dotnet-bot.json"));
+			}
+
+			using (animation)
+			{
+				Assert.NotNull(animation);
+
+				using var ic = new InvalidationController();
+				ic.Begin();
+				animation.Seek(0.25, ic);
+				ic.End();
+
+				using var bmp = new SKBitmap(64, 64);
+				bmp.Erase(SKColors.Red);
+				var beforePixels = bmp.Pixels;
+
+				using var canvas = new SKCanvas(bmp);
+				animation.Render(canvas, SKRect.Create(64, 64));
+				var afterPixels = bmp.Pixels;
+
+				Assert.NotEqual(beforePixels, afterPixels);
 			}
 		}
 	}
