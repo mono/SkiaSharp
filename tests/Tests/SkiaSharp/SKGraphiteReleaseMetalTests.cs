@@ -21,9 +21,65 @@ namespace SkiaSharp.Tests
 		protected override string Backend => GpuBackends.GraphiteMetal;
 
 		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
-			Task.FromResult(CreateHarness());
+			Task.FromResult<GraphiteReleaseHarness>(CreateHarness());
 
-		private GraphiteReleaseHarness CreateHarness()
+		[Fact]
+		public void DeferredCanvasRejectsTargetsWithoutRequiredMsaa()
+		{
+			GpuPolicy.RequireOrSkip(Backend);
+			using var harness = CreateHarness();
+			var (texture, owner) = harness.CreateBackendTexture(Width, Height, MTLPixelFormatRG32Float);
+			using (owner)
+			using (var textureInfo = texture.TextureInfo)
+			{
+				Assert.NotNull(textureInfo);
+				Assert.True(textureInfo.IsValid);
+				var info = new SKImageInfo(Width, Height, SKColorType.RgF16, SKAlphaType.Opaque);
+				var canvas = harness.Recorder.CreateDeferredCanvas(info, textureInfo);
+				// Graphite's Apple-family caps make RG32Float renderable but single-sample-only.
+				if (harness.UsesAppleGpuFamily)
+				{
+					Assert.Null(canvas);
+				}
+				else
+				{
+					Assert.NotNull(canvas);
+					canvas.Clear(SKColors.Blue);
+					using var recording = harness.Recorder.Snap();
+					Assert.NotNull(recording);
+					Assert.Equal(IntPtr.Zero, canvas.Handle);
+				}
+			}
+		}
+
+		[Fact]
+		public void DeferredCanvasAllowsTargetsWhenMsaaIsDisabled()
+		{
+			GpuPolicy.RequireOrSkip(Backend);
+			using var harness = CreateHarness(new SKGraphiteContextOptions
+			{
+				InternalMultisampleCount = 1,
+				GpuBudgetInBytes = -1,
+			});
+			var (texture, owner) = harness.CreateBackendTexture(Width, Height);
+			using (owner)
+			using (var textureInfo = texture.TextureInfo)
+			{
+				Assert.NotNull(textureInfo);
+				var info = new SKImageInfo(Width, Height, ColorType, SKAlphaType.Premul);
+				var canvas = harness.Recorder.CreateDeferredCanvas(info, textureInfo);
+				Assert.NotNull(canvas);
+				canvas.Clear(SKColors.Blue);
+				using var recording = harness.Recorder.Snap();
+				Assert.NotNull(recording);
+				Assert.Equal(IntPtr.Zero, canvas.Handle);
+			}
+		}
+
+		private MetalHarness CreateHarness() =>
+			CreateHarness(new SKGraphiteContextOptions { GpuBudgetInBytes = -1 });
+
+		private MetalHarness CreateHarness(SKGraphiteContextOptions options)
 		{
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
@@ -45,7 +101,7 @@ namespace SkiaSharp.Tests
 			}
 
 			var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
-			var context = SKGraphiteContext.CreateMetal(backendContext)
+			var context = SKGraphiteContext.CreateMetal(backendContext, options)
 				?? throw new InvalidOperationException("SKGraphiteContext.CreateMetal returned null.");
 			var recorder = context.CreateRecorder()
 				?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
@@ -72,9 +128,14 @@ namespace SkiaSharp.Tests
 
 			public override SKGraphiteRecorder Recorder => recorder;
 
-			public override (SKGraphiteBackendTexture texture, IDisposable owner) CreateBackendTexture(int width, int height)
+			public bool UsesAppleGpuFamily => MetalHasAppleGpuFamily(device);
+
+			public override (SKGraphiteBackendTexture texture, IDisposable owner) CreateBackendTexture(int width, int height) =>
+				CreateBackendTexture(width, height, MTLPixelFormatBGRA8Unorm);
+
+			public (SKGraphiteBackendTexture texture, IDisposable owner) CreateBackendTexture(int width, int height, nuint pixelFormat)
 			{
-				var mtlTexture = CreateMetalTexture(device, width, height);
+				var mtlTexture = CreateMetalTexture(device, width, height, pixelFormat);
 				if (mtlTexture == IntPtr.Zero)
 					throw new InvalidOperationException("[MTLDevice newTextureWithDescriptor:] returned null.");
 
@@ -117,6 +178,7 @@ namespace SkiaSharp.Tests
 
 		// Metal.framework enum values (MTLPixelFormat.h / MTLTexture.h).
 		private const nuint MTLPixelFormatBGRA8Unorm = 80;
+		private const nuint MTLPixelFormatRG32Float = 105;
 		private const nuint MTLTextureUsageShaderRead = 1;
 		private const nuint MTLTextureUsageRenderTarget = 4;
 		private const nuint MTLStorageModePrivate = 2;
@@ -126,11 +188,11 @@ namespace SkiaSharp.Tests
 		private const ulong MTLGPUFamilyApple9 = 1009;
 		private const ulong MTLGPUFamilyMac2 = 2002;
 
-		private static IntPtr CreateMetalTexture(IntPtr device, int width, int height)
+		private static IntPtr CreateMetalTexture(IntPtr device, int width, int height, nuint pixelFormat)
 		{
 			var descClass = objc_getClass("MTLTextureDescriptor");
 			var descSel = sel_registerName("texture2DDescriptorWithPixelFormat:width:height:mipmapped:");
-			var descriptor = objc_msgSend_texDesc(descClass, descSel, MTLPixelFormatBGRA8Unorm, (nuint)width, (nuint)height, 0);
+			var descriptor = objc_msgSend_texDesc(descClass, descSel, pixelFormat, (nuint)width, (nuint)height, 0);
 			if (descriptor == IntPtr.Zero)
 				return IntPtr.Zero;
 
@@ -141,10 +203,14 @@ namespace SkiaSharp.Tests
 			return objc_msgSend_arg(device, sel_registerName("newTextureWithDescriptor:"), descriptor);
 		}
 
-		private static bool MetalHasGraphiteCapableFamily(IntPtr device)
+		private static bool MetalHasGraphiteCapableFamily(IntPtr device) =>
+			MetalHasAppleGpuFamily(device)
+			|| objc_msgSend_supportsFamily(device, sel_registerName("supportsFamily:"), MTLGPUFamilyMac2) != 0;
+
+		private static bool MetalHasAppleGpuFamily(IntPtr device)
 		{
 			var sel = sel_registerName("supportsFamily:");
-			foreach (var f in new[] { MTLGPUFamilyApple9, MTLGPUFamilyApple8, MTLGPUFamilyApple7, MTLGPUFamilyMac2 })
+			foreach (var f in new[] { MTLGPUFamilyApple9, MTLGPUFamilyApple8, MTLGPUFamilyApple7 })
 			{
 				if (objc_msgSend_supportsFamily(device, sel, f) != 0)
 					return true;
