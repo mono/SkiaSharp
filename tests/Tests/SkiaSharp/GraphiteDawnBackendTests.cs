@@ -8,10 +8,10 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	/// <summary>
-	/// Graphite release-callback tests over Dawn (WebGPU) for the Blazor WASM
-	/// host. Reuses the <c>SKWebGpu</c> JS interop that <c>GraphiteDawnRenderer</c>
-	/// uses to obtain a WebGPU device and mint textures. Only runs in a browser;
-	/// every other host skips.
+	/// <see cref="GraphiteBackendTestBase"/> harness over Dawn (WebGPU) for the
+	/// Blazor WASM host. Reuses the <c>SKWebGpu</c> JS interop that
+	/// <c>GraphiteDawnRenderer</c> uses to obtain a WebGPU device and mint
+	/// textures. Only runs in a browser; every other host skips.
 	///
 	/// <para>
 	/// Dawn on WASM is a <em>non-yielding</em> context: it cannot submit
@@ -19,16 +19,19 @@ namespace SkiaSharp.Tests
 	/// context/recorder are created once and kept for the process lifetime (never
 	/// disposed). Bring-up is asynchronous; the single-threaded WASM host needs no
 	/// GPU gate, and blocking on the async setup would deadlock the JS event loop,
-	/// so <see cref="SKGraphiteReleaseTestsBase.RunGuardedAsync"/> simply awaits.
+	/// so <see cref="GraphiteBackendTestBase.RunGuardedAsync"/> simply awaits.
+	/// All harnesses use identical <see cref="SKGraphiteContextOptions"/>, including
+	/// a shared shader-error handler. Later requests must match the installed options.
 	/// </para>
 	/// </summary>
 	[Collection(GpuRenderingCollection.Name)]
-	public sealed class SKGraphiteReleaseDawnTests : SKGraphiteReleaseTestsBase
+	public sealed class GraphiteDawnBackendTests : GraphiteBackendTestBase
 	{
 		private static SKGraphiteContext s_context;
 		private static SKGraphiteRecorder s_recorder;
 		private static JSObject s_device;
 		private static bool s_ready;
+		private static SKGraphiteContextOptions s_options;
 
 		protected override SKColorType ColorType => SKColorType.Rgba8888;
 
@@ -36,7 +39,7 @@ namespace SkiaSharp.Tests
 
 		protected override string Backend => GpuBackends.GraphiteDawn;
 
-		protected override async Task<GraphiteReleaseHarness> CreateHarnessAsync()
+		protected override async Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options)
 		{
 			if (!s_ready)
 			{
@@ -66,17 +69,19 @@ namespace SkiaSharp.Tests
 					WgpuDevice = (IntPtr)deviceId,
 					WgpuQueue = (IntPtr)queueId,
 				};
-				s_context = SKGraphiteContext.CreateDawn(backendContext)
+				s_context = SKGraphiteContext.CreateDawn(backendContext, options)
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
 				s_recorder = s_context.CreateRecorder()
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+				s_options = options;
 				s_ready = true;
 			}
 
+			Assert.Equal(s_options, options);
 			return new DawnHarness(s_context, s_recorder, s_device);
 		}
 
-		private sealed class DawnHarness : GraphiteReleaseHarness
+		private sealed class DawnHarness : GraphiteBackendHarness
 		{
 			private readonly JSObject device;
 

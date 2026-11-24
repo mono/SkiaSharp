@@ -54,20 +54,13 @@ namespace SkiaSharp.Tests.Visual
 
 				scene.Draw(surface.Canvas);
 
-				var recording = recorder.Snap();
-				if (recording is null)
-				{
-					// The Apple simulator's Metal cannot compile every pipeline Graphite
-					// emits — notably the gradient-shader pipeline (GradientBlend) — so
-					// Snap() returns null there for those scenes.
-					throw new InvalidOperationException(
-						"Graphite/Metal Recorder.Snap() returned null" +
-						(IsRunningOnAppleSimulator
-							? " on the Apple simulator, whose Metal cannot compile some pipelines Graphite " +
-							  "emits (e.g. gradient shaders). Ganesh/Metal renders this scene on the " +
-							  "simulator, and Graphite/Metal renders it on macOS and real devices."
-							: "."));
-				}
+				// A null Snap() is a hard error on every host, simulator included: the
+				// simulator-only gradient-pipeline gap (#4555 — Graphite picked framebuffer
+				// fetch for dst reads, which the simulator's Metal rejects at PSO creation)
+				// is fixed in libSkiaSharp by falling back to texture-copy dst reads there,
+				// so the old per-scene simulator skip is gone and regressions fail loudly.
+				var recording = recorder.Snap()
+					?? throw new InvalidOperationException("Recorder.Snap() returned null.");
 
 				using (recording)
 				{
