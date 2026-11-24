@@ -91,11 +91,18 @@ namespace SkiaSharp
 			if (backendContext == null)
 				throw new ArgumentNullException (nameof (backendContext));
 
+			// ToNative() copies raw handles (the memory allocator, the extensions) out of
+			// wrappers that only backendContext references. Keep it alive until the native
+			// factory has taken its own references, or a finalizer could release them mid-call.
 			if (options == null) {
-				return GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
+				var context = GetObject (SkiaApi.gr_direct_context_make_vulkan (backendContext.ToNative ()));
+				GC.KeepAlive (backendContext);
+				return context;
 			} else {
 				var opts = options.ToNative ();
-				return GetObject (SkiaApi.gr_direct_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+				var context = GetObject (SkiaApi.gr_direct_context_make_vulkan_with_options (backendContext.ToNative (), &opts));
+				GC.KeepAlive (backendContext);
+				return context;
 			}
 		}
 
