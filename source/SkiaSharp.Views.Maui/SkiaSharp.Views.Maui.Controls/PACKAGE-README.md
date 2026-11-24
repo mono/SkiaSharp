@@ -9,7 +9,7 @@
 ## What you get
 
 - `SKCanvasView` for CPU-rendered, on-demand drawing.
-- `SKGLView` for hardware-accelerated drawing and continuous render loops.
+- `SKGaneshView` and `SKGLView` for hardware-accelerated drawing and continuous render loops.
 - `SKImageImageSource`, `SKBitmapImageSource`, `SKPixmapImageSource`, and `SKPictureImageSource` for MAUI images.
 - XAML support, data binding, touch input, invalidation, and density-aware canvas sizing.
 - Native handlers for Android, iOS, Mac Catalyst, and Windows.

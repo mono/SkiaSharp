@@ -44,6 +44,31 @@ public class MemoryLeakTests : SKUITests
 			return view;
 		});
 
+#if ANDROID || IOS || MACCATALYST
+	[UIFact]
+	public Task SKGaneshViewHandlerDoesNotLeak()
+	{
+#if IOS || MACCATALYST
+		GpuPolicy.RequireOrSkip(GpuBackends.GaneshMetal);
+#endif
+		return AssertHandlerDoesNotLeak(() =>
+		{
+			var view = new SKGaneshView();
+			view.PaintSurface += (sender, e) =>
+			{
+				e.Surface.Canvas.Clear(SKColors.Red);
+			};
+			view.EnableTouchEvents = true;
+			view.Touch += (sender, e) =>
+			{
+				view.InvalidateSurface();
+			};
+			view.HasRenderLoop = true;
+			return view;
+		});
+	}
+#endif
+
 	private async Task AssertHandlerDoesNotLeak(Func<View> ctor)
 	{
 		async Task<(WeakReference, WeakReference, WeakReference)> RunTest()
