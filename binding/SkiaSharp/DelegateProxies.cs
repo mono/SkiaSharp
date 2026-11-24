@@ -65,6 +65,11 @@ namespace SkiaSharp
 	/// <remarks />
 	public delegate void SKGraphiteReleaseDelegate ();
 
+	/// <summary>Represents the method that is called when Skia detects that the Vulkan device has been lost.</summary>
+	/// <param name="info">Diagnostic information reported by Skia about the loss, valid for the duration of the callback.</param>
+	/// <remarks>Invoked on whichever thread the driver reports the loss on, which is not necessarily the thread that created the context.</remarks>
+	public delegate void GRVkDeviceLostDelegate (GRVkDeviceLostInfo info);
+
 	/// <summary>Represents a callback method that receives the path and transformation matrix for each glyph when enumerating glyph paths.</summary>
 	/// <param name="path">The path of the glyph, or <see langword="null" /> if the glyph has no path.</param>
 	/// <param name="matrix">The transformation matrix to position the glyph.</param>
@@ -148,6 +153,20 @@ namespace SkiaSharp
 			var del = Get<SKGraphiteVkGetProcedureAddressDelegate> ((IntPtr)userData, out _);
 
 			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
+		}
+
+
+		private static partial void GRVkDeviceLostProxyImplementation (void* userData, IntPtr info)
+		{
+			try {
+				using var managed = GRVkDeviceLostInfo.GetObject (info, false);
+				if (managed == null)
+					return;
+
+				var del = Get<GRVkDeviceLostDelegate> ((IntPtr)userData, out _);
+				del?.Invoke (managed);
+			} catch {
+			}
 		}
 
 		private static partial void SKGraphiteReleaseProxyImplementation (void* releaseContext)

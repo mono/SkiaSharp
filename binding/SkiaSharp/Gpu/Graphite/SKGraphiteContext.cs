@@ -146,10 +146,33 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var init = backendContext.ToNative ();
-			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &options);
-			if (handle == IntPtr.Zero)
+			// One device-lost handle per context, intentionally never freed once the
+			// context exists. VulkanSharedContext keeps the raw user data and is
+			// shared with every Recorder, which can outlive this context, so no
+			// managed owner can know when freeing it is safe. Only a failed creation
+			// hands nothing to Skia.
+			GCHandle deviceLostHandle = default;
+			IntPtr handle;
+			try {
+				void* deviceLostUserData = null;
+				if (backendContext.DeviceLost is { } deviceLost) {
+					DelegateProxies.Create (deviceLost, out deviceLostHandle, out var userData);
+					deviceLostUserData = (void*)userData;
+				}
+
+				var init = backendContext.ToNative (deviceLostUserData);
+				handle = SkiaApi.sk_graphite_context_make_vulkan (init, &options);
+			} catch {
+				if (deviceLostHandle.IsAllocated)
+					deviceLostHandle.Free ();
+				throw;
+			}
+
+			if (handle == IntPtr.Zero) {
+				if (deviceLostHandle.IsAllocated)
+					deviceLostHandle.Free ();
 				return null;
+			}
 
 			var ctx = new SKGraphiteContext (handle, true);
 

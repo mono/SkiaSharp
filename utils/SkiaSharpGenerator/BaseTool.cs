@@ -369,6 +369,34 @@ namespace SkiaSharpGenerator
 			"long int", "signed long int", "unsigned long int",
 		};
 
+		private static readonly Dictionary<string, string> FixedBufferElementTypes = new()
+		{
+			{ "char",             nameof(Byte) },
+			{ "signed char",      nameof(SByte) },
+			{ "unsigned char",    nameof(Byte) },
+			{ "uint8_t",          nameof(Byte) },
+			{ "int8_t",           nameof(SByte) },
+			{ "uint16_t",         nameof(UInt16) },
+			{ "int16_t",          nameof(Int16) },
+			{ "uint32_t",         nameof(UInt32) },
+			{ "int32_t",          nameof(Int32) },
+			{ "uint64_t",         nameof(UInt64) },
+			{ "int64_t",          nameof(Int64) },
+			{ "short",            nameof(Int16) },
+			{ "unsigned short",   nameof(UInt16) },
+			{ "int",              nameof(Int32) },
+			{ "unsigned int",     nameof(UInt32) },
+			{ "float",            nameof(Single) },
+			{ "double",           nameof(Double) },
+			{ "bool",             nameof(Byte) },
+		};
+
+		protected static string? GetFixedBufferElementType(CppType elementType)
+		{
+			var name = GetCppType(elementType).Trim();
+			return FixedBufferElementTypes.TryGetValue(name, out var cs) ? cs : null;
+		}
+
 		protected string GetType(CppType type)
 		{
 			var typeName = GetCppType(type);

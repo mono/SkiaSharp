@@ -1323,6 +1323,126 @@ namespace SkiaSharp
 			(gr_recording_context_unref_delegate ??= GetSymbol<Delegates.gr_recording_context_unref> ("gr_recording_context_unref")).Invoke (context);
 		#endif
 
+		// void gr_vk_device_lost_info_get_address_info(const gr_vk_device_lost_info_t* info, int32_t index, gr_vk_device_fault_address_info_t* addressInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void gr_vk_device_lost_info_get_address_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultAddressInfoNative* addressInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_device_lost_info_get_address_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultAddressInfoNative* addressInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_vk_device_lost_info_get_address_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultAddressInfoNative* addressInfo);
+		}
+		private static Delegates.gr_vk_device_lost_info_get_address_info gr_vk_device_lost_info_get_address_info_delegate;
+		internal static void gr_vk_device_lost_info_get_address_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultAddressInfoNative* addressInfo) =>
+			(gr_vk_device_lost_info_get_address_info_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_info_get_address_info> ("gr_vk_device_lost_info_get_address_info")).Invoke (info, index, addressInfo);
+		#endif
+
+		// int32_t gr_vk_device_lost_info_get_address_info_count(const gr_vk_device_lost_info_t* info)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial Int32 gr_vk_device_lost_info_get_address_info_count (gr_vk_device_lost_info_t info);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 gr_vk_device_lost_info_get_address_info_count (gr_vk_device_lost_info_t info);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 gr_vk_device_lost_info_get_address_info_count (gr_vk_device_lost_info_t info);
+		}
+		private static Delegates.gr_vk_device_lost_info_get_address_info_count gr_vk_device_lost_info_get_address_info_count_delegate;
+		internal static Int32 gr_vk_device_lost_info_get_address_info_count (gr_vk_device_lost_info_t info) =>
+			(gr_vk_device_lost_info_get_address_info_count_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_info_get_address_info_count> ("gr_vk_device_lost_info_get_address_info_count")).Invoke (info);
+		#endif
+
+		// sk_string_t* gr_vk_device_lost_info_get_description(const gr_vk_device_lost_info_t* info)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial sk_string_t gr_vk_device_lost_info_get_description (gr_vk_device_lost_info_t info);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_string_t gr_vk_device_lost_info_get_description (gr_vk_device_lost_info_t info);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_string_t gr_vk_device_lost_info_get_description (gr_vk_device_lost_info_t info);
+		}
+		private static Delegates.gr_vk_device_lost_info_get_description gr_vk_device_lost_info_get_description_delegate;
+		internal static sk_string_t gr_vk_device_lost_info_get_description (gr_vk_device_lost_info_t info) =>
+			(gr_vk_device_lost_info_get_description_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_info_get_description> ("gr_vk_device_lost_info_get_description")).Invoke (info);
+		#endif
+
+		// const void* gr_vk_device_lost_info_get_vendor_binary_data(const gr_vk_device_lost_info_t* info, size_t* size)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void* gr_vk_device_lost_info_get_vendor_binary_data (gr_vk_device_lost_info_t info, /* size_t */ IntPtr* size);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* gr_vk_device_lost_info_get_vendor_binary_data (gr_vk_device_lost_info_t info, /* size_t */ IntPtr* size);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* gr_vk_device_lost_info_get_vendor_binary_data (gr_vk_device_lost_info_t info, /* size_t */ IntPtr* size);
+		}
+		private static Delegates.gr_vk_device_lost_info_get_vendor_binary_data gr_vk_device_lost_info_get_vendor_binary_data_delegate;
+		internal static void* gr_vk_device_lost_info_get_vendor_binary_data (gr_vk_device_lost_info_t info, /* size_t */ IntPtr* size) =>
+			(gr_vk_device_lost_info_get_vendor_binary_data_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_info_get_vendor_binary_data> ("gr_vk_device_lost_info_get_vendor_binary_data")).Invoke (info, size);
+		#endif
+
+		// void gr_vk_device_lost_info_get_vendor_info(const gr_vk_device_lost_info_t* info, int32_t index, gr_vk_device_fault_vendor_info_t* vendorInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial void gr_vk_device_lost_info_get_vendor_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultVendorInfoNative* vendorInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_device_lost_info_get_vendor_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultVendorInfoNative* vendorInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_vk_device_lost_info_get_vendor_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultVendorInfoNative* vendorInfo);
+		}
+		private static Delegates.gr_vk_device_lost_info_get_vendor_info gr_vk_device_lost_info_get_vendor_info_delegate;
+		internal static void gr_vk_device_lost_info_get_vendor_info (gr_vk_device_lost_info_t info, Int32 index, GRVkDeviceFaultVendorInfoNative* vendorInfo) =>
+			(gr_vk_device_lost_info_get_vendor_info_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_info_get_vendor_info> ("gr_vk_device_lost_info_get_vendor_info")).Invoke (info, index, vendorInfo);
+		#endif
+
+		// int32_t gr_vk_device_lost_info_get_vendor_info_count(const gr_vk_device_lost_info_t* info)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
+		internal static partial Int32 gr_vk_device_lost_info_get_vendor_info_count (gr_vk_device_lost_info_t info);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 gr_vk_device_lost_info_get_vendor_info_count (gr_vk_device_lost_info_t info);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 gr_vk_device_lost_info_get_vendor_info_count (gr_vk_device_lost_info_t info);
+		}
+		private static Delegates.gr_vk_device_lost_info_get_vendor_info_count gr_vk_device_lost_info_get_vendor_info_count_delegate;
+		internal static Int32 gr_vk_device_lost_info_get_vendor_info_count (gr_vk_device_lost_info_t info) =>
+			(gr_vk_device_lost_info_get_vendor_info_count_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_info_get_vendor_info_count> ("gr_vk_device_lost_info_get_vendor_info_count")).Invoke (info);
+		#endif
+
 		// void gr_vk_extensions_delete(gr_vk_extensions_t* extensions)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT

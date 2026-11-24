@@ -264,6 +264,17 @@ namespace SkiaSharpGenerator
 			var allFields = new List<string>();
 			foreach (var field in klass.Fields)
 			{
+				if (field.Type is CppArrayType { Size: > 0 } arrayType &&
+					GetFixedBufferElementType(arrayType.ElementType) is { } fixedElement)
+				{
+					writer.WriteLine($"\t\t// {FormatCppSignature(field.ToString())}");
+
+					var bufferVis = map?.IsInternal == true ? "public" : "private";
+					writer.WriteLine($"\t\t{bufferVis} fixed {fixedElement} {field.Name}[{arrayType.Size}];");
+					writer.WriteLine();
+					continue;
+				}
+
 				var type = GetType(field.Type);
 				var funcPointerType = GetFunctionPointerType(field.Type);
 				var cppT = GetCppType(field.Type);
