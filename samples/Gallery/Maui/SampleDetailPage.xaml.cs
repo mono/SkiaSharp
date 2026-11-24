@@ -17,11 +17,12 @@ public sealed partial class SampleDetailPage : ContentPage
     private readonly Dictionary<string, ControlItem> controlUpdaters = new(StringComparer.Ordinal);
     private IReadOnlyList<ControlItem> controlItemsData = [];
     private SKCanvasView? cpuView;
-    private SKGaneshView? gpuView;
+    private View? gpuView;
     private Task? initTask;
     private Window? subscribedWindow;
     private bool active;
     private bool useGpu;
+    private bool useGraphite;
     private bool controlsExpanded = true;
     private bool userToggledControls;
     private bool hasControlPanel;
@@ -43,6 +44,7 @@ public sealed partial class SampleDetailPage : ContentPage
         this.navigateBack = navigateBack;
         this.windowSettings = windowSettings;
         useGpu = windowSettings.UseGpu;
+        useGraphite = windowSettings.Renderer == GalleryRenderer.Graphite;
         SampleTags = SampleManager.OrderTags(sample.ApiTags).Select(tag => new SampleTagItem(tag)).ToArray();
         InitializeComponent();
         BindingContext = this;
@@ -107,6 +109,7 @@ public sealed partial class SampleDetailPage : ContentPage
     {
         base.OnAppearing();
         useGpu = windowSettings.UseGpu;
+        useGraphite = windowSettings.Renderer == GalleryRenderer.Graphite;
         windowSettings.BackendChanged += OnBackendChanged;
         if (Window is { } window && subscribedWindow != window)
         {
@@ -233,8 +236,18 @@ public sealed partial class SampleDetailPage : ContentPage
         if (!active || sample is DocumentSampleBase) return;
         if (useGpu)
         {
-            gpuView = new SKGaneshView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
-            gpuView.PaintSurface += PaintGpu;
+            if (useGraphite)
+            {
+                var graphite = new SKGraphiteView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
+                graphite.PaintSurface += PaintGpu;
+                gpuView = graphite;
+            }
+            else
+            {
+                var ganesh = new SKGaneshView { IgnorePixelScaling = true, HasRenderLoop = false, AutomationId = "sample-canvas-gpu" };
+                ganesh.PaintSurface += PaintGpu;
+                gpuView = ganesh;
+            }
             gpuView.HandlerChanged += RendererReady;
             gpuView.SizeChanged += RendererReady;
             surfaceHost.Insert(0, gpuView);
@@ -254,6 +267,7 @@ public sealed partial class SampleDetailPage : ContentPage
         if (!active || sender is not VisualElement view || view.Width <= 0 || view.Height <= 0) return;
         if (sender is SKCanvasView canvas && ReferenceEquals(canvas, cpuView)) canvas.InvalidateSurface();
         if (sender is SKGaneshView ganesh && ReferenceEquals(ganesh, gpuView)) ganesh.InvalidateSurface();
+        if (sender is SKGraphiteView graphite && ReferenceEquals(graphite, gpuView)) graphite.InvalidateSurface();
     }
 
     private void RemoveRenderer()
@@ -261,8 +275,16 @@ public sealed partial class SampleDetailPage : ContentPage
         if (gpuView is { } oldGpu)
         {
             gpuView = null;
-            oldGpu.HasRenderLoop = false;
-            oldGpu.PaintSurface -= PaintGpu;
+            if (oldGpu is SKGaneshView ganesh)
+            {
+                ganesh.HasRenderLoop = false;
+                ganesh.PaintSurface -= PaintGpu;
+            }
+            if (oldGpu is SKGraphiteView graphite)
+            {
+                graphite.HasRenderLoop = false;
+                graphite.PaintSurface -= PaintGpu;
+            }
             oldGpu.HandlerChanged -= RendererReady;
             oldGpu.SizeChanged -= RendererReady;
             surfaceHost.Children.Remove(oldGpu);
@@ -281,8 +303,10 @@ public sealed partial class SampleDetailPage : ContentPage
 
     private void ChangeBackend(bool gpuRequested)
     {
-        if (useGpu == gpuRequested) return;
+        var graphiteRequested = windowSettings.Renderer == GalleryRenderer.Graphite;
+        if (useGpu == gpuRequested && useGraphite == graphiteRequested) return;
         useGpu = gpuRequested;
+        useGraphite = graphiteRequested;
         lastWidth = lastHeight = -1;
         if (sample is DocumentSampleBase)
         {
@@ -291,7 +315,7 @@ public sealed partial class SampleDetailPage : ContentPage
                 : "Document generation unavailable";
             return;
         }
-        status.Text = useGpu ? "Ganesh · preparing surface…" : "CPU · preparing surface…";
+        status.Text = useGpu ? $"{(useGraphite ? "Graphite" : "Ganesh")} · preparing surface…" : "CPU · preparing surface…";
         InstallRenderer();
     }
 
@@ -304,7 +328,8 @@ public sealed partial class SampleDetailPage : ContentPage
         {
             if (!active || generation != epoch) return;
             cpuView?.InvalidateSurface();
-            gpuView?.InvalidateSurface();
+            if (gpuView is SKGaneshView ganesh) ganesh.InvalidateSurface();
+            if (gpuView is SKGraphiteView graphite) graphite.InvalidateSurface();
         });
     }
 
@@ -324,7 +349,7 @@ public sealed partial class SampleDetailPage : ContentPage
     }
 
     private void PaintCpu(object? sender, SKPaintSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, false);
-    private void PaintGpu(object? sender, SKPaintGaneshSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, true);
+    private void PaintGpu(object? sender, SKPaintSurfaceEventArgs e) => Paint(sender, e.Surface.Canvas, e.Info, e.RawInfo, true);
 
     private void Paint(object? renderer, SKCanvas canvas, SKImageInfo info, SKImageInfo raw, bool gpuFrame)
     {
@@ -341,7 +366,7 @@ public sealed partial class SampleDetailPage : ContentPage
             lastHeight = info.Height;
             var backend = !gpuFrame ? "CPU · raster" :
 #if IOS || MACCATALYST
-                "Ganesh · Metal";
+                useGraphite ? "Graphite · Metal" : "Ganesh · Metal";
 #elif WINDOWS
                 "Ganesh · ANGLE / DirectX";
 #else
@@ -549,7 +574,8 @@ public sealed partial class SampleDetailPage : ContentPage
             UpdateButtons();
             if (sample is DocumentSampleBase) UpdateDocumentState();
             cpuView?.InvalidateSurface();
-            gpuView?.InvalidateSurface();
+            if (gpuView is SKGaneshView ganesh) ganesh.InvalidateSurface();
+            if (gpuView is SKGraphiteView graphite) graphite.InvalidateSurface();
         }
         catch (Exception ex)
         {
