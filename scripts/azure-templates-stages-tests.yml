@@ -160,7 +160,7 @@ stages:
                 SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
               ${{ if eq(ios.installRuntime, true) }}:
                 preBuildSteps:
-                  - pwsh: ./scripts/infra/managed/install-ios-runtime.ps1 -Version '${{ ios.version }}'
+                  - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform iOS -Version '${{ ios.version }}'
                     displayName: Install the iOS ${{ ios.version }} simulator runtime
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
