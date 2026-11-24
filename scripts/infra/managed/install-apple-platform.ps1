@@ -9,6 +9,11 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
+$Platform = switch ($Platform) {
+    'iOS' { 'iOS' }
+    'tvOS' { 'tvOS' }
+}
+
 if (-not $IsMacOS) {
     throw 'Apple platforms can only be installed on macOS.'
 }
