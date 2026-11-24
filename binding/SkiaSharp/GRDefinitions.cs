@@ -241,6 +241,7 @@ namespace SkiaSharp
 				SKColorType.Bgra1010102 => 0,
 				SKColorType.Bgr101010x => 0,
 				SKColorType.Bgr101010xXR => 0,
+				SKColorType.Bgr888x => GRGlSizedFormat.BGRA8,
 				SKColorType.Bgra10101010XR => 0,
 				SKColorType.Srgba8888 => GRGlSizedFormat.SRGB8_ALPHA8,
 				SKColorType.R8Unorm => GRGlSizedFormat.R8,
