@@ -1,15 +1,66 @@
 {
-  "theme": "Linux native asset support",
-  "highlights_headline": "SkiaSharp 4.159 will no longer include Linux x86 native assets.",
-  "highlights_body": null,
+  "theme": "Image testing and rendering reliability",
+  "highlights_headline": "SkiaSharp 4.159.0 adds experimental image comparison tools and improves rendering reliability.",
+  "highlights_body": "The separate SkiaSharp.Testing package supports image acceptance policies and visual diagnostics. Runtime-effect uniforms start cleared, Windows x64 decoder error recovery is corrected, and Ganesh texture sampling stays inside subset edges. Linux x86 native assets are no longer packaged.",
   "breaking": [
     {
-      "title": "Move Linux x86 deployments to a supported architecture",
-      "body": "Linux x86 native assets will no longer be included in NuGet packages, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
+      "title": "Move Linux x86 applications to a supported architecture",
+      "body": "Linux x86 native assets are no longer built or included in NuGet packages. Applications relying on those assets must move to a supported Linux architecture, such as x64 or ARM64, before upgrading.",
       "prs": [5784]
     }
   ],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Experimental image comparison package",
+          "detail": "SkiaSharp.Testing compares SKImage, SKBitmap and SKPixmap inputs with channel tolerances, masks, mismatch budgets and error metrics, and creates caller-owned difference images. The assembly is experimental: consumers must explicitly opt in by suppressing diagnostic SKIA4001.",
+          "prs": [5293]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Windows x64 decoder error recovery",
+          "detail": "Fixes process crashes when libjpeg or libpng uses longjmp to recover from an error in clang-built Windows x64 natives. This includes malformed JPEG input to SKCodec.Create and PDF processing of lazy non-JPEG images. Other Windows architectures and MSVC builds are unchanged.",
+          "prs": [5827]
+        },
+        {
+          "lead": "Defined runtime-effect uniform contents",
+          "detail": "New SKRuntimeEffectUniforms buffers are zeroed rather than containing leftover memory. Reset() now clears the existing buffer in place, avoiding a native buffer and wrapper allocation on each call.",
+          "prs": [5843]
+        },
+        {
+          "lead": "Trim-safe MAUI window binding",
+          "detail": "SKGLView uses a statically expressed Window binding instead of a string path, removing the trimming warning from that binding in trimmed MAUI applications without changing its behavior.",
+          "prs": [5320]
+        },
+        {
+          "lead": "Texture subset edges and Tizen blur selection",
+          "detail": "Ganesh bilinear sampling clamps slightly inside texture subsets to avoid undefined exterior texels; CPU and Graphite sampling are unchanged. Tizen now applies its intended CPU blur-path selection when compiling Skia. Texture-edge pixels may change, and Tizen blur output and performance may differ.",
+          "prs": [5679]
+        }
+      ]
+    },
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m159 servicing update",
+          "detail": "Integrates upstream bug fixes within Skia m159 without changing managed bindings or package versions in the engine-sync change.",
+          "prs": [5841]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "taublast": "Corrected runtime-effect uniform initialization and in-place reset, and disposed test data snapshots.",
+    "bhall-ctre": "Made the MAUI SKGLView proxy-window binding trim-safe.",
+    "ramezgerges": "Restored the Uno Gallery to the Windows sample solution.",
+    "SimonCropp": "Fixed Windows x64 crashes during JPEG and PNG decoder error recovery."
+  },
   "preview_summaries": {}
 }

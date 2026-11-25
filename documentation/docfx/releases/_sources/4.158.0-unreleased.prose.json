@@ -1,0 +1,45 @@
+{
+  "theme": "GPU rendering and error recovery",
+  "highlights_headline": "SkiaSharp 4.158.0 integrates Skia m158 fixes for GPU failures, image filtering and glyph rendering.",
+  "highlights_body": "The collected native update preserves managed APIs, generated bindings and dependency versions.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh flush failure handling",
+          "detail": "Propagates low-level draw and upload failures and abandons the context when recovery is unsafe. Failed promise-image fulfillment drops the flush's work but remains nonfatal, leaving the context usable.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Imagination GPU failure safeguards",
+          "detail": "Rejects oversized multisample attachments on affected Imagination GL, ANGLE and Vulkan devices. Ganesh and Graphite deliberately abandon Vulkan descriptor pools after affected out-of-memory errors rather than destroy them unsafely; Graphite rejects further allocations through a null pool handle.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Image filtering and draw order",
+          "detail": "Ganesh prevents unwritten scratch texels from entering filtered images through mipmaps and clips destination reads to their bounds. Graphite resets depth after full-overwrite draws to preserve painter order.",
+          "prs": [5839]
+        },
+        {
+          "lead": "FreeType glyph bounds",
+          "detail": "Corrects LCD16 bitmap bounds conversion and cropping when font scalers return different bounds between glyph loads. Bitmap validation and outline-translation checks also guard image buffer bounds.",
+          "prs": [5839]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Overflow-safe Ganesh allocations",
+          "detail": "Checks buffer alignment, padding and element-size arithmetic, rejects invalid sizes, allows CPU buffer allocation to fail safely, and caps block and vertex-chunk allocations.",
+          "prs": [5839]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
