@@ -6,9 +6,13 @@
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <MauiVersion>11.0.10</MauiVersion>
+    <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
+    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
     <SingleProject>true</SingleProject>
     <Nullable>enable</Nullable>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+    <RunAOTCompilation Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">true</RunAOTCompilation>
+    <PublishAot Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">true</PublishAot>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -48,6 +52,6 @@
   </ItemGroup>
 
   <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
-  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" />
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
 
 </Project>
