@@ -22,6 +22,8 @@
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+    <RunAOTCompilation Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">true</RunAOTCompilation>
+    <PublishAot Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">true</PublishAot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(TargetFramework)' == 'net11.0-maccatalyst'">
     <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.Debug.plist</CodesignEntitlements>
@@ -33,7 +35,6 @@
     <ProjectReference Include="../Shared/SkiaSharpSample.Shared.csproj" />
     <ProjectReference Include="../../../source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.12.26421.1" />

@@ -17,6 +17,9 @@
         <UnoFeatures>
             Skia;
         </UnoFeatures>
+        <RunAOTCompilation Condition="($(TargetFramework.Contains('-browserwasm')) and '$(_IsPublishing)' == 'true') or ($(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release')">true</RunAOTCompilation>
+        <PublishAot Condition="$(TargetFramework.Contains('-ios'))">true</PublishAot>
+        <ValidateSceneManifest Condition="$(TargetFramework.Contains('-ios'))">false</ValidateSceneManifest>
     </PropertyGroup>
   
   
