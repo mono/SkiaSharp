@@ -1,9 +1,30 @@
 {
-  "theme": "Servicing line opened",
-  "highlights_headline": "The 4.156.3 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "Native rendering and allocation safety",
+  "highlights_headline": "SkiaSharp 4.156.3 integrates upstream fixes for image filtering, glyph rendering and GPU allocation safety.",
+  "highlights_body": "This servicing update keeps the managed API and native C ABI unchanged.",
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Cleaner image filters and bounded destination reads",
+          "detail": "Ganesh image filtering avoids mipmaps that could incorporate unwritten scratch-texture contents. Draws that read the destination are clipped to their destination-read bounds, including when geometry overshoots calculated draw bounds.",
+          "prs": [5837]
+        },
+        {
+          "lead": "Correct glyph cropping and painter order",
+          "detail": "FreeType LCD16 glyph copies use consistent pixel-space bounds and crop to the valid overlap when successive loads produce different outlines. Graphite resets depth and bounds tracking after overwriting draws so depth wrap does not reorder rendering.",
+          "prs": [5837]
+        },
+        {
+          "lead": "Reject invalid Ganesh buffer allocations",
+          "detail": "Checked alignment and size arithmetic prevents overflowing allocation requests and out-of-bounds padding writes. Invalid or failed allocations skip the draw rather than proceeding with an invalid buffer.",
+          "prs": [5837]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

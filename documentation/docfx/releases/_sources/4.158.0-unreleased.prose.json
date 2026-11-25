@@ -1,0 +1,35 @@
+{
+  "theme": "GPU recovery and rendering correctness",
+  "highlights_headline": "SkiaSharp 4.158.0 integrates upstream GPU failure-handling, image-filtering and glyph-rendering fixes.",
+  "highlights_body": "The native update preserves managed APIs, generated bindings and dependency versions while improving allocation checks and handling of Imagination driver errors.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Explicit handling of failed GPU work",
+          "detail": "Ganesh propagates low-level draw and upload failures and abandons the context when recovery is unsafe. Failed promise-image fulfillment remains nonfatal: the flush's work is dropped, but the context stays usable.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Safer allocations and Imagination driver workarounds",
+          "detail": "Ganesh checks buffer-size arithmetic and handles allocation failure. Oversized MSAA attachments are rejected on affected Imagination GL, ANGLE and Vulkan devices. After Vulkan descriptor-allocation out-of-memory errors, affected pools are deliberately abandoned instead of destroyed; Graphite also rejects a null pool handle.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Bounded image filtering and destination reads",
+          "detail": "Ganesh avoids mipmaps that could sample unwritten scratch texels and clips destination-reading draws to their intended read bounds.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Correct glyph cropping and painter order",
+          "detail": "FreeType LCD16 glyph copies normalize bounds to pixel coordinates and crop source and destination consistently when glyph loads differ. Graphite resets depth and bounds tracking after overwriting draws to prevent depth wrap from changing painter order.",
+          "prs": [5839]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

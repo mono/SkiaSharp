@@ -1,15 +1,55 @@
 {
-  "theme": "Linux native asset support",
-  "highlights_headline": "SkiaSharp 4.159 will no longer include Linux x86 native assets.",
-  "highlights_body": null,
+  "theme": "Image testing and rendering reliability",
+  "highlights_headline": "SkiaSharp 4.159.0 adds experimental image comparison APIs and fixes runtime-effect initialization and Windows image-decoding crashes.",
+  "highlights_body": "A separate SkiaSharp.Testing package supports tolerance-based image comparisons and visual diagnostics. GPU texture-edge sampling also changes, while Linux x86 native assets are removed.",
   "breaking": [
     {
       "title": "Move Linux x86 deployments to a supported architecture",
-      "body": "Linux x86 native assets will no longer be included in NuGet packages, following upstream .NET's removal of Linux x86 cross-build infrastructure. Move 32-bit x86 Linux deployments to a supported architecture before upgrading.",
+      "body": "Linux x86 native assets are no longer built or included in NuGet packages. Move applications deploying to linux-x86 to a supported Linux architecture before upgrading.",
       "prs": [5784]
     }
   ],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Experimental image comparison package",
+          "detail": "SkiaSharp.Testing compares SKImage, SKBitmap and SKPixmap inputs with channel tolerances, masks, mismatch budgets and error metrics, and creates caller-owned difference images. The assembly is experimental; opt in by suppressing diagnostic SKIA4001 with NoWarn or a pragma.",
+          "prs": [5293]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Windows x64 decoder recovery no longer terminates the process",
+          "detail": "Fixes crashes when libjpeg or libpng uses longjmp for error recovery in clang-built Windows x64 natives, including malformed JPEGs passed to SKCodec.Create and PDF output using lazily decoded non-JPEG images. Other Windows architectures and MSVC builds are unchanged.",
+          "prs": [5827]
+        },
+        {
+          "lead": "Uniform buffers start and reset to zero",
+          "detail": "SKRuntimeEffectUniforms no longer exposes uninitialized values on creation or after Reset(). Reset clears the existing buffer in place instead of allocating a new native block and managed wrapper, including when uniforms are reused for meshes.",
+          "prs": [5843]
+        },
+        {
+          "lead": "Filtered GPU sampling stays inside texture subsets",
+          "detail": "Ganesh sampling uses an inward inset to avoid including undefined texels beyond subset edges. Texture-edge pixels may change; this is not a CPU or Graphite rendering change.",
+          "prs": [5679]
+        },
+        {
+          "lead": "Tizen CPU blur selection takes effect",
+          "detail": "Tizen now applies its intended blur configuration to Skia itself, selecting the existing ThreeBoxApprox/Tent paths instead of the shader-based Gaussian candidate. Blur pixels and performance may differ; Tizen rendering and performance were not measured in the source change.",
+          "prs": [5679]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "taublast": "Corrected uniform initialization and in-place reset behavior, and disposed test data snapshots.",
+    "ramezgerges": "Restored the Uno Gallery to the Windows sample solution.",
+    "SimonCropp": "Fixed Windows x64 crashes during JPEG and PNG decoder error recovery."
+  },
   "preview_summaries": {}
 }

@@ -1,9 +1,37 @@
 {
-  "theme": "Servicing line opened",
-  "highlights_headline": "The 4.155.3 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "Security servicing and Uno compatibility",
+  "highlights_headline": "SkiaSharp 4.155.3 backports native security fixes and corrects Uno 6 WebAssembly linking on .NET 9 and later.",
+  "highlights_body": "The servicing update keeps the 4.155 line available to Uno Platform 6 applications without changing public APIs or bindings.",
   "breaking": [],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Backported Skia security fixes",
+          "detail": "Adds 25 CVE fixes and 13 further hardening and test fixes to the 4.155 native engine. The changes address shader-pipeline validation, GPU uploads and resource state, texture sampling, glyph bounds, and allocation arithmetic, complementing earlier security backports on this line.",
+          "prs": [5844]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Uno 6 WebAssembly linking on newer .NET targets",
+          "detail": "Uno 6.x applications using the Skia renderer no longer receive the conflicting -sUSE_WEBGPU linker option on .NET 9 and later, where Dawn supplies WebGPU. The option remains enabled for net8.0, which still uses Emscripten's built-in WebGPU port.",
+          "prs": [5835]
+        },
+        {
+          "lead": "Additional native rendering hardening",
+          "detail": "The backport also prevents unwritten scratch-texture contents from entering filtered output and corrects glyph-copy bounds. It resets Graphite depth tracking after overwriting draws to preserve painter order.",
+          "prs": [5844]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Backported Skia security and rendering fixes and corrected Uno 6 WebAssembly linker options."
+  },
   "preview_summaries": {}
 }
