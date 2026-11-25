@@ -15,15 +15,116 @@
   "superseded_by": null,
   "api_links": [],
   "tallies": {
-    "product": 1,
-    "mixed": 0,
-    "internal": 11
+    "product": 4,
+    "mixed": 2,
+    "internal": 15
   },
   "breaking_candidates": [],
-  "contributors": [],
+  "contributors": [
+    {
+      "login": "taublast",
+      "url": "https://github.com/taublast",
+      "prs": [
+        5843,
+        5846
+      ]
+    },
+    {
+      "login": "ramezgerges",
+      "url": "https://github.com/ramezgerges",
+      "prs": [
+        5145
+      ]
+    },
+    {
+      "login": "SimonCropp",
+      "url": "https://github.com/SimonCropp",
+      "prs": [
+        5827
+      ]
+    }
+  ],
   "previews": [],
   "shipments": [],
   "prs": {
+    "5841": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5841",
+      "title": "[M159] Sync upstream Skia bug fixes",
+      "body": "[M159] Sync upstream Skia bug fixes (#5841)\n\nRequires: https://github.com/mono/skia/pull/470\nChanges: https://github.com/mono/skia/compare/8a65fa27c104d1bb5a58df5ec3e0c1655053fcf6...b809e72312b060cfa2d865369b434840cf6c7538\n\nKeep the SkiaSharp m159 native pin and Component Governance provenance\naligned with the merged upstream fix set. This same-milestone update changes\nthe native gitlink and its recorded commit without changing managed bindings\nor package versions.\n\n~~ Record landed native ancestry without changing reviewed sources ~~\n\nThe reviewed native tip 64ba38f7523a10cb3200ecf746868a7079462b9a was merged\nas 436352e4a9d8146ce18d2dedfc84bd8c91da18c3, a two-parent commit whose\nparents are 5d226f638edbb3c0dac0ac93ac1ff349298880a4 and\n64ba38f7523a10cb3200ecf746868a7079462b9a. Its tree\n51a4611047eebc7d6c577d93aa41258131001eff is identical to the reviewed\ntree. Set the `externals/skia` gitlink and CG `commitHash` to the merge,\nwhile retaining b809e72312b060cfa2d865369b434840cf6c7538 as the\n`chrome/m159` upstream merge. Tree equality preserves the reviewed native\nsources; it is not a new runtime test run.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5809": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5809",
+      "title": "[CI] Modernize Tahoe CI to Xcode 26.6 and .NET 10.0.404",
+      "body": "[CI] Modernize Tahoe Apple toolchains (#5809)\n\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1690550\nContext: https://dev.azure.com/dnceng-public/public/_build/results?buildId=1690908\n\nUpdate the Apple CI images and toolchains while retaining the existing\ntarget frameworks and deployment minimums. Image selection does not add\ncapacity to the public shared pool.\n\n~~ Align Apple images and toolchains ~~\n\nSelect AcesShared Tahoe for public Apple jobs and hosted macos-26 for\ninternal package and test jobs. Update Xcode from 26.3 to 26.6 and the\n.NET SDK from 10.0.403 to 10.0.404 across CI, global.json, containers and\nintegration-test defaults. Pair it with workload set 10.0.401; later Apple\nworkload sets require Xcode 27, which is not on the selected images.\n\nPublic build 1690908 passed 95 jobs at the preceding head 2d4f5c77931.\nAn internal iOS diagnostic captured an objc_msgSend cache-probe crash;\nthe source of the invalid pointer remains unknown.\n\n~~ Provision tvOS in the jobs that require it ~~\n\nThe public Tahoe image lacked the tvOS platform needed by native tvOS\nbuilds and the macOS sample build. Install the selected Xcode's default\ntvOS platform in those public jobs after Xcode selection, with retries.\nThe native job skips installation on a cache hit. Internal jobs do not\nreceive this public-image provisioning step.\n\n~~ Share Apple platform installation ~~\n\nReplace install-ios-runtime.ps1 with install-apple-platform.ps1 for the\ntvOS jobs and pinned iOS simulator runtimes. With a version, inspect the\nruntime inventory, download if missing and verify availability afterward;\nwithout one, install Xcode's default platform. Propagate command failures.\n\nNormalize accepted platform names before calling Xcode or comparing\nruntime names. PowerShell's ValidateSet accepts \"ios\", but the ordinal\ninventory comparison expects \"iOS\"; without normalization, an installed\nruntime could be reported missing. Local installer checks cover mixed-case\nnames, downloads, availability checks and failures.\n\n~~ Stabilize the deadline-confirmation fixture ~~\n\nWindows build 1690550 failed ScreenshotComparisonConfirmsFirstMismatchAfterDeadline:\nthe previous 2x2 capture was reported instead of the expected 4x4 image.\nPrepare the confirmation image in the capture callback and allow its\ncompletion source to run continuations inline. A local thread-pool\nstarvation reproduction produced the same failure with the forced\nasynchronous handoff and passed without it; the precise hosted scheduling\ndelay was not traced.\n\nBuild 1690908 passed all 169 Windows Build sample tests, including the\ndeadline test. Its assertions, timeout and image tolerances are unchanged.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Alex Soto <alex@soto.dev>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    },
+    "5827": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5827",
+      "title": "Fix win-x64 crash on libjpeg/libpng longjmp error recovery",
+      "body": "* Fix win-x64 crash on libjpeg/libpng longjmp error recovery (#5645)\n\nSince 4.156 the Windows natives are built with the clang that ships with\nVS 2026 (LLVM 22+). LLVM 22 pads some x64 calls with a nop for Windows EH\n(llvm/llvm-project#144745), but CFGuardLongjmp's post-instruction label is\nemitted after that nop, so the CFG long-jump table points one byte past the\nreal setjmp return address. Windows rejects the target and the process dies\n(0xC0000005 with CET shadow stacks, 0xC0000409 without) whenever libjpeg or\nlibpng recovers from an error with longjmp.\n\nThe PDF backend hits this for every lazy non-JPEG image, because it first\noffers the encoded bytes to the JPEG decoder. A malformed JPEG passed to\nSKCodec.Create crashes the same way.\n\nLink x64 clang builds with /guard:cf,nolongjmp. CFG stays enabled; only the\nmiscomputed long-jump table is dropped. arm64, x86 and MSVC builds are\nunaffected and unchanged.\n\n* Link the upstream LLVM issue from the nolongjmp workaround",
+      "author": "SimonCropp",
+      "community": true,
+      "tag": "mixed",
+      "fixes": [
+        5645
+      ]
+    },
+    "5846": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5846",
+      "title": "Tests: dispose the ToData() snapshots",
+      "body": "",
+      "author": "taublast",
+      "community": true,
+      "tag": "internal"
+    },
+    "5843": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5843",
+      "title": "Fix SKRuntimeEffectUniforms starting with uninitialized memory; Reset() clears in place",
+      "body": "The uniform block comes from sk_data_new_uninitialized, so a new\nSKRuntimeEffectUniforms (and every Reset(), which allocated a fresh\nuninitialized block) held leftover memory instead of the zeros Reset()\ndocuments. Clear the block when it is created, and make Reset() clear it in\nplace: shaders, color filters and blenders copy it through ToData(), and\nSkMesh::Make copies it (MakeWithCopy in sk_mesh.cpp), so nothing else holds it.\nReset() no longer allocates a native block and a wrapper per call.\n\nAdds SKMeshUniformsBenchmark (a mesh rebuilt every frame with a reused\nSKMeshBuilder) and tests for zeroed new/reset uniforms on effects and meshes.\nResetDisposesPreviousUniformBuffer becomes ResetKeepsAndClearsUniformBuffer:\nthere is no replaced buffer any more; it checks the same buffer is kept,\nzeroed, and released on Dispose.\n\n\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "taublast",
+      "community": true,
+      "tag": "product"
+    },
+    "5679": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5679",
+      "title": "Enable inset texture sampling and align Tizen blur configuration",
+      "body": "Enable inset texture sampling and align Tizen blur configuration (#5679)\n\nContext: https://skia-review.googlesource.com/c/skia/+/751778\n\nEnable existing Skia rendering options at the native compilation boundary:\nopt into inward texture-subset clamping and apply Tizen's CPU blur-path\nselection to Skia itself rather than its wrapper.\n\n~~ Keep filtered texture samples inside subset boundaries ~~\n\nBilinear filtering at the last pixel center of a texture subset can sample\nthe adjacent exterior row or column with a nominal weight of zero. Skia's\nupstream \"Add epsilon to texture effect clamping at pixel centers\" change\nadds an inward offset so filtering uses interior texels instead of\nincluding undefined exterior data in the weighted sum.\n\nDefine SK_USE_SAFE_INSET_FOR_TEXTURE_SAMPLING in the Android, iOS, Linux,\nmacOS, Tizen, tvOS, WASM and Windows Skia GN recipes. At the pinned revision,\nthis changes Ganesh's linear inset from 0.5 to 0.5001 texels. It also rejects\nthe direct linear-copy path for identity-scale copies touching the logical\nedge of an approximately sized texture, where backing storage extends\nbeyond that edge.\n\nThis enables existing Ganesh behavior, not a CPU or Graphite rendering\nchange. Texture-edge pixels may differ. Keep the definitions inline in the\nplatform recipes without changing shared build tooling or native APIs.\n\n~~ Apply Tizen's blur selection when compiling Skia ~~\n\nTizen defined SK_AVOID_SLOW_RASTER_PIPELINE_BLURS in project_def.prop, which\ncompiles the wrapper and links the previously built Skia libraries. The\ndefine therefore did not reach SkBlurEngine.cpp, where it selects the\nCPU blur implementation.\n\nPass the define through Tizen's GN extra_cflags and remove the ineffective\nwrapper definition. This bypasses the shader-based Gaussian candidate in\nfavor of the existing ThreeBoxApprox/Tent selection, matching the setting\nin the other seven recipes. Blur pixels and performance may differ;\nTizen rendering and performance were not measured locally.\n\nThe macOS ARM64 native source build and complete net10.0 console test\nsolution passed at the final head: 6,613 passed, 48 existing skips and zero\nfailures. These checks do not establish pixel-identical rendering.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "mixed"
+    },
+    "5145": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5145",
+      "title": "[samples] Restore the Uno Gallery to the Windows solution (#3945)",
+      "body": "PR #3835 removed SkiaSharpSample.Uno and the two SkiaSharp.Views.Uno\nprojects from SkiaSharpSample.Windows.slnx, because Uno.Resizetizer\ncrashed during the Windows Samples build:\n\n  System.TypeInitializationException: ... SkiaSharp.SKColorSpace ...\n  The version of the native libSkiaSharp library (116.0) is incompatible\n  with this version of SkiaSharp. Supported versions of the native\n  libSkiaSharp library are in the range [88.1, 89.0).\n\nThat no longer reproduces. Building the Uno sample directly on Windows,\nfrom a clean obj/bin so UnoResizetizeImages actually runs rather than\nbeing skipped as up to date:\n\n  net10.0-desktop              build succeeded (52 PNGs + icon.ico generated)\n  net10.0-windows10.0.26100    build succeeded\n  net10.0-android              build succeeded\n\nNo TypeInitializationException and no native version error on any of\nthem. net10.0-browserwasm could not be completed locally, but for an\nunrelated reason - the local Emscripten in the wasm-tools workload is\nmissing $(EmscriptenUpstreamBinPath) - and the Resizetizer had already\nrun successfully on that TFM before the link step failed. CI has a\nworking Emscripten, which is the remaining gap this change closes.\n\nNote the underlying incompatibility has NOT been fixed upstream: every\npublished Uno.Resizetizer, including the latest 2.0.0-dev.2, still\nbundles managed SkiaSharp 2.88.6.0, whose version gate only accepts a\nnative in [88.1, 89.0). Feeding that assembly a SkiaSharp 3.x native\nstill throws (verified in isolation with both 116.0 and 119.0). What\nchanged is that the Resizetizer task now resolves the matching 88.1\nnative it ships alongside itself, instead of a foreign one from the\nbuild. So this is safe today but could regress if native resolution\naround the Resizetizer changes again.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "internal",
+      "fixes": [
+        3945
+      ]
+    },
+    "5293": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5293",
+      "title": "[Testing] Add experimental image comparison APIs",
+      "body": "[Testing] Add experimental image comparison APIs (#5293)\n\nAdd a separately packaged SkiaSharp.Testing library for comparing rendered\nimages, applying explicit acceptance policies and producing failure\ndiagnostics. Replace the copied test comparer and SkiaSharp.Extended dependency\nwhile preserving existing golden-image acceptance behavior.\n\nThe implementation is managed-only and does not change native APIs, generated\nbindings or rendering backends.\n\n~~ Define image comparison and acceptance semantics ~~\n\nAdd SKImageComparison entry points for SKImage, SKBitmap and SKPixmap. Normalize\ninputs to tightly packed BGRA8888 pixels, using exact unpremultiplied RGBA by\ndefault and allowing callers to select premultiplied comparison where required.\n\nConfigure comparisons through SKComparisonOptions:\n\n  * Per-channel absolute or percentage tolerances classify mismatched pixels;\n    null disables a channel.\n  * Tolerance masks widen enabled-channel allowances without changing raw error\n    measurements.\n  * Ignore masks remove complete pixels from errors, bounds and denominators;\n    reject masks that leave no pixels to compare.\n  * SKPixelMismatchBudget accepts inclusive pixel, percentage or combined\n    limits. Percentage limits use exact decimal-rational arithmetic before\n    flooring to whole pixels, avoiding floating-point boundary errors and long\n    overflow.\n  * Raw and thresholded metrics expose MAE, RMS and PSNR. Thresholded metrics\n    exclude tolerated channels but retain the full magnitude of errors that\n    exceed tolerance.\n  * Mismatch, normalized MAE and normalized RMS gates combine with AND.\n    Magnitude-only gates do not imply a zero-mismatch requirement.\n\nResults are immutable managed objects and retain no native handles. Inputs and\nmasks are borrowed during each synchronous call; returned difference images are\nindependent caller-owned SKImage instances.\n\n~~ Package and adopt the shared implementation ~~\n\nShip SkiaSharp.Testing as a signed package using the SkiaSharp family version,\ncurrently 4.159.0. Register it with repository versioning, supported-package,\nsigning and solution infrastructure.\n\nMark the assembly experimental with SKIA4001 and record that diagnostic in the\nexperimental API registry. Consumers opt in through NoWarn or a pragma. An\ninternal ExperimentalAttribute compatibility type preserves metadata on targets\nbefore .NET 8.\n\nRemove the copied SKPixelComparer and SKPixelComparisonResult from\nSkiaSharp.Tests.Shared. Route the shared Golden comparison boundary and SKTest\nbitmap assertions through SKImageComparison while retaining their existing\ngolden lookup, retry, attachment, reference and tolerance policies.\n\nReplace the SkiaSharp.Extended dependency in exact-package integration tests\nwith the matching SkiaSharp.Testing package. Remove the obsolete\nPixelComparison.projitems import from the Samples project now that sample tests\nuse the shared golden harness.\n\n~~ Add reusable difference diagnostics ~~\n\nAdd five opaque SKDifferenceStyle outputs using the same normalization,\ntolerance and masking rules as comparison:\n\n  * BinaryMask emits white mismatches on black.\n  * ChannelDifference emits raw RGB differences.\n  * ThresholdMap emits red mismatches, amber tolerated differences and gray\n    ignored regions.\n  * ThresholdOverlay, the default, blends classifications over the actual image\n    after flattening transparency onto white.\n  * Heatmap maps the largest raw enabled-channel difference onto a fixed\n    blue-to-cyan-to-yellow-to-red scale.\n\nAdd an illustrated guide covering exact and tolerant comparison, mismatch and\nmagnitude gates, masks, alpha differences and diagnostics. Keep reusable inputs,\nmasks and outputs at 800x600, with separately named 850x650 checkerboard preview\nimages for documentation presentation.\n\n~~ Cover compatibility and performance ~~\n\nAdd a dedicated SkiaSharp.Testing.Tests host covering acceptance, metrics,\nnormalization, masks, diagnostics, validation, ownership and each supported\ninput family. Register it with the .NET and Windows .NET Framework Cake test\nrunners, including x86 and x64 Framework jobs, and use Framework-compatible\nenum enumeration.\n\nAdd BenchmarkDotNet coverage for image, bitmap and pixmap comparisons,\nidentical images, masks, diagnostics and mismatch-budget arithmetic across\nrepresentative image sizes. Include these workloads in source benchmark\ntracking and preserve Release configuration through project references on clean\nCI runners.\n\nCache normalized width during mismatch-bound calculation and skip channel\narithmetic for identical normalized pixels. On an Apple M3 Pro with .NET 10,\nthe measured 1920x1080 comparison improved from about 27.8 ms to 10.9 ms for\nmostly identical pixels and from 54.7 ms to 28.8 ms for dense differences,\nwithout materially changing managed allocations.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Alex Soto <alex@soto.dev>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
+    "5830": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5830",
+      "title": "docs: regenerate API diffs and release notes",
+      "body": "Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "author": "github-actions[bot]",
+      "community": false,
+      "tag": "internal"
+    },
     "5829": {
       "url": "https://github.com/mono/SkiaSharp/pull/5829",
       "title": "Fix release-note credit identities",

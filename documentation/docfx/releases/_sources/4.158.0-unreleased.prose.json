@@ -1,0 +1,35 @@
+{
+  "theme": "GPU and text rendering reliability",
+  "highlights_headline": "SkiaSharp 4.158.0 incorporates Skia m158 fixes for GPU failure handling, image filtering and glyph bounds.",
+  "highlights_body": "This same-milestone native update does not change managed APIs or generated bindings.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "GPU error handling",
+          "detail": "Propagates Ganesh draw and upload failures and abandons the context when recovery is unsafe. Failed promise-image fulfillment drops the flush's work without abandoning the context. Imagination Vulkan descriptor pools are deliberately left unfreed after allocation errors to avoid unsafe destruction.",
+          "prs": [5839]
+        },
+        {
+          "lead": "GPU allocation bounds",
+          "detail": "Checks Ganesh buffer-size arithmetic and handles CPU buffer allocation failure. Rejects oversized multisample attachments on affected Imagination GL, ANGLE and Vulkan devices rather than overflowing their footprint limits.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Filtered images and draw ordering",
+          "detail": "Prevents Ganesh image filters from incorporating unwritten scratch-texture texels and restricts destination reads to their bounds. Graphite resets depth tracking after full-overwrite draws to preserve painter order.",
+          "prs": [5839]
+        },
+        {
+          "lead": "FreeType LCD glyph bounds",
+          "detail": "Corrects LCD16 bitmap coordinate conversion and cropping when successive glyph loads produce different bounds. Validates bitmap dimensions and format, and guards outline translation and image-buffer bounds.",
+          "prs": [5839]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
