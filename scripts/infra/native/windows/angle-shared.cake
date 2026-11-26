@@ -31,8 +31,7 @@ void SyncAngle(DirectoryPath anglePath, string angleVersion, string angleRevisio
     UseWindowsSdkResourceCompiler(anglePath);
 }
 
-// Keep the policy-critical conversion warnings enabled in UWP MSVC builds,
-// including third-party objects linked into libGLESv2.
+// Fix checked narrowing conversions exposed by UWP MSVC warning enforcement.
 void PatchAngleCompilerWarnings(DirectoryPath anglePath)
 {
     var patch = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/angle-uwp-warnings.patch");

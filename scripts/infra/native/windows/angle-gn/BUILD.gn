@@ -13,6 +13,12 @@ config("skiasharp") {
     if (current_os == "winuwp" && !is_clang) {
       # Chromium only sets a Windows warning level for Clang.
       cflags += [ "/W3" ]
+      # Language flags follow cflags, overriding Chromium/zlib's /wd switches.
+      cflags_c = [
+        "/w24244",
+        "/w34267",
+      ]
+      cflags_cc = cflags_c
     }
     ldflags = [ "/guard:cf" ]
 

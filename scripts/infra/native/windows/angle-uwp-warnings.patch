@@ -1,41 +1,34 @@
-diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
---- a/build/config/compiler/BUILD.gn
-+++ b/build/config/compiler/BUILD.gn
-@@ -1898,7 +1898,7 @@ config("default_warnings") {
-       # want to remove this define eventually.
-       "_WINSOCK_DEPRECATED_NO_WARNINGS",
-     ]
--    if (!is_clang) {
-+    if (!is_clang && current_os != "winuwp") {
-       # TODO(thakis): Remove this once
-       # https://swiftshader-review.googlesource.com/c/SwiftShader/+/57968 has
-       # rolled into angle.
-@@ -2298,8 +2298,10 @@ config("no_chromium_code") {
-     }
-     cflags += [
-       "/wd4800",  # Disable warning when forcing value to bool.
--      "/wd4267",  # TODO(jschuh): size_t to int.
-     ]
-+    if (current_os != "winuwp") {
-+      cflags += [ "/wd4267" ]  # TODO(jschuh): size_t to int.
-+    }
-   } else if (is_clang) {
-     cflags += [ "-Wall" ]
-   }
-diff --git a/third_party/zlib/BUILD.gn b/third_party/zlib/BUILD.gn
---- a/third_party/zlib/BUILD.gn
-+++ b/third_party/zlib/BUILD.gn
-@@ -43,10 +43,12 @@ config("zlib_warnings") {
-     # V8 supports building with msvc, these silence some warnings that
-     # causes compilation to fail (https://crbug.com/1255096).
-     cflags = [
--      "/wd4244",
-       "/wd4100",
-       "/wd4702",
-       "/wd4127",
-     ]
-+    if (current_os != "winuwp") {
-+      cflags += [ "/wd4244" ]
-+    }
-   }
+diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/SymbolTable.h
+--- a/src/compiler/translator/SymbolTable.h
++++ b/src/compiler/translator/SymbolTable.h
+@@ -127,5 +127,5 @@ constexpr SymbolRule::SymbolRule(int version,
+       mVersion(static_cast<uint16_t>(version)),
+       mShaders(static_cast<uint8_t>(shaders)),
+-      mExtensionIndex(extensionIndex),
++      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
+       mSymbolOrVar(symbol)
+ {}
+@@ -138,5 +138,5 @@ constexpr SymbolRule::SymbolRule(int version,
+       mVersion(static_cast<uint16_t>(version)),
+       mShaders(static_cast<uint8_t>(shaders)),
+-      mExtensionIndex(extensionIndex),
++      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
+       mSymbolOrVar(resourceVar)
+ {}
+@@ -148,5 +148,5 @@ constexpr SymbolRule SymbolRule::Get(T value)
+     static_assert(version < 0x4000u, "version OOR");
+     static_assert(static_cast<uint8_t>(shaders) < 0xFFu, "shaders OOR");
+-    static_assert(static_cast<uint8_t>(extensionIndex) < 0xFF, "extensionIndex OOR");
++    static_assert(extensionIndex < 0xFFu, "extensionIndex OOR");
+     return SymbolRule(version, shaders, extensionIndex, value);
  }
+diff --git a/src/common/system_utils_win.cpp b/src/common/system_utils_win.cpp
+--- a/src/common/system_utils_win.cpp
++++ b/src/common/system_utils_win.cpp
+@@ -247,5 +247,5 @@ std::string GetLibraryPath(void *libraryHandle)
+     std::array<wchar_t, MAX_PATH> buffer;
+     if (GetModuleFileNameW(reinterpret_cast<HMODULE>(libraryHandle), buffer.data(),
+-                           buffer.size()) == 0)
++                           static_cast<DWORD>(buffer.size())) == 0)
+     {
+         return "";
