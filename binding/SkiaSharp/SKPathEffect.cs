@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>The base class for objects in the <see cref="T:SkiaSharp.SKPaint" /> that affect the geometry of a drawing primitive before it is transformed by the canvas' matrix and drawn.</summary>
 	/// <remarks />
-	public unsafe class SKPathEffect : SKObject, ISKReferenceCounted
+	public unsafe partial class SKPathEffect : SKObject, ISKReferenceCounted
 	{
 		internal SKPathEffect (IntPtr handle, bool owns)
 			: base (handle, owns)

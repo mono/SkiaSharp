@@ -9,7 +9,7 @@ namespace SkiaSharp
 {
 	/// <summary>Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKWStream" /> (a writeable Skia stream)</summary>
 	/// <remarks />
-	public class SKManagedWStream : SKAbstractManagedWStream
+	public partial class SKManagedWStream : SKAbstractManagedWStream
 	{
 		private Stream stream;
 		private readonly bool disposeStream;

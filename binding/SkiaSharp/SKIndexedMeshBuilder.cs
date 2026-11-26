@@ -4,7 +4,7 @@ namespace SkiaSharp;
 
 /// <summary>Builds an indexed <see cref="T:SkiaSharp.SKMesh" /> from a specification, vertex buffer, index buffer, uniforms and child effects.</summary>
 /// <remarks />
-public class SKIndexedMeshBuilder : SKMeshBuilder
+public partial class SKIndexedMeshBuilder : SKMeshBuilder
 {
 	/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKIndexedMeshBuilder" /> class.</summary>
 	/// <param name="specification">The specification describing the mesh attributes, varyings and programs.</param>

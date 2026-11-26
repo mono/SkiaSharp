@@ -28,7 +28,7 @@ namespace SkiaSharp.Views.WPF
 	/// <remarks />
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
-	public class SKGLElement : GLWpfControl, IDisposable
+	public partial class SKGLElement : GLWpfControl, IDisposable
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;

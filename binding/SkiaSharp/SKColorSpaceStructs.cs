@@ -447,7 +447,7 @@ namespace SkiaSharp
 
 	/// <summary>Represents an ICC color profile used to describe the color characteristics of a device or color space.</summary>
 	/// <remarks />
-	public unsafe class SKColorSpaceIccProfile : SKObject
+	public unsafe partial class SKColorSpaceIccProfile : SKObject
 	{
 		internal SKColorSpaceIccProfile (IntPtr handle, bool owns)
 			: base (handle, owns)

@@ -5,7 +5,7 @@ namespace SkiaSharp;
 
 /// <summary>Represents a custom blending function that combines source and destination colors.</summary>
 /// <remarks />
-public unsafe class SKBlender : SKObject, ISKReferenceCounted
+public unsafe partial class SKBlender : SKObject, ISKReferenceCounted
 {
 	private static readonly Dictionary<SKBlendMode, SKBlender> blendModeBlenders;
 

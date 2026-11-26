@@ -20,7 +20,7 @@ namespace SkiaSharp
 	///
 	/// Typeface objects are immutable, and so they can be shared between threads.
 	/// ]]></format></remarks>
-	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
+	public unsafe partial class SKTypeface : SKObject, ISKReferenceCounted
 	{
 		private static SKTypeface empty;
 		private static bool emptyInitialized;

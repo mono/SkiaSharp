@@ -54,7 +54,7 @@ namespace SkiaSharp
 	///
 	/// ![SKSurface](~/images/surface-rects.png "SKSurface")
 	/// ]]></format></remarks>
-	public unsafe class SKSurface : SKObject, ISKReferenceCounted
+	public unsafe partial class SKSurface : SKObject, ISKReferenceCounted
 	{
 		// Skia's SkSurface lazily creates its SkCanvas once and returns the same raw
 		// pointer for the surface's entire lifetime (SkSurface_Base::getCachedCanvas,

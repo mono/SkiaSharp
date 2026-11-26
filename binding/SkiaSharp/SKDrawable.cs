@@ -14,7 +14,7 @@ namespace SkiaSharp
 	/// results, the drawable must change its generation ID whenever its internal
 	/// state changes such that it will draw differently.
 	/// ]]></format></remarks>
-	public unsafe class SKDrawable : SKObject, ISKReferenceCounted
+	public unsafe partial class SKDrawable : SKObject, ISKReferenceCounted
 	{
 		private static readonly SKManagedDrawableDelegates delegates;
 

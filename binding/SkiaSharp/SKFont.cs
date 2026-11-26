@@ -8,7 +8,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a font used for drawing and measuring text.</summary>
 	/// <remarks>Byte lengths must be nonnegative; <see cref="SKTextEncoding.GlyphId" /> buffers must contain complete 16-bit glyph IDs.</remarks>
-	public unsafe class SKFont : SKObject
+	public unsafe partial class SKFont : SKObject
 	{
 		internal const float DefaultSize = 12f;
 		internal const float DefaultScaleX = 1f;
@@ -1693,7 +1693,7 @@ namespace SkiaSharp
 
 		//
 
-		internal sealed class GlyphPathCache : Dictionary<ushort, SKPath>, IDisposable
+		internal sealed partial class GlyphPathCache : Dictionary<ushort, SKPath>, IDisposable
 		{
 			public SKFont Font { get; }
 

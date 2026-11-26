@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>A context for recording GPU operations that can be replayed later.</summary>
 	/// <remarks />
-	public unsafe class GRRecordingContext : SKObject, ISKReferenceCounted
+	public unsafe partial class GRRecordingContext : SKObject, ISKReferenceCounted
 	{
 		internal GRRecordingContext (IntPtr h, bool owns)
 			: base (h, owns)

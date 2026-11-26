@@ -4,7 +4,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents multiple text runs of glyphs and positions.</summary>
 	/// <remarks />
-	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
+	public unsafe partial class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKTextBlob (IntPtr x, bool owns)
 			: base (x, owns)
@@ -457,7 +457,7 @@ namespace SkiaSharp
 
 	/// <summary>A builder object that is used to create a <see cref="T:SkiaSharp.SKTextBlob" />.</summary>
 	/// <remarks />
-	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
+	public unsafe partial class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
 			: base (x, owns)

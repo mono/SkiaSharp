@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a collection of Vulkan extensions for use with Skia's GPU backend.</summary>
 	/// <remarks />
-	public unsafe class GRVkExtensions : SKObject, ISKSkipObjectRegistration
+	public unsafe partial class GRVkExtensions : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRVkExtensions (IntPtr h, bool owns)
 			: base (h, owns)

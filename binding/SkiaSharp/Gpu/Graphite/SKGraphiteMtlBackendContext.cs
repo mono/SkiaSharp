@@ -15,7 +15,7 @@ namespace SkiaSharp
 	///
 	/// On Apple platforms you can also assign the strongly typed `Device` and `Queue` properties instead of raw handles.
 	/// ]]></format></remarks>
-	public unsafe class SKGraphiteMtlBackendContext : IDisposable
+	public unsafe partial class SKGraphiteMtlBackendContext : IDisposable
 	{
 		private IntPtr mtlDevice;
 		private IntPtr mtlQueue;

@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a rounded rectangle with a potentially different radii for each corner.</summary>
 	/// <remarks>If either of a corner's radii are 0 the corner will be square and negative radii are not allowed (they are clamped to zero).</remarks>
-	public unsafe class SKRoundRect : SKObject, ISKSkipObjectRegistration
+	public unsafe partial class SKRoundRect : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKRoundRect (IntPtr handle, bool owns)
 			: base (handle, owns)

@@ -9,7 +9,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a text buffer in memory.</summary>
 	/// <remarks />
-	public unsafe class Buffer : NativeObject
+	public unsafe partial class Buffer : NativeObject
 	{
 		/// <summary>The default replacement code point (U+FFFD) used for invalid characters.</summary>
 		/// <remarks />
