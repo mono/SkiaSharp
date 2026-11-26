@@ -108,29 +108,33 @@ index 71a602e9ca..903936893e 100755
  }}
  }}  // namespace
 diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
-index 5c0f686891..d7b0531040 100644
+index 5c0f686891..5f55df5d06 100644
 --- a/src/libANGLE/Context.cpp
 +++ b/src/libANGLE/Context.cpp
-@@ -6546,7 +6546,8 @@ void Context::getFragmentShadingRates(GLsizei samples,
+@@ -6546,7 +6546,7 @@ void Context::getFragmentShadingRates(GLsizei samples,
      uint32_t shadingRatesCounts = 0;
      angle::ShadingRateMap SupportedFragmentShadingRateSampleCounts =
          mImplementation->getSupportedFragmentShadingRateEXTSampleCounts();
 -    uint32_t supportedShadingRateCounts = SupportedFragmentShadingRateSampleCounts.size();
-+    uint32_t supportedShadingRateCounts =
-+        static_cast<uint32_t>(SupportedFragmentShadingRateSampleCounts.size());
++    size_t supportedShadingRateCounts = SupportedFragmentShadingRateSampleCounts.size();
  
      for (uint32_t i = 1; i < supportedShadingRateCounts; i++)
      {
-@@ -9928,7 +9929,8 @@ void Context::getPerfMonitorCounterData(GLuint monitor,
-             GLuint resultSize = 0;
+@@ -9925,12 +9925,12 @@ void Context::getPerfMonitorCounterData(GLuint monitor,
+         {
+             const PerfMonitorCounterGroupsInfo &perfMonitorGroups =
+                 mImplementation->getPerfMonitorCountersInfo();
+-            GLuint resultSize = 0;
++            size_t resultSize = 0;
              for (const PerfMonitorCounterGroupInfo &group : perfMonitorGroups)
              {
--                resultSize += sizeof(PerfMonitorTriplet) * group.counters.size();
-+                resultSize +=
-+                    static_cast<GLuint>(sizeof(PerfMonitorTriplet) * group.counters.size());
+                 resultSize += sizeof(PerfMonitorTriplet) * group.counters.size();
              }
-             *data = resultSize;
+-            *data = resultSize;
++            *data = static_cast<GLuint>(resultSize);
              byteCount += sizeof(GLuint);
+             break;
+         }
 diff --git a/src/libANGLE/ProgramExecutable.cpp b/src/libANGLE/ProgramExecutable.cpp
 index c99c21375e..e3ca878a05 100644
 --- a/src/libANGLE/ProgramExecutable.cpp
