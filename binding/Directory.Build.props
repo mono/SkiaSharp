@@ -3,6 +3,9 @@
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.props" />
 
   <PropertyGroup>
+    <!-- Use the DllImport bindings on Browser to avoid the Mono AOT crash with explicit LibraryImport calling conventions. -->
+    <ManagedBindingTargetFrameworks>$(AllTargetFrameworks);$(TFMCurrent)-browser</ManagedBindingTargetFrameworks>
+    <ManagedBindingTargetFrameworks Condition="'$(TFMPrevious)' != ''">$(ManagedBindingTargetFrameworks);$(TFMPrevious)-browser</ManagedBindingTargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- NU5100/NU5131: NuGet packaging warnings that are pre-existing and not code quality issues -->

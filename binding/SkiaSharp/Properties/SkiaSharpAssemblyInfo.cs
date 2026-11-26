@@ -63,6 +63,6 @@ using System.Runtime.CompilerServices;
 #pragma warning restore CS0618 // Type or member is obsolete
 #endif
 
-#if NET7_0_OR_GREATER
+#if USE_LIBRARY_IMPORT
 [assembly: DisableRuntimeMarshalling]
 #endif

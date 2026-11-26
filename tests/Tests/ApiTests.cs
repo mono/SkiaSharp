@@ -93,6 +93,25 @@ namespace SkiaSharp.Tests
 		}
 #endif
 
+#if BROWSER
+		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
+		[Fact]
+		public void BrowserImportsUseCdeclDllImport()
+		{
+			foreach (var apiType in InteropApiTypes)
+			{
+				var methods = apiType.GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+				Assert.DoesNotContain(methods, method => method.IsDefined(typeof(LibraryImportAttribute)));
+
+				var imports = methods.Select(method => method.GetCustomAttribute<DllImportAttribute>())
+					.Where(import => import != null)
+					.ToArray();
+				Assert.NotEmpty(imports);
+				Assert.All(imports, import => Assert.Equal(CallingConvention.Cdecl, import.CallingConvention));
+			}
+		}
+#endif
+
 #if !USE_LIBRARY_IMPORT
 		[Trait(Traits.Category.Key, Traits.Category.Values.Api)]
 		[Theory]

@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious)</TargetFrameworks>
-    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER;USE_LIBRARY_IMPORT</DefineConstants>
+    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious);$(TFMCurrent)-browser</TargetFrameworks>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
+    <DefineConstants Condition="!$(TargetFramework.EndsWith('-browser'))">$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
     <NoWarn>$(NoWarn);SKIA4001</NoWarn>

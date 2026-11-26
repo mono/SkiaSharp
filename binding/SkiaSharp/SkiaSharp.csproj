@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(ManagedBindingTargetFrameworks)</TargetFrameworks>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
@@ -11,7 +11,7 @@
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <DefineConstants>$(DefineConstants);USE_DELEGATES</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0')) and !$(TargetFramework.EndsWith('-browser'))">
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">

@@ -23,6 +23,20 @@ It provides a comprehensive 2D API that can be used across mobile, server and de
 
   <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.'))" />
 
+  <!-- Blazor apps can use a plain .NET TFM and select this assembly by RID. -->
+  <Target Name="_IncludeBrowserRuntimeAssembly"
+          AfterTargets="_IncludeAdditionalTfmSpecificPackageFilesPrepare"
+          Condition="'$(TargetPlatformIdentifier)' == 'browser'">
+    <PropertyGroup>
+      <_BrowserRuntimePackagePath>runtimes/browser-wasm/lib/$(TargetFramework.Replace('-browser', ''))</_BrowserRuntimePackagePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetPath)" PackagePath="$(_BrowserRuntimePackagePath)/$(TargetFileName)" />
+      <TfmSpecificPackageFile Include="$(TargetDir)$(TargetName).pdb" PackagePath="$(_BrowserRuntimePackagePath)/$(TargetName).pdb"
+                              Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    </ItemGroup>
+  </Target>
+
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 
 </Project>
