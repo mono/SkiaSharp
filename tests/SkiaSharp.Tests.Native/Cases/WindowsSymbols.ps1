@@ -1,7 +1,7 @@
 <#
 Validates Windows symbol and metadata artifacts. Native MSF and managed portable PDB names and identities must match
-their DLL's CodeView data, and WinUI projection/WinMD files must contain readable CLI metadata. This catches
-mismatched or invalid debug artifacts without loading the target assemblies or requiring a Windows runtime.
+their DLL's CodeView data, and WinUI/UWP projection and WinUI WinMD files must contain readable CLI metadata. This
+catches mismatched or invalid debug artifacts without loading the target assemblies or requiring a Windows runtime.
 #>
 
 param([Parameter(Mandatory)][string] $NativeRoot)
@@ -13,6 +13,10 @@ Assert-NativeRoot $NativeRoot
 Assert-Tool llvm-pdbutil
 
 # Projection symbols may be portable PDBs; native PDBs use MSF. Both must match the DLL's CodeView identity.
+$projectionPdbs = @(
+    'winui/any/SkiaSharp.Views.WinUI.Native.Projection.pdb'
+    'uwp/any/SkiaSharp.Views.UWP.Native.Projection.pdb'
+)
 foreach ($artifact in Get-NativeArtifactInventory $NativeRoot | Where-Object Case -eq WindowsSymbols) {
     Assert-Artifact $artifact.Path
     if ($artifact.Kind -eq 'WinMD') {
@@ -30,7 +34,7 @@ foreach ($artifact in Get-NativeArtifactInventory $NativeRoot | Where-Object Cas
         try {
             $portable = [Convert]::ToHexString((Get-StreamPrefix $stream)).StartsWith('42534A42')
             if ($portable) {
-                if ($artifact.RelativePath -cne 'winui/any/SkiaSharp.Views.WinUI.Native.Projection.pdb') {
+                if ($artifact.RelativePath -cnotin $projectionPdbs) {
                     throw "Expected native MSF symbols, not a portable PDB: $($artifact.Path)"
                 }
 
@@ -63,7 +67,7 @@ foreach ($artifact in Get-NativeArtifactInventory $NativeRoot | Where-Object Cas
         if ($guid -ne $identity.Guid -or $age -ne $identity.Age) {
             throw "PDB identity does not match $binary`: $($artifact.Path)"
         }
-        if ($artifact.RelativePath -like 'winui/any/*') {
+        if ($artifact.RelativePath -like 'winui/any/*' -or $artifact.RelativePath -like 'uwp/any/*') {
             Assert-CliMetadata $binary
         }
     }
