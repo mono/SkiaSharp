@@ -11,6 +11,7 @@
     <Platforms>x86;x64;arm64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishAot>true</PublishAot>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,8 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" />
+    <!-- MSIX packaging gathers RID-specific project outputs; use those same outputs for references. -->
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" AdditionalProperties="IsRidAgnostic=false" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" AdditionalProperties="IsRidAgnostic=false" />
   </ItemGroup>
 
   <ItemGroup>
