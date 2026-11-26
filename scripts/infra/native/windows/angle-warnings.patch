@@ -15,13 +15,6 @@ diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/Sym
 +      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
        mSymbolOrVar(resourceVar)
  {}
-@@ -148,5 +148,5 @@ constexpr SymbolRule SymbolRule::Get(T value)
-     static_assert(version < 0x4000u, "version OOR");
-     static_assert(static_cast<uint8_t>(shaders) < 0xFFu, "shaders OOR");
--    static_assert(static_cast<uint8_t>(extensionIndex) < 0xFF, "extensionIndex OOR");
-+    static_assert(extensionIndex < 0xFFu, "extensionIndex OOR");
-     return SymbolRule(version, shaders, extensionIndex, value);
- }
 diff --git a/src/common/system_utils_win.cpp b/src/common/system_utils_win.cpp
 --- a/src/common/system_utils_win.cpp
 +++ b/src/common/system_utils_win.cpp
@@ -32,3 +25,60 @@ diff --git a/src/common/system_utils_win.cpp b/src/common/system_utils_win.cpp
 +                           static_cast<DWORD>(buffer.size())) == 0)
      {
          return "";
+diff --git a/src/image_util/loadimage_paletted.cpp b/src/image_util/loadimage_paletted.cpp
+--- a/src/image_util/loadimage_paletted.cpp
++++ b/src/image_util/loadimage_paletted.cpp
+@@ -131,4 +131,4 @@ void LoadPalettedToRGBA8Impl(const ImageLoadContext &context,
+ {
+     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
+-    size_t paletteSize  = 1 << indexBits;
++    size_t paletteSize  = size_t{1} << indexBits;
+     size_t paletteBytes = paletteSize * colorBytes;
+diff --git a/src/image_util/storeimage_paletted.cpp b/src/image_util/storeimage_paletted.cpp
+--- a/src/image_util/storeimage_paletted.cpp
++++ b/src/image_util/storeimage_paletted.cpp
+@@ -119,3 +119,3 @@ void StoreRGBA8ToPalettedImpl(size_t width,
+     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
+-    size_t paletteSize  = 1 << indexBits;
++    size_t paletteSize  = size_t{1} << indexBits;
+     size_t paletteBytes = paletteSize * colorBytes;
+diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/translator/SymbolTable_autogen.cpp
+--- a/src/compiler/translator/SymbolTable_autogen.cpp
++++ b/src/compiler/translator/SymbolTable_autogen.cpp
+@@ -24269,7 +24269,7 @@ namespace
+ uint16_t GetNextRuleIndex(uint32_t nameHash)
+ {
+     if (nameHash == 1424 - 1)
+     {
+-        return ArraySize(BuiltInArray::kRules);
++        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
+     }
+     return BuiltInArray::kMangledOffsets[nameHash + 1];
+diff --git a/src/compiler/translator/gen_builtin_symbols.py b/src/compiler/translator/gen_builtin_symbols.py
+--- a/src/compiler/translator/gen_builtin_symbols.py
++++ b/src/compiler/translator/gen_builtin_symbols.py
+@@ -353,6 +353,6 @@ template_symboltable_cpp = """// GENERATED FILE - DO NOT EDIT.
+ uint16_t GetNextRuleIndex(uint32_t nameHash)
+ {{
+     if (nameHash == {num_mangled_names} - 1)
+-        return ArraySize(BuiltInArray::kRules);
++        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
+     return BuiltInArray::kMangledOffsets[nameHash + 1];
+ }}
+diff --git a/scripts/code_generation_hashes/Static_builtins.json b/scripts/code_generation_hashes/Static_builtins.json
+--- a/scripts/code_generation_hashes/Static_builtins.json
++++ b/scripts/code_generation_hashes/Static_builtins.json
+@@ -5,5 +5,5 @@
+     "ad7feffe539c46c0527249776c4cb1a7",
+   "src/compiler/translator/SymbolTable_autogen.cpp":
+-    "8a80e4865b683c589ae06dd0694f1f45",
++    "f9ce2d0697a32fa3f2534a9704576e26",
+   "src/compiler/translator/SymbolTable_autogen.h":
+     "e8ad6382d05f71593d12b9f3b18a3fe9",
+@@ -13,5 +13,5 @@
+     "2eb97570952f7f077076ee53f28736b0",
+   "src/compiler/translator/gen_builtin_symbols.py":
+-    "8fb0c41413df635c408259e2c29141f8",
++    "437b431844e9849b453ea64c2059f7dc",
+   "src/compiler/translator/tree_util/BuiltIn_autogen.h":
+     "75295e2c833ce136f35ea1df47fef1c4",
