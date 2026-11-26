@@ -31,10 +31,10 @@ void SyncAngle(DirectoryPath anglePath, string angleVersion, string angleRevisio
     UseWindowsSdkResourceCompiler(anglePath);
 }
 
-// Fix checked narrowing conversions exposed by UWP MSVC warning enforcement.
+// Fix checked narrowing conversions exposed by MSVC warning enforcement.
 void PatchAngleCompilerWarnings(DirectoryPath anglePath)
 {
-    var patch = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/angle-uwp-warnings.patch");
+    var patch = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/angle-warnings.patch");
     var arguments = new ProcessArgumentBuilder()
         .Append("apply").Append("--reverse").Append("--check").AppendQuoted(patch.FullPath);
     if (StartProcess("git", new ProcessSettings {
