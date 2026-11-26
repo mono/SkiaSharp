@@ -14,7 +14,7 @@ Task ("Default")
 {
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     DirectoryPath results = $"{ROOT_PATH}/output/logs/testlogs/SkiaSharp.Tests.Devices.windows/{DATE_TIME_STR}";
-    var tfm = "net10.0-windows10.0.19041.0";
+    var tfm = "net11.0-windows10.0.19041.0";
 
     var properties = new Dictionary<string, string> {
         // Restrict restore too: --framework alone still restores the other platforms.

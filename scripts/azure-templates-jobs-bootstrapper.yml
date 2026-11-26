@@ -286,7 +286,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the correct version of the Android SDK
-          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools", "build-tools;35.0.0", "build-tools;36.0.0"
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools", "build-tools;36.0.0", "build-tools;37.0.0"
             displayName: Install Android SDK, platform tools and build tools
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))

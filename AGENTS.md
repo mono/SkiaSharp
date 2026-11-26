@@ -118,7 +118,7 @@ Single source of truth for all commands:
 | **Build Native (Linux x64)** | `dotnet cake --target=externals-linux --arch=x64` |
 | **Build Native (Linux ARM64)** | `dotnet cake --target=externals-linux --arch=arm64` |
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
-| **Test** | `dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0` |
+| **Test** | `dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0` |
 | **Regenerate** | `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1` |
 | **Regenerate release-notes (Prepare: api diffs + facts + index)** | `.agents/skills/release-notes/scripts/prepare.sh [--force] [--min-version X --max-version Y]` |
 | **Render all pages + TOC/index (offline, from committed JSON)** | `.agents/skills/release-notes/scripts/render.sh [--min-version X --max-version Y]` |
@@ -305,7 +305,7 @@ ThreadLocal<SKPaint> paint = new(() => new SKPaint());
 ### Running Tests
 
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0
 ```
 
 The unfiltered solution is the primary test entry point and the only final validation.
@@ -324,7 +324,7 @@ Example:
 
 ```bash
 dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0 \
   -- --filter-method "*CreateVkContextIsValid*"
 ```
 

@@ -60,9 +60,9 @@
     <!-- The base/lowest version of .NET we want to support for class libraries only (no platforms) -->
     <TFMBase>net6.0</TFMBase>
     <!-- The previous version of .NET that we are still shipping for (all the TFMs) -->
-    <TFMPrevious>net9.0</TFMPrevious>
+    <TFMPrevious>net10.0</TFMPrevious>
     <!-- The current version of .NET that we are shipping for (all the TFMs) -->
-    <TFMCurrent>net10.0</TFMCurrent>
+    <TFMCurrent>net11.0</TFMCurrent>
     <!-- The minimum version of .NET used by other supported library targets -->
     <TFMMinimum>net6.0</TFMMinimum>
   </PropertyGroup>
@@ -74,33 +74,33 @@
     preview WASM test job.
   -->
   <PropertyGroup Condition="'$(UsePreviewTFM)' == 'true'">
-    <TFMPrevious>net10.0</TFMPrevious>
-    <TFMCurrent>net11.0</TFMCurrent>
+    <TFMPrevious>net11.0</TFMPrevious>
+    <TFMCurrent>net12.0</TFMCurrent>
   </PropertyGroup>
 
   <!-- Target Platform Versions -->
   <PropertyGroup>
-    <!-- Previous (net9.0) -->
-    <TPVAndroidPrevious>35.0</TPVAndroidPrevious>
-    <TPViOSPrevious>18.0</TPViOSPrevious>
-    <TPVMacCatalystPrevious>18.0</TPVMacCatalystPrevious>
-    <TPVtvOSPrevious>18.0</TPVtvOSPrevious>
-    <TPVmacOSPrevious>15.0</TPVmacOSPrevious>
+    <!-- Previous (net10.0) -->
+    <TPVAndroidPrevious>36.0</TPVAndroidPrevious>
+    <TPViOSPrevious>26.0</TPViOSPrevious>
+    <TPVMacCatalystPrevious>26.0</TPVMacCatalystPrevious>
+    <TPVtvOSPrevious>26.0</TPVtvOSPrevious>
+    <TPVmacOSPrevious>26.0</TPVmacOSPrevious>
+    <TPVTizenPrevious>10.0</TPVTizenPrevious>
     <TPVWindowsPrevious>10.0.19041.0</TPVWindowsPrevious>
-    <!-- Current (net10.0) -->
-    <TPVAndroidCurrent>36.0</TPVAndroidCurrent>
-    <TPViOSCurrent>26.0</TPViOSCurrent>
-    <TPVMacCatalystCurrent>26.0</TPVMacCatalystCurrent>
-    <TPVtvOSCurrent>26.0</TPVtvOSCurrent>
-    <TPVmacOSCurrent>26.0</TPVmacOSCurrent>
-    <TPVTizenCurrent>10.0</TPVTizenCurrent>
+    <!-- Current (net11.0) -->
+    <TPVAndroidCurrent>37.0</TPVAndroidCurrent>
+    <TPViOSCurrent>27.2</TPViOSCurrent>
+    <TPVMacCatalystCurrent>27.2</TPVMacCatalystCurrent>
+    <TPVtvOSCurrent>27.2</TPVtvOSCurrent>
+    <TPVmacOSCurrent>27.2</TPVmacOSCurrent>
     <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
   </PropertyGroup>
 
   <!-- MAUI package versions per TFM; Apple workload/Xcode versions are pinned separately. -->
   <PropertyGroup>
+    <MauiVersion Condition="$(TargetFramework.StartsWith('net11'))">11.0.10</MauiVersion>
     <MauiVersion Condition="$(TargetFramework.StartsWith('net10'))">10.0.110</MauiVersion>
-    <MauiVersion Condition="$(TargetFramework.StartsWith('net9'))">9.0.120</MauiVersion>
   </PropertyGroup>
 
   <!-- .NET Standard, .NET Framework and .NET -->
@@ -109,7 +109,6 @@
     <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;$(FullFrameworkTargetFrameworks);$(TFMCurrent)</BasicTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
-    <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen$(TPVTizenCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="$(IsWindows)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</PlatformTargetFrameworksCurrent>
@@ -118,6 +117,7 @@
     <BasicTargetFrameworksPrevious>$(TFMPrevious)</BasicTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="$(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</PlatformTargetFrameworksPrevious>
+    <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-tizen$(TPVTizenPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-tvos$(TPVtvOSPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="$(IsWindows)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</PlatformTargetFrameworksPrevious>
@@ -230,16 +230,16 @@
     <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
-    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>15.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>17.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>17.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-macos'))">
-    <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>12.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>14.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>14.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-android'))">
-    <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>21.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>24.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows10'))">
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>

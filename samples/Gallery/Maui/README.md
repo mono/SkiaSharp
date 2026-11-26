@@ -9,21 +9,21 @@ PDF previews open in an external viewer; XPS is available on Windows.
 
 ## Build and run
 
-Install the .NET 10 SDK and the MAUI workload. Apple targets also require a
+Install the .NET 11 SDK and the MAUI workload. Apple targets also require a
 compatible Xcode installation. Run these commands from this folder:
 
 ```sh
 dotnet workload restore SkiaSharpSample.Maui.csproj
-dotnet build SkiaSharpSample.Maui.csproj -f net10.0-maccatalyst -t:Run
+dotnet build SkiaSharpSample.Maui.csproj -f net11.0-maccatalyst -t:Run
 ```
 
 For another platform, replace the framework with:
 
 | Platform | Framework | Build host |
 | --- | --- | --- |
-| Android | `net10.0-android` | Windows or macOS |
-| iOS | `net10.0-ios` | macOS |
-| Windows | `net10.0-windows10.0.19041.0` | Windows |
+| Android | `net11.0-android` | Windows or macOS |
+| iOS | `net11.0-ios` | macOS |
+| Windows | `net11.0-windows10.0.19041.0` | Windows |
 
 Android/iOS deployment requires a connected device or simulator. If installing
 an Android Debug APK manually, build with `-p:EmbedAssembliesIntoApk=true` so it

@@ -20,11 +20,11 @@ ARG BUILD_ARCH=arm64
 # One stage per arch — .NET cross images use "amd64" instead of "x64", so we
 # map it here in a single place. BuildKit only pulls the stage referenced by
 # the final `FROM base-${BUILD_ARCH}`; the others are inert.
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-arm         AS base-arm
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-arm64       AS base-arm64
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-amd64       AS base-x64
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-riscv64     AS base-riscv64
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-cross-loongarch64 AS base-loongarch64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net11.0-cross-arm         AS base-arm
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net11.0-cross-arm64       AS base-arm64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net11.0-cross-amd64       AS base-x64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net11.0-cross-riscv64     AS base-riscv64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net11.0-cross-loongarch64 AS base-loongarch64
 
 FROM base-${BUILD_ARCH}
 
@@ -75,7 +75,7 @@ RUN case "${BUILD_ARCH}" in \
        fi
 
 # Install the .NET SDK (needed for Cake build scripts).
-ARG DOTNET_SDK_VERSION=10.0.404
+ARG DOTNET_SDK_VERSION=11.0.100
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
     && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \

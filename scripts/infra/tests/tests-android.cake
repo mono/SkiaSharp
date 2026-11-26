@@ -34,7 +34,7 @@ Setup(context =>
         // emulator can cause OOM on CI agents.
         Information("Pre-building Android test project...");
         var properties = new Dictionary<string, string> {
-            { "TargetFramework", "net10.0-android" },
+            { "TargetFramework", "net11.0-android" },
         };
         AddGpuOptOut(properties);
         RunDotNetBuild(csproj, configuration: "Release", properties: properties);
@@ -70,7 +70,7 @@ Task("Default")
         properties["DeviceRunnersDevice"] = OWNED_ANDROID_SERIAL;
         properties["AdbTarget"] = "-s " + OWNED_ANDROID_SERIAL;
     }
-    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net10.0-android", noBuild: true, properties: properties);
+    RunDeviceRunnersTest(csproj, (DirectoryPath)TEST_RESULTS, configuration: "Release", framework: "net11.0-android", noBuild: true, properties: properties);
 });
 
 RunTarget(TARGET);

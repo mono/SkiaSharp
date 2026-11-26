@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
@@ -23,11 +23,11 @@
     <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
     <RestoreSources Condition="'$(PackageSource)' != ''">$(PackageSource);https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json</RestoreSources>
 
-    <!-- Framework band for the generated temp projects. Defaults to net10.0. To smoke-test the
-         packages on a newer band (e.g. a .NET 11 preview), override all three, e.g.:
-         dotnet test -p:BaseFramework=net11.0 -p:SdkVersion=11.0.100-preview.6 -p:SdkAllowPrerelease=true -->
-    <BaseFramework Condition="'$(BaseFramework)' == ''">net10.0</BaseFramework>
-    <SdkVersion Condition="'$(SdkVersion)' == ''">10.0.404</SdkVersion>
+    <!-- Framework band for the generated temp projects. Defaults to net11.0. To smoke-test the
+         packages on a newer band (e.g. a .NET 12 preview), override all three, e.g.:
+         dotnet test -p:BaseFramework=net12.0 -p:SdkVersion=12.0.100-preview.1 -p:SdkAllowPrerelease=true -->
+    <BaseFramework Condition="'$(BaseFramework)' == ''">net11.0</BaseFramework>
+    <SdkVersion Condition="'$(SdkVersion)' == ''">11.0.100</SdkVersion>
     <SdkAllowPrerelease Condition="'$(SdkAllowPrerelease)' == ''">false</SdkAllowPrerelease>
     
     <!-- Device configuration - can be overridden via command line -->

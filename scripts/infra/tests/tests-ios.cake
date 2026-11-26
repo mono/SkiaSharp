@@ -33,7 +33,7 @@ Task ("Default")
         { "DeviceRunnersDevice", OWNED_IOS_SIMULATOR },
     };
 
-    RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net10.0-ios", noBuild: SKIP_BUILD, properties: properties);
+    RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: "net11.0-ios", noBuild: SKIP_BUILD, properties: properties);
 });
 
 RunTarget(TARGET);

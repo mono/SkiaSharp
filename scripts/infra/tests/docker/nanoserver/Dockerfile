@@ -21,6 +21,6 @@
 # REQUIRES a Windows container host (Windows agent with container support). It cannot be built or
 # run on Linux/macOS Docker.
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.404-nanoserver-ltsc2022
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100-nanoserver-ltsc2025
 
 WORKDIR C:\work
