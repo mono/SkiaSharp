@@ -1,9 +1,20 @@
 {
-  "theme": "Servicing line opened",
-  "highlights_headline": "The 4.157.1 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "Vulkan driver failure recovery",
+  "highlights_headline": "SkiaSharp 4.157.1 avoids unsafe Vulkan descriptor-pool destruction after allocation failures on Imagination drivers.",
+  "highlights_body": "This unreleased servicing update stays on Skia m157 without changing managed bindings or the native ABI.",
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Imagination Vulkan allocation failures",
+          "detail": "Ganesh and Graphite deliberately abandon affected descriptor pools after host or device out-of-memory errors rather than destroying them in an unsafe driver state. Graphite also rejects subsequent allocations through a null pool handle. The workaround trades pool cleanup for safety.",
+          "prs": [5838]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }

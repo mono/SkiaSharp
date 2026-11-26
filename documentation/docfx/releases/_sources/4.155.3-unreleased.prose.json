@@ -1,9 +1,32 @@
 {
-  "theme": "Servicing line opened",
-  "highlights_headline": "The 4.155.3 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "Native hardening and Uno compatibility",
+  "highlights_headline": "SkiaSharp 4.155.3 backports native safety fixes and corrects Uno WebAssembly linking on .NET 9 and later.",
+  "highlights_body": "The unreleased servicing update keeps the 4.155 line available to Uno Platform 6 applications without changing public APIs.",
   "breaking": [],
-  "categories": [],
-  "contributor_summaries": {},
+  "categories": [
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Skia safety backports",
+          "detail": "Backports 25 additional Skia CVE fixes plus related hardening, covering shader and buffer bounds, glyph handling, texture sampling, GPU resource lifetime and failure recovery. These extend the earlier 4.155 fixes without changing public APIs or the native ABI.",
+          "prs": [5844]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Uno WebAssembly linking on newer .NET",
+          "detail": "Uno Platform 6 WebAssembly apps using the Skia renderer no longer receive the incompatible -sUSE_WEBGPU linker flag on .NET 9 and later, where Dawn supplies WebGPU. The flag remains enabled for .NET 8's built-in WebGPU port.",
+          "prs": [5835]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Backported native Skia safety fixes and corrected Uno WebAssembly linker flags for newer .NET targets."
+  },
   "preview_summaries": {}
 }

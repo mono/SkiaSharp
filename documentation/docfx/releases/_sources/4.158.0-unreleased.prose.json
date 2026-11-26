@@ -1,0 +1,40 @@
+{
+  "theme": "Rendering fixes and GPU resilience",
+  "highlights_headline": "SkiaSharp 4.158.0 collects upstream rendering corrections and safer GPU failure handling within Skia m158.",
+  "highlights_body": "The unreleased update corrects filtered-image sampling and glyph cropping while preserving managed APIs, generated bindings and dependency versions.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh flush failure handling",
+          "detail": "Propagates low-level draw and upload failures and abandons the context when recovery is unsafe. Failed promise-image fulfillment remains nonfatal: affected flush work is dropped, but the context remains usable.",
+          "prs": [5839]
+        },
+        {
+          "lead": "GPU allocation bounds and Imagination workarounds",
+          "detail": "Checks Ganesh buffer-size arithmetic and rejects oversized MSAA attachments on affected Imagination GL, ANGLE and Vulkan devices. On Imagination Vulkan allocation errors, affected descriptor pools are deliberately abandoned rather than destroyed unsafely; Graphite rejects null pool handles.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Ganesh sampling and destination-read bounds",
+          "detail": "Prevents mipmaps from incorporating unwritten scratch texels during image filtering and clips destination reads to their intended region when geometry extends beyond draw bounds.",
+          "prs": [5839]
+        },
+        {
+          "lead": "FreeType LCD glyph bounds",
+          "detail": "Corrects LCD16 pixel-space bounds and source/destination cropping when glyph loads return different outlines. Bitmap dimensions, outline translation and image-buffer bounds are also checked.",
+          "prs": [5839]
+        },
+        {
+          "lead": "Graphite painter order",
+          "detail": "Resets depth and bounds tracking after full-overwrite draws, preventing depth wrap from reordering later output.",
+          "prs": [5839]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

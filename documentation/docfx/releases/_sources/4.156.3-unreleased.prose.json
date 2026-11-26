@@ -1,9 +1,35 @@
 {
-  "theme": "Servicing line opened",
-  "highlights_headline": "The 4.156.3 servicing line is open, with no consumer-facing changes collected yet.",
-  "highlights_body": null,
+  "theme": "Rendering correctness and native safety",
+  "highlights_headline": "SkiaSharp 4.156.3 brings upstream fixes for image filtering, glyph cropping and native rendering bounds.",
+  "highlights_body": "This unreleased servicing update stays on Skia m156 and preserves the managed API and native ABI.",
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh image filtering and destination reads",
+          "detail": "Prevents image filters from sampling unwritten scratch texels through mipmaps and clips destination reads to their intended bounds when geometry overshoots draw bounds.",
+          "prs": [5837]
+        },
+        {
+          "lead": "FreeType LCD glyph cropping",
+          "detail": "Corrects pixel-space bounds and overlap cropping when successive glyph loads produce different outlines, avoiding misaligned LCD16 copies and assertions. Outline translation is also checked for overflow.",
+          "prs": [5837]
+        },
+        {
+          "lead": "Ganesh buffer-allocation bounds",
+          "detail": "Checks allocation, alignment and padding arithmetic to prevent overflow and out-of-bounds writes. Invalid or failed allocations skip the draw instead of using an invalid buffer.",
+          "prs": [5837]
+        },
+        {
+          "lead": "Graphite painter order after overwrites",
+          "detail": "Resets depth and bounds tracking when a draw overwrites earlier output, preventing repeated overwrites from wrapping depth and changing painter order.",
+          "prs": [5837]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
