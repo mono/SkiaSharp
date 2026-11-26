@@ -1,5 +1,5 @@
 diff --git a/scripts/code_generation_hashes/Static_builtins.json b/scripts/code_generation_hashes/Static_builtins.json
-index 937a7892cd..478365edd3 100644
+index 937a789..478365e 100644
 --- a/scripts/code_generation_hashes/Static_builtins.json
 +++ b/scripts/code_generation_hashes/Static_builtins.json
 @@ -4,7 +4,7 @@
@@ -21,7 +21,7 @@ index 937a7892cd..478365edd3 100644
      "75295e2c833ce136f35ea1df47fef1c4",
    "src/tests/compiler_tests/ImmutableString_test_autogen.cpp":
 diff --git a/src/common/system_utils_win.cpp b/src/common/system_utils_win.cpp
-index 74e9ed8f0a..daa6c4c42c 100644
+index 74e9ed8..daa6c4c 100644
 --- a/src/common/system_utils_win.cpp
 +++ b/src/common/system_utils_win.cpp
 @@ -246,7 +246,7 @@ std::string GetLibraryPath(void *libraryHandle)
@@ -33,8 +33,23 @@ index 74e9ed8f0a..daa6c4c42c 100644
      {
          return "";
      }
+diff --git a/src/compiler/translator/ShaderVars.cpp b/src/compiler/translator/ShaderVars.cpp
+index 9536228..7b42786 100644
+--- a/src/compiler/translator/ShaderVars.cpp
++++ b/src/compiler/translator/ShaderVars.cpp
+@@ -233,7 +233,9 @@ unsigned int ShaderVariable::getExternalSize() const
+     }
+     else
+     {
+-        memorySize += gl::VariableExternalSize(type);
++        const size_t elementSize = gl::VariableExternalSize(type);
++        ASSERT(angle::IsValueInRangeForNumericType<unsigned int>(elementSize));
++        memorySize += static_cast<unsigned int>(elementSize);
+     }
+ 
+     // multiply by array size to get total memory size of this variable / struct.
 diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/SymbolTable.h
-index c69eb82511..a6da3016e7 100644
+index c69eb82..a6da301 100644
 --- a/src/compiler/translator/SymbolTable.h
 +++ b/src/compiler/translator/SymbolTable.h
 @@ -126,7 +126,7 @@ constexpr SymbolRule::SymbolRule(int version,
@@ -65,7 +80,7 @@ index c69eb82511..a6da3016e7 100644
  }
  
 diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/translator/SymbolTable_autogen.cpp
-index 1b18dd98e1..22e2fa97e4 100644
+index 1b18dd9..22e2fa9 100644
 --- a/src/compiler/translator/SymbolTable_autogen.cpp
 +++ b/src/compiler/translator/SymbolTable_autogen.cpp
 @@ -19,6 +19,7 @@
@@ -92,8 +107,23 @@ index 1b18dd98e1..22e2fa97e4 100644
      }
      return BuiltInArray::kMangledOffsets[nameHash + 1];
  }
+diff --git a/src/compiler/translator/blocklayout.cpp b/src/compiler/translator/blocklayout.cpp
+index 5f873ea..f88b600 100644
+--- a/src/compiler/translator/blocklayout.cpp
++++ b/src/compiler/translator/blocklayout.cpp
+@@ -774,7 +774,9 @@ void BlockEncoderVisitor::enterStructAccess(const ShaderVariable &structVar, boo
+     if (!mIsTopLevelArrayStrideReady)
+     {
+         size_t structSize = mEncoder->getShaderVariableSize(structVar, isRowMajor);
+-        mTopLevelArrayStride *= structSize;
++        ASSERT(mTopLevelArrayStride >= 0 &&
++               (angle::CheckedNumeric<int>(mTopLevelArrayStride) * structSize).IsValid<int>());
++        mTopLevelArrayStride        = static_cast<int>(mTopLevelArrayStride * structSize);
+         mIsTopLevelArrayStrideReady = true;
+     }
+ 
 diff --git a/src/compiler/translator/gen_builtin_symbols.py b/src/compiler/translator/gen_builtin_symbols.py
-index 71a602e9ca..8a1a59b0d5 100755
+index 71a602e..8a1a59b 100755
 --- a/src/compiler/translator/gen_builtin_symbols.py
 +++ b/src/compiler/translator/gen_builtin_symbols.py
 @@ -261,6 +261,7 @@ template_symboltable_cpp = """// GENERATED FILE - DO NOT EDIT.
@@ -120,7 +150,7 @@ index 71a602e9ca..8a1a59b0d5 100755
  }}
  }}  // namespace
 diff --git a/src/image_util/loadimage_paletted.cpp b/src/image_util/loadimage_paletted.cpp
-index 488731b37e..fcbd500845 100644
+index 488731b..fcbd500 100644
 --- a/src/image_util/loadimage_paletted.cpp
 +++ b/src/image_util/loadimage_paletted.cpp
 @@ -130,7 +130,7 @@ void LoadPalettedToRGBA8Impl(const ImageLoadContext &context,
@@ -133,7 +163,7 @@ index 488731b37e..fcbd500845 100644
  
      const uint8_t *palette = input;
 diff --git a/src/image_util/storeimage_paletted.cpp b/src/image_util/storeimage_paletted.cpp
-index 6bed8f99c0..f856b2ea82 100644
+index 6bed8f9..f856b2e 100644
 --- a/src/image_util/storeimage_paletted.cpp
 +++ b/src/image_util/storeimage_paletted.cpp
 @@ -117,7 +117,7 @@ void StoreRGBA8ToPalettedImpl(size_t width,
@@ -145,3 +175,59 @@ index 6bed8f99c0..f856b2ea82 100644
      size_t paletteBytes = paletteSize * colorBytes;
  
      uint8_t *palette = output;
+diff --git a/src/libANGLE/ProgramExecutable.cpp b/src/libANGLE/ProgramExecutable.cpp
+index c99c213..b9fe897 100644
+--- a/src/libANGLE/ProgramExecutable.cpp
++++ b/src/libANGLE/ProgramExecutable.cpp
+@@ -2075,11 +2075,14 @@ void ProgramExecutable::copySamplerBindingsFromProgram(const ProgramExecutable &
+ {
+     const std::vector<SamplerBinding> &bindings = executable.getSamplerBindings();
+     const std::vector<GLuint> &textureUnits     = executable.getSamplerBoundTextureUnits();
+-    uint16_t adjustedStartIndex                 = mSamplerBoundTextureUnits.size();
++    ASSERT(angle::IsValueInRangeForNumericType<uint16_t>(mSamplerBoundTextureUnits.size()));
++    uint16_t adjustedStartIndex = static_cast<uint16_t>(mSamplerBoundTextureUnits.size());
+     mSamplerBoundTextureUnits.insert(mSamplerBoundTextureUnits.end(), textureUnits.begin(),
+                                      textureUnits.end());
+     for (const SamplerBinding &binding : bindings)
+     {
++        ASSERT(angle::IsValueInRangeForNumericType<uint16_t>(binding.textureUnitsStartIndex +
++                                                             adjustedStartIndex));
+         mSamplerBindings.push_back(binding);
+         mSamplerBindings.back().textureUnitsStartIndex += adjustedStartIndex;
+     }
+diff --git a/src/libANGLE/angletypes.cpp b/src/libANGLE/angletypes.cpp
+index f48d666..0697901 100644
+--- a/src/libANGLE/angletypes.cpp
++++ b/src/libANGLE/angletypes.cpp
+@@ -492,7 +492,7 @@ BlendStateExt::BlendStateExt(const size_t drawBufferCount)
+                                                ColorMaskStorage::GetMask(drawBufferCount))),
+       mColorMask(mAllColorMask),
+       mAllEnabledMask(0xFF >> (8 - drawBufferCount)),
+-      mDrawBufferCount(drawBufferCount)
++      mDrawBufferCount(static_cast<uint8_t>(drawBufferCount))
+ {}
+ 
+ BlendStateExt::BlendStateExt(const BlendStateExt &other) = default;
+diff --git a/src/libANGLE/angletypes.h b/src/libANGLE/angletypes.h
+index 1ec96d0..068db86 100644
+--- a/src/libANGLE/angletypes.h
++++ b/src/libANGLE/angletypes.h
+@@ -786,12 +786,13 @@ class BlendStateExt final
+ 
+     constexpr static uint8_t kColorMaskRGBA = 0xf;
+ 
+-    static constexpr size_t PackColorMask(const bool red,
+-                                          const bool green,
+-                                          const bool blue,
+-                                          const bool alpha)
++    static constexpr uint8_t PackColorMask(const bool red,
++                                           const bool green,
++                                           const bool blue,
++                                           const bool alpha)
+     {
+-        return (red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) | (alpha ? 8 : 0);
++        return static_cast<uint8_t>((red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) |
++                                    (alpha ? 8 : 0));
+     }
+ 
+     static constexpr void UnpackColorMask(const size_t value,
