@@ -35,19 +35,8 @@ void SyncAngle(DirectoryPath anglePath, string angleVersion, string angleRevisio
 void PatchAngleCompilerWarnings(DirectoryPath anglePath)
 {
     var patch = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/angle-warnings.patch");
-    var arguments = new ProcessArgumentBuilder()
-        .Append("apply").Append("--reverse").Append("--check").AppendQuoted(patch.FullPath);
-    if (StartProcess("git", new ProcessSettings {
-        Arguments = arguments,
-        WorkingDirectory = anglePath.FullPath,
-        RedirectStandardError = true,
-    }) == 0)
-        return;
-
-    RunProcess("git", new ProcessSettings {
-        Arguments = new ProcessArgumentBuilder().Append("apply").AppendQuoted(patch.FullPath),
-        WorkingDirectory = anglePath.FullPath,
-    });
+    if (!RunProcess("git", $"apply --reverse --check --quiet \"{patch.FullPath}\"", anglePath, allowFailure: true))
+        RunProcess("git", $"apply \"{patch.FullPath}\"", anglePath);
 }
 
 void CheckoutAngle(DirectoryPath anglePath, string angleVersion, string angleRevision)

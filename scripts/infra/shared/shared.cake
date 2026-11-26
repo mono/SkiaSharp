@@ -221,6 +221,18 @@ void RunProcess(FilePath process, string args = "")
     }
 }
 
+bool RunProcess(FilePath process, string args, DirectoryPath workingDirectory, bool allowFailure = false)
+{
+    var result = StartProcess(process, new ProcessSettings {
+        Arguments = args,
+        WorkingDirectory = workingDirectory.FullPath,
+    });
+    if (result != 0 && !allowFailure) {
+        throw new Exception($"Process '{process}' failed with error: {result}");
+    }
+    return result == 0;
+}
+
 void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
 {
     RunProcess(process, new ProcessSettings {
