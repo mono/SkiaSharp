@@ -178,7 +178,7 @@ jobs:
 
       - name: Build WASM native libraries
         run: |
-          bash scripts/infra/native/wasm/docker/build-local.sh 3.1.56 "_wasmeh,st"
+          bash scripts/infra/native/wasm/docker/build-local.sh 6.0.2 "_wasmeh,_newexc,st"
           sudo chown -R $(id -u):$(id -g) output
 
       - name: Upload WASM natives
@@ -210,12 +210,12 @@ jobs:
           - id: gallery-uno
             name: Gallery (Uno Platform)
             project: samples/Gallery/Uno/SkiaSharpSample.Uno.csproj
-            publish_args: -f net10.0-browserwasm -p:WasmEnableSIMD=false
+            publish_args: -f net11.0-browserwasm -p:WasmEnableSIMD=false
             smoke: samples/Gallery/Uno/scripts/smoke.sh
           - id: fiddle
             name: SkiaFiddle
             project: samples/SkiaFiddle/SkiaFiddle.csproj
-            publish_args: -f net10.0-browserwasm -p:WasmEnableSIMD=false
+            publish_args: -f net11.0-browserwasm -p:WasmEnableSIMD=false
             smoke: samples/SkiaFiddle/scripts/smoke.sh
     steps:
       - name: Checkout
