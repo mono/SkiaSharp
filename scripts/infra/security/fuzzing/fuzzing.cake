@@ -58,9 +58,9 @@ Task("fuzzing-prepare")
         new DotNetRunSettings
         {
             Configuration = "Release",
-            Framework = "net10.0",
+            Framework = "net11.0",
             MSBuildSettings = new DotNetMSBuildSettings()
-                .WithProperty("AllTargetFrameworks", "net10.0")
+                .WithProperty("AllTargetFrameworks", "net11.0")
                 .WithProperty("BuildArch", "x64")
         });
 });
@@ -81,9 +81,9 @@ Task("fuzzing-run")
         new DotNetRunSettings
         {
             Configuration = "Release",
-            Framework = "net10.0",
+            Framework = "net11.0",
             MSBuildSettings = new DotNetMSBuildSettings()
-                .WithProperty("AllTargetFrameworks", "net10.0")
+                .WithProperty("AllTargetFrameworks", "net11.0")
         });
 
     var crashes = local.Combine("crashes");

@@ -59,7 +59,7 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 
 ## Requirements
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 11 SDK](https://dotnet.microsoft.com/download) or later
 - Uno Platform workload: `dotnet workload install uno-platform`
 - Platform-specific workloads for target platforms (e.g., `android`, `ios`, `wasm-tools`)
 
@@ -68,13 +68,13 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 Build and run the desktop target:
 
 ```bash
-dotnet run -f net10.0-desktop
+dotnet run -f net11.0-desktop
 ```
 
 Or target a specific platform:
 
 ```bash
-dotnet build -f net10.0-browserwasm     # WebAssembly
-dotnet build -f net10.0-android         # Android
-dotnet build -f net10.0-ios             # iOS
+dotnet build -f net11.0-browserwasm     # WebAssembly
+dotnet build -f net11.0-android         # Android
+dotnet build -f net11.0-ios             # iOS
 ```

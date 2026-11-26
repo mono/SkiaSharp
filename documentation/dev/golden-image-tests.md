@@ -78,18 +78,18 @@ For managed-only changes:
 ```sh
 dotnet cake --target=externals-download
 dotnet test tests/SkiaSharp.Tests.Console.slnx \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0
 ```
 
 Focused checks:
 
 ```sh
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0 \
   -- --filter-class "*GoldenReferenceTests"
 
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0 \
   -p:EmbedGoldens=true -- --filter-class "*GoldenResourceTests"
 ```
 

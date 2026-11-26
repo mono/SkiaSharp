@@ -5,6 +5,8 @@ using CoreVideo;
 using OpenGL;
 using SkiaSharp.Views.GlesInterop;
 
+#pragma warning disable CA1422 // OpenGL is deprecated on macOS 10.14+; SKGLLayer wraps CAOpenGLLayer for legacy GL support
+
 namespace SkiaSharp.Views.Mac
 {
 	/// <summary>A CoreAnimation OpenGL layer that can be drawn on using SkiaSharp drawing commands.</summary>

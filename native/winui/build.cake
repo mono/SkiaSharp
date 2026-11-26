@@ -42,7 +42,7 @@ Task("SkiaSharp.Views.WinUI.Native")
 
         var anyOutDir = OUTPUT_PATH.Combine("any");
         EnsureDirectoryExists(anyOutDir);
-        var projectionOutDir = ROOT_PATH.Combine($"artifacts/bin/winui-projection/{CONFIGURATION}/net9.0-windows10.0.19041.0");
+        var projectionOutDir = ROOT_PATH.Combine($"artifacts/bin/winui-projection/{CONFIGURATION}/net10.0-windows10.0.19041.0");
         CopyFileToDirectory(projectionOutDir.CombineWithFilePath($"{name}.Projection.dll"), anyOutDir);
         CopyFileToDirectory(projectionOutDir.CombineWithFilePath($"{name}.Projection.pdb"), anyOutDir);
 

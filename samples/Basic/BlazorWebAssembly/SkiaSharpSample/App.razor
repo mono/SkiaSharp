@@ -1,4 +1,8 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using System.Diagnostics.CodeAnalysis
+@attribute [UnconditionalSuppressMessage("Trimming", "IL2110", Justification = "Razor-generated Router and LayoutView component references are preserved by the Blazor SDK.")]
+@attribute [UnconditionalSuppressMessage("Trimming", "IL2111", Justification = "Razor-generated Router and LayoutView component references are preserved by the Blazor SDK.")]
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

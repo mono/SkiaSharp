@@ -53,7 +53,7 @@ public class UnoBrowserSampleRunTests : DotNetSampleTestBase
 
     private async Task RunUnoBrowserSample(Func<BrowserRunningApp, Task> test)
     {
-        const string framework = "net10.0-browserwasm";
+        const string framework = "net11.0-browserwasm";
         var folder = Path.Combine("Basic", "UnoPlatform");
         var projectRelative = Path.Combine("SkiaSharpSample", "SkiaSharpSample.csproj");
         var options = new DotNetOptions { Framework = framework };

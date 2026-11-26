@@ -231,7 +231,7 @@ their output directories contain the newly built libraries:
 
 ```sh
 ./.dotnet/dotnet test tests/SkiaSharp.Tests.Console.slnx \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0
 ```
 
 Do not use `externals-download` for native changes or disable Xcode-version
@@ -254,7 +254,7 @@ virtual display:
 
 ```sh
 xvfb-run -a dotnet test tests/SkiaSharp.Views.Gtk4.Tests/SkiaSharp.Views.Gtk4.Tests.csproj \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0
 ```
 
 ## MSBuild Package-Consumer Tests
@@ -262,8 +262,8 @@ xvfb-run -a dotnet test tests/SkiaSharp.Views.Gtk4.Tests/SkiaSharp.Views.Gtk4.Te
 `tests/SkiaSharp.Tests.MSBuild` tests real packed SkiaSharp and HarfBuzzSharp
 packages using isolated .NET console consumers. It does not build the bindings,
 load native libraries into the test runner, or use the repository's native-copy
-targets. Install the stable and preview SDKs selected by `DOTNET_VERSION` and
-`DOTNET_VERSION_PREVIEW` in `scripts/azure-templates-variables.yml`; no mobile workloads,
+targets. Install the SDK selected by `DOTNET_VERSION` in
+`scripts/azure-templates-variables.yml`; no mobile workloads,
 submodules, GPU, browser, native source build, or native runtime dependencies are
 needed. These tests inspect build/publish output without executing native code.
 
@@ -274,9 +274,8 @@ missing artifacts. Both families require their core, `NativeAssets.Win32`,
 `NativeAssets.macOS`, and `NativeAssets.Linux` packages; package versions are read
 from their nuspec metadata, not inferred from the checkout.
 
-For local runs, select the configured preview SDK in `global.json` before running
-either entry point below; keep the .NET 10 runtime installed for the test runner.
-Run the CI entry point from the repository root:
+For local runs, keep the .NET 10 and .NET 11 runtimes installed for the consumer
+targets. Run the CI entry point from the repository root:
 
 ```sh
 dotnet cake --target=tests-msbuild

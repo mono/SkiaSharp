@@ -37,7 +37,7 @@ the repo is mounted at run time.
 
 ## What `tests-container` does
 
-1. builds `tests/SkiaSharp.Tests.Console` with `-p:TargetFrameworks=net10.0`, collapsing the
+1. builds `tests/SkiaSharp.Tests.Console` with `-p:TargetFrameworks=net11.0`, collapsing the
    multi-targeted binding projects to a single TFM so no Android/iOS workloads are needed;
 2. runs the suite via `dotnet test`, writing `output/logs/testlogs/**/TestResults.trx`.
 
@@ -111,7 +111,7 @@ cannot provide through the bootstrapper's `env:` parameter. Only the shared cons
 `tests-container` builds `SkiaSharp.Tests.Console` alone — so the Vulkan and Direct3D satellites
 never load and need no declaration.
 
-The Nano Server leg requires a Windows agent with container support (matching the `ltsc2022` image
+The Nano Server leg requires a Windows agent with container support (matching the `ltsc2025` image
 base) and pulls the Nano Server .NET SDK image.
 
 ## Fonts

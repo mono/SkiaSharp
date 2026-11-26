@@ -7,7 +7,7 @@
 #   2. Release notes      — .agents/skills/release-notes/scripts/prepare.sh (+ render.sh)
 # API reference generation belongs to mono/SkiaSharp-API-docs and is deliberately
 # outside this image.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.404
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100
 
 ENV DEBIAN_FRONTEND=noninteractive
 

@@ -334,16 +334,16 @@ jobs:
           dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64 `
             --vsinstall="$env:VS_INSTALL"
 
-      - name: Build SkiaSharp (managed, net10 only)
-        # AllTargetFrameworks=net10.0 drops SkiaSharp's platform TFMs (android/ios/...).
+      - name: Build SkiaSharp (managed, net11 only)
+        # AllTargetFrameworks=net11.0 drops SkiaSharp's platform TFMs (android/ios/...).
         # BuildingInsideVisualStudio=true drops the SkiaSharp.NativeAssets.* project
         # references, which on non-Linux hosts add -macos TFMs that would demand the
         # 'macos' workload. We only need the managed SkiaSharp.dll here (native comes
         # from output/native), so excluding those packaging projects is correct.
-        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
+        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net11.0 -p:BuildingInsideVisualStudio=true
 
-      - name: Build SkiaSharp.Testing (managed, net10 only)
-        run: dotnet build source/SkiaSharp.Testing/SkiaSharp.Testing.csproj -c Release -p:BasicTargetFrameworks=net10.0 -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true -p:ShouldUnsetParentConfigurationAndPlatform=false
+      - name: Build SkiaSharp.Testing (managed, net11 only)
+        run: dotnet build source/SkiaSharp.Testing/SkiaSharp.Testing.csproj -c Release -p:BasicTargetFrameworks=net11.0 -p:AllTargetFrameworks=net11.0 -p:BuildingInsideVisualStudio=true -p:ShouldUnsetParentConfigurationAndPlatform=false
 
       - name: Build source benchmarks
         run: dotnet build "$PROJECT" -c Release

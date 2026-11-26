@@ -1,8 +1,8 @@
-FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-android-amd64
+FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net11.0-android-amd64
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
-ARG DOTNET_SDK_VERSION=10.0.404
+ARG DOTNET_SDK_VERSION=11.0.100
 ARG ANDROID_NDK_VERSION=27.2.12479018
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1

@@ -22,7 +22,7 @@ public class MauiiOSTests(ITestOutputHelper output) : MauiTestBase(output)
         AppContext.GetData("iOSVersion") as string is { Length: > 0 } version ? version : DefaultVersion;
     
     protected override string PlatformName => "iOS";
-    protected override string TargetFramework => "net10.0-ios";
+    protected override string TargetFramework => "net11.0-ios";
 
     protected override string? CanRunOnCurrentMachine() =>
         OperatingSystem.IsMacOS() ? null : "iOS requires macOS (hardware requirement)";

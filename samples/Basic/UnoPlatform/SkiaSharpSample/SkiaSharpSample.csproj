@@ -1,11 +1,12 @@
 <Project Sdk="Uno.Sdk/7.0.0-dev.79">
     <PropertyGroup>
-        <TargetFrameworks>net10.0-desktop;net10.0-browserwasm</TargetFrameworks>
-        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0;$(TargetFrameworks)</TargetFrameworks>
-        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) or $([MSBuild]::IsOSPlatform('OSX'))">net10.0-android;net10.0-ios;$(TargetFrameworks)</TargetFrameworks>
+        <TargetFrameworks>net11.0-desktop;net11.0-browserwasm</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net11.0-windows10.0.19041.0;$(TargetFrameworks)</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) or $([MSBuild]::IsOSPlatform('OSX'))">net11.0-android;net11.0-ios;$(TargetFrameworks)</TargetFrameworks>
   
         <OutputType>Exe</OutputType>
         <UnoSingleProject>true</UnoSingleProject>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   
         <ApplicationTitle>SkiaSharpSample</ApplicationTitle>
         <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
@@ -17,6 +18,9 @@
         <UnoFeatures>
             Skia;
         </UnoFeatures>
+        <PublishAot Condition="$(TargetFramework.Contains('-ios'))">true</PublishAot>
+        <RunAOTCompilation Condition="'$(_IsPublishing)' == 'true'">true</RunAOTCompilation>
+        <ValidateSceneManifest>false</ValidateSceneManifest>
     </PropertyGroup>
   
   

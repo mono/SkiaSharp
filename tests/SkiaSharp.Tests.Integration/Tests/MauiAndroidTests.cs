@@ -31,7 +31,7 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         AppContext.GetData("AndroidApiLevel") as string is { Length: > 0 } api ? api : null;
     
     protected override string PlatformName => "Android";
-    protected override string TargetFramework => "net10.0-android";
+    protected override string TargetFramework => "net11.0-android";
 
     /// <summary>
     /// Get the ADB path for this machine.

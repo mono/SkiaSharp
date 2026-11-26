@@ -37,12 +37,12 @@ Task ("Default")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    var tfm = "net10.0";
+    var tfm = "net11.0";
     var testAssembly = "SkiaSharp.Tests.Console";
     var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";
 
     var props = new Dictionary<string, string> {
-        // TargetFrameworks (plural) collapses the multi-targeted binding projects to net10.0 only,
+        // TargetFrameworks (plural) collapses the multi-targeted binding projects to net11.0 only,
         // so the Android/iOS/etc. workloads are never restored/built — keeping the image lean.
         { "TargetFramework", tfm },
         { "TargetFrameworks", tfm },

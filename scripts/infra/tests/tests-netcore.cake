@@ -25,7 +25,7 @@ Task ("Default")
 
     var failedTests = 0;
 
-    var tfm = "net10.0";
+    var tfm = "net11.0";
     var testAssemblies = new List<string> {
         "SkiaSharp.Tests.Console",
         "SkiaSharp.Tests.SingletonInit.Console",
