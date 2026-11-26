@@ -43,9 +43,8 @@ stages:
           target: externals-tvos
           cacheJob: native/tvos
           enableCaching: ${{ parameters.enableCaching }}
-          ${{ if eq(variables['System.TeamProject'], 'public') }}:
-            preBuildSteps:
-              - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
-                displayName: Install the tvOS simulator platform
-                retryCountOnTaskFailure: 3
-                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          preBuildSteps:
+            - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform tvOS
+              displayName: Install the tvOS simulator platform
+              retryCountOnTaskFailure: 3
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
