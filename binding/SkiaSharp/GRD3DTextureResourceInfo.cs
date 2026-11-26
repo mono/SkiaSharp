@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents Direct3D texture resource information for GPU interoperability.</summary>
 	/// <remarks />
-	public class GRD3DTextureResourceInfo : IDisposable
+	public partial class GRD3DTextureResourceInfo : IDisposable
 	{
 		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.GRD3DTextureResourceInfo" />.</summary>
 		/// <remarks />

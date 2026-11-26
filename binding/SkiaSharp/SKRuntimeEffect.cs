@@ -9,7 +9,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a compiled SkSL runtime effect that can be used to create shaders, color filters, or blenders.</summary>
 	/// <remarks />
-	public unsafe class SKRuntimeEffect : SKObject, ISKReferenceCounted
+	public unsafe partial class SKRuntimeEffect : SKObject, ISKReferenceCounted
 	{
 		private string[] children;
 		private string[] uniforms;
@@ -294,7 +294,7 @@ namespace SkiaSharp
 
 	/// <summary>Represents a collection of uniform values for an <see cref="T:SkiaSharp.SKRuntimeEffect" />.</summary>
 	/// <remarks>This class manages uniform data that is passed to SkSL shaders, color filters, and blenders. Uniforms are identified by name and can hold various data types including floats, integers, colors, and matrices.</remarks>
-	public unsafe class SKRuntimeEffectUniforms : IEnumerable<string>, IDisposable
+	public unsafe partial class SKRuntimeEffectUniforms : IEnumerable<string>, IDisposable
 	{
 		internal readonly struct Variable
 		{
@@ -523,7 +523,7 @@ namespace SkiaSharp
 
 	/// <summary>Represents a collection of child shaders or color filters for use with <see cref="T:SkiaSharp.SKRuntimeEffect" />.</summary>
 	/// <remarks />
-	public class SKRuntimeEffectChildren : IEnumerable<string>, IDisposable
+	public partial class SKRuntimeEffectChildren : IEnumerable<string>, IDisposable
 	{
 		private readonly string[] names;
 		private readonly SKObject[] children;
@@ -962,7 +962,7 @@ namespace SkiaSharp
 
 	/// <summary>Base class for building runtime effects with uniforms and child effects.</summary>
 	/// <remarks />
-	public class SKRuntimeEffectBuilder : IDisposable
+	public partial class SKRuntimeEffectBuilder : IDisposable
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKRuntimeEffectBuilder" /> class for the specified runtime effect.</summary>
 		/// <param name="effect">The compiled runtime effect to build upon.</param>
@@ -1002,7 +1002,7 @@ namespace SkiaSharp
 
 	/// <summary>A builder for creating shaders from SkSL runtime effects.</summary>
 	/// <remarks />
-	public class SKRuntimeShaderBuilder : SKRuntimeEffectBuilder
+	public partial class SKRuntimeShaderBuilder : SKRuntimeEffectBuilder
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKRuntimeShaderBuilder" /> class for the specified runtime effect.</summary>
 		/// <param name="effect">The compiled shader runtime effect.</param>
@@ -1028,7 +1028,7 @@ namespace SkiaSharp
 
 	/// <summary>A builder for creating color filters from SkSL runtime effects.</summary>
 	/// <remarks />
-	public class SKRuntimeColorFilterBuilder : SKRuntimeEffectBuilder
+	public partial class SKRuntimeColorFilterBuilder : SKRuntimeEffectBuilder
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKRuntimeColorFilterBuilder" /> class for the specified runtime effect.</summary>
 		/// <param name="effect">The compiled color filter runtime effect.</param>
@@ -1047,7 +1047,7 @@ namespace SkiaSharp
 
 	/// <summary>A builder for creating blenders from SkSL runtime effects.</summary>
 	/// <remarks />
-	public class SKRuntimeBlenderBuilder : SKRuntimeEffectBuilder
+	public partial class SKRuntimeBlenderBuilder : SKRuntimeEffectBuilder
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKRuntimeBlenderBuilder" /> class for the specified runtime effect.</summary>
 		/// <param name="effect">The compiled blender runtime effect.</param>

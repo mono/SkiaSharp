@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>A type of <see cref="T:SkiaSharp.SKCanvas" /> that draws to multiple canvases at the same time.</summary>
 	/// <remarks />
-	public class SKNWayCanvas : SKNoDrawCanvas
+	public partial class SKNWayCanvas : SKNoDrawCanvas
 	{
 		internal SKNWayCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)

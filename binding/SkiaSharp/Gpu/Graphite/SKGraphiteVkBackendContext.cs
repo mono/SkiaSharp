@@ -18,7 +18,7 @@ namespace SkiaSharp
 	///
 	/// This type implements `IDisposable`.
 	/// ]]></format></remarks>
-	public unsafe class SKGraphiteVkBackendContext : IDisposable
+	public unsafe partial class SKGraphiteVkBackendContext : IDisposable
 	{
 		private SKGraphiteVkGetProcedureAddressDelegate getProc;
 		private GCHandle getProcHandle;

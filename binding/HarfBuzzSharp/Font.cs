@@ -10,7 +10,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a specific font face.</summary>
 	/// <remarks />
-	public unsafe class Font : NativeObject
+	public unsafe partial class Font : NativeObject
 	{
 		internal const int NameBufferLength = 128;
 

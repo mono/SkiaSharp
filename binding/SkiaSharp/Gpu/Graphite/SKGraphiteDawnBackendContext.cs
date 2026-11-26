@@ -13,7 +13,7 @@ namespace SkiaSharp
 	///
 	/// On non-yielding environments such as the browser (WASM), the Dawn event loop cannot be pumped from inside a managed call frame, so synchronous submits are rejected; drive readbacks with <xref:SkiaSharp.SKGraphiteContext.CheckAsyncWorkCompletion> instead.
 	/// ]]></format></remarks>
-	public unsafe class SKGraphiteDawnBackendContext : IDisposable
+	public unsafe partial class SKGraphiteDawnBackendContext : IDisposable
 	{
 		private static readonly OSPlatform Browser = OSPlatform.Create ("BROWSER");
 

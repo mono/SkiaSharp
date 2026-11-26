@@ -7,7 +7,7 @@ namespace SkiaSharp
 {
 	/// <summary>Recorded drawing operations made to a <see cref="T:SkiaSharp.SKCanvas" /> to be played back at a later time.</summary>
 	/// <remarks>This base class handles serialization and a few other miscellany.</remarks>
-	public unsafe class SKPicture : SKObject, ISKReferenceCounted
+	public unsafe partial class SKPicture : SKObject, ISKReferenceCounted
 	{
 		internal SKPicture (IntPtr h, bool owns)
 			: base (h, owns)

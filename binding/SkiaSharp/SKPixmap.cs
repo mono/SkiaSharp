@@ -5,7 +5,7 @@ namespace SkiaSharp
 {
 	/// <summary>Pairs <see cref="T:SkiaSharp.SKImageInfo" /> with actual pixels and rowbytes.</summary>
 	/// <remarks>This class does not try to manage the lifetime of the pixel memory (nor the color table if provided).</remarks>
-	public unsafe class SKPixmap : SKObject
+	public unsafe partial class SKPixmap : SKObject
 	{
 		private const string UnableToCreateInstanceMessage = "Unable to create a new SKPixmap instance.";
 

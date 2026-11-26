@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Encapsulates the geometric region used to specify clipping areas for drawing.</summary>
 	/// <remarks />
-	public unsafe class SKRegion : SKObject, ISKSkipObjectRegistration
+	public unsafe partial class SKRegion : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKRegion (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -457,7 +457,7 @@ namespace SkiaSharp
 
 		/// <summary>Iterates over the rectangles that make up a region.</summary>
 		/// <remarks />
-		public class RectIterator : SKObject, ISKSkipObjectRegistration
+		public partial class RectIterator : SKObject, ISKSkipObjectRegistration
 		{
 			internal RectIterator (SKRegion region)
 				: base (SkiaApi.sk_region_iterator_new (region.Handle), true)
@@ -495,7 +495,7 @@ namespace SkiaSharp
 
 		/// <summary>Iterates over the rectangles of a region clipped to a bounding rectangle.</summary>
 		/// <remarks />
-		public class ClipIterator : SKObject, ISKSkipObjectRegistration
+		public partial class ClipIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKRectI clip;
 
@@ -536,7 +536,7 @@ namespace SkiaSharp
 
 		/// <summary>Iterates over the horizontal spans of a region at a specific y-coordinate.</summary>
 		/// <remarks />
-		public class SpanIterator : SKObject, ISKSkipObjectRegistration
+		public partial class SpanIterator : SKObject, ISKSkipObjectRegistration
 		{
 			internal SpanIterator (SKRegion region, int y, int left, int right)
 				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right), true)

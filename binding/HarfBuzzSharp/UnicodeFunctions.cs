@@ -6,7 +6,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a collection of callback functions used by HarfBuzz for Unicode character property lookups such as script, general category, and combining class.</summary>
 	/// <remarks />
-	public unsafe class UnicodeFunctions : NativeObject
+	public unsafe partial class UnicodeFunctions : NativeObject
 	{
 		private static readonly Lazy<UnicodeFunctions> defaultFunctions =
 			new Lazy<UnicodeFunctions> (() => new StaticUnicodeFunctions (HarfBuzzApi.hb_unicode_funcs_get_default ()));
@@ -305,7 +305,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		private class StaticUnicodeFunctions : UnicodeFunctions
+		private partial class StaticUnicodeFunctions : UnicodeFunctions
 		{
 			public StaticUnicodeFunctions (IntPtr handle)
 				: base (handle)

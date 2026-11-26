@@ -33,7 +33,7 @@ namespace SkiaSharp.Resources
 
 	/// <summary>A resource provider proxy that caches loaded image assets.</summary>
 	/// <remarks><para>This provider wraps another <see cref="T:SkiaSharp.Resources.ResourceProvider" /> and caches loaded image assets to avoid repeated loading of the same resources.</para><para>Use this provider to improve performance when an animation references the same image assets multiple times.</para></remarks>
-	public sealed class CachingResourceProvider : ResourceProvider
+	public sealed partial class CachingResourceProvider : ResourceProvider
 	{
 		/// <summary>Creates a caching proxy around the specified resource provider.</summary>
 		/// <param name="resourceProvider">The underlying resource provider to wrap with caching.</param>
@@ -53,7 +53,7 @@ namespace SkiaSharp.Resources
 
 	/// <summary>A resource provider that can load resources from data URIs embedded in Lottie JSON files.</summary>
 	/// <remarks><para>Data URIs allow embedding image and font data directly in the Lottie JSON file using base64 encoding. This provider parses and decodes such embedded resources.</para><para>Use the constructor with a fallback provider to handle both embedded data URIs and external resources.</para></remarks>
-	public sealed class DataUriResourceProvider : ResourceProvider
+	public sealed partial class DataUriResourceProvider : ResourceProvider
 	{
 		/// <summary>Creates a data URI resource provider without a fallback provider.</summary>
 		/// <param name="preDecode">If <see langword="true" />, images are decoded upfront at load time; if <see langword="false" />, images are decoded on-the-fly at rasterization time.</param>
@@ -79,7 +79,7 @@ namespace SkiaSharp.Resources
 
 	/// <summary>A resource provider that loads resources from a directory on the file system.</summary>
 	/// <remarks>Use this provider to load Lottie animation assets (images, fonts, nested animations) from a local directory.</remarks>
-	public sealed class FileResourceProvider : ResourceProvider
+	public sealed partial class FileResourceProvider : ResourceProvider
 	{
 		/// <summary>Creates a new file resource provider with the specified base directory.</summary>
 		/// <param name="baseDirectory">The base directory path from which to load resources.</param>

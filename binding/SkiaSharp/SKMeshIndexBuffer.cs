@@ -4,7 +4,7 @@ namespace SkiaSharp;
 
 /// <summary>Represents a CPU- or GPU-backed buffer holding the index data of a mesh.</summary>
 /// <remarks />
-public unsafe class SKMeshIndexBuffer : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+public unsafe partial class SKMeshIndexBuffer : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 {
 	internal SKMeshIndexBuffer (IntPtr handle, bool owns)
 		: base (handle, owns)

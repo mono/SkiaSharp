@@ -7,7 +7,7 @@ namespace SkiaSharp
 {
 	/// <summary>Describes properties and constraints of a given <see cref="T:SkiaSharp.SKSurface" />.</summary>
 	/// <remarks>The rendering engine can parse these during drawing, and can sometimes optimize its performance (e.g. disabling an expensive feature).</remarks>
-	public class SKSurfaceProperties : SKObject
+	public partial class SKSurfaceProperties : SKObject
 	{
 		internal SKSurfaceProperties (IntPtr h, bool owns)
 			: base (h, owns)

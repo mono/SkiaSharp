@@ -11,7 +11,7 @@ namespace SkiaSharp
 {
 	/// <summary>Manages a collection of fonts.</summary>
 	/// <remarks />
-	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
+	public unsafe partial class SKFontManager : SKObject, ISKReferenceCounted
 	{
 		private static SKFontManager defaultManager;
 		private static bool defaultManagerInitialized;

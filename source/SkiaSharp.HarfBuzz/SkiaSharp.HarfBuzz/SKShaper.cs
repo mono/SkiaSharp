@@ -7,7 +7,7 @@ namespace SkiaSharp.HarfBuzz
 {
 	/// <summary>Encapsulates basic text shaping.</summary>
 	/// <remarks />
-	public class SKShaper : IDisposable
+	public partial class SKShaper : IDisposable
 	{
 		internal const int FONT_SIZE_SCALE = 512;
 

@@ -14,7 +14,7 @@ namespace SkiaSharp.Views.Desktop
 	/// <remarks />
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
-	public class SKGLControl : GLControl
+	public partial class SKGLControl : GLControl
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;

@@ -24,7 +24,7 @@ using WinRT;
 
 namespace SkiaSharp.Views.GlesInterop
 {
-	internal unsafe class GlesContext : IDisposable
+	internal unsafe partial class GlesContext : IDisposable
 	{
 		private static EGLDisplay eglDisplay = Egl.EGL_NO_DISPLAY;
 

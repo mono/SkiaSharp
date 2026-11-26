@@ -239,7 +239,7 @@ namespace SkiaSharp
 	///
 	/// ![Compose Shader](~/images/compose.png "Compose Shader")
 	/// ]]></format></remarks>
-	public unsafe class SKShader : SKObject, ISKReferenceCounted
+	public unsafe partial class SKShader : SKObject, ISKReferenceCounted
 	{
 		internal SKShader (IntPtr handle, bool owns)
 			: base (handle, owns)

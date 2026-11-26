@@ -141,7 +141,7 @@ namespace SkiaSharp.Views.Maui.Handlers
 			return new SKPoint((float)x, (float)y);
 		}
 
-		private class MauiSKSwapChainPanel : SKSwapChainPanel
+		private partial class MauiSKSwapChainPanel : SKSwapChainPanel
 		{
 			public bool IgnorePixelScaling { get; set; }
 

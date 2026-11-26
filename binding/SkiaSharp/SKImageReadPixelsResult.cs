@@ -12,7 +12,7 @@ namespace SkiaSharp
 	///
 	/// Results may be planar (for example, a YUV read has more than one plane); use <xref:SkiaSharp.SKImageReadPixelsResult.PlaneCount> to enumerate the planes.
 	/// ]]></format></remarks>
-	public sealed unsafe class SKImageReadPixelsResult : IDisposable
+	public sealed unsafe partial class SKImageReadPixelsResult : IDisposable
 	{
 		private IntPtr handle;
 		private readonly SKImageInfo info;

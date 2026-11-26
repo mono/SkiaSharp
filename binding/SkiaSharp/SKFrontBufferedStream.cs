@@ -7,7 +7,7 @@ namespace SkiaSharp
 {
 	/// <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
 	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
-	public class SKFrontBufferedStream : Stream
+	public partial class SKFrontBufferedStream : Stream
 	{
 		/// <summary>The default number of bytes to buffer (4096 bytes).</summary>
 		/// <remarks />
