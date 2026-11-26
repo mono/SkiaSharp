@@ -18,7 +18,8 @@ config("skiasharp") {
         "/w24244",
         "/w34267",
       ]
-      cflags_cc = cflags_c
+      # ANGLE's palette shifts are bounded but trigger C4334 on 64-bit builds.
+      cflags_cc = cflags_c + [ "/wd4334" ]
     }
     ldflags = [ "/guard:cf" ]
 

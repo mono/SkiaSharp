@@ -47,7 +47,7 @@ index 9536228813..7b812f4516 100644
  
      // multiply by array size to get total memory size of this variable / struct.
 diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/SymbolTable.h
-index c69eb82511..a6da3016e7 100644
+index c69eb82511..701eff8915 100644
 --- a/src/compiler/translator/SymbolTable.h
 +++ b/src/compiler/translator/SymbolTable.h
 @@ -126,7 +126,7 @@ constexpr SymbolRule::SymbolRule(int version,
@@ -67,15 +67,6 @@ index c69eb82511..a6da3016e7 100644
 +      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
        mSymbolOrVar(resourceVar)
  {}
- 
-@@ -147,7 +147,7 @@ constexpr SymbolRule SymbolRule::Get(T value)
- {
-     static_assert(version < 0x4000u, "version OOR");
-     static_assert(static_cast<uint8_t>(shaders) < 0xFFu, "shaders OOR");
--    static_assert(static_cast<uint8_t>(extensionIndex) < 0xFF, "extensionIndex OOR");
-+    static_assert(extensionIndex < 0xFFu, "extensionIndex OOR");
-     return SymbolRule(version, shaders, extensionIndex, value);
- }
  
 diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/translator/SymbolTable_autogen.cpp
 index 1b18dd98e1..a6c0befdca 100644
@@ -116,36 +107,43 @@ index 71a602e9ca..903936893e 100755
      return BuiltInArray::kMangledOffsets[nameHash + 1];
  }}
  }}  // namespace
-diff --git a/src/image_util/loadimage_paletted.cpp b/src/image_util/loadimage_paletted.cpp
-index 488731b37e..fcbd500845 100644
---- a/src/image_util/loadimage_paletted.cpp
-+++ b/src/image_util/loadimage_paletted.cpp
-@@ -130,7 +130,7 @@ void LoadPalettedToRGBA8Impl(const ImageLoadContext &context,
-                              size_t outputDepthPitch)
- {
-     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
--    size_t paletteSize  = 1 << indexBits;
-+    size_t paletteSize  = size_t{1} << indexBits;
-     size_t paletteBytes = paletteSize * colorBytes;
+diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
+index 5c0f686891..d7b0531040 100644
+--- a/src/libANGLE/Context.cpp
++++ b/src/libANGLE/Context.cpp
+@@ -6546,7 +6546,8 @@ void Context::getFragmentShadingRates(GLsizei samples,
+     uint32_t shadingRatesCounts = 0;
+     angle::ShadingRateMap SupportedFragmentShadingRateSampleCounts =
+         mImplementation->getSupportedFragmentShadingRateEXTSampleCounts();
+-    uint32_t supportedShadingRateCounts = SupportedFragmentShadingRateSampleCounts.size();
++    uint32_t supportedShadingRateCounts =
++        static_cast<uint32_t>(SupportedFragmentShadingRateSampleCounts.size());
  
-     const uint8_t *palette = input;
-diff --git a/src/image_util/storeimage_paletted.cpp b/src/image_util/storeimage_paletted.cpp
-index 6bed8f99c0..f856b2ea82 100644
---- a/src/image_util/storeimage_paletted.cpp
-+++ b/src/image_util/storeimage_paletted.cpp
-@@ -117,7 +117,7 @@ void StoreRGBA8ToPalettedImpl(size_t width,
-     ASSERT((redBlueBits + greenBits + redBlueBits + alphaBits) % 8 == 0);
- 
-     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
--    size_t paletteSize  = 1 << indexBits;
-+    size_t paletteSize  = size_t{1} << indexBits;
-     size_t paletteBytes = paletteSize * colorBytes;
- 
-     uint8_t *palette = output;
+     for (uint32_t i = 1; i < supportedShadingRateCounts; i++)
+     {
+@@ -9928,7 +9929,8 @@ void Context::getPerfMonitorCounterData(GLuint monitor,
+             GLuint resultSize = 0;
+             for (const PerfMonitorCounterGroupInfo &group : perfMonitorGroups)
+             {
+-                resultSize += sizeof(PerfMonitorTriplet) * group.counters.size();
++                resultSize +=
++                    static_cast<GLuint>(sizeof(PerfMonitorTriplet) * group.counters.size());
+             }
+             *data = resultSize;
+             byteCount += sizeof(GLuint);
 diff --git a/src/libANGLE/ProgramExecutable.cpp b/src/libANGLE/ProgramExecutable.cpp
-index c99c21375e..4cfe7b4ddb 100644
+index c99c21375e..e3ca878a05 100644
 --- a/src/libANGLE/ProgramExecutable.cpp
 +++ b/src/libANGLE/ProgramExecutable.cpp
+@@ -399,7 +399,7 @@ GLuint GetResourceLocation(const GLchar *name, const T &variable, GLint location
+         // The 'name' string may not contain the array notation "[0]"
+         if (arrayIndex != GL_INVALID_INDEX)
+         {
+-            location += arrayIndex;
++            location += static_cast<GLint>(arrayIndex);
+         }
+     }
+ 
 @@ -2075,7 +2075,7 @@ void ProgramExecutable::copySamplerBindingsFromProgram(const ProgramExecutable &
  {
      const std::vector<SamplerBinding> &bindings = executable.getSamplerBindings();
@@ -191,3 +189,49 @@ index 1ec96d0c5e..068db86858 100644
      }
  
      static constexpr void UnpackColorMask(const size_t value,
+diff --git a/src/libANGLE/renderer/d3d/VertexDataManager.cpp b/src/libANGLE/renderer/d3d/VertexDataManager.cpp
+index 53d8432e44..f132bd538e 100644
+--- a/src/libANGLE/renderer/d3d/VertexDataManager.cpp
++++ b/src/libANGLE/renderer/d3d/VertexDataManager.cpp
+@@ -389,8 +389,8 @@ angle::Result VertexDataManager::StoreStaticAttrib(const gl::Context *context,
+             angle::CheckedNumeric<size_t> startIndex = offset / attribStride;
+             ANGLE_CHECK_GL_MATH(GetImplAs<ContextD3D>(context), startIndex.IsValid());
+             size_t si = startIndex.ValueOrDie();
+-            ANGLE_TRY(staticBuffer->storeStaticAttribute(context, attrib, binding, -si, totalCount,
+-                                                         0, sourceData));
++            ANGLE_TRY(staticBuffer->storeStaticAttribute(context, attrib, binding, 0 - si,
++                                                         totalCount, 0, sourceData));
+         }
+     }
+ 
+diff --git a/src/libANGLE/renderer/gl/StateManagerGL.cpp b/src/libANGLE/renderer/gl/StateManagerGL.cpp
+index 38103f2d81..c276c939cb 100644
+--- a/src/libANGLE/renderer/gl/StateManagerGL.cpp
++++ b/src/libANGLE/renderer/gl/StateManagerGL.cpp
+@@ -2913,7 +2913,7 @@ void StateManagerGL::setBlendFuncs(const gl::BlendStateExt &blendState)
+             gl::BlendStateExt::FactorStorage::Type commonDstColor = 0;
+             gl::BlendStateExt::FactorStorage::Type commonSrcAlpha = 0;
+             gl::BlendStateExt::FactorStorage::Type commonDstAlpha = 0;
+-            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1; i++)
++            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1u; i++)
+             {
+                 const gl::BlendStateExt::FactorStorage::Type tempCommonSrcColor =
+                     blendState.expandSrcColorIndexed(i);
+@@ -2996,7 +2996,7 @@ void StateManagerGL::setBlendEquations(const gl::BlendStateExt &blendState)
+             bool found                                                   = false;
+             gl::BlendStateExt::EquationStorage::Type commonEquationColor = 0;
+             gl::BlendStateExt::EquationStorage::Type commonEquationAlpha = 0;
+-            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1; i++)
++            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1u; i++)
+             {
+                 const gl::BlendStateExt::EquationStorage::Type tempCommonEquationColor =
+                     blendState.expandEquationColorIndexed(i);
+@@ -4094,7 +4094,7 @@ void StateManagerGL::setColorMaskForFramebuffer(const gl::BlendStateExt &blendSt
+     {
+         bool found                                                = false;
+         gl::BlendStateExt::ColorMaskStorage::Type commonColorMask = 0;
+-        for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1; i++)
++        for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1u; i++)
+         {
+             const gl::BlendStateExt::ColorMaskStorage::Type tempCommonColorMask =
+                 blendState.expandColorMaskIndexed(i);

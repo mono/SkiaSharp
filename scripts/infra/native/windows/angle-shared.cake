@@ -235,7 +235,7 @@ void BuildAngle(
             { "vs2026_install", VS_INSTALL },
             { "VCToolsVersion", TOOLSET_VERSION.Value },
         });
-        RunNinja(anglePath, outDir, target);
+        RunNinja(anglePath, outDir, $"-k 0 {target}");
     }
     finally
     {
