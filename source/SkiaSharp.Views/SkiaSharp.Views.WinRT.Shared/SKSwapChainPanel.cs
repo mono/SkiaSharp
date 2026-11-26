@@ -64,14 +64,7 @@ namespace SkiaSharp.Views.UWP
 			// create the SkiaSharp context
 			if (context == null)
 			{
-#if WINDOWS_UWP
-				// TODO: on uwp SkiaApi.gr_glinterface_create_native_interface ()) throws
-				// Indirect call guard check detected invalid control transfer
-				// if app was idle in the background 
 				glInterface = GRGlInterface.CreateAngle();
-#else
-				glInterface = GRGlInterface.Create();
-#endif
 				context = GRContext.CreateGl(glInterface);
 			}
 
