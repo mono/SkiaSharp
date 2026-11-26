@@ -18,7 +18,7 @@ namespace SkiaSharp.Views.UWP
 {
 	/// <summary>A XAML SwapChainPanel that uses ANGLE to provide an OpenGL ES rendering context.</summary>
 	/// <remarks>This is the base class for <see cref="T:SkiaSharp.Views.Windows.SKSwapChainPanel" /> and provides the OpenGL ES context management via ANGLE (Almost Native Graphics Layer Engine).</remarks>
-	public class AngleSwapChainPanel : SwapChainPanel
+	public partial class AngleSwapChainPanel : SwapChainPanel
 	{
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(

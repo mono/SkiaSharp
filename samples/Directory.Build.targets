@@ -10,24 +10,34 @@
   <!-- Microsoft.Android.Sdk.Darwin's binutils wrapper scripts and mono-aot-cross (with compile-in-child / llvm-path)
        invoke paths without quoting spaces, which fails when the SDK is installed under ~/Library/Application Support/dotnetup/dotnet.
        Route those tool paths through the space-free /usr/local/share/dotnet symlink when present. -->
+  <Target Name="_CheckDotnetupAlias"
+          Condition="$([MSBuild]::IsOSPlatform('OSX')) and Exists('/usr/local/share/dotnet') and Exists('$(HOME)/Library/Application Support/dotnetup/dotnet')">
+    <Exec Command="if [ &quot;/usr/local/share/dotnet&quot; -ef &quot;$_DotnetupSdkDirectory&quot; ]; then echo true; fi"
+          EnvironmentVariables="_DotnetupSdkDirectory=$(HOME)/Library/Application Support/dotnetup/dotnet"
+          ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_DotnetupAliasMatches" />
+    </Exec>
+  </Target>
+
   <Target Name="_FixAndroidBinUtilsDirectoryWithSpaces"
           AfterTargets="_ResolveSdks"
-          Condition="'$(AndroidBinUtilsDirectory)' != '' and $(AndroidBinUtilsDirectory.Contains(' ')) and Exists('/usr/local/share/dotnet')">
-    <PropertyGroup>
-      <_SpaceFreeAndroidBinUtilsDirectory>$([System.Text.RegularExpressions.Regex]::Replace('$(AndroidBinUtilsDirectory)', '^.*/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</_SpaceFreeAndroidBinUtilsDirectory>
+          DependsOnTargets="_CheckDotnetupAlias"
+          Condition="'$(AndroidBinUtilsDirectory)' != '' and $(AndroidBinUtilsDirectory.Contains(' '))">
+    <PropertyGroup Condition="'$(_DotnetupAliasMatches)' == 'true'">
+      <_SpaceFreeAndroidBinUtilsDirectory>$([System.String]::Copy('$(AndroidBinUtilsDirectory)').Replace('$(HOME)/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</_SpaceFreeAndroidBinUtilsDirectory>
       <AndroidBinUtilsDirectory Condition="Exists('$(_SpaceFreeAndroidBinUtilsDirectory)')">$(_SpaceFreeAndroidBinUtilsDirectory)</AndroidBinUtilsDirectory>
     </PropertyGroup>
   </Target>
 
   <Target Name="_FixWasmToolPathsWithSpaces"
           BeforeTargets="_SetupEmscripten"
-          Condition="Exists('/usr/local/share/dotnet')">
-    <PropertyGroup>
-      <EmscriptenSdkToolsPath Condition="'$(EmscriptenSdkToolsPath)' != '' and $(EmscriptenSdkToolsPath.Contains(' '))">$([System.Text.RegularExpressions.Regex]::Replace('$(EmscriptenSdkToolsPath)', '^.*/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</EmscriptenSdkToolsPath>
-      <EmscriptenNodeToolsPath Condition="'$(EmscriptenNodeToolsPath)' != '' and $(EmscriptenNodeToolsPath.Contains(' '))">$([System.Text.RegularExpressions.Regex]::Replace('$(EmscriptenNodeToolsPath)', '^.*/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</EmscriptenNodeToolsPath>
-      <EmscriptenUpstreamBinPath Condition="'$(EmscriptenUpstreamBinPath)' != '' and $(EmscriptenUpstreamBinPath.Contains(' '))">$([System.Text.RegularExpressions.Regex]::Replace('$(EmscriptenUpstreamBinPath)', '^.*/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</EmscriptenUpstreamBinPath>
+          DependsOnTargets="_CheckDotnetupAlias">
+    <PropertyGroup Condition="'$(_DotnetupAliasMatches)' == 'true'">
+      <EmscriptenSdkToolsPath Condition="'$(EmscriptenSdkToolsPath)' != '' and $(EmscriptenSdkToolsPath.Contains(' '))">$([System.String]::Copy('$(EmscriptenSdkToolsPath)').Replace('$(HOME)/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</EmscriptenSdkToolsPath>
+      <EmscriptenNodeToolsPath Condition="'$(EmscriptenNodeToolsPath)' != '' and $(EmscriptenNodeToolsPath.Contains(' '))">$([System.String]::Copy('$(EmscriptenNodeToolsPath)').Replace('$(HOME)/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</EmscriptenNodeToolsPath>
+      <EmscriptenUpstreamBinPath Condition="'$(EmscriptenUpstreamBinPath)' != '' and $(EmscriptenUpstreamBinPath.Contains(' '))">$([System.String]::Copy('$(EmscriptenUpstreamBinPath)').Replace('$(HOME)/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))</EmscriptenUpstreamBinPath>
     </PropertyGroup>
-    <ItemGroup>
+    <ItemGroup Condition="'$(_DotnetupAliasMatches)' == 'true'">
       <_SpaceFreeMonoAotCrossCompiler Include="@(MonoAotCrossCompiler->Replace('$(HOME)/Library/Application Support/dotnetup/dotnet/', '/usr/local/share/dotnet/'))" />
       <MonoAotCrossCompiler Remove="@(MonoAotCrossCompiler)" />
       <MonoAotCrossCompiler Include="@(_SpaceFreeMonoAotCrossCompiler)" />
