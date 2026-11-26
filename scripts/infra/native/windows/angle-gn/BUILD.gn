@@ -10,6 +10,10 @@ config("skiasharp") {
       "/guard:cf",
       "/GS",
     ]
+    if (current_os == "winuwp" && !is_clang) {
+      # Chromium only sets a Windows warning level for Clang.
+      cflags += [ "/W3" ]
+    }
     ldflags = [ "/guard:cf" ]
 
     # The Spectre libraries are desktop CRT libraries. UWP must link the store

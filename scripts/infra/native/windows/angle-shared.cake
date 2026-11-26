@@ -22,12 +22,33 @@ void SyncAngle(DirectoryPath anglePath, string angleVersion, string angleRevisio
 {
     CheckoutAngle(anglePath, angleVersion, angleRevision);
     SyncAngleSubmodules(anglePath);
+    PatchAngleCompilerWarnings(anglePath);
     LinkAngleClang(anglePath);
     PatchAngleToolchainOutputNames(anglePath);
     WriteAngleGclientArgs(anglePath);
     ApplyAngleSkiaSharpConfig(anglePath);
     WriteAngleLastChange(anglePath);
     UseWindowsSdkResourceCompiler(anglePath);
+}
+
+// Keep the policy-critical conversion warnings enabled in UWP MSVC builds,
+// including third-party objects linked into libGLESv2.
+void PatchAngleCompilerWarnings(DirectoryPath anglePath)
+{
+    var patch = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/angle-uwp-warnings.patch");
+    var arguments = new ProcessArgumentBuilder()
+        .Append("apply").Append("--reverse").Append("--check").AppendQuoted(patch.FullPath);
+    if (StartProcess("git", new ProcessSettings {
+        Arguments = arguments,
+        WorkingDirectory = anglePath.FullPath,
+        RedirectStandardError = true,
+    }) == 0)
+        return;
+
+    RunProcess("git", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder().Append("apply").AppendQuoted(patch.FullPath),
+        WorkingDirectory = anglePath.FullPath,
+    });
 }
 
 void CheckoutAngle(DirectoryPath anglePath, string angleVersion, string angleRevision)
