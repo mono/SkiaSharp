@@ -1,9 +1,20 @@
 {
-  "theme": "Servicing line opened",
-  "highlights_headline": "The 4.157.1 servicing line is open, with no consumer-facing changes collected yet.",
+  "theme": "Vulkan driver error recovery",
+  "highlights_headline": "SkiaSharp 4.157.1 avoids unsafe Vulkan descriptor-pool destruction after allocation failures on Imagination drivers.",
   "highlights_body": null,
   "breaking": [],
-  "categories": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Safer Imagination Vulkan allocation failure handling",
+          "detail": "Ganesh and Graphite abandon affected descriptor pools after host or device out-of-memory errors rather than destroy them in an unsafe state. Graphite also rejects further allocations through the null pool handle. The workaround deliberately trades pool cleanup for safety on affected drivers.",
+          "prs": [5838]
+        }
+      ]
+    }
+  ],
   "contributor_summaries": {},
   "preview_summaries": {}
 }
