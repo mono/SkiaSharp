@@ -69,6 +69,9 @@ RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-inst
 
 ENV CC=clang CXX=clang++
 
+# binutils provides `ar` for archiving static libraries (e.g. libskcms.a) during the Skia build.
+RUN tdnf install -y binutils && tdnf clean all
+
 # Install fontconfig-dev into the sysroot from Alpine repos.
 # The sysroot is Alpine 3.17 but we pull fontconfig from 3.21 (newer keys needed).
 # SSL_CERT_FILE is needed because apk.static (musl) can't find Azure Linux's CA bundle.
