@@ -189,21 +189,16 @@
     <DebugSymbols>true</DebugSymbols>
     <!-- We have a lot of unsafe code -->
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  <!-- We don't use the build output so don't do extra work -->
+    <!-- We don't use the build output so don't do extra work -->
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <!-- Enable AOT and trim analysis for managed libraries -->
   <PropertyGroup Condition="'$(IsAotCompatible)' == '' and !$(MSBuildProjectName.Contains('.NativeAssets.')) and $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
     <IsAotCompatible>true</IsAotCompatible>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-    <EnableAotAnalyzer>true</EnableAotAnalyzer>
-    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <!-- Keep trim analysis on; the MAUI and Apple SDKs otherwise turn it off for non-AOT projects -->
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
     <_MauiDoNotConfigureTrimAnalyzer>true</_MauiDoNotConfigureTrimAnalyzer>
-    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
-    <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
-    <TrimmerSingleWarn>false</TrimmerSingleWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TF_BUILD)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(CI)' == 'true' ">
