@@ -45,7 +45,7 @@ diff --git a/src/image_util/storeimage_paletted.cpp b/src/image_util/storeimage_
 diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/translator/SymbolTable_autogen.cpp
 --- a/src/compiler/translator/SymbolTable_autogen.cpp
 +++ b/src/compiler/translator/SymbolTable_autogen.cpp
-@@ -24269,7 +24269,7 @@ namespace
+@@ -24269,6 +24269,6 @@ namespace
  uint16_t GetNextRuleIndex(uint32_t nameHash)
  {
      if (nameHash == 1424 - 1)
@@ -54,31 +54,3 @@ diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/tran
 +        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
      }
      return BuiltInArray::kMangledOffsets[nameHash + 1];
-diff --git a/src/compiler/translator/gen_builtin_symbols.py b/src/compiler/translator/gen_builtin_symbols.py
---- a/src/compiler/translator/gen_builtin_symbols.py
-+++ b/src/compiler/translator/gen_builtin_symbols.py
-@@ -353,6 +353,6 @@ template_symboltable_cpp = """// GENERATED FILE - DO NOT EDIT.
- uint16_t GetNextRuleIndex(uint32_t nameHash)
- {{
-     if (nameHash == {num_mangled_names} - 1)
--        return ArraySize(BuiltInArray::kRules);
-+        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
-     return BuiltInArray::kMangledOffsets[nameHash + 1];
- }}
-diff --git a/scripts/code_generation_hashes/Static_builtins.json b/scripts/code_generation_hashes/Static_builtins.json
---- a/scripts/code_generation_hashes/Static_builtins.json
-+++ b/scripts/code_generation_hashes/Static_builtins.json
-@@ -5,5 +5,5 @@
-     "ad7feffe539c46c0527249776c4cb1a7",
-   "src/compiler/translator/SymbolTable_autogen.cpp":
--    "8a80e4865b683c589ae06dd0694f1f45",
-+    "f9ce2d0697a32fa3f2534a9704576e26",
-   "src/compiler/translator/SymbolTable_autogen.h":
-     "e8ad6382d05f71593d12b9f3b18a3fe9",
-@@ -13,5 +13,5 @@
-     "2eb97570952f7f077076ee53f28736b0",
-   "src/compiler/translator/gen_builtin_symbols.py":
--    "8fb0c41413df635c408259e2c29141f8",
-+    "437b431844e9849b453ea64c2059f7dc",
-   "src/compiler/translator/tree_util/BuiltIn_autogen.h":
-     "75295e2c833ce136f35ea1df47fef1c4",
