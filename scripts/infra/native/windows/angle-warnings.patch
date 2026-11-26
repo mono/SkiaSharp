@@ -1,51 +1,88 @@
-diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/SymbolTable.h
---- a/src/compiler/translator/SymbolTable.h
-+++ b/src/compiler/translator/SymbolTable.h
-@@ -127,5 +127,5 @@ constexpr SymbolRule::SymbolRule(int version,
-       mVersion(static_cast<uint16_t>(version)),
-       mShaders(static_cast<uint8_t>(shaders)),
--      mExtensionIndex(extensionIndex),
-+      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
-       mSymbolOrVar(symbol)
- {}
-@@ -138,5 +138,5 @@ constexpr SymbolRule::SymbolRule(int version,
-       mVersion(static_cast<uint16_t>(version)),
-       mShaders(static_cast<uint8_t>(shaders)),
--      mExtensionIndex(extensionIndex),
-+      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
-       mSymbolOrVar(resourceVar)
- {}
+diff --git a/scripts/code_generation_hashes/Static_builtins.json b/scripts/code_generation_hashes/Static_builtins.json
+index 937a7892cd..478365edd3 100644
+--- a/scripts/code_generation_hashes/Static_builtins.json
++++ b/scripts/code_generation_hashes/Static_builtins.json
+@@ -4,7 +4,7 @@
+   "src/compiler/translator/Operator_autogen.h":
+     "ad7feffe539c46c0527249776c4cb1a7",
+   "src/compiler/translator/SymbolTable_autogen.cpp":
+-    "8a80e4865b683c589ae06dd0694f1f45",
++    "a55e24f7c00a03dd4158be3276dc1884",
+   "src/compiler/translator/SymbolTable_autogen.h":
+     "e8ad6382d05f71593d12b9f3b18a3fe9",
+   "src/compiler/translator/builtin_function_declarations.txt":
+@@ -12,7 +12,7 @@
+   "src/compiler/translator/builtin_variables.json":
+     "2eb97570952f7f077076ee53f28736b0",
+   "src/compiler/translator/gen_builtin_symbols.py":
+-    "8fb0c41413df635c408259e2c29141f8",
++    "4025589118a096178f4a504ec1132b70",
+   "src/compiler/translator/tree_util/BuiltIn_autogen.h":
+     "75295e2c833ce136f35ea1df47fef1c4",
+   "src/tests/compiler_tests/ImmutableString_test_autogen.cpp":
 diff --git a/src/common/system_utils_win.cpp b/src/common/system_utils_win.cpp
+index 74e9ed8f0a..daa6c4c42c 100644
 --- a/src/common/system_utils_win.cpp
 +++ b/src/common/system_utils_win.cpp
-@@ -247,5 +247,5 @@ std::string GetLibraryPath(void *libraryHandle)
+@@ -246,7 +246,7 @@ std::string GetLibraryPath(void *libraryHandle)
+ 
      std::array<wchar_t, MAX_PATH> buffer;
      if (GetModuleFileNameW(reinterpret_cast<HMODULE>(libraryHandle), buffer.data(),
 -                           buffer.size()) == 0)
 +                           static_cast<DWORD>(buffer.size())) == 0)
      {
          return "";
-diff --git a/src/image_util/loadimage_paletted.cpp b/src/image_util/loadimage_paletted.cpp
---- a/src/image_util/loadimage_paletted.cpp
-+++ b/src/image_util/loadimage_paletted.cpp
-@@ -131,4 +131,4 @@ void LoadPalettedToRGBA8Impl(const ImageLoadContext &context,
+     }
+diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/SymbolTable.h
+index c69eb82511..a6da3016e7 100644
+--- a/src/compiler/translator/SymbolTable.h
++++ b/src/compiler/translator/SymbolTable.h
+@@ -126,7 +126,7 @@ constexpr SymbolRule::SymbolRule(int version,
+     : mIsVar(0u),
+       mVersion(static_cast<uint16_t>(version)),
+       mShaders(static_cast<uint8_t>(shaders)),
+-      mExtensionIndex(extensionIndex),
++      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
+       mSymbolOrVar(symbol)
+ {}
+ 
+@@ -137,7 +137,7 @@ constexpr SymbolRule::SymbolRule(int version,
+     : mIsVar(1u),
+       mVersion(static_cast<uint16_t>(version)),
+       mShaders(static_cast<uint8_t>(shaders)),
+-      mExtensionIndex(extensionIndex),
++      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
+       mSymbolOrVar(resourceVar)
+ {}
+ 
+@@ -147,7 +147,7 @@ constexpr SymbolRule SymbolRule::Get(T value)
  {
-     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
--    size_t paletteSize  = 1 << indexBits;
-+    size_t paletteSize  = size_t{1} << indexBits;
-     size_t paletteBytes = paletteSize * colorBytes;
-diff --git a/src/image_util/storeimage_paletted.cpp b/src/image_util/storeimage_paletted.cpp
---- a/src/image_util/storeimage_paletted.cpp
-+++ b/src/image_util/storeimage_paletted.cpp
-@@ -119,3 +119,3 @@ void StoreRGBA8ToPalettedImpl(size_t width,
-     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
--    size_t paletteSize  = 1 << indexBits;
-+    size_t paletteSize  = size_t{1} << indexBits;
-     size_t paletteBytes = paletteSize * colorBytes;
+     static_assert(version < 0x4000u, "version OOR");
+     static_assert(static_cast<uint8_t>(shaders) < 0xFFu, "shaders OOR");
+-    static_assert(static_cast<uint8_t>(extensionIndex) < 0xFF, "extensionIndex OOR");
++    static_assert(extensionIndex < 0xFFu, "extensionIndex OOR");
+     return SymbolRule(version, shaders, extensionIndex, value);
+ }
+ 
 diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/translator/SymbolTable_autogen.cpp
+index 1b18dd98e1..22e2fa97e4 100644
 --- a/src/compiler/translator/SymbolTable_autogen.cpp
 +++ b/src/compiler/translator/SymbolTable_autogen.cpp
-@@ -24269,6 +24269,6 @@ namespace
+@@ -19,6 +19,7 @@
+ #include "compiler/translator/tree_util/BuiltIn.h"
+ 
+ #include <array>
++#include <limits>
+ 
+ namespace sh
+ {
+@@ -24266,11 +24267,14 @@ void TSymbolTable::initializeBuiltInVariables(sh::GLenum shaderType,
+ 
+ namespace
+ {
++static_assert(ArraySize(BuiltInArray::kRules) <= std::numeric_limits<uint16_t>::max(),
++              "Too many built-in symbol rules");
++
  uint16_t GetNextRuleIndex(uint32_t nameHash)
  {
      if (nameHash == 1424 - 1)
@@ -54,3 +91,57 @@ diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/tran
 +        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
      }
      return BuiltInArray::kMangledOffsets[nameHash + 1];
+ }
+diff --git a/src/compiler/translator/gen_builtin_symbols.py b/src/compiler/translator/gen_builtin_symbols.py
+index 71a602e9ca..8a1a59b0d5 100755
+--- a/src/compiler/translator/gen_builtin_symbols.py
++++ b/src/compiler/translator/gen_builtin_symbols.py
+@@ -261,6 +261,7 @@ template_symboltable_cpp = """// GENERATED FILE - DO NOT EDIT.
+ #include "compiler/translator/SymbolTable.h"
+ 
+ #include <array>
++#include <limits>
+ 
+ namespace sh
+ {{
+@@ -350,10 +351,13 @@ void TSymbolTable::initializeBuiltInVariables(sh::GLenum shaderType,
+ 
+ namespace
+ {{
++static_assert(ArraySize(BuiltInArray::kRules) <= std::numeric_limits<uint16_t>::max(),
++              "Too many built-in symbol rules");
++
+ uint16_t GetNextRuleIndex(uint32_t nameHash)
+ {{
+     if (nameHash == {num_mangled_names} - 1)
+-        return ArraySize(BuiltInArray::kRules);
++        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
+     return BuiltInArray::kMangledOffsets[nameHash + 1];
+ }}
+ }}  // namespace
+diff --git a/src/image_util/loadimage_paletted.cpp b/src/image_util/loadimage_paletted.cpp
+index 488731b37e..fcbd500845 100644
+--- a/src/image_util/loadimage_paletted.cpp
++++ b/src/image_util/loadimage_paletted.cpp
+@@ -130,7 +130,7 @@ void LoadPalettedToRGBA8Impl(const ImageLoadContext &context,
+                              size_t outputDepthPitch)
+ {
+     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
+-    size_t paletteSize  = 1 << indexBits;
++    size_t paletteSize  = size_t{1} << indexBits;
+     size_t paletteBytes = paletteSize * colorBytes;
+ 
+     const uint8_t *palette = input;
+diff --git a/src/image_util/storeimage_paletted.cpp b/src/image_util/storeimage_paletted.cpp
+index 6bed8f99c0..f856b2ea82 100644
+--- a/src/image_util/storeimage_paletted.cpp
++++ b/src/image_util/storeimage_paletted.cpp
+@@ -117,7 +117,7 @@ void StoreRGBA8ToPalettedImpl(size_t width,
+     ASSERT((redBlueBits + greenBits + redBlueBits + alphaBits) % 8 == 0);
+ 
+     size_t colorBytes   = (redBlueBits + greenBits + redBlueBits + alphaBits) / 8;
+-    size_t paletteSize  = 1 << indexBits;
++    size_t paletteSize  = size_t{1} << indexBits;
+     size_t paletteBytes = paletteSize * colorBytes;
+ 
+     uint8_t *palette = output;
