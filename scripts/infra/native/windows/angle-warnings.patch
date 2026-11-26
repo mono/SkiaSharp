@@ -171,10 +171,10 @@ index f48d666cb7..06979013fb 100644
  
  BlendStateExt::BlendStateExt(const BlendStateExt &other) = default;
 diff --git a/src/libANGLE/angletypes.h b/src/libANGLE/angletypes.h
-index 1ec96d0c5e..068db86858 100644
+index 1ec96d0c5e..78ab9da1d5 100644
 --- a/src/libANGLE/angletypes.h
 +++ b/src/libANGLE/angletypes.h
-@@ -786,12 +786,13 @@ class BlendStateExt final
+@@ -786,10 +786,10 @@ class BlendStateExt final
  
      constexpr static uint8_t kColorMaskRGBA = 0xf;
  
@@ -187,12 +187,8 @@ index 1ec96d0c5e..068db86858 100644
 +                                           const bool blue,
 +                                           const bool alpha)
      {
--        return (red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) | (alpha ? 8 : 0);
-+        return static_cast<uint8_t>((red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) |
-+                                    (alpha ? 8 : 0));
+         return (red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) | (alpha ? 8 : 0);
      }
- 
-     static constexpr void UnpackColorMask(const size_t value,
 diff --git a/src/libANGLE/renderer/d3d/VertexDataManager.cpp b/src/libANGLE/renderer/d3d/VertexDataManager.cpp
 index 53d8432e44..f132bd538e 100644
 --- a/src/libANGLE/renderer/d3d/VertexDataManager.cpp
