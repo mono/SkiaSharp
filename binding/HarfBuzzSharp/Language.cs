@@ -8,7 +8,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a language tag used for text shaping.</summary>
 	/// <remarks>Language tags are used to identify the language of text being shaped, which affects how certain characters are rendered.</remarks>
-	public unsafe partial class Language : NativeObject
+	public unsafe class Language : NativeObject
 	{
 		private static readonly Lazy<Language> defaultLanguage =
 			new Lazy<Language> (() => new StaticLanguage (HarfBuzzApi.hb_language_get_default ()));
@@ -63,7 +63,7 @@ namespace HarfBuzzSharp
 		/// <remarks />
 		public override int GetHashCode () => Name != null ? Name.GetHashCode () : 0;
 
-		private partial class StaticLanguage : Language
+		private class StaticLanguage : Language
 		{
 			public StaticLanguage (IntPtr handle)
 				: base (handle)

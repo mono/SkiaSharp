@@ -38,7 +38,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// ]]></format></remarks>
-	public partial class SKManagedStream : SKAbstractManagedStream
+	public class SKManagedStream : SKAbstractManagedStream
 	{
 		private Stream stream;
 

@@ -12,7 +12,7 @@ namespace SkiaSharp
 	///
 	/// This type wraps a native Skia resource and implements `IDisposable`. Dispose it once it has been inserted and is no longer needed.
 	/// ]]></format></remarks>
-	public unsafe partial class SKGraphiteRecording : SKObject
+	public unsafe class SKGraphiteRecording : SKObject
 	{
 		internal SKGraphiteRecording (IntPtr handle, bool owns)
 			: base (handle, owns)

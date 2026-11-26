@@ -10,7 +10,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents an immutable set of vertex data that can be used with <see cref="M:SkiaSharp.SKCanvas.DrawVertices(SkiaSharp.SKVertices,SkiaSharp.SKBlendMode,SkiaSharp.SKPaint)" />.</summary>
 	/// <remarks />
-	public unsafe partial class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class SKVertices : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKVertices (IntPtr x, bool owns)
 			: base (x, owns)

@@ -7,7 +7,7 @@ namespace SkiaSharp
 {
 	/// <summary>Color filters for use with the <see cref="P:SkiaSharp.SKPaint.ColorFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.</summary>
 	/// <remarks />
-	public unsafe partial class SKColorFilter : SKObject, ISKReferenceCounted
+	public unsafe class SKColorFilter : SKObject, ISKReferenceCounted
 	{
 		/// <summary>The size of the color matrix.</summary>
 		/// <remarks />

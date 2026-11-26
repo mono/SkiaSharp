@@ -274,7 +274,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// ]]></format></remarks>
-	public unsafe partial class SKCanvas : SKObject
+	public unsafe class SKCanvas : SKObject
 	{
 		private const int PatchCornerCount = 4;
 		private const int PatchCubicsCount = 12;
@@ -2409,7 +2409,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// ]]></format></remarks>
-	public partial class SKAutoCanvasRestore : IDisposable
+	public class SKAutoCanvasRestore : IDisposable
 	{
 		private SKCanvas canvas;
 		private readonly int saveCount;

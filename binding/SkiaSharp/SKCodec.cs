@@ -11,7 +11,7 @@ namespace SkiaSharp
 
 	/// <summary>An abstraction layer directly on top of an image codec.</summary>
 	/// <remarks />
-	public unsafe partial class SKCodec : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKCodec : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKCodec (IntPtr handle, bool owns)
 			: base (handle, owns)

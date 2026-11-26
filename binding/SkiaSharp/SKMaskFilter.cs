@@ -10,7 +10,7 @@ namespace SkiaSharp
 
 	/// <summary>Mask filters perform transformations on an alpha-channel mask before drawing. A mask filter is set using the <see cref="P:SkiaSharp.SKPaint.MaskFilter" /> property on <see cref="T:SkiaSharp.SKPaint" /> type.</summary>
 	/// <remarks />
-	public unsafe partial class SKMaskFilter : SKObject, ISKReferenceCounted
+	public unsafe class SKMaskFilter : SKObject, ISKReferenceCounted
 	{
 		private const float BlurSigmaScale = 0.57735f;
 		/// <summary>Gets the maximum number of colors in the color lookup table.</summary>

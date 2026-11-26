@@ -9,7 +9,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents the Metal backend context used to create a GPU-backed <see cref="T:SkiaSharp.GRContext" />.</summary>
 	/// <remarks />
-	public partial class GRMtlBackendContext : IDisposable
+	public class GRMtlBackendContext : IDisposable
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRMtlBackendContext" /> class.</summary>
 		/// <remarks />

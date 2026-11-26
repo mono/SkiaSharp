@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a type that can be used to calculate the length of, and segments of, a path.</summary>
 	/// <remarks />
-	public unsafe partial class SKPathMeasure : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKPathMeasure : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPathMeasure (IntPtr handle, bool owns)
 			: base (handle, owns)

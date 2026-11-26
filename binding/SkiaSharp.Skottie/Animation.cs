@@ -7,7 +7,7 @@ namespace SkiaSharp.Skottie
 {
 	/// <summary>Represents a Lottie animation that can be loaded, positioned, and rendered to a canvas.</summary>
 	/// <remarks><para>Skottie is a Lottie animation player built on top of the Skia graphics library. Lottie is an animation file format that allows designers to create animations in tools like Adobe After Effects and export them as JSON files for use in applications.</para><para>Use the <see cref="M:SkiaSharp.Skottie.Animation.Create(System.String)" /> or <see cref="M:SkiaSharp.Skottie.Animation.Parse(System.String)" /> factory methods to load an animation, then use <see cref="M:SkiaSharp.Skottie.Animation.Seek(System.Double,SkiaSharp.SceneGraph.InvalidationController)" /> or <see cref="M:SkiaSharp.Skottie.Animation.SeekFrame(System.Double,SkiaSharp.SceneGraph.InvalidationController)" /> to set the animation state, and finally call <see cref="M:SkiaSharp.Skottie.Animation.Render(SkiaSharp.SKCanvas,SkiaSharp.SKRect)" /> to draw the current frame.</para><para>For more control over the animation loading process, use <see cref="M:SkiaSharp.Skottie.Animation.CreateBuilder(SkiaSharp.Skottie.AnimationBuilderFlags)" /> to obtain an <see cref="T:SkiaSharp.Skottie.AnimationBuilder" />.</para></remarks>
-	public unsafe partial class Animation : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class Animation : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal Animation (IntPtr handle, bool owns)
 			: base (handle, owns)

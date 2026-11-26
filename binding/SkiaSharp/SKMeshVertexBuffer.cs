@@ -4,7 +4,7 @@ namespace SkiaSharp;
 
 /// <summary>Represents a CPU- or GPU-backed buffer holding the vertex data of a mesh.</summary>
 /// <remarks />
-public unsafe partial class SKMeshVertexBuffer : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+public unsafe class SKMeshVertexBuffer : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 {
 	internal SKMeshVertexBuffer (IntPtr handle, bool owns)
 		: base (handle, owns)

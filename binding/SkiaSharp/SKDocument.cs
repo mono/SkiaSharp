@@ -15,7 +15,7 @@ namespace SkiaSharp
 	/// <xref:SkiaSharp.SKDocument.EndPage%2A>. Finally, call
 	/// <xref:SkiaSharp.SKDocument.Close%2A> to complete the document.
 	/// ]]></format></remarks>
-	public unsafe partial class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
+	public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		/// <summary>Gets the default DPI for raster graphics.</summary>
 		/// <remarks />

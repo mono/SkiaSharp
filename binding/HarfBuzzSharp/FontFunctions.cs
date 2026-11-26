@@ -6,7 +6,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a collection of callback functions used by HarfBuzz for font operations such as retrieving glyph metrics, advances, and extents.</summary>
 	/// <remarks />
-	public unsafe partial class FontFunctions : NativeObject
+	public unsafe class FontFunctions : NativeObject
 	{
 		private static readonly Lazy<FontFunctions> emptyFontFunctions =
 			new Lazy<FontFunctions> (() => new StaticFontFunctions (HarfBuzzApi.hb_font_funcs_get_empty ()));
@@ -309,7 +309,7 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
 		}
 
-		private partial class StaticFontFunctions : FontFunctions
+		private class StaticFontFunctions : FontFunctions
 		{
 			public StaticFontFunctions (IntPtr handle)
 				: base (handle)

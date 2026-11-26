@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>An abstract base class for receiving memory tracing callbacks from Skia.</summary>
 	/// <remarks />
-	public unsafe partial class SKTraceMemoryDump : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKTraceMemoryDump : SKObject, ISKSkipObjectRegistration
 	{
 		private static readonly SKManagedTraceMemoryDumpDelegates delegates;
 		private readonly IntPtr userData;

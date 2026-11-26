@@ -8,7 +8,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a color space.</summary>
 	/// <remarks />
-	public unsafe partial class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
 		private static SKColorSpace srgb;
 		private static bool srgbInitialized;

@@ -117,7 +117,7 @@ namespace SkiaSharp.Views.Maui.Platform
 			{
 				button = SKMouseButton.Middle;
 			}
-			else if (evt.ButtonState.HasFlag(MotionEventButtonState.StylusSecondary))
+			else if (OperatingSystem.IsAndroidVersionAtLeast(23) && evt.ButtonState.HasFlag(MotionEventButtonState.StylusSecondary))
 			{
 				button = SKMouseButton.Right;
 			}

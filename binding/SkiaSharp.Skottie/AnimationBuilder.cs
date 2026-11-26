@@ -6,7 +6,7 @@ namespace SkiaSharp.Skottie
 {
 	/// <summary>Provides a builder pattern for creating animations with custom configuration.</summary>
 	/// <remarks><para>Use the builder to configure custom font managers and resource providers before loading an animation.</para><para>Create a builder using <see cref="M:SkiaSharp.Skottie.Animation.CreateBuilder(SkiaSharp.Skottie.AnimationBuilderFlags)" />.</para></remarks>
-	public sealed unsafe partial class AnimationBuilder : SKObject, ISKSkipObjectRegistration
+	public sealed unsafe class AnimationBuilder : SKObject, ISKSkipObjectRegistration
 	{
 		internal AnimationBuilder (AnimationBuilderFlags flags)
 			: this (SkottieApi.skottie_animation_builder_new (flags), true)

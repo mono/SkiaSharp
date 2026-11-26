@@ -18,7 +18,7 @@ namespace SkiaSharp
 	/// these values. We expect these properties to be immutable even if the 3D API
 	/// doesn't require this (eg: OpenGL).
 	/// ]]></format></remarks>
-	public unsafe partial class GRBackendRenderTarget : SKObject, ISKSkipObjectRegistration
+	public unsafe class GRBackendRenderTarget : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
 			: base (handle, owns)
