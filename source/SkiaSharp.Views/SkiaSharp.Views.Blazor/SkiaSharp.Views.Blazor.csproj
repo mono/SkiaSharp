@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious);$(TFMBase)</TargetFrameworks>
+    <!-- Static web assets are packed from the first listed TFM. A net11.0+ representative switches to the
+         JSON manifest format that older SDKs cannot read, so TFMPrevious goes first to keep the .props format. -->
+    <TargetFrameworks>$(TFMPrevious);$(TFMCurrent);$(TFMBase)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Blazor</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Blazor</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Blazor</PackagingGroup>

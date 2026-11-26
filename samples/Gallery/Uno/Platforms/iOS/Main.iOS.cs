@@ -1,5 +1,7 @@
+using Foundation;
 using UIKit;
 using Uno.UI.Hosting;
+using Uno.UI.Runtime.AppleUIKit;
 
 namespace SkiaSharpSample.iOS;
 
@@ -17,4 +19,9 @@ public class EntryPoint
 
         host.Run();
     }
+}
+
+[Register("SceneDelegate")]
+public class SceneDelegate : UnoUISceneDelegate
+{
 }
