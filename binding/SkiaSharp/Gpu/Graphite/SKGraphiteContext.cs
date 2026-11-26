@@ -32,7 +32,7 @@ namespace SkiaSharp
 	/// context.Submit();
 	/// ```
 	/// ]]></format></remarks>
-	public unsafe partial class SKGraphiteContext : SKObject
+	public unsafe class SKGraphiteContext : SKObject
 	{
 		// Pinned managed delegate the Vulkan dispatch lambda calls back into. Ownership is transferred
 		// from the SKGraphiteVkBackendContext at CreateVulkan time so callers can safely Dispose

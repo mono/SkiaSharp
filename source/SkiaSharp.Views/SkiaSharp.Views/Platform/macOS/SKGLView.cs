@@ -5,6 +5,8 @@ using CoreGraphics;
 using Foundation;
 using SkiaSharp.Views.GlesInterop;
 
+#pragma warning disable CA1422 // OpenGL is deprecated on macOS 10.14+; SKGLView wraps NSOpenGLView for legacy GL support
+
 namespace SkiaSharp.Views.Mac
 {
 	/// <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>

@@ -174,7 +174,7 @@ namespace SkiaSharp
 	///
 	/// ![SKPaint and SKShader](~/images/gradient.png "SKPaint and SKShader")
 	/// ]]></format></remarks>
-	public unsafe partial class SKPaint : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
 		[Obsolete]
 		private SKFont font;

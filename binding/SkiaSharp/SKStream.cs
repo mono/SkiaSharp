@@ -357,7 +357,7 @@ namespace SkiaSharp
 			GetOrAddObject<SKStream> (handle, (h, o) => new SKStreamImplementation (h, o));
 	}
 
-	internal partial class SKStreamImplementation : SKStream
+	internal class SKStreamImplementation : SKStream
 	{
 		internal SKStreamImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -404,7 +404,7 @@ namespace SkiaSharp
 			GetOrAddObject<SKStreamAsset> (handle, (h, o) => new SKStreamAssetImplementation (h, o));
 	}
 
-	internal partial class SKStreamAssetImplementation : SKStreamAsset
+	internal class SKStreamAssetImplementation : SKStreamAsset
 	{
 		internal SKStreamAssetImplementation (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -430,7 +430,7 @@ namespace SkiaSharp
 
 	/// <summary>A seekable stream backed by a file on the file system.</summary>
 	/// <remarks />
-	public unsafe partial class SKFileStream : SKStreamAsset
+	public unsafe class SKFileStream : SKStreamAsset
 	{
 		internal SKFileStream (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -501,7 +501,7 @@ namespace SkiaSharp
 
 	/// <summary>A memory-based stream.</summary>
 	/// <remarks />
-	public unsafe partial class SKMemoryStream : SKStreamMemory
+	public unsafe class SKMemoryStream : SKStreamMemory
 	{
 		internal SKMemoryStream (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -795,7 +795,7 @@ namespace SkiaSharp
 
 	/// <summary>A writeable stream backed by a file on the file system.</summary>
 	/// <remarks />
-	public unsafe partial class SKFileWStream : SKWStream
+	public unsafe class SKFileWStream : SKWStream
 	{
 		internal SKFileWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -866,7 +866,7 @@ namespace SkiaSharp
 
 	/// <summary>A writeable, dynamically-sized, memory-based stream.</summary>
 	/// <remarks />
-	public unsafe partial class SKDynamicMemoryWStream : SKWStream
+	public unsafe class SKDynamicMemoryWStream : SKWStream
 	{
 		internal SKDynamicMemoryWStream (IntPtr handle, bool owns)
 			: base (handle, owns)

@@ -27,7 +27,7 @@ namespace SkiaSharp
 	/// using var path = builder.Detach();
 	/// ```
 	/// ]]></remarks>
-	public unsafe partial class SKPathBuilder : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKPathBuilder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPathBuilder (IntPtr handle, bool owns)
 			: base (handle, owns)

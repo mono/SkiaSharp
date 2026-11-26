@@ -7,7 +7,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents an underlying backend 3D API context.</summary>
 	/// <remarks />
-	public unsafe partial class GRContext : GRRecordingContext
+	public unsafe class GRContext : GRRecordingContext
 	{
 		internal GRContext (IntPtr h, bool owns)
 			: base (h, owns)

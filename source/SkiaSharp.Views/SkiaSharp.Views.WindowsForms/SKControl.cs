@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.Desktop
 	/// <remarks />
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
-	public partial class SKControl : Control
+	public class SKControl : Control
 	{
 		private Bitmap bitmap;
 

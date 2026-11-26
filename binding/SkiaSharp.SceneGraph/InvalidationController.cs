@@ -9,7 +9,7 @@ namespace SkiaSharp.SceneGraph
 {
 	/// <summary>Controls invalidation tracking for scene graph animations.</summary>
 	/// <remarks>This class is used with Skottie animations to track which regions of the scene graph need to be redrawn. Call <see cref="M:SkiaSharp.SceneGraph.InvalidationController.Begin" /> before seeking/ticking an animation, then <see cref="M:SkiaSharp.SceneGraph.InvalidationController.End" /> afterward to capture the invalidated bounds.</remarks>
-	public unsafe partial class InvalidationController : SKObject, ISKSkipObjectRegistration
+	public unsafe class InvalidationController : SKObject, ISKSkipObjectRegistration
 	{
 		/// <summary>Creates a new instance of <see cref="T:SkiaSharp.SceneGraph.InvalidationController" />.</summary>
 		/// <remarks />

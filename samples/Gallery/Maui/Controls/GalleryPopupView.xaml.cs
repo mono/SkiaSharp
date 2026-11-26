@@ -30,6 +30,8 @@ public partial class GalleryPopupView : ContentView
     {
         base.OnApplyTemplate();
         panel = GetTemplateChild("PART_Panel") as Border;
+        if (panel is not null)
+            AbsoluteLayout.SetLayoutBounds(panel, PopupBounds);
     }
 
     public Size MeasureMenu(double width, double height) =>
@@ -38,7 +40,11 @@ public partial class GalleryPopupView : ContentView
     public void SetMenuPosition(Rect bounds)
     {
         if (PopupBounds != bounds)
+        {
             PopupBounds = bounds;
+            if (panel is not null)
+                AbsoluteLayout.SetLayoutBounds(panel, bounds);
+        }
     }
 
     private void BackdropTapped(object? sender, TappedEventArgs e) =>

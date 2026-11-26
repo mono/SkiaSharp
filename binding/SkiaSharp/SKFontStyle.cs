@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents a particular style (bold, italic, condensed) of a typeface.</summary>
 	/// <remarks />
-	public partial class SKFontStyle : SKObject, ISKSkipObjectRegistration
+	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
 		private static readonly SKFontStyle normal =
 			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);

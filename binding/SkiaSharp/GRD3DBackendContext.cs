@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents the Direct3D 12 backend context used to create a GPU-backed <see cref="T:SkiaSharp.GRContext" />.</summary>
 	/// <remarks />
-	public partial class GRD3DBackendContext : IDisposable
+	public class GRD3DBackendContext : IDisposable
 	{
 		/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.GRD3DBackendContext" /> class.</summary>
 		/// <remarks />

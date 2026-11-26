@@ -8,7 +8,7 @@ namespace SkiaSharp
 {
 	/// <summary>Represents the set of styles for a particular font family.</summary>
 	/// <remarks />
-	public partial class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
+	public class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
 		internal SKFontStyleSet (IntPtr handle, bool owns)
 			: base (handle, owns)

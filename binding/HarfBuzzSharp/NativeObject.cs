@@ -8,7 +8,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a native object.</summary>
 	/// <remarks />
-	public partial class NativeObject : IDisposable
+	public class NativeObject : IDisposable
 	{
 		private bool isDisposed;
 		private readonly bool zero;

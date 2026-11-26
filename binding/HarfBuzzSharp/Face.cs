@@ -6,7 +6,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a typeface.</summary>
 	/// <remarks />
-	public unsafe partial class Face : NativeObject
+	public unsafe class Face : NativeObject
 	{
 		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
 
@@ -486,7 +486,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		private partial class StaticFace : Face
+		private class StaticFace : Face
 		{
 			public StaticFace (IntPtr handle)
 				: base (handle)

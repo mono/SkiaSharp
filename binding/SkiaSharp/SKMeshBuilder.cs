@@ -4,7 +4,7 @@ namespace SkiaSharp;
 
 /// <summary>Builds an <see cref="T:SkiaSharp.SKMesh" /> from a specification, buffers, uniforms and child effects.</summary>
 /// <remarks />
-public partial class SKMeshBuilder : IDisposable
+public class SKMeshBuilder : IDisposable
 {
 	/// <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKMeshBuilder" /> class.</summary>
 	/// <param name="specification">The specification describing the mesh attributes, varyings and programs.</param>

@@ -4,7 +4,7 @@ namespace SkiaSharp
 {
 	/// <summary>Image filters for use with the <see cref="P:SkiaSharp.SKPaint.ImageFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.</summary>
 	/// <remarks />
-	public unsafe partial class SKImageFilter : SKObject, ISKReferenceCounted
+	public unsafe class SKImageFilter : SKObject, ISKReferenceCounted
 	{
 		internal SKImageFilter (IntPtr handle, bool owns)
 			: base (handle, owns)

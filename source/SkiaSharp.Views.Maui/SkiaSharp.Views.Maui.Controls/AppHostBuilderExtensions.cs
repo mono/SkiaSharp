@@ -19,7 +19,9 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 				.ConfigureMauiHandlers(handlers =>
 				{
 					handlers.AddHandler<SKCanvasView, SKCanvasViewHandler>();
+#pragma warning disable CA1422 // SKGLViewHandler is obsoleted on iOS/MacCatalyst 12.0+ in favor of Metal
 					handlers.AddHandler<SKGLView, SKGLViewHandler>();
+#pragma warning restore CA1422
 				})
 				.ConfigureImageSources(sources =>
 				{

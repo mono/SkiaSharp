@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	internal unsafe partial class SKString : SKObject, ISKSkipObjectRegistration
+	internal unsafe class SKString : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKString (IntPtr handle, bool owns)
 			: base (handle, owns)

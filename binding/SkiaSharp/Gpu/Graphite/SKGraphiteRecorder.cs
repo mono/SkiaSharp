@@ -17,7 +17,7 @@ namespace SkiaSharp
 	///
 	/// A recorder is not thread-safe; use one recorder per thread. This type wraps a native Skia resource and implements `IDisposable`.
 	/// ]]></format></remarks>
-	public unsafe partial class SKGraphiteRecorder : SKObject
+	public unsafe class SKGraphiteRecorder : SKObject
 	{
 		// Pin keeping the user's image-upload callback alive while Skia's FfiImageProvider
 		// can dispatch into it. Freed in DisposeNative AFTER the native recorder is destroyed.

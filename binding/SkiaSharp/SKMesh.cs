@@ -4,7 +4,7 @@ namespace SkiaSharp;
 
 /// <summary>Represents a custom vertex mesh that can be drawn with <see cref="T:SkiaSharp.SKCanvas" />.</summary>
 /// <remarks>Meshes are built with <see cref="T:SkiaSharp.SKMeshBuilder" /> or <see cref="T:SkiaSharp.SKMeshSpecification" /> and only draw on GPU-backed surfaces.</remarks>
-public unsafe partial class SKMesh : SKObject, ISKSkipObjectRegistration
+public unsafe class SKMesh : SKObject, ISKSkipObjectRegistration
 {
 	internal SKMesh (IntPtr handle, bool owns)
 		: base (handle, owns)

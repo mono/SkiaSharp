@@ -19,7 +19,7 @@ namespace SkiaSharp
 
 	/// <summary>A compound geometric path.</summary>
 	/// <remarks>A path encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</remarks>
-	public unsafe partial class SKPath : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKPath : SKObject, ISKSkipObjectRegistration
 	{
 		private SKPathBuilder _builder;
 
@@ -1339,7 +1339,7 @@ namespace SkiaSharp
 		/// Iterators are created by calling the
 		/// <xref:SkiaSharp.SKPath.CreateIterator%2A?displayProperty=nameWithType> method.
 		/// ]]></format></remarks>
-		public partial class Iterator : SKObject, ISKSkipObjectRegistration
+		public class Iterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
@@ -1427,7 +1427,7 @@ namespace SkiaSharp
 		/// <xref:SkiaSharp.SKPath.CreateRawIterator%2A?displayProperty=nameWithType>
 		/// method.
 		/// ]]></format></remarks>
-		public partial class RawIterator : SKObject, ISKSkipObjectRegistration
+		public class RawIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
 
@@ -1493,7 +1493,7 @@ namespace SkiaSharp
 
 		/// <summary>Perform a series of path operations, optimized for unioning many paths together.</summary>
 		/// <remarks />
-		public partial class OpBuilder : SKObject, ISKSkipObjectRegistration
+		public class OpBuilder : SKObject, ISKSkipObjectRegistration
 		{
 			/// <summary>Creates an instance of <see cref="T:SkiaSharp.SKPath.OpBuilder" />.</summary>
 			/// <remarks />

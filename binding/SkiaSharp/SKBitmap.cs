@@ -13,7 +13,7 @@ namespace SkiaSharp
 
 	/// <summary>The <see cref="T:SkiaSharp.SKBitmap" /> specifies a raster bitmap.</summary>
 	/// <remarks><para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para><para>A <see cref="T:SkiaSharp.SKBitmap" /> exposes <see cref="M:SkiaSharp.SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data. The raw data is laid out in the format configured at the time that the bitmap was created.</para></remarks>
-	public unsafe partial class SKBitmap : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";

@@ -280,7 +280,7 @@ namespace SkiaSharp.Views.Mac
 		{
 			using var colorSpace = CGColorSpace.CreateDeviceRGB();
 			using var context = new CIContext(null);
-			context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, ciImage.Extent, (int)CIFormat.kRGBA8, colorSpace);
+			context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, ciImage.Extent, (int)CIFormat.Rgba8, colorSpace);
 		}
 
 		/// <summary>Converts a CoreImage image into a SkiaSharp image.</summary>

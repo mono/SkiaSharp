@@ -6,7 +6,7 @@ namespace SkiaSharp
 {
 	/// <summary>The picture recorder is used to record drawing operations made to a <see cref="T:SkiaSharp.SKCanvas" /> and stored in a <see cref="T:SkiaSharp.SKPicture" />.</summary>
 	/// <remarks />
-	public unsafe partial class SKPictureRecorder : SKObject, ISKSkipObjectRegistration
+	public unsafe class SKPictureRecorder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPictureRecorder (IntPtr handle, bool owns)
 			: base (handle, owns)

@@ -6,7 +6,7 @@ namespace SkiaSharp;
 
 /// <summary>Describes the attributes, varyings and SkSL programs that define a custom vertex mesh.</summary>
 /// <remarks />
-public unsafe partial class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
+public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 {
 	/// <summary>The maximum allowed vertex stride, in bytes.</summary>
 	public const int MaxStride = 1024;

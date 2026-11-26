@@ -13,7 +13,7 @@ namespace SkiaSharp
 	///
 	/// This type implements `IDisposable`. Dispose it while its owning recorder is still alive so the cached textures can be released safely.
 	/// ]]></format></remarks>
-	public sealed partial class SKGraphiteImageCache : IDisposable
+	public sealed class SKGraphiteImageCache : IDisposable
 	{
 		// LRU cap — keeps memory bounded when callers decode fresh SkImages
 		// per frame instead of reusing the same SkImage object. Without a cap,

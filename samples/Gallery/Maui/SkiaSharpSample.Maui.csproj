@@ -21,9 +21,7 @@
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
-    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
-    <RunAOTCompilation Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">true</RunAOTCompilation>
-    <PublishAot Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))">true</PublishAot>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(TargetFramework)' == 'net11.0-maccatalyst'">
     <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.Debug.plist</CodesignEntitlements>

@@ -54,6 +54,7 @@ namespace SkiaSharp.Views.Blazor
 		/// <summary>Gets or sets a value indicating whether continuous rendering is enabled.</summary>
 		/// <value><see langword="true" /> to render continuously using requestAnimationFrame; <see langword="false" /> to render only when <see cref="M:SkiaSharp.Views.Blazor.SKGLView.Invalidate" /> is called.</value>
 		/// <remarks>Enable this for animations that need to update every frame. Disable for static content to conserve GPU resources and battery.</remarks>
+#pragma warning disable BL0007 // Component parameters should be auto properties
 		[Parameter]
 		public bool EnableRenderLoop
 		{
@@ -84,6 +85,7 @@ namespace SkiaSharp.Views.Blazor
 				}
 			}
 		}
+#pragma warning restore BL0007 // Component parameters should be auto properties
 
 		/// <summary>Gets or sets additional HTML attributes to apply to the canvas element.</summary>
 		/// <value>A dictionary of attribute names and values, or <see langword="null" />.</value>

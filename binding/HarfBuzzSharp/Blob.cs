@@ -7,7 +7,7 @@ namespace HarfBuzzSharp
 {
 	/// <summary>Represents a blob of data in memory.</summary>
 	/// <remarks />
-	public unsafe partial class Blob : NativeObject
+	public unsafe class Blob : NativeObject
 	{
 		private static readonly Lazy<Blob> emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
 
@@ -158,7 +158,7 @@ namespace HarfBuzzSharp
 			return HarfBuzzApi.hb_blob_create ((void*)data, (uint)length, mode, (void*)ctx, proxy);
 		}
 
-		private partial class StaticBlob : Blob
+		private class StaticBlob : Blob
 		{
 			public StaticBlob (IntPtr handle)
 				: base (handle)
