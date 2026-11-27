@@ -34,6 +34,8 @@ internal class SKTouchHandlerProxy : SKEventProxy<IView, UIView>
 			glView.OnTouch(e);
 		else if (VirtualView is ISKGaneshView ganeshView)
 			ganeshView.OnTouch(e);
+		else if (VirtualView is ISKGraphiteView graphiteView)
+			graphiteView.OnTouch(e);
 	}
 
 	private SKPoint OnGetScaledCoord(double x, double y)
@@ -45,6 +47,8 @@ internal class SKTouchHandlerProxy : SKEventProxy<IView, UIView>
 			ignore = glView.IgnorePixelScaling;
 		else if (VirtualView is ISKGaneshView ganeshView)
 			ignore = ganeshView.IgnorePixelScaling;
+		else if (VirtualView is ISKGraphiteView graphiteView)
+			ignore = graphiteView.IgnorePixelScaling;
 
 		if (ignore == false && touchHandler?.View is {} platformView)
 		{

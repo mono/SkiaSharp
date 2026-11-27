@@ -2,6 +2,7 @@ using System;
 using Microsoft.Maui.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
+using SkiaSharp.Views.Maui.Controls;
 
 namespace SkiaSharpSample;
 
@@ -74,10 +75,34 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	SKPoint touchPos;
 	bool touchActive;
+	SKGraphiteView? graphiteView;
 
 	public GpuPage()
+		: this(false)
+	{
+	}
+
+	public GpuPage(bool graphite)
 	{
 		InitializeComponent();
+
+		if (graphite)
+		{
+			var replacement = new SKGraphiteView
+			{
+				HasRenderLoop = false,
+				EnableTouchEvents = true,
+			};
+			replacement.PaintSurface += OnPaintSurface;
+			replacement.Touch += OnTouch;
+
+			var host = (Grid)skiaView.Parent;
+			host.Children.Remove(skiaView);
+			host.Children.Insert(0, replacement);
+
+			graphiteView = replacement;
+			Title = "Graphite";
+		}
 	}
 
 	protected override void OnAppearing()
@@ -104,26 +129,34 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		StopAnimation();
 	}
 
+	void SetRenderLoop(bool enabled)
+	{
+		if (graphiteView is not null)
+			graphiteView.HasRenderLoop = enabled;
+		else
+			skiaView.HasRenderLoop = enabled;
+	}
+
 	void StartAnimation()
 	{
 		// Force-restart: toggle off then on to re-arm the native render loop
-		// after Shell navigation detaches/reattaches the native GL view
-		skiaView.HasRenderLoop = false;
+		// after Shell navigation detaches/reattaches the native GPU view
+		SetRenderLoop(false);
 		fpsCounter.Start();
 		fpsLabel.Text = "FPS: --";
 		Dispatcher.Dispatch(() =>
 		{
-			skiaView.HasRenderLoop = true;
+			SetRenderLoop(true);
 		});
 	}
 
 	void StopAnimation()
 	{
-		skiaView.HasRenderLoop = false;
+		SetRenderLoop(false);
 		fpsCounter.Stop();
 	}
 
-	private void OnTouch(object sender, SKTouchEventArgs e)
+	private void OnTouch(object? sender, SKTouchEventArgs e)
 	{
 		switch (e.ActionType)
 		{
@@ -142,7 +175,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		e.Handled = true;
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGaneshSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
 		var info = e.Info;

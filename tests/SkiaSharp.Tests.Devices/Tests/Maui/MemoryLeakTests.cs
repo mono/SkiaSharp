@@ -69,6 +69,29 @@ public class MemoryLeakTests : SKUITests
 	}
 #endif
 
+#if IOS || MACCATALYST
+	[UIFact]
+	public Task SKGraphiteViewHandlerDoesNotLeak()
+	{
+		GpuPolicy.RequireOrSkip(GpuBackends.GraphiteMetal);
+		return AssertHandlerDoesNotLeak(() =>
+		{
+			var view = new SKGraphiteView();
+			view.PaintSurface += (sender, e) =>
+			{
+				e.Surface.Canvas.Clear(SKColors.Red);
+			};
+			view.EnableTouchEvents = true;
+			view.Touch += (sender, e) =>
+			{
+				view.InvalidateSurface();
+			};
+			view.HasRenderLoop = true;
+			return view;
+		});
+	}
+#endif
+
 	private async Task AssertHandlerDoesNotLeak(Func<View> ctor)
 	{
 		async Task<(WeakReference, WeakReference, WeakReference)> RunTest()
