@@ -100,10 +100,6 @@ parameters:
 variables:
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
-  # The native macOS stage only needs clang and the platform SDKs, which the hosted
-  # macos-26 image provides; it has no Xcode 27.
-  - name: XCODE_VERSION_NATIVE
-    value: '26.6'
 
 resources:
   repositories:
