@@ -20,9 +20,12 @@
   </PropertyGroup>
   <PropertyGroup>
     <UnoDefaultFont>None</UnoDefaultFont>
-    <SkiaSharpVersion>4.159.0-rc.1.26567.13</SkiaSharpVersion>
-    <HarfBuzzSharpVersion>15.0.0-rc.1.26567.13</HarfBuzzSharpVersion>
+    <SkiaSharpVersion>4.159.0-rc.2.26576.7</SkiaSharpVersion>
+    <HarfBuzzSharpVersion>15.0.0-rc.2.26576.7</HarfBuzzSharpVersion>
     <UnoXamlResourcesTrimming>true</UnoXamlResourcesTrimming>
+    <!-- Emit relative asset paths so the published app runs under any URL prefix
+         (/fiddle/, /staging/<PR>/fiddle/) without post-publish rewriting. -->
+    <WasmShellWebAppBasePath>./</WasmShellWebAppBasePath>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Roslyn emits IL at runtime; the runtime must be able to execute it. -->
@@ -37,8 +40,8 @@
   <ItemGroup>
     <!-- Snippets compile against the loaded managed SkiaSharp and HarfBuzzSharp. Listed here so a generated copy
          pins them to the product version; Uno.Sdk only versions the native assets. -->
-    <PackageReference Include="SkiaSharp" Version="4.159.0-rc.1.26567.13" />
-    <PackageReference Include="HarfBuzzSharp" Version="15.0.0-rc.1.26567.13" />
+    <PackageReference Include="SkiaSharp" Version="4.159.0-rc.2.26576.7" />
+    <PackageReference Include="HarfBuzzSharp" Version="15.0.0-rc.2.26576.7" />
   </ItemGroup>
   <ItemGroup>
     <!-- In-browser C# compilation -->
