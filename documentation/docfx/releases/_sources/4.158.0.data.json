@@ -2,13 +2,13 @@
   "format": 6,
   "version": "4.158.0",
   "family": "skiasharp",
-  "status": "preview",
+  "status": "stable",
   "banner": {
-    "kind": "preview",
-    "date": null,
-    "nuget_url": null,
-    "preview_nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.158.0-rc.1.26567.14",
-    "github_release_url": null
+    "kind": "stable",
+    "date": "November 26, 2026",
+    "nuget_url": "https://www.nuget.org/packages/SkiaSharp/4.158.0",
+    "preview_nuget_url": null,
+    "github_release_url": "https://github.com/mono/SkiaSharp/releases/tag/v4.158.0"
   },
   "harfbuzz": {
     "version": "15.0.0",
@@ -30,7 +30,7 @@
     }
   ],
   "tallies": {
-    "product": 8,
+    "product": 9,
     "mixed": 0,
     "internal": 19
   },
@@ -242,9 +242,66 @@
           "kind": "ai"
         }
       ]
+    },
+    {
+      "tag": "v4.158.0",
+      "core_version": "4.158.0",
+      "public_version": "4.158.0",
+      "channel": "stable",
+      "label": "Stable",
+      "previous_tag": "v4.158.0-rc.1.26567.14",
+      "target_sha": "c332e46b6d5e127cc78a03807bd96300c3b6344e",
+      "date": "2026-11-26",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.158.0-rc.1.26567.14...v4.158.0",
+      "prs": [
+        5839
+      ],
+      "attributions": [
+        {
+          "display": "@mattleibow",
+          "kind": "human",
+          "first_time": false
+        },
+        {
+          "display": "Robert Phillips",
+          "kind": "human"
+        },
+        {
+          "display": "Nathan Sanchez",
+          "kind": "human"
+        },
+        {
+          "display": "Alexis Cruz-Ayala",
+          "kind": "human"
+        },
+        {
+          "display": "Thomas Smith",
+          "kind": "human"
+        },
+        {
+          "display": "Greg Daniel",
+          "kind": "human"
+        },
+        {
+          "display": "Sarah Rust",
+          "kind": "human"
+        },
+        {
+          "display": "GitHub Copilot",
+          "kind": "ai"
+        }
+      ]
     }
   ],
   "prs": {
+    "5839": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5839",
+      "title": "[M158] Sync upstream Skia bug fixes",
+      "body": "[M158] Sync upstream Skia bug fixes (#5839)\n\nRequires: https://github.com/mono/skia/pull/469\nChanges: https://github.com/mono/skia/compare/6ff3072bb76eabbfe07038592d739349dc583979...b4574ecb9b4292951c64ddce5619628fdaf0451d\n\nAdvance the release/4.158.x native engine to the latest chrome/m158 fixes.\nThe parent changes the native pin and its provenance metadata without changing\nmanaged APIs, generated bindings, package versions, or dependency pins.\n\n~~ Surface Ganesh flush failures ~~\n\nLow-level draw and upload failures could silently drop work. Propagate\nfailures and abandon the context when recovery is unsafe. Failed promise-image\nfulfillment remains nonfatal: the flush's work is dropped, but the context\nstays usable for Chrome's direct and deferred-display-list paths.\n\n~~ Guard Ganesh buffer allocations against overflow ~~\n\nUnchecked alignment, padding, and element-size arithmetic could wrap and\nwrite out of bounds. Use checked arithmetic, reject invalid sizes, make CPU\nbuffer allocation fallible, and cap block and vertex-chunk allocations.\n\n~~ Bound Imagination MSAA footprints ~~\n\nPower-of-two alignment can make multisampled color or stencil attachments\nexceed 32-bit footprint limits. Reject oversized render targets and dynamic\nMSAA attachments on affected Imagination GL, ANGLE, and Vulkan devices.\n\n~~ Avoid unsafe Vulkan descriptor-pool destruction ~~\n\nImagination descriptor allocation can report host or device OOM before the\ncontext is lost. Mark affected pools as leaked rather than destroy them in\nthat state; Graphite also rejects a null pool handle.\n\n~~ Restrict destination reads to their bounds ~~\n\nGeometry can extend beyond incorrectly calculated draw bounds. Intersect the\npipeline scissor with destination-read bounds so those pixels cannot read\noutside the intended destination region.\n\n~~ Correct FreeType LCD16 bounds and cropping ~~\n\nStateful font scalers can produce different glyph bounds between loads.\nConvert FreeType's three-times-scaled LCD bitmap bounds to pixel coordinates\nbefore intersecting, validate the bitmap format and dimensions, and crop\nsource and destination consistently. Guard outline translation and image\nbuffer bounds as well.\n\n~~ Preserve Graphite painter order after overwrites ~~\n\nA full-overwrite draw discards earlier draws but previously left depth\nadvancing until it could wrap. Reset depth and its associated bounds managers\nwhen an overwrite occurs after the initial clear.\n\n~~ Prevent scratch texels from entering filtered images ~~\n\nGanesh image filtering could use mipmaps from approximate-fit scratch\ntextures and incorporate unwritten texels. Share the safe-sampling downgrade\nbetween shader and texture draws for non-exact-fit special images. Mark the\nmipmap test helpers potentially unused for configurations that do not call\nthem.\n\n~~ Record landed native ancestry without changing reviewed sources ~~\n\nUpdate the gitlink and Component Governance commitHash to native merge\nb4574ecb9b4292951c64ddce5619628fdaf0451d and record chrome/m158 commit\n37e919d8669ebe4a8912dcef03db14b9b55f70c7. The native merge has two parents,\ndirectly contains reviewed head 57713b14b00355c3f07929feed64d0143eba9ba0,\nand shares its tree 6376fcc82c881e7c055d8d7b918e41b4f70906a0.\n\nIndependent regeneration matched the five binding trees. The review found no\nfork-patch, interop, or DEPS changes. Tree equality preserves the reviewed\nnative content through the repin; it is not a new runtime test run.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Robert Phillips <robertphillips@google.com>\nCo-authored-by: Nathan Sanchez <nathanasanchez@google.com>\nCo-authored-by: Alexis Cruz-Ayala <alexisdavidc@google.com>\nCo-authored-by: Thomas Smith <thomsmit@google.com>\nCo-authored-by: Greg Daniel <egdaniel@google.com>\nCo-authored-by: Sarah Rust <sarahrust@google.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "product"
+    },
     "5791": {
       "url": "https://github.com/mono/SkiaSharp/pull/5791",
       "title": "Pin Linux x86 Docker base images to last working SHA-256 digests",
