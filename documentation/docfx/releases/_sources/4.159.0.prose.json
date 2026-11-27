@@ -1,12 +1,17 @@
 {
-  "theme": "GPU meshes and Skia m159",
-  "highlights_headline": "SkiaSharp 4.159.0 brings custom GPU mesh drawing alongside the Skia m159 engine update.",
-  "highlights_body": "The release candidate adds programmable vertex meshes, corrects iOS and tvOS device frameworks, and incorporates upstream glyph, image-filter cache, and Vulkan fixes. WebAssembly consumers must use .NET 9 or later; non-WebAssembly .NET 8 support is unchanged.",
+  "theme": "Programmable meshes and image testing",
+  "highlights_headline": "SkiaSharp 4.159 previews programmable GPU meshes and an experimental image-comparison package on Skia m159.",
+  "highlights_body": "The line also improves runtime-effect uniform initialization, Windows image-decoder recovery, Apple device frameworks and filtered texture sampling. WebAssembly requires .NET 9 or later, and Linux x86 native assets are removed; non-WebAssembly .NET 8 support remains unchanged.",
   "breaking": [
     {
-      "title": "Use .NET 9 or later for WebAssembly",
-      "body": "SkiaSharp and HarfBuzzSharp no longer ship .NET 8 WebAssembly native assets, and their build targets reject unsupported WebAssembly frameworks. Upgrade WebAssembly projects to .NET 9 or later and use the runtime-matched native archives; newer archives cannot substitute for an older .NET toolchain. Non-WebAssembly .NET 8 support is unchanged.",
+      "title": "Move WebAssembly applications to .NET 9 or later",
+      "body": "SkiaSharp and HarfBuzzSharp no longer provide .NET 8 WebAssembly native assets, and packaged targets reject unsupported WASM frameworks. Retarget WASM applications to .NET 9 or later and use the runtime-matched archives rather than substituting newer archives into .NET 8. Non-WebAssembly .NET 8 support is unchanged.",
       "prs": [5700]
+    },
+    {
+      "title": "Replace Linux x86 deployments",
+      "body": "Linux x86 native builds and NuGet package entries are removed. Applications relying on those assets must move to a supported Linux architecture, such as x64, before adopting this line's updated packages.",
+      "prs": [5784]
     }
   ],
   "categories": [
@@ -14,9 +19,9 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia milestone 159",
-          "detail": "Updates the bundled renderer with WebAssembly SIMD CPU rasterization, Windows font-loading improvements, and image/rendering correctness fixes.",
-          "prs": [5685]
+          "lead": "Skia m159",
+          "detail": "Updates the native renderer with WebAssembly SIMD CPU rasterization, Windows font-loading improvements and image/rendering correctness fixes, then incorporates subsequent m159 upstream fixes. The milestone transition itself leaves C API exports and public managed signatures unchanged.",
+          "prs": [5685, 5841]
         }
       ]
     },
@@ -25,8 +30,13 @@
       "bullets": [
         {
           "lead": "Programmable GPU meshes",
-          "detail": "SKMeshSpecification, indexed and non-indexed mesh builders, vertex/index buffers, and SKCanvas.DrawMesh expose custom SkSL vertex and fragment programs with uniforms and child effects. Meshes draw only on GPU-backed surfaces; raster drawing is a no-op. Built meshes retain native resources after their source wrappers are disposed.",
+          "detail": "SKMesh specifications compile SkSL vertex and fragment programs for indexed or non-indexed drawing through SKCanvas.DrawMesh, with builders, uniforms, children and CPU or Ganesh GPU buffers. Built meshes retain the native references they need after input wrappers are disposed. Drawing requires a GPU-backed surface; raster drawing is a no-op.",
           "prs": [5760]
+        },
+        {
+          "lead": "Experimental image comparisons",
+          "detail": "The separate SkiaSharp.Testing package adds SKImageComparison for images, bitmaps and pixmaps, with channel tolerances, masks, mismatch budgets, MAE/RMS/PSNR metrics and five difference-image styles. The assembly is experimental under SKIA4001. Results retain no native handles; generated difference images are independent caller-owned SKImage instances.",
+          "prs": [5293]
         }
       ]
     },
@@ -34,36 +44,50 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Correct iOS and tvOS device frameworks",
-          "detail": "SkiaSharp and HarfBuzzSharp device frameworks now contain only arm64 device binaries and matching platform metadata, avoiding App Store validation failures caused by simulator slices. Simulator frameworks retain both x86_64 and arm64 support.",
+          "lead": "Uniform initialization and reset",
+          "detail": "New SKRuntimeEffectUniforms buffers start zeroed rather than containing leftover memory. Reset clears the existing buffer in place without allocating a replacement, including uniforms used by mesh builders.",
+          "prs": [5843]
+        },
+        {
+          "lead": "Windows image-decoding recovery",
+          "detail": "Windows x64 clang builds avoid crashes when libjpeg or libpng recovers from decoding errors, including lazy non-JPEG PDF images and malformed JPEGs passed to SKCodec.Create. CFG remains enabled; arm64, x86 and MSVC builds are unchanged.",
+          "prs": [5827]
+        },
+        {
+          "lead": "Trim-safe MAUI view binding",
+          "detail": "MAUI SKGLView uses a typed Window binding to eliminate the warning caused by a runtime string-path binding in trimmed applications. The proxy-window binding behavior is unchanged.",
+          "prs": [5320]
+        },
+        {
+          "lead": "Texture sampling and CPU blur selection",
+          "detail": "Ganesh uses an inward inset for filtered texture-subset edges, avoiding undefined exterior texels; this does not change CPU or Graphite sampling. Tizen now applies its intended CPU blur setting to Skia itself, selecting the existing ThreeBoxApprox/Tent path instead of the shader-based Gaussian candidate. Texture-edge and Tizen blur pixels may differ.",
+          "prs": [5679]
+        },
+        {
+          "lead": "Glyphs, caches and Vulkan failures",
+          "detail": "Mask-filtered glyphs use reloaded paths, formats and full plane strides, clearing incompatible masks safely. Image-filter cache equality matches hashing. Imagination Vulkan descriptor pools are deliberately abandoned after affected out-of-memory errors rather than destroyed, trading cleanup for driver safety.",
+          "prs": [5741, 5769]
+        },
+        {
+          "lead": "Apple device framework packaging",
+          "detail": "SkiaSharp and HarfBuzzSharp iOS/tvOS device frameworks contain only arm64 device binaries and matching metadata, avoiding simulator slices that could cause App Store validation failure ITMS-90087. Simulator frameworks and symbols retain their x86_64 and arm64 slices.",
           "prs": [5649]
-        },
-        {
-          "lead": "More robust mask-filtered glyph rendering",
-          "detail": "Handles font scalers whose repeated glyph loads change paths, mask formats, or bounds. The native renderer uses the reloaded glyph state, clears incompatible masks, and correctly copies clipped emboss masks.",
-          "prs": [5741]
-        },
-        {
-          "lead": "Imagination Vulkan allocation failure handling",
-          "detail": "Ganesh and Graphite avoid a driver failure when descriptor-set allocation reports host or device out-of-memory on Imagination GPUs. The workaround is limited to that vendor and those allocation errors.",
-          "prs": [5741]
-        },
-        {
-          "lead": "Consistent image-filter cache keys",
-          "detail": "Makes image-filter cache equality agree with hashing for signed zero, matrix type-mask state, and subnormal translations, correcting native cache lookup behavior without changing package or ABI versions.",
-          "prs": [5769]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "kdpkke": "Corrected iOS and tvOS device framework binaries and metadata for SkiaSharp and HarfBuzzSharp while preserving simulator support."
+    "taublast": "Zero-initialized runtime-effect uniforms, allocation-free Reset and disposal of test data snapshots.",
+    "bhall-ctre": "Trim-safe MAUI SKGLView proxy-window binding.",
+    "kdpkke": "Correct iOS/tvOS device frameworks and preserved simulator outputs.",
+    "ramezgerges": "Restored Uno Gallery projects to the Windows sample solution.",
+    "SimonCropp": "Windows x64 libjpeg/libpng error-recovery crash workaround."
   },
   "preview_summaries": {
-    "v4.159.0-rc.1.26567.13": "Release Candidate 1 adds programmable GPU mesh drawing and corrects iOS/tvOS device frameworks. It also brings upstream glyph-rendering, image-filter cache, and Imagination Vulkan allocation fixes.",
-    "v4.159.0-preview.1.26563.22": "Preview 1 introduces Skia m159 with WebAssembly SIMD CPU rasterization and Windows font-loading improvements. WebAssembly now requires .NET 9 or later; non-WebAssembly .NET 8 support is unchanged."
+    "v4.159.0-rc.1.26567.13": "Release Candidate 1 adds programmable GPU mesh drawing and corrects SkiaSharp and HarfBuzzSharp Apple device frameworks. It also includes glyph-rendering, image-filter cache and Imagination Vulkan allocation fixes.",
+    "v4.159.0-preview.1.26563.22": "Preview 1 introduces Skia m159 with WebAssembly SIMD rasterization and Windows font-loading improvements. WebAssembly now requires .NET 9 or later; non-WebAssembly .NET 8 support is unchanged."
   },
-  "harfbuzz_summary": "HarfBuzzSharp now requires .NET 9 or later for WebAssembly, while non-WebAssembly .NET 8 support is unchanged. Its iOS and tvOS device frameworks now use device-only binaries and matching metadata, retaining separate simulator support; package revision 15.0.0.100 keeps native HarfBuzz at 15.0.0 with no public managed API changes.",
+  "harfbuzz_summary": "HarfBuzzSharp package revision 15.0.0.100 retains native HarfBuzz 15.0.0. The collected changes remove .NET 8 WebAssembly and Linux x86 native assets and correct iOS/tvOS device frameworks while preserving simulator slices.",
   "release_summaries": {
     "v4.159.0-preview.1.26563.22": {
       "headline": "SkiaSharp 4.159.0 Preview 1 introduces Skia m159 with WebAssembly SIMD rasterization and Windows font-loading improvements.",

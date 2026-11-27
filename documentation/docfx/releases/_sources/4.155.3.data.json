@@ -1,0 +1,74 @@
+{
+  "format": 6,
+  "version": "4.155.3",
+  "family": "skiasharp",
+  "status": "unreleased",
+  "banner": {
+    "kind": "unreleased",
+    "date": null,
+    "nuget_url": null,
+    "preview_nuget_url": null,
+    "github_release_url": null
+  },
+  "harfbuzz": {
+    "version": "14.4.0.3",
+    "api_diff_link": "harfbuzzsharp/14.4.0.3/index.md",
+    "prs": []
+  },
+  "supersedes": [],
+  "superseded_by": null,
+  "api_links": [
+    {
+      "label": "SkiaSharp API diff",
+      "href": "4.155.3/index.md"
+    },
+    {
+      "label": "HarfBuzzSharp API diff",
+      "href": "harfbuzzsharp/14.4.0.3/index.md"
+    }
+  ],
+  "tallies": {
+    "product": 2,
+    "mixed": 0,
+    "internal": 1
+  },
+  "breaking_candidates": [],
+  "contributors": [
+    {
+      "login": "ramezgerges",
+      "url": "https://github.com/ramezgerges",
+      "prs": [
+        5835,
+        5844
+      ]
+    }
+  ],
+  "previews": [],
+  "shipments": [],
+  "prs": {
+    "5844": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5844",
+      "title": "[4.155] Backport the remaining 25 Skia CVE fixes",
+      "body": "[4.155] Backport the remaining 25 Skia CVE fixes (#5844)\n\nContext: #5793, #5797\nRequires: mono/skia#471 (merged as `6b4b729abd0d`)\nChanges: https://github.com/mono/skia/compare/e6cfc7a5d6dea7e8c21a59782c672a00b1fff28c...6b4b729abd0d8cc4805d373cc6a469f8eac66655\n\n4.155 is the last SkiaSharp line available to Uno Platform 6 apps, so\nthese fixes cannot be replaced by asking those users to move to a newer\nline. Together with #5793 and #5797, this backport brings the 31 Skia\nCVEs announced in Chrome stable releases since Chrome 156 to the 4.155\nservicing line.\n\nThe native backport contains 38 upstream cherry-picks: 25 CVE fixes and\n13 additional M156 hardening and test fixes. The 4.155 baseline points\nto `e6cfc7a5d6dea7e8c21a59782c672a00b1fff28c`; the merged native commit\nhas that base and the reviewed head as parents, and its tree matches the\nreviewed head. This PR updates only `externals/skia` and its matching\nComponent Governance pin. Public APIs, C API, bindings and package\nversions are unchanged.\n\n~~ Raster-pipeline bounds and failed shader stages ~~\n\nGuard SkSL raster-pipeline slot counts and temporary stack-depth\narithmetic against overflow, and reject negative slot counts\n(CVE-2026-118348, CVE-2026-118319). On shader-stage failure, neutralize\npending branch offsets and propagate child-shader failure so an\nincomplete pipeline is not executed (CVE-2026-121084). The test conflict\nwas limited to M156-only context: the m155 tests remain, with the new\nregression test and its required include added.\n\n~~ Resource references during unique-key changes ~~\n\nKeep a cache reference while changing a resource's unique key, so a\nzero-refcount resource is not left in the purgeable queue\n(CVE-2026-118351).\n\n~~ Failed deferred uploads ~~\n\nPropagate ASAP and inline upload failures through Ganesh flushes, skip\ndraws that could sample unwritten texture memory, and evict failed atlas\nplots so cached clients are purged (CVE-2026-121072).\n\n~~ Flush-token tracking across empty flushes ~~\n\nAdvance the token tracker even when a flush executes no draws; otherwise\nper-flush atlas token comparisons can remain stale\n(CVE-2026-126844). The deferred-upload reset also retains this token\nadvance alongside clearing the upload-failure state.\n\n~~ Vulkan device-loss and render-pass state ~~\n\nTreat `VK_ERROR_UNKNOWN` as device loss (CVE-2026-118354), initialize\nthe current render-pass pointer (CVE-2026-126915), check\n`vkWaitForFences`, and apply the upstream 1 ms delay after device loss\non affected GPUs (CVE-2026-126846).\n\n~~ Sampling outside texture subsets ~~\n\nNearest-filter coordinates can round outside a touching subset edge\nafter magnification. Retain the clamp unless the transform is a safe\n1:1 integer mapping (CVE-2026-121227). Clamp coverage-mask sampling\n(CVE-2026-126884) and account for AA/MSAA coordinate extrapolation when\ndeciding whether image-filter subset padding is sufficient. The\nbackport includes the nearest-subset regression test.\n\n~~ Direct-mask Slug data and replay ~~\n\nDirect-mask glyphs have no atlas padding when bilinear sampling is\nunavailable. Reject fractional or incompatible replay\n(CVE-2026-126894), and validate deserialized positions, matrices, bounds,\nscales and flags before atlas sampling (CVE-2026-126922). Direct\npositions must be finite integers within +/-2^21; the wire format is\nunchanged. The regression tests include the protected-context case.\n\n~~ Glyph allocation and scaler bounds ~~\n\nCheck SDF dimensions and scratch-buffer arithmetic, use fallible\nallocation, and avoid rasterizing oversized glyphs that will not fit the\natlas (CVE-2026-126876). Guard the second unfiltered glyph load before it\ncan alias the original buffer (CVE-2026-131013). Related hardening\ncovers mask-filtered glyph copies and LCD16 cropping when stateful\nscalers return different bounds or formats across loads.\n\n~~ Graphite clip and stroke bounds ~~\n\nInclude hairline and subpixel strokes in clip inflation\n(CVE-2026-121160), correct wedge miter inflation (CVE-2026-126841),\nrecognize inverse fills that cover the scissor as flood fills\n(CVE-2026-126898), and use a save-record key when clip-path bounds do\nnot fit the packed int16 representation (CVE-2026-126857).\n\n~~ Ganesh stroke geometry under transforms ~~\n\nCompute op bounds in device space to match tessellator calculations\n(CVE-2026-126914). Handle negative determinants when constructing\nhairline square caps, and reject non-finite inverse-determinant results\n(CVE-2026-126848).\n\n~~ GPU transfer formats and channel layouts ~~\n\nDisable unsupported BGRA-as-RGBx writes on GLES\n(CVE-2026-119271). For Graphite A-to-RGBx readback, select RGBA with\nforced opaque alpha so the transfer writes the expected destination\nbytes (CVE-2026-126853).\n\n~~ Cache-key comparison and hashing ~~\n\nCompare Graphite PaintParamsKey data by byte length rather than element\ncount (CVE-2026-121032). Align image-filter cache equality with its\nbyte-based hash, including the type mask, and use float2 displacement\noffsets so shader precision agrees with fp32 bounds calculations.\n\n~~ Atlas indices under float interpolation ~~\n\nApply the half-step and integer conversion to Ganesh atlas indices;\nflat interpolation is only a hint, not a guarantee\n(CVE-2026-126920).\n\n~~ Framebuffer lifetime on Imagination drivers ~~\n\nKeep a complete guard FBO for the context and bind it around framebuffer\nchanges so a deleted FBO is not retained as the driver's previous\nbinding.\n\n~~ Ganesh buffer-allocation overflow ~~\n\nCheck alignment, padding and allocation-size arithmetic; make CPU buffer\nallocation fallible and bound initial preallocation.\n\n~~ Graphite depth and painter order ~~\n\nReset depth and bounds tracking when an overwriting draw discards prior\ndraws, preventing depth wrap from changing painter order.\n\n~~ Image-filter mipmap contamination ~~\n\nShare mipmap downgrade logic across SpecialImage drawing paths so\nunwritten scratch-texture contents do not enter filtered output. Include\nthe upstream regression tests and their build registration.\n\nThe native PR syntax-compiled 44 changed C++ sources under `src/` against\nm155. Metal and Direct3D render-pass files were not checked locally; no\nfull native build or test run was performed locally.\n\nCo-authored-by: Ramez Ragaa <ramezragaa@proton.me>\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nCo-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "product"
+    },
+    "5835": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5835",
+      "title": "[4.155] Pass -sUSE_WEBGPU to Uno WASM heads only on net8.0",
+      "body": "On .NET 9+ the WebAssembly block links Dawn's emdawnwebgpu port, whose\nlibrary_webgpu.js refuses to link with emsdk's -sUSE_WEBGPU. The Uno\nblock added that flag unconditionally, so an Uno 6.x WASM app with the\nSkia renderer failed to link with \"To use Dawn's library_webgpu.js,\ndisable -sUSE_WEBGPU\". Only net8.0 (emsdk 3.1.34) still uses the\nbuilt-in WebGPU port, so add the flag only there. Main no longer has the\nflag at all (the Uno block went with the Uno 7 move in #5377, and .NET 8\nWASM support was dropped).\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+      "author": "ramezgerges",
+      "community": true,
+      "tag": "product"
+    },
+    "5803": {
+      "url": "https://github.com/mono/SkiaSharp/pull/5803",
+      "title": "Bump to the next version (4.155.3) after release",
+      "body": "Co-authored-by: SkiaSharp Release Bot <noreply@github.com>",
+      "author": "mattleibow",
+      "community": false,
+      "tag": "internal"
+    }
+  }
+}

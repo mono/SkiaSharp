@@ -1,0 +1,38 @@
+{
+  "theme": "Native hardening and Uno fixes",
+  "highlights_headline": "The 4.155.3 servicing changes backport Skia hardening and fix Uno 6 WebAssembly linking on newer .NET toolchains.",
+  "highlights_body": "This retains the m155 line used by Uno Platform 6 applications without changing public APIs. Native fixes cover shader execution, texture sampling, glyph buffers and GPU resource handling.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Skia security backports",
+          "detail": "Backports 25 additional Skia CVE fixes and 13 related hardening and test fixes. These address raster-pipeline and allocation overflow, failed uploads, resource lifetimes, glyph bounds, texture-subset sampling and GPU state handling while preserving the m155 engine line and public APIs.",
+          "prs": [5844]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Uno 6 WebAssembly linking",
+          "detail": "Uno 6.x applications using the Skia renderer on .NET 9 or later no longer combine Dawn's WebGPU port with the incompatible -sUSE_WEBGPU flag. The flag remains enabled for the .NET 8 toolchain that requires it.",
+          "prs": [5835]
+        },
+        {
+          "lead": "Filtered images and GPU drawing",
+          "detail": "Native backports prevent unwritten scratch texels from entering mipmapped image-filter output and preserve Graphite painter order after overwriting draws. They also correct reflected hairline caps, text-atlas selection and glyph cropping when scaler state changes between loads.",
+          "prs": [5844]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Skia security and rendering backports for m155, plus the Uno 6 WebAssembly link fix."
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": null
+}

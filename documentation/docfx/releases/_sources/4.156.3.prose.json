@@ -1,0 +1,26 @@
+{
+  "theme": "Rendering and allocation hardening",
+  "highlights_headline": "The 4.156.3 servicing changes correct image filtering, glyph cropping and GPU draw handling without changing managed APIs.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Filtered images and glyph bounds",
+          "detail": "Ganesh image filters avoid mipmaps that can sample unwritten scratch-texture pixels. FreeType LCD16 glyph copies use pixel-space bounds and consistently crop source and destination when successive glyph loads produce different outlines.",
+          "prs": [5837]
+        },
+        {
+          "lead": "GPU draw safety and ordering",
+          "detail": "Ganesh rejects overflowing buffer allocations and skips draws when allocation fails, and destination reads are clipped to their bounds. Graphite resets depth and bounds after full-overwrite draws so repeated overwrites do not wrap depth and change painter order.",
+          "prs": [5837]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {},
+  "harfbuzz_summary": null
+}

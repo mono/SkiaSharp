@@ -1,0 +1,20 @@
+{
+  "theme": "Vulkan allocation failure handling",
+  "highlights_headline": "The 4.157.1 servicing changes avoid unsafe Vulkan descriptor-pool destruction after allocation failures on Imagination drivers.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Imagination Vulkan allocation failures",
+          "detail": "Ganesh and Graphite deliberately abandon affected descriptor pools after host or device out-of-memory errors instead of destroying pools that may trigger a driver failure. Graphite also rejects further allocations through the abandoned handle. This vendor-specific workaround trades pool cleanup for safety; managed bindings are unchanged.",
+          "prs": [5838]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
