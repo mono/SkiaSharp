@@ -299,6 +299,25 @@ jobs:
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
         - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+          # Agents without the required Xcode (internal hosted images) install it from the
+          # Universal Package that dotnet/macios publishes to an internal-only feed.
+          - ${{ if parameters.buildAgent.parameters.xcodePackageVersion }}:
+            - task: UniversalPackages@0
+              displayName: Download the Xcode package
+              retryCountOnTaskFailure: 3
+              timeoutInMinutes: 60
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              inputs:
+                command: download
+                downloadDirectory: $(Agent.TempDirectory)/xcode-package
+                feedsToUse: internal
+                vstsFeed: internal/macios-tools-internal
+                vstsFeedPackage: xcode-apple-silicon
+                vstsPackageVersion: ${{ parameters.buildAgent.parameters.xcodePackageVersion }}
+            - bash: ./scripts/infra/native/apple/install-xcode-package.sh "$(Agent.TempDirectory)/xcode-package" "$(XCODE_VERSION)"
+              displayName: Install the Xcode package
+              timeoutInMinutes: 60
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - bash: sudo ./scripts/infra/native/apple/select-xcode.sh $(XCODE_VERSION)
             displayName: Switch to the latest Xcode
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))

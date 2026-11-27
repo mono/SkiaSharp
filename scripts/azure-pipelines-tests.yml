@@ -25,8 +25,11 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: xcode-27
+        vmImage: macos-26
         os: macos
+      parameters:
+        # Hosted images have no Xcode 27, so install the one XCODE_VERSION names.
+        xcodePackageVersion: '27.2.0'
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
     type: object
