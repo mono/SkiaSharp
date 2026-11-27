@@ -7,6 +7,14 @@ pr:
   - release/*
 
 parameters:
+  - name: windowsMauiOnly
+    displayName: 'Run only Windows MAUI tests using a previous native build:'
+    type: boolean
+    default: false
+  - name: windowsMauiNativeBuildId
+    displayName: 'Native artifact build ID (required for Windows MAUI only):'
+    type: number
+    default: 0
   - name: enableCaching
     displayName: 'Enable build caching (skip native builds on cache hit):'
     type: boolean
@@ -85,15 +93,25 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     stages:
-      - template: /scripts/azure-templates-stages.yml@self
-        parameters:
-          buildPipelineType: 'complete'
-          buildAgentHost: ${{ parameters.buildAgentHost }}
-          buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
-          buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
-          buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-          buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-          enableCaching: ${{ parameters.enableCaching }}
+      - ${{ if eq(parameters.windowsMauiOnly, true) }}:
+        - stage: windows_maui
+          displayName: Windows MAUI tests
+          jobs:
+            - template: /scripts/azure-templates-jobs-tests-windows-maui.yml@self
+              parameters:
+                buildAgent: ${{ parameters.buildAgentWindows }}
+                retryCount: 0
+                nativeBuildId: '${{ parameters.windowsMauiNativeBuildId }}'
+      - ${{ else }}:
+        - template: /scripts/azure-templates-stages.yml@self
+          parameters:
+            buildPipelineType: 'complete'
+            buildAgentHost: ${{ parameters.buildAgentHost }}
+            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+            buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
+            buildAgentMac: ${{ parameters.buildAgentMac }}
+            buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
+            buildAgentLinux: ${{ parameters.buildAgentLinux }}
+            buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+            buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+            enableCaching: ${{ parameters.enableCaching }}
