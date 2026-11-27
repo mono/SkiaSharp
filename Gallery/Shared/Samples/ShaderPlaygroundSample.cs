@@ -187,7 +187,11 @@ half4 main(float2 fragCoord) {
 	protected override async Task OnUpdate(CancellationToken token)
 	{
 		await Task.Delay(16, token);
-		time += 0.016f * speed;
+		lock (SyncRoot)
+		{
+			token.ThrowIfCancellationRequested();
+			time += 0.016f * speed;
+		}
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
