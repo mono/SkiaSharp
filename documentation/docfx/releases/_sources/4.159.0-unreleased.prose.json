@@ -1,21 +1,15 @@
 {
-  "theme": "Windows integration and rendering reliability",
-  "highlights_headline": "SkiaSharp 4.159.0 adds modern .NET UWP controls and experimental image comparison, alongside rendering and crash fixes.",
-  "highlights_body": "Runtime-effect uniforms start at zero, GPU texture subsets avoid sampling exterior texels, and Windows x64 image error recovery is corrected. Linux x86 native assets are no longer included.",
-  "breaking": [
-    {
-      "title": "Move Linux x86 applications to a supported architecture",
-      "body": "Linux x86 native assets are no longer built or included in NuGet packages. Applications relying on those assets must move to a supported architecture before upgrading.",
-      "prs": [5784]
-    }
-  ],
+  "theme": "Modern UWP drawing controls",
+  "highlights_headline": "Modern .NET UWP apps gain CPU and ANGLE-backed GPU drawing controls for the in-box Windows XAML stack.",
+  "highlights_body": "The new UWP integration targets .NET 10 and remains separate from WinUI. It does not restore legacy uap10.0 support.",
+  "breaking": [],
   "categories": [
     {
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Modern .NET UWP controls",
-          "detail": "SkiaSharp.Views.UWP adds CPU SKXamlCanvas and ANGLE-backed SKSwapChainPanel controls for net10.0-windows10.0.26100.0, declaring Windows 10.0.17763.0 as the OS minimum. SkiaSharp.NativeAssets.UWP supplies UWP integration assets for x86, x64 and ARM64. This does not restore legacy uap10.0 support.",
+          "lead": "Modern .NET UWP support",
+          "detail": "SkiaSharp.Views.UWP targets net10.0-windows10.0.26100.0 with a declared Windows minimum of 10.0.17763.0. SkiaSharp.NativeAssets.UWP supplies ANGLE and native integration for win-x86, win-x64 and win-arm64, reusing the core Win32 Skia and HarfBuzz binaries. This is not legacy uap10.0 support or a Store-certification claim.",
           "prs": [4540]
         }
       ]
@@ -24,59 +18,15 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Experimental image comparison package",
-          "detail": "SkiaSharp.Testing compares SKImage, SKBitmap and SKPixmap inputs with channel tolerances, masks, mismatch budgets and error metrics, and produces difference images. The separate managed-only package requires opting into experimental diagnostic SKIA4001; returned difference images belong to the caller.",
-          "prs": [5293]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Windows x64 image error recovery",
-          "detail": "Fixes process crashes when libjpeg or libpng recovers from decoding errors in clang-built Windows x64 natives, including malformed JPEGs passed to SKCodec.Create and PDF output using lazy non-JPEG images. ARM64, x86 and MSVC builds are unchanged.",
-          "prs": [5827]
-        },
-        {
-          "lead": "Predictable runtime-effect uniforms",
-          "detail": "New SKRuntimeEffectUniforms buffers are zero-initialized, and Reset clears the existing buffer rather than allocating a replacement. Effect and mesh users no longer start with leftover uniform data.",
-          "prs": [5843]
-        },
-        {
-          "lead": "Safer GPU texture-subset filtering",
-          "detail": "Ganesh bilinear sampling clamps slightly inside texture subsets to avoid including undefined exterior texels. Texture-edge pixels may change; CPU and Graphite rendering are unaffected by this option.",
-          "prs": [5679]
-        },
-        {
-          "lead": "Tizen CPU blur selection",
-          "detail": "Applies Tizen's intended blur configuration to Skia itself, selecting the existing ThreeBoxApprox/Tent paths instead of the shader-based Gaussian candidate. Blur pixels and performance may differ.",
-          "prs": [5679]
-        },
-        {
-          "lead": "Trim-safe MAUI SKGLView binding",
-          "detail": "Replaces the string-path Window binding with a statically expressed binding, removing the associated trimming warning when constructing SKGLView without changing its intended behavior.",
-          "prs": [5320]
-        }
-      ]
-    },
-    {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "Skia m159 fixes",
-          "detail": "Updates the bundled m159 engine to the merged upstream bug-fix set. This same-milestone sync introduces no managed binding changes of its own.",
-          "prs": [5841]
+          "lead": "CPU and GPU XAML controls",
+          "detail": "Use SKXamlCanvas for CPU drawing and SKSwapChainPanel for ANGLE-backed GPU drawing in SkiaSharp.Views.UWP. PaintSurface callbacks receive control-managed surfaces: CPU surfaces are disposed after the callback, while GPU resources are released when the context is destroyed. The documented sample workflow requires Visual Studio 2026 MSBuild and deployment.",
+          "prs": [4540]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "taublast": "Zero-initialized runtime-effect uniforms, allocation-free uniform reset, and disposal of test data snapshots.",
-    "bhall-ctre": "Trim-safe Window binding for MAUI SKGLView.",
-    "FoggyFinder": "Modern .NET UWP controls, native integration and packaged drawing samples.",
-    "ramezgerges": "Restored the Uno Gallery and its views projects to the Windows sample solution.",
-    "SimonCropp": "Windows x64 crash fix for libjpeg and libpng error recovery."
+    "FoggyFinder": "Modern .NET UWP drawing controls, native integration and packaged samples."
   },
   "preview_summaries": {}
 }
