@@ -1,0 +1,237 @@
+diff --git a/scripts/code_generation_hashes/Static_builtins.json b/scripts/code_generation_hashes/Static_builtins.json
+index 937a7892cd..4efa88be7d 100644
+--- a/scripts/code_generation_hashes/Static_builtins.json
++++ b/scripts/code_generation_hashes/Static_builtins.json
+@@ -4,7 +4,7 @@
+   "src/compiler/translator/Operator_autogen.h":
+     "ad7feffe539c46c0527249776c4cb1a7",
+   "src/compiler/translator/SymbolTable_autogen.cpp":
+-    "8a80e4865b683c589ae06dd0694f1f45",
++    "f9ce2d0697a32fa3f2534a9704576e26",
+   "src/compiler/translator/SymbolTable_autogen.h":
+     "e8ad6382d05f71593d12b9f3b18a3fe9",
+   "src/compiler/translator/builtin_function_declarations.txt":
+@@ -12,7 +12,7 @@
+   "src/compiler/translator/builtin_variables.json":
+     "2eb97570952f7f077076ee53f28736b0",
+   "src/compiler/translator/gen_builtin_symbols.py":
+-    "8fb0c41413df635c408259e2c29141f8",
++    "437b431844e9849b453ea64c2059f7dc",
+   "src/compiler/translator/tree_util/BuiltIn_autogen.h":
+     "75295e2c833ce136f35ea1df47fef1c4",
+   "src/tests/compiler_tests/ImmutableString_test_autogen.cpp":
+diff --git a/src/common/system_utils_win.cpp b/src/common/system_utils_win.cpp
+index 74e9ed8f0a..daa6c4c42c 100644
+--- a/src/common/system_utils_win.cpp
++++ b/src/common/system_utils_win.cpp
+@@ -246,7 +246,7 @@ std::string GetLibraryPath(void *libraryHandle)
+ 
+     std::array<wchar_t, MAX_PATH> buffer;
+     if (GetModuleFileNameW(reinterpret_cast<HMODULE>(libraryHandle), buffer.data(),
+-                           buffer.size()) == 0)
++                           static_cast<DWORD>(buffer.size())) == 0)
+     {
+         return "";
+     }
+diff --git a/src/compiler/translator/ShaderVars.cpp b/src/compiler/translator/ShaderVars.cpp
+index 9536228813..7b812f4516 100644
+--- a/src/compiler/translator/ShaderVars.cpp
++++ b/src/compiler/translator/ShaderVars.cpp
+@@ -233,7 +233,7 @@ unsigned int ShaderVariable::getExternalSize() const
+     }
+     else
+     {
+-        memorySize += gl::VariableExternalSize(type);
++        memorySize += static_cast<unsigned int>(gl::VariableExternalSize(type));
+     }
+ 
+     // multiply by array size to get total memory size of this variable / struct.
+diff --git a/src/compiler/translator/SymbolTable.h b/src/compiler/translator/SymbolTable.h
+index c69eb82511..701eff8915 100644
+--- a/src/compiler/translator/SymbolTable.h
++++ b/src/compiler/translator/SymbolTable.h
+@@ -126,7 +126,7 @@ constexpr SymbolRule::SymbolRule(int version,
+     : mIsVar(0u),
+       mVersion(static_cast<uint16_t>(version)),
+       mShaders(static_cast<uint8_t>(shaders)),
+-      mExtensionIndex(extensionIndex),
++      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
+       mSymbolOrVar(symbol)
+ {}
+ 
+@@ -137,7 +137,7 @@ constexpr SymbolRule::SymbolRule(int version,
+     : mIsVar(1u),
+       mVersion(static_cast<uint16_t>(version)),
+       mShaders(static_cast<uint8_t>(shaders)),
+-      mExtensionIndex(extensionIndex),
++      mExtensionIndex(static_cast<uint8_t>(extensionIndex)),
+       mSymbolOrVar(resourceVar)
+ {}
+ 
+diff --git a/src/compiler/translator/SymbolTable_autogen.cpp b/src/compiler/translator/SymbolTable_autogen.cpp
+index 1b18dd98e1..a6c0befdca 100644
+--- a/src/compiler/translator/SymbolTable_autogen.cpp
++++ b/src/compiler/translator/SymbolTable_autogen.cpp
+@@ -24270,7 +24270,7 @@ uint16_t GetNextRuleIndex(uint32_t nameHash)
+ {
+     if (nameHash == 1424 - 1)
+     {
+-        return ArraySize(BuiltInArray::kRules);
++        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
+     }
+     return BuiltInArray::kMangledOffsets[nameHash + 1];
+ }
+diff --git a/src/compiler/translator/blocklayout.cpp b/src/compiler/translator/blocklayout.cpp
+index 5f873eaf19..042158f0c9 100644
+--- a/src/compiler/translator/blocklayout.cpp
++++ b/src/compiler/translator/blocklayout.cpp
+@@ -774,7 +774,7 @@ void BlockEncoderVisitor::enterStructAccess(const ShaderVariable &structVar, boo
+     if (!mIsTopLevelArrayStrideReady)
+     {
+         size_t structSize = mEncoder->getShaderVariableSize(structVar, isRowMajor);
+-        mTopLevelArrayStride *= structSize;
++        mTopLevelArrayStride *= static_cast<int>(structSize);
+         mIsTopLevelArrayStrideReady = true;
+     }
+ 
+diff --git a/src/compiler/translator/gen_builtin_symbols.py b/src/compiler/translator/gen_builtin_symbols.py
+index 71a602e9ca..903936893e 100755
+--- a/src/compiler/translator/gen_builtin_symbols.py
++++ b/src/compiler/translator/gen_builtin_symbols.py
+@@ -353,7 +353,7 @@ namespace
+ uint16_t GetNextRuleIndex(uint32_t nameHash)
+ {{
+     if (nameHash == {num_mangled_names} - 1)
+-        return ArraySize(BuiltInArray::kRules);
++        return static_cast<uint16_t>(ArraySize(BuiltInArray::kRules));
+     return BuiltInArray::kMangledOffsets[nameHash + 1];
+ }}
+ }}  // namespace
+diff --git a/src/libANGLE/Context.cpp b/src/libANGLE/Context.cpp
+index 5c0f686891..5f55df5d06 100644
+--- a/src/libANGLE/Context.cpp
++++ b/src/libANGLE/Context.cpp
+@@ -6546,7 +6546,7 @@ void Context::getFragmentShadingRates(GLsizei samples,
+     uint32_t shadingRatesCounts = 0;
+     angle::ShadingRateMap SupportedFragmentShadingRateSampleCounts =
+         mImplementation->getSupportedFragmentShadingRateEXTSampleCounts();
+-    uint32_t supportedShadingRateCounts = SupportedFragmentShadingRateSampleCounts.size();
++    size_t supportedShadingRateCounts = SupportedFragmentShadingRateSampleCounts.size();
+ 
+     for (uint32_t i = 1; i < supportedShadingRateCounts; i++)
+     {
+@@ -9925,12 +9925,12 @@ void Context::getPerfMonitorCounterData(GLuint monitor,
+         {
+             const PerfMonitorCounterGroupsInfo &perfMonitorGroups =
+                 mImplementation->getPerfMonitorCountersInfo();
+-            GLuint resultSize = 0;
++            size_t resultSize = 0;
+             for (const PerfMonitorCounterGroupInfo &group : perfMonitorGroups)
+             {
+                 resultSize += sizeof(PerfMonitorTriplet) * group.counters.size();
+             }
+-            *data = resultSize;
++            *data = static_cast<GLuint>(resultSize);
+             byteCount += sizeof(GLuint);
+             break;
+         }
+diff --git a/src/libANGLE/ProgramExecutable.cpp b/src/libANGLE/ProgramExecutable.cpp
+index c99c21375e..e3ca878a05 100644
+--- a/src/libANGLE/ProgramExecutable.cpp
++++ b/src/libANGLE/ProgramExecutable.cpp
+@@ -399,7 +399,7 @@ GLuint GetResourceLocation(const GLchar *name, const T &variable, GLint location
+         // The 'name' string may not contain the array notation "[0]"
+         if (arrayIndex != GL_INVALID_INDEX)
+         {
+-            location += arrayIndex;
++            location += static_cast<GLint>(arrayIndex);
+         }
+     }
+ 
+@@ -2075,7 +2075,7 @@ void ProgramExecutable::copySamplerBindingsFromProgram(const ProgramExecutable &
+ {
+     const std::vector<SamplerBinding> &bindings = executable.getSamplerBindings();
+     const std::vector<GLuint> &textureUnits     = executable.getSamplerBoundTextureUnits();
+-    uint16_t adjustedStartIndex                 = mSamplerBoundTextureUnits.size();
++    uint16_t adjustedStartIndex = static_cast<uint16_t>(mSamplerBoundTextureUnits.size());
+     mSamplerBoundTextureUnits.insert(mSamplerBoundTextureUnits.end(), textureUnits.begin(),
+                                      textureUnits.end());
+     for (const SamplerBinding &binding : bindings)
+diff --git a/src/libANGLE/angletypes.cpp b/src/libANGLE/angletypes.cpp
+index f48d666cb7..06979013fb 100644
+--- a/src/libANGLE/angletypes.cpp
++++ b/src/libANGLE/angletypes.cpp
+@@ -492,7 +492,7 @@ BlendStateExt::BlendStateExt(const size_t drawBufferCount)
+                                                ColorMaskStorage::GetMask(drawBufferCount))),
+       mColorMask(mAllColorMask),
+       mAllEnabledMask(0xFF >> (8 - drawBufferCount)),
+-      mDrawBufferCount(drawBufferCount)
++      mDrawBufferCount(static_cast<uint8_t>(drawBufferCount))
+ {}
+ 
+ BlendStateExt::BlendStateExt(const BlendStateExt &other) = default;
+diff --git a/src/libANGLE/angletypes.h b/src/libANGLE/angletypes.h
+index 1ec96d0c5e..78ab9da1d5 100644
+--- a/src/libANGLE/angletypes.h
++++ b/src/libANGLE/angletypes.h
+@@ -786,10 +786,10 @@ class BlendStateExt final
+ 
+     constexpr static uint8_t kColorMaskRGBA = 0xf;
+ 
+-    static constexpr size_t PackColorMask(const bool red,
+-                                          const bool green,
+-                                          const bool blue,
+-                                          const bool alpha)
++    static constexpr uint8_t PackColorMask(const bool red,
++                                           const bool green,
++                                           const bool blue,
++                                           const bool alpha)
+     {
+         return (red ? 1 : 0) | (green ? 2 : 0) | (blue ? 4 : 0) | (alpha ? 8 : 0);
+     }
+diff --git a/src/libANGLE/renderer/d3d/VertexDataManager.cpp b/src/libANGLE/renderer/d3d/VertexDataManager.cpp
+index 53d8432e44..f132bd538e 100644
+--- a/src/libANGLE/renderer/d3d/VertexDataManager.cpp
++++ b/src/libANGLE/renderer/d3d/VertexDataManager.cpp
+@@ -389,8 +389,8 @@ angle::Result VertexDataManager::StoreStaticAttrib(const gl::Context *context,
+             angle::CheckedNumeric<size_t> startIndex = offset / attribStride;
+             ANGLE_CHECK_GL_MATH(GetImplAs<ContextD3D>(context), startIndex.IsValid());
+             size_t si = startIndex.ValueOrDie();
+-            ANGLE_TRY(staticBuffer->storeStaticAttribute(context, attrib, binding, -si, totalCount,
+-                                                         0, sourceData));
++            ANGLE_TRY(staticBuffer->storeStaticAttribute(context, attrib, binding, 0 - si,
++                                                         totalCount, 0, sourceData));
+         }
+     }
+ 
+diff --git a/src/libANGLE/renderer/gl/StateManagerGL.cpp b/src/libANGLE/renderer/gl/StateManagerGL.cpp
+index 38103f2d81..c276c939cb 100644
+--- a/src/libANGLE/renderer/gl/StateManagerGL.cpp
++++ b/src/libANGLE/renderer/gl/StateManagerGL.cpp
+@@ -2913,7 +2913,7 @@ void StateManagerGL::setBlendFuncs(const gl::BlendStateExt &blendState)
+             gl::BlendStateExt::FactorStorage::Type commonDstColor = 0;
+             gl::BlendStateExt::FactorStorage::Type commonSrcAlpha = 0;
+             gl::BlendStateExt::FactorStorage::Type commonDstAlpha = 0;
+-            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1; i++)
++            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1u; i++)
+             {
+                 const gl::BlendStateExt::FactorStorage::Type tempCommonSrcColor =
+                     blendState.expandSrcColorIndexed(i);
+@@ -2996,7 +2996,7 @@ void StateManagerGL::setBlendEquations(const gl::BlendStateExt &blendState)
+             bool found                                                   = false;
+             gl::BlendStateExt::EquationStorage::Type commonEquationColor = 0;
+             gl::BlendStateExt::EquationStorage::Type commonEquationAlpha = 0;
+-            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1; i++)
++            for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1u; i++)
+             {
+                 const gl::BlendStateExt::EquationStorage::Type tempCommonEquationColor =
+                     blendState.expandEquationColorIndexed(i);
+@@ -4094,7 +4094,7 @@ void StateManagerGL::setColorMaskForFramebuffer(const gl::BlendStateExt &blendSt
+     {
+         bool found                                                = false;
+         gl::BlendStateExt::ColorMaskStorage::Type commonColorMask = 0;
+-        for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1; i++)
++        for (size_t i = 0; i < mState.blendState.getDrawBufferCount() - 1u; i++)
+         {
+             const gl::BlendStateExt::ColorMaskStorage::Type tempCommonColorMask =
+                 blendState.expandColorMaskIndexed(i);

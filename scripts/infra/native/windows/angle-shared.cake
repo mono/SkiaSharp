@@ -22,12 +22,21 @@ void SyncAngle(DirectoryPath anglePath, string angleVersion, string angleRevisio
 {
     CheckoutAngle(anglePath, angleVersion, angleRevision);
     SyncAngleSubmodules(anglePath);
+    PatchAngleCompilerWarnings(anglePath);
     LinkAngleClang(anglePath);
     PatchAngleToolchainOutputNames(anglePath);
     WriteAngleGclientArgs(anglePath);
     ApplyAngleSkiaSharpConfig(anglePath);
     WriteAngleLastChange(anglePath);
     UseWindowsSdkResourceCompiler(anglePath);
+}
+
+// Fix checked narrowing conversions exposed by MSVC warning enforcement.
+void PatchAngleCompilerWarnings(DirectoryPath anglePath)
+{
+    var patch = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/angle-warnings.patch");
+    if (!RunProcess("git", $"apply --reverse --check --quiet \"{patch.FullPath}\"", anglePath, allowFailure: true))
+        RunProcess("git", $"apply \"{patch.FullPath}\"", anglePath);
 }
 
 void CheckoutAngle(DirectoryPath anglePath, string angleVersion, string angleRevision)
