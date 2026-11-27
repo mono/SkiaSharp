@@ -136,19 +136,33 @@ index 5c0f686891..5f55df5d06 100644
              break;
          }
 diff --git a/src/libANGLE/ProgramExecutable.cpp b/src/libANGLE/ProgramExecutable.cpp
-index c99c21375e..e3ca878a05 100644
+index c99c21375e..4e55f94efe 100644
 --- a/src/libANGLE/ProgramExecutable.cpp
 +++ b/src/libANGLE/ProgramExecutable.cpp
-@@ -399,7 +399,7 @@ GLuint GetResourceLocation(const GLchar *name, const T &variable, GLint location
+@@ -392,18 +392,19 @@ GLuint GetResourceLocation(const GLchar *name, const T &variable, GLint location
+         return GL_INVALID_INDEX;
+     }
+ 
++    GLuint result = static_cast<GLuint>(location);
+     if (variable.isArray())
+     {
+         size_t nameLengthWithoutArrayIndexOut;
+-        size_t arrayIndex = ParseArrayIndex(name, &nameLengthWithoutArrayIndexOut);
++        unsigned int arrayIndex = ParseArrayIndex(name, &nameLengthWithoutArrayIndexOut);
          // The 'name' string may not contain the array notation "[0]"
          if (arrayIndex != GL_INVALID_INDEX)
          {
 -            location += arrayIndex;
-+            location += static_cast<GLint>(arrayIndex);
++            result += arrayIndex;
          }
      }
  
-@@ -2075,7 +2075,7 @@ void ProgramExecutable::copySamplerBindingsFromProgram(const ProgramExecutable &
+-    return location;
++    return result;
+ }
+ 
+ template <typename T>
+@@ -2075,7 +2076,7 @@ void ProgramExecutable::copySamplerBindingsFromProgram(const ProgramExecutable &
  {
      const std::vector<SamplerBinding> &bindings = executable.getSamplerBindings();
      const std::vector<GLuint> &textureUnits     = executable.getSamplerBoundTextureUnits();
