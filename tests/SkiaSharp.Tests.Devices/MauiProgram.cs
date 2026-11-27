@@ -41,6 +41,7 @@ namespace SkiaSharp.Tests
 
 #if WINDOWS
 			builder.Logging.AddDebug();
+			builder.Logging.AddProvider(new SkiaSharp.Tests.WinUI.StartupDiagnosticsLoggerProvider());
 #else
 			builder.Logging.AddConsole();
 #endif
