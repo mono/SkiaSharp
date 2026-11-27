@@ -276,7 +276,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
-			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");
+			SkipOnPlatform(IsMac || IsMacCatalyst, "macOS does not release the data when the typeface is disposed");
 
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var bytes = File.ReadAllBytes(path);
@@ -301,7 +301,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public unsafe void ReleaseDataWaitsForLastTypefaceClone()
 		{
-			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");
+			SkipOnPlatform(IsMac || IsMacCatalyst, "macOS does not release the data when the typeface is disposed");
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 			var released = false;

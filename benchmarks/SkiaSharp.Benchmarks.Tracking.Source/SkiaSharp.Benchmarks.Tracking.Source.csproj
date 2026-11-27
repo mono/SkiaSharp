@@ -37,16 +37,16 @@
   </ItemGroup>
 
   <!--
-    Reference the SkiaSharp.dll built from source (net10.0 only), NOT a ProjectReference.
-    A ProjectReference restores every TFM SkiaSharp declares — including net10.0-android,
+    Reference the SkiaSharp.dll built from source ($(TFMCurrent) only), NOT a ProjectReference.
+    A ProjectReference restores every TFM SkiaSharp declares — including $(TFMCurrent)-android,
     which needs the Android workload that hosted runners don't have. The workflow builds
-    `binding/SkiaSharp/SkiaSharp.csproj -p:AllTargetFrameworks=net10.0` first (workload-free),
+    `binding/SkiaSharp/SkiaSharp.csproj -p:AllTargetFrameworks=$(TFMCurrent)` first (workload-free),
     then this picks up the output. The native libSkiaSharp comes from output/native (built
     from source in Docker by the workflow) via the IncludeNativeAssets import below.
   -->
   <ItemGroup>
     <Reference Include="SkiaSharp">
-      <HintPath>..\..\binding\SkiaSharp\bin\$(Configuration)\net10.0\SkiaSharp.dll</HintPath>
+      <HintPath>..\..\binding\SkiaSharp\bin\$(Configuration)\$(TFMCurrent)\SkiaSharp.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
@@ -54,7 +54,7 @@
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Benchmarks\Benchmarks\PixelComparerBenchmarks.cs" />
     <Reference Include="SkiaSharp.Testing">
-      <HintPath>..\..\source\SkiaSharp.Testing\bin\$(Configuration)\net10.0\SkiaSharp.Testing.dll</HintPath>
+      <HintPath>..\..\source\SkiaSharp.Testing\bin\$(Configuration)\$(TFMCurrent)\SkiaSharp.Testing.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

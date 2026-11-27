@@ -133,7 +133,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <OutputType>Exe</OutputType>
-                <TargetFramework>net10.0</TargetFramework>
+                <TargetFramework>net11.0</TargetFramework>
                 <ImplicitUsings>enable</ImplicitUsings>
               </PropertyGroup>
               <ItemGroup>
@@ -147,7 +147,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         // Build and run in Docker using dotnet publish (resolves RID-specific native assets)
         var dockerfile = Path.Combine(projectDir, "Dockerfile");
         File.WriteAllText(dockerfile, $"""
-            FROM mcr.microsoft.com/dotnet/sdk:10.0
+            FROM mcr.microsoft.com/dotnet/sdk:11.0
             WORKDIR /src
             COPY {projectName}.csproj nuget.config ./
             RUN dotnet restore

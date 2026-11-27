@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.404-azurelinux3.0
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100-azurelinux3.0
 
 RUN tdnf install -y llvm gcc glibc-devel binutils \
     && tdnf clean all \

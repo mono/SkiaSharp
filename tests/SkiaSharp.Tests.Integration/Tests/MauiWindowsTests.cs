@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests.Integration;
 public class MauiWindowsTests(ITestOutputHelper output) : MauiTestBase(output)
 {
     protected override string PlatformName => "Windows";
-    protected override string TargetFramework => "net10.0-windows10.0.19041.0";
+    protected override string TargetFramework => "net11.0-windows10.0.19041.0";
 
     protected override string? CanRunOnCurrentMachine() =>
         OperatingSystem.IsWindows() ? null : "Windows requires Windows (hardware requirement)";

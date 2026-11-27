@@ -14,11 +14,10 @@ parameters:
   - name: androidDevices
     type: object
     default:
-      # API 21 is the minimum supported Android version. Vulkan is unavailable
-      # before API 24, so this leg validates the remaining CPU, GL and UI suite.
+      # API 24 is the minimum supported Android version in .NET 11.
       - name: oldest
-        displayName: Android (API 21)
-        image: 'android-21;google_apis'
+        displayName: Android (API 24)
+        image: 'android-24;google_apis'
         model: Nexus 5X
         additionalArgs: '--skipGpu="ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk"'
       # API 36 is the newest google_apis system image currently available.
@@ -31,8 +30,8 @@ parameters:
     type: object
     default:
       - name: oldest
-        displayName: iOS 18.6
-        version: '18.6'
+        displayName: iOS 26.5
+        version: '26.5'
         model: iPhone 16
         installRuntime: true
       - name: latest
@@ -220,34 +219,6 @@ stages:
             # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
             # `wasm test` command takes no browser arguments, so the WebGPU flags
             # cannot be passed through without an upstream change to that package. See #4591.
-            env:
-              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
-            preBuildSteps:
-              - bash: bash ./scripts/infra/tests/install-chrome.sh
-                displayName: Install Chrome for WASM tests
-
-        - template: /scripts/azure-templates-jobs-tests-device.yml@self
-          parameters:
-            # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
-            # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
-            # mismatch in the native lib, fail CI. Provisioning and whole-job SDK selection
-            # are separate; only this job selects the preview SDK for its source build.
-            name: tests_wasm_preview_linux
-            displayName: WASM (.NET Preview)
-            buildAgent: ${{ parameters.buildAgentLinux }}
-            target: tests-wasm
-            additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
-            packages: $(MANAGED_LINUX_PACKAGES) ninja-build
-            dotnetSdks:
-              - sdkVersion: $(DOTNET_VERSION)
-              - sdkVersion: $(DOTNET_VERSION_PREVIEW)
-                workloadSetVersion: $(DOTNET_WORKLOAD_VERSION_PREVIEW)
-                workloads: [wasm-tools, android]
-            jobSdkVersion: $(DOTNET_VERSION_PREVIEW)
-            resultLabel: WASM preview
-            logArtifact: testlogs_wasm_preview
-            extractVisualImages: false
-            # See the WASM leg above: the headless browser exposes no WebGPU adapter (#4591).
             env:
               SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             preBuildSteps:

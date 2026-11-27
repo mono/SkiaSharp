@@ -6,11 +6,11 @@ animations, and SkSL shaders.
 
 ## Build and run
 
-Install the .NET 10 SDK and WASM workload. From this folder:
+Install the .NET 11 SDK and WASM workload. From this folder:
 
 ```sh
 dotnet workload install wasm-tools
-dotnet run --project SkiaFiddle.csproj -c Debug -f net10.0-browserwasm
+dotnet run --project SkiaFiddle.csproj -c Debug -f net11.0-browserwasm
 ```
 
 Open the URL printed by the application.
@@ -31,7 +31,7 @@ the editors. Bundled media and its licenses are described in [Media](Media/READM
 
 ```sh
 dotnet publish SkiaFiddle.csproj \
-  -c Release -f net10.0-browserwasm \
+  -c Release -f net11.0-browserwasm \
   -p:WasmEnableSIMD=false -o output/skiafiddle
 python3 -m http.server 5050 --directory output/skiafiddle/wwwroot
 ```

@@ -23,15 +23,15 @@ public abstract class PlatformTestBase : IDisposable
     /// </para>
     /// </summary>
     protected static readonly string BaseFramework =
-        AppContext.GetData("BaseFramework") as string is { Length: > 0 } bf ? bf : "net10.0";
+        AppContext.GetData("BaseFramework") as string is { Length: > 0 } bf ? bf : "net11.0";
 
     /// <summary>
     /// SDK version the generated temp projects resolve to (written into their <c>global.json</c>).
-    /// Defaults to the .NET 10 band; override with <c>-p:SdkVersion=</c> when targeting a newer
+    /// Defaults to the .NET 11 band; override with <c>-p:SdkVersion=</c> when targeting a newer
     /// <see cref="BaseFramework"/>.
     /// </summary>
     protected static readonly string SdkVersion =
-        AppContext.GetData("SdkVersion") as string is { Length: > 0 } sv ? sv : "10.0.404";
+        AppContext.GetData("SdkVersion") as string is { Length: > 0 } sv ? sv : "11.0.100";
 
     /// <summary>
     /// Whether the generated temp projects may resolve a prerelease SDK. Defaults to <c>false</c>;

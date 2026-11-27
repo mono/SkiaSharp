@@ -14,7 +14,7 @@ same drawing code and sample catalog in [`Shared`](Shared).
 
 ## Running
 
-Install the .NET 10 SDK and the workloads required by your chosen host.
+Install the .NET 11 SDK and the workloads required by your chosen host.
 Run the commands below from this gallery folder.
 
 ### Blazor
@@ -32,7 +32,7 @@ With the .NET MAUI workload installed, run the desktop app on macOS:
 
 ```bash
 dotnet build Maui/SkiaSharpSample.Maui.csproj \
-  -f net10.0-maccatalyst -t:Run
+  -f net11.0-maccatalyst -t:Run
 ```
 
 The [MAUI README](Maui/README.md) covers the other platforms, native document

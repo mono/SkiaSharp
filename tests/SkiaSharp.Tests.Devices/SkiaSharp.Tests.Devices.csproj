@@ -7,6 +7,7 @@
     <ValidateXcodeVersion>true</ValidateXcodeVersion>
     <SingleProject>true</SingleProject>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+    <MtouchLink Condition="'$(Configuration)' == 'Debug'">None</MtouchLink>
     <AssemblyName>SkiaSharp.Tests.Devices</AssemblyName>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <SignAssembly>false</SignAssembly>
@@ -26,12 +27,15 @@
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- The packaged app is activated by Windows, not the CI shell, so DOTNET_ROOT is ignored
+         and a framework-dependent app needs the runtime in Program Files. Bundle it instead. -->
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <PropertyGroup>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">10.0</SupportedOSPlatformVersion>
   </PropertyGroup>

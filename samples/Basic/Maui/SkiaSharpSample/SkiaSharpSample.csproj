@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0-ios;net10.0-maccatalyst;net10.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net11.0-ios;net11.0-maccatalyst;net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
-    <MauiVersion>10.0.110</MauiVersion>
+    <MauiVersion>11.0.10</MauiVersion>
     <SingleProject>true</SingleProject>
     <Nullable>enable</Nullable>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
@@ -22,7 +22,7 @@
   <PropertyGroup>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 

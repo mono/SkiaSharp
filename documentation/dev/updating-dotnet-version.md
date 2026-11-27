@@ -7,10 +7,10 @@ This checklist documents every file that needs updating when bumping the .NET SD
 | Property | Purpose | Example |
 |----------|---------|---------|
 | **TFMBase** | Lowest .NET for class libraries only (no platform TFMs) | `net6.0` |
-| **TFMPrevious** | Previous .NET with full platform support | `net9.0` |
-| **TFMCurrent** | Current .NET with full platform support | `net10.0` |
-| **TPV\*Previous** | Target Platform Versions for TFMPrevious | `TPViOSPrevious=18.0` |
-| **TPV\*Current** | Target Platform Versions for TFMCurrent | `TPViOSCurrent=26.0` |
+| **TFMPrevious** | Previous .NET with full platform support | `net10.0` |
+| **TFMCurrent** | Current .NET with full platform support | `net11.0` |
+| **TPV\*Previous** | Target Platform Versions for TFMPrevious | `TPViOSPrevious=26.0` |
+| **TPV\*Current** | Target Platform Versions for TFMCurrent | `TPViOSCurrent=27.2` |
 
 > **Important:** Starting with .NET 10, Apple TPVs use Xcode 26 unified SDK versioning. iOS, MacCatalyst, tvOS, and macOS all use `26.0` (not the OS version like `18.0` or `15.0`). Check for valid TPVs with `dotnet new console -f net10.0-ios` and observe the error message listing valid versions.
 
@@ -125,7 +125,7 @@ The existing `tests/SkiaSharp.Tests.MSBuild` suite evaluates all four source/pac
 
 Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
-Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
+Keep each distro/OS suffix unchanged when updating either kind of image unless the upstream SDK release transitions to a newer base OS (for example, .NET 11 moved from `-noble` to `-resolute` and from `-nanoserver-ltsc2022` to `-nanoserver-ltsc2025`, while retaining `-alpine3.24` and `-azurelinux3.0`). Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
 
 If the exact SDK patch is not published for an existing distro suffix, explicitly review the distro change rather than choosing an unavailable tag.
 

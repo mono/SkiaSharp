@@ -45,10 +45,10 @@ Generate the sample projects once after staging packages:
 ```sh
 dotnet cake --target=samples-generate --previewLabel=pr.1234 --buildNumber=26509.10
 dotnet test tests/SkiaSharp.Tests.Samples.slnx \
-  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --report-trx
+  -p:TargetFramework=net11.0 -p:TargetFrameworks=net11.0 -- --report-trx
 ```
 
-Keep both framework properties so the runner uses only .NET 10 dependencies.
+Keep both framework properties so the runner uses only .NET 11 dependencies.
 Sample projects still build their declared target frameworks.
 
 `BuildSample`, `DotNet.Build` and `DotNet.Run` accept an optional
@@ -61,7 +61,7 @@ Build the runner and install its matching Chromium:
 
 ```sh
 dotnet build tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj
-pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net10.0/playwright.ps1 \
+pwsh tests/SkiaSharp.Tests.Samples/bin/Debug/net11.0/playwright.ps1 \
   install --with-deps chromium
 dotnet test tests/SkiaSharp.Tests.Samples/SkiaSharp.Tests.Samples.csproj \
   -- --filter-trait Category=Browser --report-trx

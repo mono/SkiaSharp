@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">net11.0-android;net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net11.0-android;net11.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
-    <MauiVersion>10.0.110</MauiVersion>
+    <MauiVersion>11.0.10</MauiVersion>
     <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
     <SingleProject>true</SingleProject>
@@ -19,11 +19,11 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">23.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(TargetFramework)' == 'net10.0-maccatalyst'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(TargetFramework)' == 'net11.0-maccatalyst'">
     <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.Debug.plist</CodesignEntitlements>
   </PropertyGroup>
   <ItemGroup>

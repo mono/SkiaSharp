@@ -12,7 +12,7 @@ namespace SkiaSharp.Tests.Integration;
 public class MauiMacCatalystTests(ITestOutputHelper output) : MauiTestBase(output)
 {
     protected override string PlatformName => "MacCatalyst";
-    protected override string TargetFramework => "net10.0-maccatalyst";
+    protected override string TargetFramework => "net11.0-maccatalyst";
     
     // Longer retry delay for Mac Catalyst - automation mode issues need more recovery time
     protected override TimeSpan RetryDelay => TimeSpan.FromSeconds(30);

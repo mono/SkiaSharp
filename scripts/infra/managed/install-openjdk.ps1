@@ -8,7 +8,13 @@ $ErrorActionPreference = 'Stop'
 
 $downloadVersion = $Version.Split('+')[0]
 $majorVersion = [int] $downloadVersion.Split('.')[0]
-$installedJavaHome = [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_X64")
+$isArm64 = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64
+$installedJavaHome = if ($isArm64) {
+    $arm64Home = [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_arm64")
+    if ($arm64Home) { $arm64Home } else { [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_X64") }
+} else {
+    [Environment]::GetEnvironmentVariable("JAVA_HOME_${majorVersion}_X64")
+}
 if ($installedJavaHome) {
     Write-Host "Using the existing JDK at '$installedJavaHome'..."
     $java_home = $installedJavaHome
@@ -19,7 +25,8 @@ if ($installedJavaHome) {
 
     if ($IsMacOS) {
         $ext = "tar.gz"
-        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-macOS-x64.tar.gz"
+        $arch = if ($isArm64) { "aarch64" } else { "x64" }
+        $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-macOS-$arch.tar.gz"
     } elseif ($IsLinux) {
         $ext = "tar.gz"
         $url = "https://aka.ms/download-jdk/microsoft-jdk-$downloadVersion-linux-x64.tar.gz"
