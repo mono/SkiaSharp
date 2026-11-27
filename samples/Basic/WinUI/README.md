@@ -4,7 +4,7 @@ Demonstrates all SkiaSharp WinUI 3 view types with top tab navigation, dark/ligh
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into a WinUI 3 desktop app using XAML. The `SKXamlCanvas` and `SKSwapChainPanel` controls are placed declaratively in `.xaml` files alongside standard WinUI controls, and can be configured in the Visual Studio XAML designer.
+This sample shows how to integrate SkiaSharp views into a WinUI 3 desktop app using XAML. The `SKXamlCanvas` and `SKGaneshView` controls are placed declaratively in `.xaml` files alongside standard WinUI controls, and can be configured in the Visual Studio XAML designer.
 
 ### CPU
 
@@ -18,15 +18,15 @@ A static scene rendered entirely on the CPU — a radial gradient background ove
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom font loaded from an embedded resource via `SKTypeface.FromStream`.
 
-### GPU
+### Ganesh
 
 A real-time animated shader running at full frame rate on the GPU via ANGLE (OpenGL ES over DirectX), with pointer interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKSwapChainPanel`** — Hardware-accelerated canvas backed by ANGLE, translating OpenGL ES calls to DirectX for efficient GPU rendering.
+- **`SKGaneshView`** — Hardware-accelerated Ganesh GPU canvas backed by ANGLE, translating OpenGL ES calls to DirectX for efficient GPU rendering.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation driven by `EnableRenderLoop` with an FPS counter overlay.
+- **Render loop** — Continuous animation driven by `HasRenderLoop` with an FPS counter overlay.
 - **Pointer interaction** — Pointer position is passed as a shader uniform, adding a white-hot blob to the metaball field.
 - **Lifecycle management** — Render loop starts/stops on `Loaded`/`Unloaded` to avoid background GPU work when the page is not visible.
 

@@ -44,7 +44,7 @@ public class MemoryLeakTests : SKUITests
 			return view;
 		});
 
-#if ANDROID || IOS || MACCATALYST
+#if ANDROID || IOS || MACCATALYST || WINDOWS
 	[UIFact]
 	public Task SKGaneshViewHandlerDoesNotLeak()
 	{
