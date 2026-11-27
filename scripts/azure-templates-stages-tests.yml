@@ -161,11 +161,6 @@ stages:
                 preBuildSteps:
                   - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform iOS -Version '${{ ios.version }}'
                     displayName: Install the iOS ${{ ios.version }} simulator runtime
-              # An Xcode installed from a package brings no simulator runtimes of its own.
-              ${{ elseif parameters.buildAgentMac.parameters.xcodePackageVersion }}:
-                preBuildSteps:
-                  - pwsh: ./scripts/infra/managed/install-apple-platform.ps1 -Platform iOS
-                    displayName: Install the iOS simulator runtime for the installed Xcode
 
         - template: /scripts/azure-templates-jobs-tests-device.yml@self
           parameters:

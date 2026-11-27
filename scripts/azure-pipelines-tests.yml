@@ -24,12 +24,9 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: macos-26
+        name: AcesShared
+        demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
         os: macos
-      parameters:
-        # Hosted images have no Xcode 27, so install the one XCODE_VERSION names.
-        xcodePackageVersion: '27.2.0'
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
     type: object
