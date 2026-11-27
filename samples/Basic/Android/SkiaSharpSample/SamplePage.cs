@@ -6,7 +6,7 @@ namespace SkiaSharpSample;
 public enum SamplePage
 {
 	Cpu,
-	GpuSurface,
+	Ganesh,
 	GpuTexture,
 	Drawing,
 }

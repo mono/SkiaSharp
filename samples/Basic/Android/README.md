@@ -18,15 +18,15 @@ A static scene rendered entirely on the CPU — a radial gradient background ove
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom Noto Sans font loaded from an embedded asset via `SKTypeface.FromStream`.
 
-### GPU (Surface)
+### Ganesh
 
 A real-time animated shader running at full frame rate on the GPU, with touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
-- **`SKGLSurfaceView`** — Hardware-accelerated OpenGL ES canvas backed by Android's `SurfaceView`, suitable for full-screen GPU content.
+- **`SKGaneshView`** — Hardware-accelerated Ganesh GPU canvas backed by OpenGL ES.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation driven by `Rendermode.Continuously` with an FPS counter overlay.
+- **Render loop** — Continuous animation with `HasRenderLoop` and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform, adding a white-hot blob to the metaball field.
 
 ### GPU (Texture)
@@ -74,10 +74,10 @@ dotnet build -t:Install -f net8.0-android
 To start on a different page, change `DefaultPage` in `MainActivity.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuSurface;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Ganesh;
 ```
 
-Available pages: `Cpu` (default), `GpuSurface`, `GpuTexture`, `Drawing`
+Available pages: `Cpu` (default), `Ganesh`, `GpuTexture`, `Drawing`
 
 ## Screenshots
 
