@@ -13,12 +13,13 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 		/// <summary>Registers SkiaSharp handlers and services with the MAUI application.</summary>
 		/// <param name="builder">The <see cref="T:Microsoft.Maui.Hosting.MauiAppBuilder" /> to configure.</param>
 		/// <returns>The <see cref="T:Microsoft.Maui.Hosting.MauiAppBuilder" /> for method chaining.</returns>
-		/// <remarks>This method registers handlers for <see cref="T:SkiaSharp.Views.Maui.Controls.SKCanvasView" /> and <see cref="T:SkiaSharp.Views.Maui.Controls.SKGLView" />, as well as image source services for SkiaSharp image types.</remarks>
+		/// <remarks>This method registers handlers for <see cref="T:SkiaSharp.Views.Maui.Controls.SKCanvasView" />, <see cref="T:SkiaSharp.Views.Maui.Controls.SKGaneshView" />, and <see cref="T:SkiaSharp.Views.Maui.Controls.SKGLView" />, as well as image source services for SkiaSharp image types.</remarks>
 		public static MauiAppBuilder UseSkiaSharp(this MauiAppBuilder builder) =>
 			builder
 				.ConfigureMauiHandlers(handlers =>
 				{
 					handlers.AddHandler<SKCanvasView, SKCanvasViewHandler>();
+					handlers.AddHandler<SKGaneshView, SKGaneshViewHandler>();
 					handlers.AddHandler<SKGLView, SKGLViewHandler>();
 				})
 				.ConfigureImageSources(sources =>

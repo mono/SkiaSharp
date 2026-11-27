@@ -142,7 +142,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		e.Handled = true;
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object sender, SKPaintGaneshSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
 		var info = e.Info;
@@ -160,6 +160,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		using var shader = builder.Build();
 		shaderPaint.Shader = shader;
 		canvas.DrawRect(0, 0, width, height, shaderPaint);
+		shaderPaint.Shader = null;
 
 		if (fpsCounter.Tick() is double fps)
 		{
