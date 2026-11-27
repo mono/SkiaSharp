@@ -9,3 +9,11 @@ public enum SamplePage
 	Gpu,
 	Drawing,
 }
+
+/// <summary>
+/// The GPU backends available in this sample.
+/// </summary>
+public enum GpuBackend
+{
+	SwapChain,
+}

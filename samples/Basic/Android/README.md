@@ -18,24 +18,15 @@ A static scene rendered entirely on the CPU — a radial gradient background ove
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 - **`SKTypeface`** — Custom Noto Sans font loaded from an embedded asset via `SKTypeface.FromStream`.
 
-### GPU (Surface)
+### GPU
 
-A real-time animated shader running at full frame rate on the GPU, with touch interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU, with a Material `TabLayout` sub-tab bar (`GpuFragment`) that swaps between `GpuTextureFragment` (`fragment_gpu_texture.xml` / `SKGLTextureView`) and `GpuSurfaceFragment` (`fragment_gpu_surface.xml` / `SKGLSurfaceView`), and touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
+- **`SKGLTextureView`** — Hardware-accelerated OpenGL ES canvas backed by Android's `TextureView`, which supports transparency, transforms, and compositing within the view hierarchy (default).
 - **`SKGLSurfaceView`** — Hardware-accelerated OpenGL ES canvas backed by Android's `SurfaceView`, suitable for full-screen GPU content.
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation driven by `Rendermode.Continuously` with an FPS counter overlay.
-- **Touch interaction** — Touch position is passed as a shader uniform, adding a white-hot blob to the metaball field.
-
-### GPU (Texture)
-
-A real-time animated shader running at full frame rate on the GPU, rendered into a `TextureView` that supports transparency, transforms, and compositing within the view hierarchy.
-
-**Features:**
-
-- **`SKGLTextureView`** — Hardware-accelerated OpenGL ES canvas backed by Android's `TextureView`, which supports transparency, transforms, and compositing within the view hierarchy.
+- **GPU sub-tabs (`TabLayout`)** — Top sub-tab bar that swaps child `Fragment` instances via `ChildFragmentManager`, exercising full XML layout inflation and view teardown (`OnDestroyView`) when switching backends.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform, adding a white-hot blob to the metaball field.
@@ -71,13 +62,16 @@ Build and deploy to a connected device or emulator:
 dotnet build -t:Install -f net8.0-android
 ```
 
-To start on a different page, change `DefaultPage` in `MainActivity.cs`:
+To start on a different page or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `MainActivity.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuSurface;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Texture;
 ```
 
-Available pages: `Cpu` (default), `GpuSurface`, `GpuTexture`, `Drawing`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+Available GPU backends: `Texture` (default), `Surface`
 
 ## Screenshots
 

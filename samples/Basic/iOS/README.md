@@ -17,26 +17,17 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
 
-### GPU (OpenGL)
+### GPU
 
-A real-time animated shader running at full frame rate on the GPU via OpenGL ES, with touch interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running at full frame rate on the GPU, with a segmented sub-tab bar at the top (`GpuViewController`) that swaps between the Metal (`GpuMetalViewController` / `SKMetalView`) and OpenGL ES (`GpuGLViewController` / `SKGLView`) Storyboard scenes, and touch interaction that adds a white-hot blob to the metaball field.
 
 **Features:**
 
+- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API (default).
 - **`SKGLView`** — Hardware-accelerated canvas backed by GLKit's `GLKView`, using OpenGL ES for rendering.
+- **GPU sub-tabs (`UISegmentedControl`)** — Top segmented bar that swaps full child `UIViewController` Storyboard scenes, exercising full view controller appearance/disappearance lifecycle when switching backends.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation driven by `CADisplayLink` with an FPS counter overlay.
-- **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
-
-### GPU (Metal)
-
-A real-time animated shader running at full frame rate on the GPU via Apple's Metal framework, with touch interaction.
-
-**Features:**
-
-- **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle and an FPS counter overlay.
+- **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle (Metal) or `CADisplayLink` (OpenGL ES) and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
 
 ### Drawing
@@ -65,13 +56,16 @@ Build and deploy to a simulator or device:
 dotnet build -t:Run
 ```
 
-To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
+To start on a different page or GPU backend, change `DefaultPage` or `DefaultGpuBackend` in `AppDelegate.cs`:
 
 ```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+public static GpuBackend DefaultGpuBackend { get; set; } = GpuBackend.Metal;
 ```
 
-Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`, `Drawing`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
+Available GPU backends: `Metal` (default), `GL`
 
 ## Screenshots
 
