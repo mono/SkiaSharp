@@ -247,6 +247,7 @@ namespace SkiaSharp
 				SKColorType.RgbF16F16F16x => 0,
 				SKColorType.R16Unorm => GRGlSizedFormat.R16,
 				SKColorType.RF16 => GRGlSizedFormat.R16F,
+				SKColorType.Bgr888x => GRGlSizedFormat.BGRA8,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 	}
