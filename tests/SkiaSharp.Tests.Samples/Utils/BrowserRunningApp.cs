@@ -76,7 +76,10 @@ internal sealed class BrowserRunningApp(RunningApp hostApp, IPage page, Concurre
             {
                 ViewportSize = new() { Width = 1280, Height = 900 },
                 DeviceScaleFactor = 1,
-                ColorScheme = ColorScheme.Light
+                ColorScheme = ColorScheme.Light,
+                // A C/POSIX-locale Linux agent makes Chromium report "en-US@posix", which
+                // .NET 11 WebAssembly rejects as a culture name and fails startup.
+                Locale = "en-US"
             });
             var page = await context.NewPageAsync();
             page.SetDefaultTimeout(60000);
