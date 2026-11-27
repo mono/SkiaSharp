@@ -70,27 +70,25 @@ public class GifPlayerSample : CanvasSampleBase
 
 	protected override async Task OnUpdate(CancellationToken token)
 	{
-		int adjustedDuration;
-		lock (SyncRoot)
+		if (frames == null || frames.Length == 0)
 		{
-			token.ThrowIfCancellationRequested();
-			var duration = frames is { Length: > 0 } ? frames[currentFrame].Duration : 100;
-			if (duration <= 0)
-				duration = 100;
-
-			adjustedDuration = (int)Math.Max(10, duration / speed);
+			await Task.Delay(100, token);
+			return;
 		}
+
+		var duration = frames[currentFrame].Duration;
+		if (duration <= 0)
+			duration = 100;
+
+		// Apply speed multiplier
+		var adjustedDuration = (int)Math.Max(10, duration / speed);
 		await Task.Delay(adjustedDuration, token);
 
-		lock (SyncRoot)
+		if (playing)
 		{
-			token.ThrowIfCancellationRequested();
-			if (playing && frames is { Length: > 0 })
-			{
-				currentFrame++;
-				if (currentFrame >= frames.Length)
-					currentFrame = 0;
-			}
+			currentFrame++;
+			if (currentFrame >= frames.Length)
+				currentFrame = 0;
 		}
 	}
 
