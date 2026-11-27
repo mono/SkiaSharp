@@ -53,16 +53,16 @@ parameters:
     type: object
     default:
       pool:
-        name: AcesShared
-        demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
+        name: Azure Pipelines
+        vmImage: macos-26
         os: macos
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
     type: object
     default:
       pool:
-        name: AcesShared
-        demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
+        name: Azure Pipelines
+        vmImage: macos-26
         os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
@@ -100,6 +100,10 @@ parameters:
 variables:
   - template: /eng/common/templates-official/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
+  # The native macOS stage only needs clang and the platform SDKs, which the hosted
+  # macos-26 image provides; it has no Xcode 27.
+  - name: XCODE_VERSION_NATIVE
+    value: '26.6'
 
 resources:
   repositories:
