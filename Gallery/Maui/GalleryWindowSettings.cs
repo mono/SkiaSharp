@@ -5,7 +5,7 @@ namespace SkiaSharpSample;
 
 internal sealed class GalleryWindowSettings
 {
-    private bool useGpu = true;
+    private bool useGpu;
 
     public GalleryWindowSettings(SampleService? catalog = null) => Catalog = catalog;
 
