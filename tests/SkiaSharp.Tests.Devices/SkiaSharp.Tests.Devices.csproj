@@ -27,6 +27,9 @@
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- The packaged app is activated by Windows, not the CI shell, so DOTNET_ROOT is ignored
+         and a framework-dependent app needs the runtime in Program Files. Bundle it instead. -->
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <PropertyGroup>

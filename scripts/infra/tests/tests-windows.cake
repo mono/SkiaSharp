@@ -27,6 +27,11 @@ Task ("Default")
     var diagnosticsGlob = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/bin/**/device-runner-diagnostics.log";
     DeleteFiles(diagnosticsGlob);
 
+    // TEMP: confirm which machine-wide runtimes a Windows-activated app can see.
+    var machineRuntimes = $"{EnvironmentVariable("ProgramFiles")}/dotnet/shared/Microsoft.NETCore.App";
+    Information($"Machine-wide runtimes in {machineRuntimes}: " +
+        string.Join(", ", DirectoryExists(machineRuntimes) ? GetSubDirectories(machineRuntimes).Select(d => d.GetDirectoryName()) : new[] { "<missing>" }));
+
     try {
         RunDeviceRunnersTest(csproj, results, configuration: "Debug", framework: tfm, noBuild: SKIP_BUILD, properties: properties);
     } finally {
