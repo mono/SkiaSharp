@@ -3,9 +3,6 @@ using DeviceRunners.VisualRunners;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls.Hosting;
-#if WINDOWS
-using SkiaSharp.Tests.WinUI;
-#endif
 
 namespace SkiaSharp.Tests
 {
@@ -37,18 +34,13 @@ namespace SkiaSharp.Tests
 				.UseSkiaSharp()
 				.ConfigureUITesting()
 				.UseVisualTestRunner(conf => conf
-#if WINDOWS
-					.AddWindowsCliConfiguration()
-#else
 					.AddCliConfiguration()
-#endif
 					.AddConsoleResultChannel()
 					.AddTestAssemblies(testAssemblies)
 					.AddXunit3());
 
 #if WINDOWS
 			builder.Logging.AddDebug();
-			builder.Logging.AddProvider(new SkiaSharp.Tests.WinUI.StartupDiagnosticsLoggerProvider());
 #else
 			builder.Logging.AddConsole();
 #endif

@@ -21,8 +21,6 @@ parameters:
   resultLabel: ''
   logArtifact: ''
   extractVisualImages: true
-  retryCount: 3
-  nativeBuildId: ''
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
@@ -41,11 +39,9 @@ jobs:
       initScript: ${{ parameters.initScript }}
       jobSdkVersion: ${{ parameters.jobSdkVersion }}
       dotnetSdks: ${{ parameters.dotnetSdks }}
-      retryCount: ${{ parameters.retryCount }}
       shouldPublish: false
       requiredArtifacts:
         - name: native
-          buildId: '${{ parameters.nativeBuildId }}'
       postBuildSteps:
         - ${{ if eq(parameters.extractVisualImages, true) }}:
           - pwsh: '& "$(PYTHON_EXE)" scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images'

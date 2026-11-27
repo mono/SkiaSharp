@@ -4,32 +4,22 @@ parameters:
 
 steps:
   - ${{ if ne(length(parameters.artifacts), 0) }}:
-    # Connected pipelines (such as Tests) get their source build from the
-    # SkiaSharp pipeline resource; combined pipelines use their own run.
+    # Artifacts always come from one exact, already-completed build. Connected
+    # pipelines (such as Tests) get it from the SkiaSharp pipeline resource,
+    # while combined pipelines build and consume their own artifacts.
     - pwsh: |
         $buildId = if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNID) { $env:RESOURCES_PIPELINE_SKIASHARP_RUNID } else { $env:BUILD_BUILDID }
         $pipelineId = if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) { $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID } else { $env:SYSTEM_DEFINITIONID }
-        Write-Host "Default source build ID = '$buildId'"
-        Write-Host "Source pipeline ID = '$pipelineId'"
+        Write-Host "DOWNLOAD_BUILD_ID = '$buildId'"
+        Write-Host "DOWNLOAD_PIPELINE_ID = '$pipelineId'"
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_BUILD_ID]$buildId"
         Write-Host "##vso[task.setvariable variable=DOWNLOAD_PIPELINE_ID]$pipelineId"
       displayName: Resolve the build that artifacts are downloaded from
       condition: ${{ parameters.condition }}
 
   - ${{ each artifact in parameters.artifacts }}:
-    - ${{ if ne(coalesce(artifact.buildId, 'none'), 'none') }}:
-      - pwsh: |
-          if ($env:ARTIFACT_SOURCE_BUILD_ID -notmatch '^[1-9]\d*$') {
-            throw "The source build ID for ${{ artifact.name }} must be a positive integer."
-          }
-          Write-Host "Using build $env:ARTIFACT_SOURCE_BUILD_ID for ${{ artifact.name }}."
-        displayName: Verify the ${{ artifact.name }} source build
-        condition: ${{ parameters.condition }}
-        env:
-          ARTIFACT_SOURCE_BUILD_ID: '${{ artifact.buildId }}'
-
     - task: DownloadBuildArtifacts@1
-      displayName: Download the pre-built ${{ artifact.name }} artifacts from ${{ coalesce(artifact.buildId, iif(artifact.currentRun, 'the current run', 'the source run')) }}
+      displayName: Download the pre-built ${{ artifact.name }} artifacts from ${{ iif(artifact.currentRun, 'the current run', 'the source run') }}
       condition: ${{ parameters.condition }}
       retryCountOnTaskFailure: 3
       inputs:
@@ -37,7 +27,7 @@ steps:
         project: '$(System.TeamProjectId)'
         pipeline: ${{ iif(artifact.currentRun, '$(System.DefinitionId)', '$(DOWNLOAD_PIPELINE_ID)') }}
         buildVersionToDownload: 'specific'
-        buildId: ${{ iif(artifact.currentRun, '$(Build.BuildId)', coalesce(artifact.buildId, '$(DOWNLOAD_BUILD_ID)')) }}
+        buildId: ${{ iif(artifact.currentRun, '$(Build.BuildId)', '$(DOWNLOAD_BUILD_ID)') }}
         downloadType: 'single'
         allowPartiallySucceededBuilds: true
         artifactName: ${{ artifact.name }}
