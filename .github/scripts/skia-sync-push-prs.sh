@@ -481,3 +481,8 @@ apply_labels mono/SkiaSharp "$SS_PR"
 echo "Created or updated reciprocal draft PRs:"
 echo "  $SKIA_PR_URL"
 echo "  $SS_PR_URL"
+
+# Dispatch only after both PR bodies and labels identify the complete review pair.
+gh workflow run review-skia-sync.lock.yml --repo mono/SkiaSharp --ref main \
+  -f skiasharp_pr="$SS_PR"
+echo "Dispatched independent Skia review for $SS_PR_URL"
