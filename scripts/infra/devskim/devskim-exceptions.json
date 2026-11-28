@@ -1,0 +1,29 @@
+{
+  "description": "Reviewed DevSkim false positives. DevSkim matches names, not calls, so these C++ member functions are reported like the C library function rewind(). An exception applies to one rule in one file and one exact source line. Do not add real banned-function uses here; replace them instead.",
+  "exceptions": [
+    {
+      "path": "externals/skia/include/xamarin/SkManagedStream.h",
+      "rule": "DS154189",
+      "text": "bool rewind() override;",
+      "reason": "Declares the SkStream::rewind() override; it is not the C library rewind()."
+    },
+    {
+      "path": "externals/skia/src/xamarin/SkManagedStream.cpp",
+      "rule": "DS154189",
+      "text": "bool SkManagedStream::rewind() {",
+      "reason": "Defines the SkStream::rewind() override; it is not the C library rewind()."
+    },
+    {
+      "path": "externals/skia/src/c/sk_stream.cpp",
+      "rule": "DS154189",
+      "text": "return AsStream(cstream)->rewind();",
+      "reason": "Calls the SkStream::rewind() member function; it is not the C library rewind()."
+    },
+    {
+      "path": "externals/skia/src/c/sk_region.cpp",
+      "rule": "DS154189",
+      "text": "return AsRegionIterator(iter)->rewind();",
+      "reason": "Calls the SkRegion::Iterator::rewind() member function; it is not the C library rewind()."
+    }
+  ]
+}

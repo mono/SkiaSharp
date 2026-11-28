@@ -49,6 +49,12 @@ stages:
     parameters:
       buildAgent: ${{ parameters.buildAgentLinux }}
 
+  # Public CI and PR builds only; see the template for why.
+  - ${{ if eq(parameters.buildPipelineType, 'complete') }}:
+    - template: /scripts/azure-templates-stages-devskim.yml@self
+      parameters:
+        buildAgent: ${{ parameters.buildAgentLinux }}
+
   - ${{ if in(parameters.buildPipelineType, 'build', 'complete') }}:
     - template: /scripts/azure-templates-stages-native.yml@self
       parameters:
