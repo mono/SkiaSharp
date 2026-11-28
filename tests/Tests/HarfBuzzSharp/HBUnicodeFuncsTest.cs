@@ -79,6 +79,88 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[Fact]
+		public void DisposingBufferUnicodeFunctionsGetterKeepsBufferReferenceAlive()
+		{
+			var released = 0;
+			var buffer = new Buffer();
+			using (var functions = new UnicodeFunctions(UnicodeFunctions.Default))
+			{
+				functions.SetScriptDelegate((f, u) => Script.Latin, () => released++);
+				buffer.UnicodeFunctions = functions;
+
+				using (var retrieved = buffer.UnicodeFunctions)
+					Assert.Equal(Script.Latin, retrieved.GetScript('A'));
+			}
+
+			Assert.Equal(0, released);
+			buffer.Dispose();
+			Assert.Equal(1, released);
+		}
+
+		[Fact]
+		public void BufferUnicodeFunctionsGetterSurvivesBufferDisposal()
+		{
+			var released = 0;
+			var buffer = new Buffer();
+			var functions = new UnicodeFunctions(UnicodeFunctions.Default);
+			functions.SetScriptDelegate((f, u) => Script.Latin, () => released++);
+			buffer.UnicodeFunctions = functions;
+			functions.Dispose();
+
+			var retrieved = buffer.UnicodeFunctions;
+			buffer.Dispose();
+
+			Assert.Equal(0, released);
+			Assert.Equal(Script.Latin, retrieved.GetScript('A'));
+			retrieved.Dispose();
+			Assert.Equal(1, released);
+		}
+
+		[Fact]
+		public void BufferUnicodeFunctionsGetterSurvivesSetterReplacement()
+		{
+			var released = 0;
+			using (var buffer = new Buffer())
+			using (var replacement = new UnicodeFunctions(UnicodeFunctions.Default))
+			{
+				var functions = new UnicodeFunctions(UnicodeFunctions.Default);
+				functions.SetScriptDelegate((f, u) => Script.Latin, () => released++);
+				buffer.UnicodeFunctions = functions;
+				functions.Dispose();
+
+				var retrieved = buffer.UnicodeFunctions;
+				buffer.UnicodeFunctions = replacement;
+
+				Assert.Equal(0, released);
+				Assert.Equal(Script.Latin, retrieved.GetScript('A'));
+				retrieved.Dispose();
+				Assert.Equal(1, released);
+			}
+		}
+
+		[Fact]
+		public void BufferUnicodeFunctionsGettersOwnIndependentReferences()
+		{
+			var released = 0;
+			var buffer = new Buffer();
+			var functions = new UnicodeFunctions(UnicodeFunctions.Default);
+			functions.SetScriptDelegate((f, u) => Script.Latin, () => released++);
+			buffer.UnicodeFunctions = functions;
+			functions.Dispose();
+
+			var first = buffer.UnicodeFunctions;
+			var second = buffer.UnicodeFunctions;
+			buffer.Dispose();
+
+			Assert.Equal(0, released);
+			first.Dispose();
+			Assert.Equal(0, released);
+			Assert.Equal(Script.Latin, second.GetScript('A'));
+			second.Dispose();
+			Assert.Equal(1, released);
+		}
+
+		[Fact]
 		public void ShouldSetCombiningClassDelegate()
 		{
 			using (var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default))

@@ -165,10 +165,10 @@ namespace HarfBuzzSharp
 
 		/// <summary>Gets or sets the Unicode functions used by the buffer.</summary>
 		/// <value>The Unicode functions.</value>
-		/// <remarks>Unicode functions provide character property lookups needed during shaping.</remarks>
+		/// <remarks>Unicode functions provide character property lookups needed during shaping. The getter returns an independently owned reference that remains valid after the buffer is disposed or its Unicode functions are replaced. Dispose the returned value when finished.</remarks>
 		public UnicodeFunctions UnicodeFunctions {
 			get {
-				var r = new UnicodeFunctions (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle));
+				var r = new UnicodeFunctions (HarfBuzzApi.hb_unicode_funcs_reference (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle)));
 				GC.KeepAlive (this);
 				return r;
 			}
