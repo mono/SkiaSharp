@@ -158,26 +158,26 @@ namespace SkiaSharp.HarfBuzz
 				return new Result();
 			}
 
-			using var buffer = new Buffer();
+			hbBuffer.Reset();
 
 			switch (paint.GetLegacyTextEncoding())
 			{
 				case SKTextEncoding.Utf8:
-					buffer.AddUtf8(text);
+					hbBuffer.AddUtf8(text);
 					break;
 				case SKTextEncoding.Utf16:
-					buffer.AddUtf16(text);
+					hbBuffer.AddUtf16(text);
 					break;
 				case SKTextEncoding.Utf32:
-					buffer.AddUtf32(text);
+					hbBuffer.AddUtf32(text);
 					break;
 				default:
 					throw new NotSupportedException("TextEncoding of type GlyphId is not supported.");
 			}
 
-			buffer.GuessSegmentProperties();
+			hbBuffer.GuessSegmentProperties();
 
-			return Shape(buffer, xOffset, yOffset, paint);
+			return Shape(hbBuffer, xOffset, yOffset, paint);
 		}
 
 		/// <summary>Shapes the specified text using the font.</summary>
@@ -202,12 +202,12 @@ namespace SkiaSharp.HarfBuzz
 				return new Result();
 			}
 
-			using var buffer = new Buffer();
-			buffer.AddUtf8(text);
+			hbBuffer.Reset();
+			hbBuffer.AddUtf8(text);
 
-			buffer.GuessSegmentProperties();
+			hbBuffer.GuessSegmentProperties();
 
-			return Shape(buffer, xOffset, yOffset, font);
+			return Shape(hbBuffer, xOffset, yOffset, font);
 		}
 
 		/// <summary>Represents the result of a shaping operation.</summary>
