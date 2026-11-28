@@ -13,6 +13,8 @@ For **every** item in `added`, `removed`, and `changed` across all four sections
 - **Factual only** — describe what the change does, not whether it's good or bad
 - **No per-item PASS/FAIL** — all items need human review
 - **Read the actual diff** — summaries based on file names alone are useless
+- **Preserve mechanical results** — keep statuses, item identities, categories,
+  counts, and diff text; add summaries, recommendations, and related-file links
 
 ### Upstream Integrity Summaries
 
@@ -46,8 +48,10 @@ Example: `"libpng bumped from 1.6.40 to 1.6.43 — includes fixes for CVE-2024-3
 ### Verifying Removed Patches
 
 For every **removed** item in `upstreamIntegrity`, you MUST verify WHY the patch was
-dropped. The orchestrator leaves the working tree checked out with upstream refs fetched,
-so you can inspect upstream directly.
+dropped. For non-isolated runs, the orchestrator leaves the working tree checked
+out with upstream refs fetched. Use the exact `meta.shas.upstream` commit, not
+the current branch tip. For isolated/prepared runs, read public upstream files
+through GitHub at that same SHA; the host checkout is not the reviewed source.
 
 **For each removed patch:**
 
@@ -55,8 +59,10 @@ so you can inspect upstream directly.
 2. Identify the key change (function added, constant changed, ifdef added, etc.)
 3. Check the new upstream version of the file:
    ```bash
-   git show upstream/{new_upstream_branch}:{file_path}   # in externals/skia
+   git show {meta.shas.upstream}:{file_path}   # in externals/skia, non-isolated runs
    ```
+   In isolated/prepared runs, use the read-only GitHub tools to retrieve
+   `{file_path}` from `google/skia` at `meta.shas.upstream`.
    Pipe through `grep` or `head` for large files — search for the specific
    function, constant, or pattern from the old patch.
 4. State what you found as evidence in the summary
@@ -119,7 +125,8 @@ Top level needs:
 | `upstreamIntegrity.status == REVIEW_REQUIRED` | HIGH |
 | `interopIntegrity.status == REVIEW_REQUIRED` | MEDIUM |
 | `depsAudit.status == REVIEW_REQUIRED` | MEDIUM |
-| All PASS | LOW |
+| `companionPr.status == REVIEW_REQUIRED` | MEDIUM |
+| All five checks PASS | LOW |
 
 Highest wins (e.g., if upstream is REVIEW_REQUIRED and deps is REVIEW_REQUIRED → HIGH).
 
