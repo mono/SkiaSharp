@@ -1,6 +1,9 @@
-﻿using DeviceRunners.UITesting;
+﻿#if WINDOWS
+using DeviceRunners.UITesting;
 using DeviceRunners.VisualRunners;
+#endif
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
@@ -16,6 +19,7 @@ namespace SkiaSharp.Tests
 
 			var builder = MauiApp.CreateBuilder();
 
+#if WINDOWS
 			// The Vulkan tests live in their own unsigned, platform-restricted library
 			// (SkiaSharp.Vulkan.Tests). Register its assembly on the platforms where it
 			// is referenced so both the test runner and the renderer catalog
@@ -38,6 +42,11 @@ namespace SkiaSharp.Tests
 					.AddConsoleResultChannel()
 					.AddTestAssemblies(testAssemblies)
 					.AddXunit3());
+#else
+			builder
+				.UseMauiApp<TestApp>()
+				.UseSkiaSharp();
+#endif
 
 #if WINDOWS
 			builder.Logging.AddDebug();

@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(MauiTargetFrameworksAppCurrent)</TargetFrameworks>
+    <TargetFrameworks>net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsMacOS)">net11.0-ios;net11.0-maccatalyst;net11.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net10.0-windows$(TPVWindowsCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <ValidateXcodeVersion>true</ValidateXcodeVersion>
@@ -13,6 +15,12 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <IsTestProject>true</IsTestProject>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <UseAppHost>false</UseAppHost>
+    <RunWithOpen>false</RunWithOpen>
+    <AndroidUseInstrumentation>true</AndroidUseInstrumentation>
+    <MauiVersion Condition="$(TargetFramework.StartsWith('net11'))">11.0.0-rc.2.26505.5</MauiVersion>
     <GoldenRoot>$(MSBuildThisFileDirectory)../Goldens/Visual</GoldenRoot>
     <EmbedGoldens>true</EmbedGoldens>
   </PropertyGroup>
@@ -31,12 +39,19 @@
   <PropertyGroup>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">17.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">24.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">10.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
+    <!-- Apple owns the app entry point, not xUnit's desktop app host. -->
+    <PackageReference Include="xunit.v3.core.mtp-v2" Version="3.2.2" ExcludeAssets="build;buildTransitive" />
+    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
     <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
     <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
     <PackageReference Include="DeviceRunners.VisualRunners.Maui" Version="0.1.0-preview.12" />
@@ -44,6 +59,9 @@
     <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.12" />
     <PackageReference Include="DeviceRunners.UITesting.Xunit3" Version="0.1.0-preview.12" />
     <PackageReference Include="DeviceRunners.Testing.Targets" Version="0.1.0-preview.12" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
@@ -60,15 +78,32 @@
     <ProjectReference Include="..\..\source\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Core\SkiaSharp.Views.Maui.Core.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
-    <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests.Shared\SkiaSharp.Tests.Shared.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
 
-  <!-- Vulkan tests: only the device platforms whose native library is built with Vulkan and whose
-       linker can resolve the Vulkan P/Invokes (android, windows). The library is unsigned so it can
-       reference the unsigned Silk.NET/SharpVk packages; MauiProgram registers its assembly so the
-       renderer catalog and the test runner both discover it. -->
-  <ItemGroup Condition="$(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-windows'))">
+  <!-- xUnit's MTP integration discovers the entry assembly. Compile the shared tests into it. -->
+  <PropertyGroup Condition="!$(TargetFramework.Contains('-windows'))">
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_LOADER</DefineConstants>
+    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
+    <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**;..\Tests\SkiaSharp\Visual\Renderers\Desktop\**" Link="Tests\Shared\%(RecursiveDir)%(FileName)%(Extension)" />
+    <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="..\VulkanTests\**\*.cs" Link="Tests\Vulkan\%(RecursiveDir)%(FileName)%(Extension)" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.Silk.NET\SkiaSharp.Vulkan.Silk.NET.csproj" />
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
+    <PackageReference Include="SharpVk" Version="0.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
     <ProjectReference Include="..\SkiaSharp.Vulkan.Tests\SkiaSharp.Vulkan.Tests.csproj" />
+    <Compile Remove="TestApp.cs;Platforms\Android\TestInstrumentation.cs" />
   </ItemGroup>
 
   <ItemGroup>
